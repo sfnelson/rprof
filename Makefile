@@ -1,7 +1,7 @@
 LIBNAME=rprof
 SOURCES=rprof.c agent_util.c java_crw_demo.c
 
-JAVA_SOURCES=HeapTracker.java
+JAVA_SOURCES=HeapTracker.java Test.java
 JARFILE=rprof.jar
 
 OBJECTS=rprof.o agent_util.o java_crw_demo.o
@@ -43,3 +43,6 @@ $(JARFILE): $(JAVA_SOURCES)
 clean:
 	rm -f $(LIBRARY) $(OBJECTS) $(JARFILE)
 	rm -f -r classes
+
+test:
+	$(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -cp classes Test

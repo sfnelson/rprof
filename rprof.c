@@ -996,7 +996,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     }
 
     /* Add jar file to boot classpath */
-    add_demo_jar_to_bootclasspath(jvmti, "heapTracker");
+    add_demo_jar_to_bootclasspath(jvmti, "rprof");
 
     /* We return JNI_OK to signify success */
     return JNI_OK;

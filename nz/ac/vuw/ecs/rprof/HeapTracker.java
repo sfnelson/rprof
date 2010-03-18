@@ -34,30 +34,90 @@
  * nuclear facility.
  */
 
+package nz.ac.vuw.ecs.rprof;
+import java.util.IdentityHashMap;
 
 /* Java class to hold static methods which will be called in byte code
  *    injections of all class files.
  */
 
 public class HeapTracker {
- 
-    private static int engaged = 0; 
-  
-    private static native void _newobj(Object thread, Object o);
-    public static void newobj(Object o)
-    {
-	if ( engaged != 0 ) {
-	    _newobj(Thread.currentThread(), o);
+	
+	static {
+		nextThreadId = (1 << 24);
+		map = new IdentityHashMap<Thread, HeapTracker>();
+		nullCounter = new HeapTracker();
 	}
-    }
-    
-    private static native void _newarr(Object thread, Object a);
-    public static void newarr(Object a)
-    {
-	if ( engaged != 0 ) {
-	    _newarr(Thread.currentThread(), a);
+
+	private static int engaged = 0;
+
+	private static native void _newobj(Object thread, Object o, long id);
+	public static void newobj(Object o) {
+		if ( engaged != 0 && !(o instanceof HeapTracker)) {
+			_newobj(Thread.currentThread(), o, id(o));
+		}
 	}
-    }
-    
+
+	private static native void _newarr(Object thread, Object a, long id);
+	public static void newarr(Object a) {
+		if ( engaged != 0 ) {
+			_newarr(Thread.currentThread(), a, id(a));
+		}
+	}
+
+	private static native void _menter(Object thread, int cnum, int mnum);
+	public static void enter(int cnum, int mnum) {
+		if ( engaged != 0 ) {
+			_menter(Thread.currentThread(), cnum, mnum);
+		}
+	}
+
+	private static native void _mexit(Object thread, int cnum, int mnum);
+	public static void exit(int cnum, int mnum) {
+		if ( engaged != 0 && Thread.currentThread() != null) {
+			_mexit(Thread.currentThread(), cnum, mnum);
+		}
+	}
+
+	private static long id(Object o) {
+		if (o instanceof HeapTracker) {
+			return nextThreadId;
+		}
+		
+		HeapTracker c;
+		if (Thread.currentThread() == null) {
+			c = nullCounter;
+		} else {
+			c = map.get(Thread.currentThread());
+		}
+
+		if (c == null) {
+			c = new HeapTracker();
+			map.put(Thread.currentThread(), c);
+		}
+		return c.newId();
+	}
+
+	private static final HeapTracker nullCounter;
+	private static final IdentityHashMap<Thread, HeapTracker> map;
+
+	private static volatile long nextThreadId;
+
+	private static synchronized long nextThreadId() {
+		long id = nextThreadId;
+		nextThreadId = id + (1 << 24);
+		return id;
+	}
+
+	private final long threadId;
+	private long counter = 0;
+
+	private HeapTracker() {
+		threadId = nextThreadId();
+	}
+
+	public long newId() {
+		return threadId | ++counter;
+	}
 }
 

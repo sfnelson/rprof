@@ -1,7 +1,7 @@
 LIBNAME=rprof
 SOURCES=rprof.c agent_util.c java_crw_demo.c
 
-JAVA_SOURCES=HeapTracker.java Test.java
+JAVA_SOURCES=nz/ac/vuw/ecs/rprof/HeapTracker.java Test.java
 JARFILE=rprof.jar
 
 OBJECTS=rprof.o agent_util.o java_crw_demo.o

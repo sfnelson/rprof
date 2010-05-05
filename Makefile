@@ -1,10 +1,10 @@
 LIBNAME=rprof
-SOURCES=rprof.c agent_util.c java_crw_demo.c
+SOURCES=src/rprof.c src/agent_util.c src/java_crw_demo.c
 
-JAVA_SOURCES=nz/ac/vuw/ecs/rprof/HeapTracker.java Test.java
-JARFILE=rprof.jar
+JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/HeapTracker.java src/Test.java
+JARFILE=bin/rprof.jar
 
-OBJECTS=rprof.o agent_util.o java_crw_demo.o
+OBJECTS=objects/rprof.o objects/agent_util.o objects/java_crw_demo.o
 
 JDK=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0
 
@@ -16,35 +16,35 @@ COMMON_FLAGS+= -W -Wall  -Wno-unused -Wno-parentheses
 CFLAGS=-O2 $(COMMON_FLAGS)
 CFLAGS += -arch x86_64 -arch i386
 
-CFLAGS += -I.
+CFLAGS += -Isrc
 CFLAGS += -I$(JDK)/Headers
 
-LIBRARY=lib$(LIBNAME).jnilib
+LIBRARY=bin/lib$(LIBNAME).jnilib
 LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
-#LIBRARIES=-L $(JDK)/Libraries/ -lc
 LIBRARIES=-lc
 LINK_SHARED=$(LINK.c) -shared -o $@
 
 all: $(LIBRARY) $(JARFILE)
 
 $(LIBRARY): $(OBJECTS)
+	mkdir -p bin
 	$(LINK_SHARED) $(OBJECTS) $(LIBRARIES)
 
-%.o: %.c
-	cc $(CFLAGS) -c $?
+objects/%.o: src/%.c
+	mkdir -p objects
+	cc $(CFLAGS) -c $? -o $@
 
 # Build jar file
 $(JARFILE): $(JAVA_SOURCES)
-	rm -f -r classes
+	mkdir -p bin
 	mkdir -p classes
 	$(JDK)/Home/bin/javac -d classes $(JAVA_SOURCES)
 	(cd classes; $(JDK)/Home/bin/jar cf ../$@ *)
 
 clean:
-	rm -f $(LIBRARY) $(OBJECTS) $(JARFILE)
-	rm -f -r classes
+	rm -f -r bin classes objects
 
 test: all
 	date
-	$(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath classes Test
+	(cd bin; $(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ../classes Test)
 	date

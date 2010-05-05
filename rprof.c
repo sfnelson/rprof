@@ -36,6 +36,7 @@
 
 #include "stdlib.h"
 #include "string.h"
+#include "errno.h"
 
 #include "rprof.h"
 #include "java_crw_demo.h"
@@ -151,7 +152,7 @@ logEvent(JNIEnv *env, jvmtiEnv *jvmti, jthread thread, jobject o, const char* fo
 	error = (*jvmti)->GetClassSignature(jvmti, cls, &signature, NULL);
 	check_jvmti_error(jvmti, error, "Cannot get class signature");
 
-	//stdout_message(format, id, signature);
+	stdout_message(format, id, signature);
 }
 
 /* Java Native Method for Object.<init> */
@@ -172,7 +173,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, jobject o,
 	error = (*jvmti)->SetTag(jvmti, o, id);
 	check_jvmti_error(jvmti, error, "Cannot tag object with id");
 
-	logEvent(env, jvmti, thread, o, "object allocated: %x (%s)\n");
+	//logEvent(env, jvmti, thread, o, "object allocated: %x (%s)\n");
 }
 
 /* Java Native Method for newarray */
@@ -191,12 +192,12 @@ HEAP_TRACKER_native_newarr(JNIEnv *env, jclass klass, jthread thread, jobject a,
 	error = (*jvmti)->SetTag(jvmti, a, id);
 	check_jvmti_error(jvmti, error, "Cannot tag array with id");
 
-	logEvent(env, jvmti, thread, a, "array allocated:  %x (%s)\n");
+	//logEvent(env, jvmti, thread, a, "array allocated:  %x (%s)\n");
 }
 
 /* Java Native Method for method execution */
 static void
-HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum)
+HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum, jarray args)
 {
 	if (gdata->vmInitialized) {
 		jvmtiError error;
@@ -209,7 +210,8 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 
 		jvmti = gdata->jvmti;
 
-		//stdout_message("method execution began: %d %d\n", cnum, mnum);
+		jsize len = (*env)->GetArrayLength(env, args);
+		//stdout_message("method execution began: %d %d (%d params)\n", cnum, mnum, len);
 
 		jvmtiFrameInfo frames[5];
 		jint count;
@@ -233,70 +235,85 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 		error = (*jvmti)->GetArgumentsSize(jvmti, method, &size);
 		check_jvmti_error(jvmti, error, "Cannot access arguments size");
 
-		//stdout_message("Executing method: %s %d %s\n", methodName, size, signature);
-
-		char argTypes[size];
-		int arg = 0;
-		int len = strlen(signature);
-		for (i = 1; i < len; i++) {
-			switch(signature[i]) {
-			case ')':
-				i = strlen(signature);
-				break;
-			case 'J': // long
-			case 'D': // double
-				argTypes[arg++] = signature[i]; // ignore primitive parameter
-			case 'B': // byte
-			case 'C': // character
-			case 'S': // short
-			case 'Z': // boolean
-			case 'F': // float
-			case 'I': // int
-				argTypes[arg++] = signature[i]; // ignore primitive parameter
-				break;
-			case 'L': // object, followed by FQ name, terminated by ';'
-			case '[': // array, followed by a second type descriptor
-				argTypes[arg++] = signature[i];
-				while (signature[i] == '[') i++;
-				if (signature[i] == 'L') {
-					while (signature[++i] != ';');
-				}
-				break;
-			}
-		}
-		if (arg < size) {
-			argTypes[arg] = '.';
-		}
-
-		jlong args[size];
-		int offset = 0;
-		if (arg < size) {
-			offset = 1;
-		}
-		for (i = 0; i < size; i++) {
-			if (i - offset < 0 || argTypes[i - offset] == 'L' || argTypes[i - offset] == '[') {
-				error = (*jvmti)->GetLocalObject(jvmti, thread, 2, i, &obj);
-				check_jvmti_error(jvmti, error, "Cannot access local variable");
-
-				if (obj != NULL) {
-					error = (*jvmti)->GetTag(jvmti, obj, &args[i]);
-					check_jvmti_error(jvmti, error, "Cannot read tag");
-				} else {
-					args[i] = 0xDEADBEEF;
-				}
+		jlong tags[len];
+		for (i = 0; i < len; i++) {
+			jobject o = (*env)->GetObjectArrayElement(env, args, i);
+			if (o != NULL) {
+				error = (*jvmti)->GetTag(jvmti, o, &tags[i]);
+				check_jvmti_error(jvmti, error, "Cannot read tag");
 			} else {
-				args[i] = 0;
+				tags[i] = 0xDEADBEEF;
 			}
 		}
 
-		/*stdout_message("method arguments: %s ( ", methodName);
-		for (i = 0; i < size; i++) {
-			stdout_message("%x %c ", args[i], argTypes[i]);
+		//stdout_message("method arguments: %s ( ", methodName);
+		for (i = 0; i < len; i++) {
+			//stdout_message("%x ", tags[i]);
 		}
-		stdout_message(") - %s\n", signature);*/
+		//stdout_message(") - %s\n", signature);
 
 		(*jvmti)->Deallocate(jvmti, methodName);
 		(*jvmti)->Deallocate(jvmti, signature);
+
+		//		char argTypes[size];
+		//		int arg = 0;
+		//		int len = strlen(signature);
+		//		for (i = 1; i < len; i++) {
+		//			switch(signature[i]) {
+		//			case ')':
+		//				i = strlen(signature);
+		//				break;
+		//			case 'J': // long
+		//			case 'D': // double
+		//				argTypes[arg++] = signature[i]; // ignore primitive parameter
+		//			case 'B': // byte
+		//			case 'C': // character
+		//			case 'S': // short
+		//			case 'Z': // boolean
+		//			case 'F': // float
+		//			case 'I': // int
+		//				argTypes[arg++] = signature[i]; // ignore primitive parameter
+		//				break;
+		//			case 'L': // object, followed by FQ name, terminated by ';'
+		//			case '[': // array, followed by a second type descriptor
+		//				argTypes[arg++] = signature[i];
+		//				while (signature[i] == '[') i++;
+		//				if (signature[i] == 'L') {
+		//					while (signature[++i] != ';');
+		//				}
+		//				break;
+		//			}
+		//		}
+		//		if (arg < size) {
+		//			argTypes[arg] = '.';
+		//		}
+		//
+		//		jlong args[size];
+		//		int offset = 0;
+		//		if (arg < size) {
+		//			offset = 1;
+		//		}
+		//		for (i = 0; i < size; i++) {
+		//			if (i - offset < 0 || argTypes[i - offset] == 'L' || argTypes[i - offset] == '[') {
+		//				/*error = (*jvmti)->GetLocalObject(jvmti, thread, 2, i, &obj);
+		//				check_jvmti_error(jvmti, error, "Cannot access local variable");
+		//
+		//				if (obj != NULL) {
+		//					error = (*jvmti)->GetTag(jvmti, obj, &args[i]);
+		//					check_jvmti_error(jvmti, error, "Cannot read tag");
+		//				} else {
+		//					args[i] = 0xDEADBEEF;
+		//				}*/
+		//			} else {
+		//				args[i] = 0;
+		//			}
+		//		}
+		//
+		//		/*stdout_message("method arguments: %s ( ", methodName);
+		//		for (i = 0; i < size; i++) {
+		//			stdout_message("%x %c ", args[i], argTypes[i]);
+		//		}
+		//		stdout_message(") - %s\n", signature);*/
 	}
 }
 
@@ -333,7 +350,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 		static JNINativeMethod registry[4] = {
 				{STRING(HEAP_TRACKER_native_newobj), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newobj},
 				{STRING(HEAP_TRACKER_native_newarr), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newarr},
-				{STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_enter},
+				{STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
 				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_exit}
 		};
 
@@ -477,7 +494,7 @@ cbVMObjectAlloc(jvmtiEnv *jvmti, JNIEnv *env, jthread thread,
 	error = (*jvmti)->SetTag(jvmti, o, id);
 	check_jvmti_error(jvmti, error, "Cannot tag object with id");
 
-	logEvent(env, jvmti, thread, o, "object allocated: %x (%s)\n");
+	//logEvent(env, jvmti, thread, o, "object allocated: %x (%s)\n");
 }
 
 /* Callback for JVMTI_EVENT_OBJECT_FREE */
@@ -523,14 +540,14 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 			*new_class_data_len = 0;
 			*new_class_data     = NULL;
 
-			//stdout_message("weaving %s\n", classname);
-
 			/* The tracker class itself? */
-			if ( strstr(classname, STRING(HEAP_TRACKER_package)) != classname ) {
+			if ( strstr(classname, STRING(HEAP_TRACKER_package)) != classname) {
 				jint           cnum;
 				int            systemClass;
 				unsigned char *newImage;
 				long           newLength;
+
+				//stdout_message("weaving %s\n", classname);
 
 				/* Get number for every class file image loaded */
 				cnum = gdata->ccount++;
@@ -555,7 +572,7 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 						systemClass,
 						STRING(HEAP_TRACKER_package/HEAP_TRACKER_class),
 						"L" STRING(HEAP_TRACKER_package/HEAP_TRACKER_class) ";",
-						STRING(HEAP_TRACKER_enter), "(II)V", // Method offset 0
+						STRING(HEAP_TRACKER_enter), "(II[Ljava/lang/Object;)V", // Method offset 0
 						STRING(HEAP_TRACKER_exit), "(II)V", // Method return
 						STRING(HEAP_TRACKER_newobj), "(Ljava/lang/Object;)V", // Object <init>
 						STRING(HEAP_TRACKER_newarr), "(Ljava/lang/Object;)V", // new array opcode
@@ -569,6 +586,23 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 				 */
 				if ( newLength > 0 ) {
 					unsigned char *jvmti_space;
+
+					/*
+					char buffer[50];
+
+
+					sprintf(&buffer, "tmp/rprof-output-%d-%d.class", cnum, newLength);
+
+
+					FILE* out = fopen(buffer, "w");
+					int written = fwrite ( newImage, 1, newLength, out );
+					if (written != newLength) {
+						int err = ferror(out);
+						stdout_message("error writing file: %s (%d)\n", strerror(err), err);
+					} else {
+						stdout_message("wrote %d bytes to %s\n", written, buffer);
+					}
+					fclose(out);*/
 
 					jvmti_space = (unsigned char *)allocate(jvmti, (jint)newLength);
 					(void)memcpy((void*)jvmti_space, (void*)newImage, (int)newLength);

@@ -44,5 +44,7 @@ clean:
 	rm -f $(LIBRARY) $(OBJECTS) $(JARFILE)
 	rm -f -r classes
 
-test:
-	$(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -cp classes Test
+test: all
+	date
+	$(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath classes Test
+	date

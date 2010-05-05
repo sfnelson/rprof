@@ -65,10 +65,10 @@ public class HeapTracker {
 		}
 	}
 
-	private static native void _menter(Object thread, int cnum, int mnum);
-	public static void enter(int cnum, int mnum) {
+	private static native void _menter(Object thread, int cnum, int mnum, Object[] args);
+	public static void enter(int cnum, int mnum, Object[] args) {
 		if ( engaged != 0 ) {
-			_menter(Thread.currentThread(), cnum, mnum);
+			_menter(Thread.currentThread(), cnum, mnum, args);
 		}
 	}
 

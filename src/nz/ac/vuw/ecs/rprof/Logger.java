@@ -9,7 +9,7 @@ public class Logger {
 	public static final int BUFFER_SIZE = 256;
 	
 	public static void main(String args[]) throws IOException {
-		DatagramSocket socket = new DatagramSocket(90935);
+		DatagramSocket socket = new DatagramSocket(9035);
 		
 		byte[] buffer = new byte[BUFFER_SIZE];
 		

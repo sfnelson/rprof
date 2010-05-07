@@ -156,6 +156,8 @@ typedef struct CrwClassImage {
 	char* obj_init_sig;         /* Signature of this method */
 	char* newarray_name;        /* Method name to call after newarray opcodes */
 	char* newarray_sig;         /* Signature of this method */
+	char* main_method_name;		/* Method name to call before main methods */
+	char* main_method_sig;		/* Signature of this method */
 
 	/* Constant pool index values for new entries */
 	CrwCpoolIndex               tracker_class_index;
@@ -165,6 +167,7 @@ typedef struct CrwClassImage {
 	CrwCpoolIndex               return_tracker_index;
 	CrwCpoolIndex               class_number_index; /* Class number in pool */
 	CrwCpoolIndex				object_index;
+	CrwCpoolIndex				main_method_tracker_index;
 
 	/* Count of injections made into this class */
 	int                         injection_count;
@@ -719,6 +722,12 @@ cpool_setup(CrwClassImage *ci)
 				ci->newarray_name,
 				ci->newarray_sig);
 	}
+	if (ci->main_method_name != NULL) {
+		ci->main_method_tracker_index = add_new_method_cpool_entry(ci,
+				ci->tracker_class_index,
+				ci->main_method_name,
+				ci->main_method_sig);
+	}
 	if (ci->call_name != NULL) {
 		ci->call_tracker_index = add_new_method_cpool_entry(ci,
 				ci->tracker_class_index,
@@ -780,12 +789,14 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 	CrwClassImage *     ci;
 	ByteOffset nbytes = 0;
 	unsigned max_stack;
+	int is_main;
 	int add_dup;
 	int add_aload;
 	int push_cnum;
 	int push_mnum;
 	int push_params;
 	CrwCpoolIndex object_index = mi->ci->object_index;
+	CrwCpoolIndex init_index = mi->ci->main_method_tracker_index;
 
 	ci = mi->ci;
 
@@ -795,7 +806,7 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		return 0;
 	}
 
-	char* signature = mi->descr;
+	const char* signature = mi->descr;
 	int is_static = (mi->access_flags & 0x0008) == 0x0008;
 	int num_args = 0;
 	int useful_args = is_static ? 0 : 1;
@@ -866,6 +877,14 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		}
 	}
 
+
+	if (is_static && strcmp(mi->name, "main") == 0
+			&& strcmp(mi->descr, "([Ljava/lang/String;)V") == 0) {
+		is_main = JNI_TRUE;
+	} else {
+		is_main = JNI_FALSE;
+	}
+
 	if ( method_index == ci->newarray_tracker_index) {
 		max_stack       = mi->max_stack + 1;
 		add_dup         = JNI_TRUE;
@@ -873,6 +892,7 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		push_cnum       = JNI_FALSE;
 		push_mnum       = JNI_FALSE;
 		push_params		= JNI_FALSE;
+		is_main			= JNI_FALSE;
 	} else if ( method_index == ci->object_init_tracker_index) {
 		max_stack       = mi->max_stack + 1;
 		add_dup         = JNI_FALSE;
@@ -880,6 +900,7 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		push_cnum       = JNI_FALSE;
 		push_mnum       = JNI_FALSE;
 		push_params		= JNI_FALSE;
+		is_main			= JNI_FALSE;
 	} else if ( method_index == ci->return_tracker_index) {
 		max_stack       = mi->max_stack + 2;
 		add_dup         = JNI_FALSE;
@@ -887,6 +908,7 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		push_cnum       = JNI_TRUE;
 		push_mnum       = JNI_TRUE;
 		push_params		= JNI_FALSE;
+		is_main			= JNI_FALSE;
 	} else {
 		max_stack       = mi->max_stack + 6;
 		add_dup         = JNI_FALSE;
@@ -896,6 +918,11 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		push_params		= JNI_TRUE;
 	}
 
+	if ( is_main ) {
+		bytecodes[nbytes++] = (ByteCode)JVM_OPC_invokestatic;
+		bytecodes[nbytes++] = (ByteCode)(init_index >> 8);
+		bytecodes[nbytes++] = (ByteCode)init_index;
+	}
 	if ( add_dup ) {
 		bytecodes[nbytes++] = (ByteCode)JVM_OPC_dup;
 	}
@@ -1853,10 +1880,10 @@ write_stackmap_table(MethodImage *mi)
 	last_new_pc = 0;
 	delta_adj   = 0;
 	for ( i = 0 ; i < count ; i++ ) {
-		ByteOffset new_pc;    /* new pc in instrumented code */
-		unsigned   ft;        /* frame_type */
-		int        delta;     /* pc delta */
-		int        new_delta; /* new pc delta */
+		ByteOffset new_pc		= 0; /* new pc in instrumented code */
+		unsigned   ft			= 0; /* frame_type */
+		int        delta		= 0; /* pc delta */
+		int        new_delta	= 0; /* new pc delta */
 
 		ft = readU1(ci);
 		if ( ft <= 63 ) {
@@ -2332,6 +2359,8 @@ inject_class(struct CrwClassImage *ci,
 		char* obj_init_sig,
 		char* newarray_name,
 		char* newarray_sig,
+		char* main_method_name,
+		char* main_method_sig,
 		unsigned char *buf,
 		long buf_len)
 {
@@ -2360,6 +2389,8 @@ inject_class(struct CrwClassImage *ci,
 	ci->obj_init_sig            = obj_init_sig;
 	ci->newarray_name           = newarray_name;
 	ci->newarray_sig            = newarray_sig;
+	ci->main_method_name		= main_method_name;
+	ci->main_method_sig			= main_method_sig;
 	ci->output                  = buf;
 	ci->output_len              = buf_len;
 
@@ -2432,6 +2463,8 @@ java_crw_demo(unsigned class_number,
 		char* obj_init_sig,    /* Signature of this method */
 		char* newarray_name,   /* Method name to call after newarray opcodes */
 		char* newarray_sig,    /* Signature of this method */
+		char* main_method_name,/* Method name to call before main methods */
+		char* main_method_sig, /* Signature of this method */
 		unsigned char **pnew_file_image,
 		long *pnew_file_len,
 		FatalErrorHandler fatal_error_handler,
@@ -2503,6 +2536,11 @@ java_crw_demo(unsigned class_number,
 			CRW_FATAL(&ci, "newarray_sig is not (Ljava/lang/Object;)V");
 		}
 	}
+	if ( main_method_name != NULL ) {
+		if ( main_method_name == NULL || strcmp(main_method_sig, "()V") != 0) {
+			CRW_FATAL(&ci, "main_method_sig is not ()V");
+		}
+	}
 
 	/* Finish setup the CrwClassImage structure */
 	ci.is_thread_class = JNI_FALSE;
@@ -2533,6 +2571,8 @@ java_crw_demo(unsigned class_number,
 			obj_init_sig,
 			newarray_name,
 			newarray_sig,
+			main_method_name,
+			main_method_sig,
 			new_image,
 			max_length);
 

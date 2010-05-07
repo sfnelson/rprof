@@ -1,7 +1,7 @@
 LIBNAME=rprof
 SOURCES=src/rprof.c src/agent_util.c src/java_crw_demo.c
 
-JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/HeapTracker.java src/Test.java
+JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java
 JARFILE=bin/rprof.jar
 
 OBJECTS=objects/rprof.o objects/agent_util.o objects/java_crw_demo.o
@@ -16,7 +16,6 @@ COMMON_FLAGS+= -W -Wall  -Wno-unused -Wno-parentheses
 CFLAGS=-O2 $(COMMON_FLAGS)
 CFLAGS += -arch x86_64 -arch i386
 
-CFLAGS += -Isrc
 CFLAGS += -I$(JDK)/Headers
 
 LIBRARY=bin/lib$(LIBNAME).jnilib

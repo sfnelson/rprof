@@ -35,6 +35,10 @@
  */
 
 package nz.ac.vuw.ecs.rprof;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.IdentityHashMap;
 
 /* Java class to hold static methods which will be called in byte code
@@ -78,12 +82,17 @@ public class HeapTracker {
 			_mexit(Thread.currentThread(), cnum, mnum);
 		}
 	}
-
-	private static long id(Object o) {
-		if (o instanceof HeapTracker) {
-			return nextThreadId;
-		}
+	
+	private static native void _main();
+	public static void main() {
+		engaged = 2;
 		
+		getTracker().log("main method called");
+		
+		_main();
+	}
+	
+	private static HeapTracker getTracker() {
 		HeapTracker c;
 		if (Thread.currentThread() == null) {
 			c = nullCounter;
@@ -95,7 +104,15 @@ public class HeapTracker {
 			c = new HeapTracker();
 			map.put(Thread.currentThread(), c);
 		}
-		return c.newId();
+		return c;
+	}
+
+	private static long id(Object o) {
+		if (o instanceof HeapTracker) {
+			return nextThreadId;
+		}
+		
+		return getTracker().newId();
 	}
 
 	private static final HeapTracker nullCounter;
@@ -111,13 +128,38 @@ public class HeapTracker {
 
 	private final long threadId;
 	private long counter = 0;
+	private DatagramSocket socket;
 
 	private HeapTracker() {
 		threadId = nextThreadId();
+		
 	}
 
 	public long newId() {
 		return threadId | ++counter;
+	}
+	
+	public void log(String message) {
+		message = threadId + ": " + message;
+		byte[] m = message.getBytes();
+		DatagramPacket packet;
+		try {
+			packet = new DatagramPacket(m, m.length, InetAddress.getLocalHost(), 9035);
+			socket().send(packet);
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+	
+	private DatagramSocket socket() {
+		if (socket == null) {
+			try {
+				socket = new DatagramSocket();
+			} catch (SocketException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return socket;
 	}
 }
 

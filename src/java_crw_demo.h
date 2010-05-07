@@ -93,6 +93,8 @@ typedef void (JNICALL *JavaCrwDemo)(
 	 char* obj_init_sig,
 	 char* newarray_name,
 	 char* newarray_sig,
+	 char* main_method_name,
+	 char* main_method_sig,
 	 unsigned char **pnew_file_image,
 	 long *pnew_file_len,
 	 FatalErrorHandler fatal_error_handler,
@@ -147,6 +149,12 @@ JNIEXPORT void JNICALL java_crw_demo(
 	 char* newarray_sig,	/* Signature of this method */
 				/*  (Must be "(Ljava/lang/Object;II)V") */
 	 
+	 char* main_method_name,/* Method name in tclass to call before every */
+				/*	main method */
+
+	 char* main_method_sig,	/* Signature of this method */
+				/*  (Must be "()V") */
+
 	 unsigned char 
 	   **pnew_file_image,   /* Returns a pointer to new classfile image */
 	 

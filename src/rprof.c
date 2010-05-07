@@ -76,6 +76,8 @@
 #define HEAP_TRACKER_native_enter	_menter		/* Name of java method execution native */
 #define HEAP_TRACKER_native_exit	_mexit		/* Name of java method return native */
 #define HEAP_TRACKER_engaged		engaged		/* Name of static field switch */
+#define HEAP_TRACKER_main			main		/* Name of java main method tracker */
+#define HEAP_TRACKER_native_main	_main		/* Name of java main method tracker native */
 
 /* C macros to create strings from tokens */
 #define _STRING(s) #s
@@ -214,7 +216,7 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 		//stdout_message("method execution began: %d %d (%d params)\n", cnum, mnum, len);
 
 		jvmtiFrameInfo frames[5];
-		jint count;
+		long int count;
 		jmethodID method;
 		jint size;
 		char *methodName;
@@ -337,6 +339,20 @@ HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 	}
 }
 
+/* Java Native Method for main method tracking */
+static void
+HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread)
+{
+	if (gdata->vmInitialized) {
+
+		if ( gdata->vmDead ) {
+			return;
+		}
+
+		stdout_message("main method called\n");
+	}
+}
+
 /* Callback for JVMTI_EVENT_VM_START */
 static void JNICALL
 cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
@@ -347,11 +363,12 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 		jint rc;
 
 		/* Java Native Methods for class */
-		static JNINativeMethod registry[4] = {
+		static JNINativeMethod registry[5] = {
 				{STRING(HEAP_TRACKER_native_newobj), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newobj},
 				{STRING(HEAP_TRACKER_native_newarr), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newarr},
 				{STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
-				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_exit}
+				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_exit},
+				{STRING(HEAP_TRACKER_native_main), "()V", (void*)&HEAP_TRACKER_native_main}
 		};
 
 		/* Register Natives for class whose methods we use */
@@ -360,7 +377,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 			fatal_error("ERROR: JNI: Cannot find %s with FindClass\n",
 					STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
 		}
-		rc = (*env)->RegisterNatives(env, klass, registry, 4);
+		rc = (*env)->RegisterNatives(env, klass, registry, 5);
 		if ( rc != 0 ) {
 			fatal_error("ERROR: JNI: Cannot register natives for class %s\n",
 					STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
@@ -576,6 +593,7 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 						STRING(HEAP_TRACKER_exit), "(II)V", // Method return
 						STRING(HEAP_TRACKER_newobj), "(Ljava/lang/Object;)V", // Object <init>
 						STRING(HEAP_TRACKER_newarr), "(Ljava/lang/Object;)V", // new array opcode
+						STRING(HEAP_TRACKER_main), "()V", // main method
 						&newImage,
 						&newLength,
 						NULL,
@@ -587,22 +605,21 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 				if ( newLength > 0 ) {
 					unsigned char *jvmti_space;
 
-					/*
-					char buffer[50];
+					if (strcmp(classname, "Test") == 0) {
+						char buffer[50];
 
+						sprintf(&buffer, "../tmp/rprof-output-%s.class", classname);
 
-					sprintf(&buffer, "tmp/rprof-output-%d-%d.class", cnum, newLength);
-
-
-					FILE* out = fopen(buffer, "w");
-					int written = fwrite ( newImage, 1, newLength, out );
-					if (written != newLength) {
-						int err = ferror(out);
-						stdout_message("error writing file: %s (%d)\n", strerror(err), err);
-					} else {
-						stdout_message("wrote %d bytes to %s\n", written, buffer);
+						FILE* out = fopen(buffer, "w");
+						int written = fwrite ( newImage, 1, newLength, out );
+						if (written != newLength) {
+							int err = ferror(out);
+							stdout_message("error writing file: %s (%d)\n", strerror(err), err);
+						} else {
+							stdout_message("wrote %d bytes to %s\n", written, buffer);
+						}
+						fclose(out);
 					}
-					fclose(out);*/
 
 					jvmti_space = (unsigned char *)allocate(jvmti, (jint)newLength);
 					(void)memcpy((void*)jvmti_space, (void*)newImage, (int)newLength);

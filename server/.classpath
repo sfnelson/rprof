@@ -3,7 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/rprof-java"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/org.springframework.asm-3.0.0.RELEASE.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/org.springframework.beans-3.0.0.RELEASE.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/org.springframework.context-3.0.0.RELEASE.jar"/>

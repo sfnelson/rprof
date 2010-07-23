@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>rprof</name>
+	<name>jvmti-lib</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -70,26 +70,6 @@
 		<buildCommand>
 			<name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
 			<arguments>
-			</arguments>
-		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
-			<triggers>full,incremental,</triggers>
-			<arguments>
-				<dictionary>
-					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/Makefile.launch</value>
-				</dictionary>
-			</arguments>
-		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
-			<triggers>clean,</triggers>
-			<arguments>
-				<dictionary>
-					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/Make clean.launch</value>
-				</dictionary>
 			</arguments>
 		</buildCommand>
 	</buildSpec>

@@ -45,6 +45,7 @@
 #include "jvmti.h"
 
 #include "agent_util.h"
+#include "comm.h"
 
 /* -------------------------------------------------------------------
  * Some constant names that tie to Java class/method names.
@@ -165,6 +166,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, jobject o,
 	jvmtiEnv *jvmti;
 	char* signature;
 	jclass cls;
+	jlong threadId = 0;
 
 	if ( gdata->vmDead ) {
 		return;
@@ -176,6 +178,13 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, jobject o,
 	check_jvmti_error(jvmti, error, "Cannot tag object with id");
 
 	//logEvent(env, jvmti, thread, o, "object allocated: %x (%s)\n");
+
+	if (thread != NULL) {
+		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
+		check_jvmti_error(jvmti, error, "Cannot read tag");
+	}
+
+	log_method_event(threadId, "object allocated", 0, 0, 1, &id, 0);
 }
 
 /* Java Native Method for newarray */
@@ -184,6 +193,7 @@ HEAP_TRACKER_native_newarr(JNIEnv *env, jclass klass, jthread thread, jobject a,
 {
 	jvmtiError error;
 	jvmtiEnv *jvmti;
+	jlong threadId;
 
 	if ( gdata->vmDead ) {
 		return;
@@ -194,7 +204,11 @@ HEAP_TRACKER_native_newarr(JNIEnv *env, jclass klass, jthread thread, jobject a,
 	error = (*jvmti)->SetTag(jvmti, a, id);
 	check_jvmti_error(jvmti, error, "Cannot tag array with id");
 
+	error = (*jvmti)->GetTag(jvmti, thread, &threadId);
+	check_jvmti_error(jvmti, error, "Cannot read tag");
+
 	//logEvent(env, jvmti, thread, a, "array allocated:  %x (%s)\n");
+	log_method_event(threadId, "array allocated", 0, 0, 1, &id, 0);
 }
 
 /* Java Native Method for method execution */
@@ -205,6 +219,8 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 		jvmtiError error;
 		jvmtiEnv *jvmti;
 		jclass cls;
+		jlong threadId;
+		int i;
 
 		if ( gdata->vmDead ) {
 			return;
@@ -212,31 +228,10 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 
 		jvmti = gdata->jvmti;
 
+		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
+		check_jvmti_error(jvmti, error, "Cannot read tag");
+
 		jsize len = (*env)->GetArrayLength(env, args);
-		//stdout_message("method execution began: %d %d (%d params)\n", cnum, mnum, len);
-
-		jvmtiFrameInfo frames[5];
-		long int count;
-		jmethodID method;
-		jint size;
-		char *methodName;
-		char *signature;
-		jobject obj;
-		int i;
-
-		error = (*jvmti)->GetStackTrace(jvmti, thread, 0, 5, &frames, &count);
-		check_jvmti_error(jvmti, error, "Cannot access stack trace");
-
-		method = frames[2].method;
-
-		if (count < 1) return;
-
-		error = (*jvmti)->GetMethodName(jvmti, method, &methodName, &signature, NULL);
-		check_jvmti_error(jvmti, error, "Cannot access method name");
-
-		error = (*jvmti)->GetArgumentsSize(jvmti, method, &size);
-		check_jvmti_error(jvmti, error, "Cannot access arguments size");
-
 		jlong tags[len];
 		for (i = 0; i < len; i++) {
 			jobject o = (*env)->GetObjectArrayElement(env, args, i);
@@ -248,74 +243,7 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 			}
 		}
 
-		//stdout_message("method arguments: %s ( ", methodName);
-		for (i = 0; i < len; i++) {
-			//stdout_message("%x ", tags[i]);
-		}
-		//stdout_message(") - %s\n", signature);
-
-		(*jvmti)->Deallocate(jvmti, methodName);
-		(*jvmti)->Deallocate(jvmti, signature);
-
-		//		char argTypes[size];
-		//		int arg = 0;
-		//		int len = strlen(signature);
-		//		for (i = 1; i < len; i++) {
-		//			switch(signature[i]) {
-		//			case ')':
-		//				i = strlen(signature);
-		//				break;
-		//			case 'J': // long
-		//			case 'D': // double
-		//				argTypes[arg++] = signature[i]; // ignore primitive parameter
-		//			case 'B': // byte
-		//			case 'C': // character
-		//			case 'S': // short
-		//			case 'Z': // boolean
-		//			case 'F': // float
-		//			case 'I': // int
-		//				argTypes[arg++] = signature[i]; // ignore primitive parameter
-		//				break;
-		//			case 'L': // object, followed by FQ name, terminated by ';'
-		//			case '[': // array, followed by a second type descriptor
-		//				argTypes[arg++] = signature[i];
-		//				while (signature[i] == '[') i++;
-		//				if (signature[i] == 'L') {
-		//					while (signature[++i] != ';');
-		//				}
-		//				break;
-		//			}
-		//		}
-		//		if (arg < size) {
-		//			argTypes[arg] = '.';
-		//		}
-		//
-		//		jlong args[size];
-		//		int offset = 0;
-		//		if (arg < size) {
-		//			offset = 1;
-		//		}
-		//		for (i = 0; i < size; i++) {
-		//			if (i - offset < 0 || argTypes[i - offset] == 'L' || argTypes[i - offset] == '[') {
-		//				/*error = (*jvmti)->GetLocalObject(jvmti, thread, 2, i, &obj);
-		//				check_jvmti_error(jvmti, error, "Cannot access local variable");
-		//
-		//				if (obj != NULL) {
-		//					error = (*jvmti)->GetTag(jvmti, obj, &args[i]);
-		//					check_jvmti_error(jvmti, error, "Cannot read tag");
-		//				} else {
-		//					args[i] = 0xDEADBEEF;
-		//				}*/
-		//			} else {
-		//				args[i] = 0;
-		//			}
-		//		}
-		//
-		//		/*stdout_message("method arguments: %s ( ", methodName);
-		//		for (i = 0; i < size; i++) {
-		//			stdout_message("%x %c ", args[i], argTypes[i]);
-		//		}
-		//		stdout_message(") - %s\n", signature);*/
+		log_method_event(threadId, "method entered", cnum, mnum, len, &tags, 0);
 	}
 }
 
@@ -335,21 +263,35 @@ HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 
 		jvmti = gdata->jvmti;
 
-		//stdout_message("method execution finished: %d %d\n", cnum, mnum);
+		jlong threadId;
+
+		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
+		check_jvmti_error(jvmti, error, "Cannot read tag");
+
+		log_method_event(threadId, "method exited", cnum, mnum, 0, NULL, 0);
 	}
 }
 
-/* Java Native Method for main method tracking */
 static void
-HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread)
+HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum)
 {
 	if (gdata->vmInitialized) {
+		jvmtiError error;
+		jvmtiEnv *jvmti;
+		jclass cls;
 
 		if ( gdata->vmDead ) {
 			return;
 		}
 
-		stdout_message("main method called\n");
+		jvmti = gdata->jvmti;
+
+		jlong threadId;
+
+		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
+		check_jvmti_error(jvmti, error, "Cannot read tag");
+
+		log_method_event(threadId, "main method entered", cnum, mnum, 0, NULL, 0);
 	}
 }
 
@@ -368,7 +310,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 				{STRING(HEAP_TRACKER_native_newarr), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newarr},
 				{STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
 				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_exit},
-				{STRING(HEAP_TRACKER_native_main), "()V", (void*)&HEAP_TRACKER_native_main}
+				{STRING(HEAP_TRACKER_native_main), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_main}
 		};
 
 		/* Register Natives for class whose methods we use */
@@ -393,6 +335,8 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 
 		/* Indicate VM has started */
 		gdata->vmStarted = JNI_TRUE;
+
+		log_profiler_started();
 
 	} exitCriticalSection(jvmti);
 }
@@ -490,6 +434,9 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 		 */
 		gdata->vmDead = JNI_TRUE;
 
+		flush_method_event_buffer();
+		log_profiler_stopped();
+
 	} exitCriticalSection(jvmti);
 
 }
@@ -542,8 +489,7 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 
 			/* Name can be NULL, make sure we avoid SEGV's */
 			if ( name == NULL ) {
-				classname = java_crw_demo_classname(class_data, class_data_len,
-						NULL);
+				classname = java_crw_demo_classname(class_data, class_data_len, NULL);
 				if ( classname == NULL ) {
 					fatal_error("ERROR: No classname in classfile\n");
 				}
@@ -557,32 +503,35 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 			*new_class_data_len = 0;
 			*new_class_data     = NULL;
 
-			/* The tracker class itself? */
-			if ( strstr(classname, STRING(HEAP_TRACKER_package)) != classname) {
-				jint           cnum;
-				int            systemClass;
-				unsigned char *newImage;
-				long           newLength;
+			jint           cnum;
+			int            systemClass;
+			unsigned char* newImage;
+			jint           newLength;
 
-				//stdout_message("weaving %s\n", classname);
+			//stdout_message("weaving %s\n", classname);
 
-				/* Get number for every class file image loaded */
-				cnum = gdata->ccount++;
+			/* Get number for every class file image loaded */
+			cnum = gdata->ccount++;
 
-				/* Is it a system class? If the class load is before VmStart
-				 *   then we will consider it a system class that should
-				 *   be treated carefully. (See java_crw_demo)
-				 */
-				systemClass = 0;
-				if ( !gdata->vmStarted ) {
-					systemClass = 1;
-				}
+			/* Is it a system class? If the class load is before VmStart
+			 *   then we will consider it a system class that should
+			 *   be treated carefully. (See java_crw_demo)
+			 */
+			systemClass = 0;
+			if ( !gdata->vmStarted ) {
+				systemClass = 1;
+			}
 
-				newImage = NULL;
-				newLength = 0;
+			newImage = NULL;
+			newLength = 0;
 
-				/* Call the class file reader/write demo code */
-				java_crw_demo(cnum,
+			weave_classfile(classname, systemClass,
+					class_data_len, class_data,
+					&newLength, &newImage);
+
+
+			/* Call the class file reader/write demo code */
+			/*java_crw_demo(cnum,
 						classname,
 						class_data,
 						class_data_len,
@@ -590,47 +539,73 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 						STRING(HEAP_TRACKER_package/HEAP_TRACKER_class),
 						"L" STRING(HEAP_TRACKER_package/HEAP_TRACKER_class) ";",
 						STRING(HEAP_TRACKER_enter), "(II[Ljava/lang/Object;)V", // Method offset 0
-						STRING(HEAP_TRACKER_exit), "(II)V", // Method return
+						STRING(HEAP_TRACKER_exit), "(ILjava/lang/String;ILjava/lang/String;)V", // Method return
 						STRING(HEAP_TRACKER_newobj), "(Ljava/lang/Object;)V", // Object <init>
 						STRING(HEAP_TRACKER_newarr), "(Ljava/lang/Object;)V", // new array opcode
 						STRING(HEAP_TRACKER_main), "()V", // main method
 						&newImage,
 						&newLength,
 						NULL,
-						NULL);
+						NULL);*/
 
-				/* If we got back a new class image, return it back as "the"
-				 *   new class image. This must be JVMTI Allocate space.
-				 */
-				if ( newLength > 0 ) {
-					unsigned char *jvmti_space;
+			/* If we got back a new class image, return it back as "the"
+			 *   new class image. This must be JVMTI Allocate space.
+			 */
+			if ( newLength > 0 && newImage != NULL) {
+				unsigned char *jvmti_space;
 
-					if (strcmp(classname, "Test") == 0) {
-						char buffer[50];
 
-						sprintf(&buffer, "../tmp/rprof-output-%s.class", classname);
+				char cfname[strlen(classname)+1];
+				strcpy(cfname, classname);
 
-						FILE* out = fopen(buffer, "w");
-						int written = fwrite ( newImage, 1, newLength, out );
-						if (written != newLength) {
-							int err = ferror(out);
-							stdout_message("error writing file: %s (%d)\n", strerror(err), err);
-						} else {
-							stdout_message("wrote %d bytes to %s\n", written, buffer);
-						}
-						fclose(out);
+				unsigned int i;
+				for (i = 0; i < strlen(cfname); i++) {
+					if (cfname[i] == '/') {
+						cfname[i] = '.';
 					}
-
-					jvmti_space = (unsigned char *)allocate(jvmti, (jint)newLength);
-					(void)memcpy((void*)jvmti_space, (void*)newImage, (int)newLength);
-					*new_class_data_len = (jint)newLength;
-					*new_class_data     = jvmti_space; /* VM will deallocate */
 				}
 
-				/* Always free up the space we get from java_crw_demo() */
-				if ( newImage != NULL ) {
-					(void)free((void*)newImage); /* Free malloc() space with free() */
+				char buffer[255];
+				FILE *pre, *post;
+				int written, err;
+
+				sprintf(&buffer, "../tmp/pre/%s.class", cfname);
+				pre = fopen(buffer, "w");
+				if (pre == NULL) {
+					fatal_error("could not open file %s (%s)\n", buffer, strerror(errno));
 				}
+				written = fwrite ( class_data, sizeof(unsigned char), class_data_len, pre );
+				if (written != class_data_len) {
+					err = ferror(post);
+					fatal_error("error %d writing file: %s (%s)\n", err, strerror(err), buffer);
+				} else {
+					//stdout_message("wrote %d bytes to %s\n", written, buffer);
+				}
+				fclose(pre);
+
+				sprintf(&buffer, "../tmp/post/%s.class", cfname);
+				post = fopen(buffer, "w");
+				if (post == NULL) {
+					fatal_error("could not open file %d: %s (%s)\n", buffer, strerror(errno));
+				}
+				written = fwrite ( newImage, sizeof(unsigned char), newLength, post );
+				if (written != newLength) {
+					err = ferror(post);
+					fatal_error("error %d writing file: %s (%s)\n", err, strerror(err), buffer);
+				} else {
+					//stdout_message("wrote %d bytes to %s\n", written, buffer);
+				}
+				fclose(post);
+
+				jvmti_space = (unsigned char *)allocate(jvmti, (jint)newLength);
+				(void)memcpy((void*)jvmti_space, (void*)newImage, (int)newLength);
+				*new_class_data_len = (jint)newLength;
+				*new_class_data     = jvmti_space; /* VM will deallocate */
+			}
+
+			/* Always free up the space we get from java_crw_demo() */
+			if ( newImage != NULL ) {
+				(void)free((void*)newImage); /* Free malloc() space with free() */
 			}
 
 			(void)free((void*)classname);
@@ -698,6 +673,9 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	jint                   res;
 	jvmtiCapabilities      capabilities;
 	jvmtiEventCallbacks    callbacks;
+
+	/* initialize comm utilities */
+	init_comm();
 
 	/* Setup initial global agent data area
 	 *   Use of static/extern data should be handled carefully here.

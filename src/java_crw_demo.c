@@ -134,6 +134,8 @@ typedef struct CrwClassImage {
 	CrwPosition                 input_position;
 	CrwPosition                 output_position;
 
+	CrwPosition					cpool_output_position;
+
 	/* Mirrored constant pool */
 	CrwConstantPoolEntry *      cpool;
 	CrwCpoolIndex               cpool_max_elements;             /* Max count */
@@ -158,6 +160,8 @@ typedef struct CrwClassImage {
 	char* newarray_sig;         /* Signature of this method */
 	char* main_method_name;		/* Method name to call before main methods */
 	char* main_method_sig;		/* Signature of this method */
+
+	CrwCpoolIndex name_index;	/* Name of this class */
 
 	/* Constant pool index values for new entries */
 	CrwCpoolIndex               tracker_class_index;
@@ -186,6 +190,7 @@ typedef struct CrwClassImage {
 	int                         method_count;
 	const char **               method_name;
 	const char **               method_descr;
+	CrwCpoolIndex *		method_name_index;
 	struct MethodImage *        current_mi;
 
 } CrwClassImage;
@@ -210,6 +215,9 @@ typedef struct MethodImage {
 	/* Method name and descr */
 	const char *        name;
 	const char *        descr;
+
+	/* Constant pool index of this method's name */
+	CrwCpoolIndex	name_index;
 
 	/* Map of input bytecode offsets to output bytecode offsets */
 	ByteOffset *        map;
@@ -638,6 +646,7 @@ cpool_setup(CrwClassImage *ci)
 
 	CRW_ASSERT_CI(ci);
 	cpool_output_position = ci->output_position;
+	ci->cpool_output_position = cpool_output_position;
 	count_plus_one = copyU2(ci);
 	CRW_ASSERT(ci, count_plus_one>1);
 	ci->cpool_max_elements = count_plus_one+MAXIMUM_NEW_CPOOL_ENTRIES;
@@ -742,8 +751,12 @@ cpool_setup(CrwClassImage *ci)
 	}
 
 	ci->object_index = add_new_class_cpool_entry(ci, "java/lang/Object");
+}
 
-	random_writeU2(ci, cpool_output_position, ci->cpool_count_plus_one);
+static void
+cpool_finished(CrwClassImage *ci)
+{
+	random_writeU2(ci, ci->cpool_output_position, ci->cpool_count_plus_one);
 }
 
 /* ----------------------------------------------------------------- */
@@ -782,6 +795,15 @@ push_short_constant_bytecodes(ByteCode *bytecodes, unsigned number)
 	return nbytes;
 }
 
+static int
+is_init_method(const char *name)
+{
+	if ( name!=NULL && strcmp(name,"<init>")==0 ) {
+		return JNI_TRUE;
+	}
+	return JNI_FALSE;
+}
+
 static ByteOffset
 injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes, 
 		CrwCpoolIndex method_index)
@@ -793,7 +815,9 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 	int add_dup;
 	int add_aload;
 	int push_cnum;
+	int push_cname;
 	int push_mnum;
+	int push_mname;
 	int push_params;
 	CrwCpoolIndex object_index = mi->ci->object_index;
 	CrwCpoolIndex init_index = mi->ci->main_method_tracker_index;
@@ -808,8 +832,10 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 
 	const char* signature = mi->descr;
 	int is_static = (mi->access_flags & 0x0008) == 0x0008;
+	int is_constructor = is_init_method(mi->name);
+
 	int num_args = 0;
-	int useful_args = is_static ? 0 : 1;
+	int useful_args = is_static || is_constructor ? 0 : 1;
 	int i;
 
 	int len = strlen(signature);
@@ -844,7 +870,7 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 	int count = 0;
 	int arg_index = 0;
 
-	if (!is_static) {
+	if (!is_static && !is_constructor) {
 		useful_locals[count++] = 0;
 		arg_index++;
 	}
@@ -890,7 +916,9 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		add_dup         = JNI_TRUE;
 		add_aload       = JNI_FALSE;
 		push_cnum       = JNI_FALSE;
+		push_cname		= JNI_FALSE;
 		push_mnum       = JNI_FALSE;
+		push_mname		= JNI_FALSE;
 		push_params		= JNI_FALSE;
 		is_main			= JNI_FALSE;
 	} else if ( method_index == ci->object_init_tracker_index) {
@@ -898,15 +926,19 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		add_dup         = JNI_FALSE;
 		add_aload       = JNI_TRUE;
 		push_cnum       = JNI_FALSE;
+		push_cname		= JNI_FALSE;
 		push_mnum       = JNI_FALSE;
+		push_mname		= JNI_FALSE;
 		push_params		= JNI_FALSE;
 		is_main			= JNI_FALSE;
 	} else if ( method_index == ci->return_tracker_index) {
-		max_stack       = mi->max_stack + 2;
+		max_stack       = mi->max_stack + 4;
 		add_dup         = JNI_FALSE;
 		add_aload       = JNI_FALSE;
 		push_cnum       = JNI_TRUE;
+		push_cname		= JNI_TRUE;
 		push_mnum       = JNI_TRUE;
+		push_mname		= JNI_TRUE;
 		push_params		= JNI_FALSE;
 		is_main			= JNI_FALSE;
 	} else {
@@ -914,7 +946,9 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 		add_dup         = JNI_FALSE;
 		add_aload       = JNI_FALSE;
 		push_cnum       = JNI_TRUE;
+		push_cname      = JNI_FALSE;
 		push_mnum       = JNI_TRUE;
+		push_mname      = JNI_FALSE;
 		push_params		= JNI_TRUE;
 	}
 
@@ -939,13 +973,20 @@ injection_template(MethodImage *mi, ByteCode *bytecodes, ByteOffset max_nbytes,
 					ci->class_number_index);
 		}
 	}
+	if ( push_cname ) {
+		bytecodes[nbytes++] = (ByteCode)JVM_OPC_ldc;
+		bytecodes[nbytes++] = (ByteCode)ci->name_index;
+	}
 	if ( push_mnum ) {
 		nbytes += push_short_constant_bytecodes(bytecodes+nbytes,
 				mi->number);
 	}
+	if ( push_mname ) {
+		bytecodes[nbytes++] = (ByteCode)JVM_OPC_ldc;
+		bytecodes[nbytes++] = (ByteCode)mi->name_index;
+	}
 	if ( push_params ) { // stack: cnum, mnum
-		bytecodes[nbytes++] = (ByteCode)JVM_OPC_bipush;
-		bytecodes[nbytes++] = (ByteCode)useful_args; // stack: cnum, mnum, nargs
+		nbytes += push_short_constant_bytecodes(bytecodes+nbytes, useful_args);
 		bytecodes[nbytes++] = (ByteCode)JVM_OPC_anewarray;
 		bytecodes[nbytes++] = (ByteCode)(object_index >> 8);
 		bytecodes[nbytes++] = (ByteCode)object_index;  // stack: cnum, mnum, args
@@ -1106,6 +1147,9 @@ method_init(CrwClassImage *ci, unsigned mnum, ByteOffset code_len)
 			(int)((code_len+1)*sizeof(Injection)));
 	mi->number          = mnum;
 	ci->current_mi      = mi;
+
+	mi->name_index		= add_new_cpool_entry(ci, JVM_CONSTANT_String, ci->method_name_index[mnum], 0, NULL, 0);
+
 	return mi;
 }
 
@@ -2104,15 +2148,6 @@ method_write_code_attribute(MethodImage *mi)
 }
 
 static int
-is_init_method(const char *name)
-{
-	if ( name!=NULL && strcmp(name,"<init>")==0 ) {
-		return JNI_TRUE;
-	}
-	return JNI_FALSE;
-}
-
-static int
 is_clinit_method(const char *name)
 {
 	if ( name!=NULL && strcmp(name,"<clinit>")==0 ) {
@@ -2267,6 +2302,7 @@ method_write(CrwClassImage *ci, unsigned mnum)
 	descr_index = copyU2(ci);
 	ci->method_descr[mnum] = cpool_entry(ci, descr_index).ptr;
 	attr_count = copyU2(ci);
+	ci->method_name_index[mnum] = name_index;
 
 	for (i = 0; i < attr_count; ++i) {
 		CrwCpoolIndex name_index;
@@ -2293,6 +2329,7 @@ method_write_all(CrwClassImage *ci)
 	if ( count > 0 ) {
 		ci->method_name = (const char **)allocate_clean(ci, count*(int)sizeof(const char*));
 		ci->method_descr = (const char **)allocate_clean(ci, count*(int)sizeof(const char*));
+		ci->method_name_index = (CrwCpoolIndex *)allocate_clean(ci, count*(int)sizeof(CrwCpoolIndex));
 	}
 
 	for (i = 0; i < count; ++i) {
@@ -2323,6 +2360,10 @@ cleanup(CrwClassImage *ci)
 	if ( ci->method_descr != NULL ) {
 		deallocate(ci, (void*)ci->method_descr);
 		ci->method_descr = NULL;
+	}
+	if ( ci->method_name_index != NULL ) {
+		deallocate(ci, (void*)ci->method_name_index);
+		ci->method_name_index = NULL;
 	}
 	if ( ci->cpool != NULL ) {
 		CrwCpoolIndex i;
@@ -2415,7 +2456,10 @@ inject_class(struct CrwClassImage *ci,
 
 	this_class          = copyU2(ci);
 
-	cs = cpool_entry(ci, (CrwCpoolIndex)(cpool_entry(ci, this_class).index1));
+	CrwCpoolIndex class_name_constant = (CrwCpoolIndex)(cpool_entry(ci, this_class).index1);
+	cs = cpool_entry(ci, class_name_constant);
+	ci->name_index = add_new_cpool_entry(ci, JVM_CONSTANT_String, class_name_constant, 0, NULL, 0);
+
 	if ( ci->name == NULL ) {
 		ci->name = duplicate(ci, cs.ptr, cs.len);
 		CRW_ASSERT(ci, strchr(ci->name,'.')==NULL); /* internal qualified name */
@@ -2438,6 +2482,8 @@ inject_class(struct CrwClassImage *ci,
 	if ( ci->injection_count == 0 ) {
 		return (long)0;
 	}
+
+	cpool_finished(ci);
 
 	copy_attributes(ci);
 
@@ -2522,8 +2568,8 @@ java_crw_demo(unsigned class_number,
 		}
 	}
 	if ( return_name != NULL ) {
-		if ( return_sig == NULL || strcmp(return_sig, "(II)V") != 0 ) {
-			CRW_FATAL(&ci, "return_sig is not (II)V");
+		if ( return_sig == NULL || strcmp(return_sig, "(ILjava/lang/String;ILjava/lang/String;)V") != 0 ) {
+			CRW_FATAL(&ci, "return_sig is not (ILjava/lang/String;ILjava/lang/String;)V");
 		}
 	}
 	if ( obj_init_name != NULL ) {

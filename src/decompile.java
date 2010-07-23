@@ -292,11 +292,13 @@ abstract class CompositeNode<T> extends Node<T> implements Iterable<Node<?>> {
 
 class Constant extends CompositeNode<Constant> {
 
+	int num;
 	String name;
 	Object[] values;
 
-	public Constant() {
-		super("constant");
+	public Constant(int num) {
+		super("constant" + num);
+		this.num = num;
 	}
 
 	private void store(Object o) {
@@ -322,6 +324,7 @@ class Constant extends CompositeNode<Constant> {
 			store(add(new Reference("class"), in));
 			break;
 		case 8:
+		case 0:
 			name = "string";
 			store(add(new Reference("string"), in));
 			break;
@@ -370,7 +373,7 @@ class ConstantPool extends CompositeNode<ConstantPool> {
 	@Override
 	public ConstantPool read(InputStream in) throws IOException {
 		for (short i = 1; i < length; i++) {
-			Constant c = add(new Constant(), in);
+			Constant c = add(new Constant(i+1), in);
 			constants.put(i, c);
 		}
 		return this;

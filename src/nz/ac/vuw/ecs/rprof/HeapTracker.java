@@ -35,23 +35,13 @@
  */
 
 package nz.ac.vuw.ecs.rprof;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.IdentityHashMap;
+
 
 /* Java class to hold static methods which will be called in byte code
  *    injections of all class files.
  */
 
 public class HeapTracker {
-	
-	static {
-		nextThreadId = (1 << 24);
-		map = new IdentityHashMap<Thread, HeapTracker>();
-		nullCounter = new HeapTracker();
-	}
 
 	private static int engaged = 0;
 
@@ -78,88 +68,82 @@ public class HeapTracker {
 
 	private static native void _mexit(Object thread, int cnum, int mnum);
 	public static void exit(int cnum, int mnum) {
-		if ( engaged != 0 && Thread.currentThread() != null) {
+		if ( engaged != 0) {
 			_mexit(Thread.currentThread(), cnum, mnum);
 		}
 	}
-	
-	private static native void _main();
-	public static void main() {
-		engaged = 2;
-		
-		getTracker().log("main method called");
-		
-		_main();
+
+	private static native void _main(Object thread, int cnum, int mnum);
+	public static void main(int cnum, int mnum) {
+		if (engaged != 0) {
+			_main(Thread.currentThread(), cnum, mnum);
+		}
 	}
-	
+
+	private static HeapTracker nullCounter;
 	private static HeapTracker getTracker() {
 		HeapTracker c;
-		if (Thread.currentThread() == null) {
+		Thread current = Thread.currentThread();
+		if (current == null) {
 			c = nullCounter;
+			if (c == null) {
+				c = new HeapTracker();
+				nullCounter = c;
+			}
 		} else {
-			c = map.get(Thread.currentThread());
+			c = _getTracker(current);
+			if (c == null) {
+				c = new HeapTracker();
+				_setTracker(current, c);
+			}
 		}
 
-		if (c == null) {
-			c = new HeapTracker();
-			map.put(Thread.currentThread(), c);
-		}
 		return c;
+	}
+	
+	public static HeapTracker _getTracker(Thread current) {
+		return null; // return current._rprof;
+	}
+
+	public static void _setTracker(Thread current, HeapTracker tracker) {
+		// current._rprof = tracker;
 	}
 
 	private static long id(Object o) {
 		if (o instanceof HeapTracker) {
 			return nextThreadId;
 		}
-		
-		return getTracker().newId();
+
+		try {
+			return getTracker().newId();
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 
-	private static final HeapTracker nullCounter;
-	private static final IdentityHashMap<Thread, HeapTracker> map;
+	static {
+		nextThreadId = (1l << 32);
+		//map = new WeakHashMap<Thread, HeapTracker>();
+	}
 
 	private static volatile long nextThreadId;
+	//private static final WeakHashMap<Thread, HeapTracker> map;
 
 	private static synchronized long nextThreadId() {
 		long id = nextThreadId;
-		nextThreadId = id + (1 << 24);
+		nextThreadId = id + (1l << 32);
 		return id;
 	}
 
 	private final long threadId;
 	private long counter = 0;
-	private DatagramSocket socket;
 
 	private HeapTracker() {
 		threadId = nextThreadId();
-		
 	}
 
 	public long newId() {
 		return threadId | ++counter;
-	}
-	
-	public void log(String message) {
-		message = threadId + ": " + message;
-		byte[] m = message.getBytes();
-		DatagramPacket packet;
-		try {
-			packet = new DatagramPacket(m, m.length, InetAddress.getLocalHost(), 9035);
-			socket().send(packet);
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		}
-	}
-	
-	private DatagramSocket socket() {
-		if (socket == null) {
-			try {
-				socket = new DatagramSocket();
-			} catch (SocketException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return socket;
 	}
 }
 

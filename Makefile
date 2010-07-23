@@ -1,10 +1,10 @@
 LIBNAME=rprof
-SOURCES=src/rprof.c src/agent_util.c src/java_crw_demo.c
+SOURCES=src/rprof.c src/agent_util.c src/java_crw_demo.c src/comm.c
 
 JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java
 JARFILE=bin/rprof.jar
 
-OBJECTS=objects/rprof.o objects/agent_util.o objects/java_crw_demo.o
+OBJECTS=objects/rprof.o objects/agent_util.o objects/java_crw_demo.o objects/comm.o
 
 JDK=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0
 
@@ -20,7 +20,7 @@ CFLAGS += -I$(JDK)/Headers
 
 LIBRARY=bin/lib$(LIBNAME).jnilib
 LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
-LIBRARIES=-lc
+LIBRARIES=-lc -lcurl
 LINK_SHARED=$(LINK.c) -shared -o $@
 
 all: $(LIBRARY) $(JARFILE)
@@ -47,3 +47,10 @@ test: all
 	date
 	(cd bin; $(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ../classes Test)
 	date
+
+test2: all
+	(cd bin; $(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ~/Desktop/jhotdraw/#prof/ CH/ifa/draw/samples/javadraw/JavaDrawApp)
+
+server: all
+	(cd classes; $(JDK)/Home/bin/java nz.ac.vuw.ecs.rprof.Logger)
+

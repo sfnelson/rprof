@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>rprof server</name>
+	<name>server</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -26,4 +26,11 @@
 		<nature>com.google.gwt.eclipse.core.gwtNature</nature>
 		<nature>com.google.gdt.eclipse.core.webAppNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>jvmti</name>
+			<type>2</type>
+			<location>/Users/stephen/Eclipse/Profiling/jvmti-lib/src</location>
+		</link>
+	</linkedResources>
 </projectDescription>

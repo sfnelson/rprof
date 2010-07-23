@@ -239,11 +239,11 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 				error = (*jvmti)->GetTag(jvmti, o, &tags[i]);
 				check_jvmti_error(jvmti, error, "Cannot read tag");
 			} else {
-				tags[i] = 0xDEADBEEF;
+				tags[i] = -1;
 			}
 		}
 
-		log_method_event(threadId, "method entered", cnum, mnum, len, &tags, 0);
+		log_method_event(threadId, "method entered", cnum, mnum, len, tags, 0);
 	}
 }
 
@@ -569,21 +569,19 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 				FILE *pre, *post;
 				int written, err;
 
-				sprintf(&buffer, "../tmp/pre/%s.class", cfname);
+				sprintf(buffer, "../tmp/pre/%s.class", cfname);
 				pre = fopen(buffer, "w");
 				if (pre == NULL) {
 					fatal_error("could not open file %s (%s)\n", buffer, strerror(errno));
 				}
 				written = fwrite ( class_data, sizeof(unsigned char), class_data_len, pre );
 				if (written != class_data_len) {
-					err = ferror(post);
+					err = ferror(pre);
 					fatal_error("error %d writing file: %s (%s)\n", err, strerror(err), buffer);
-				} else {
-					//stdout_message("wrote %d bytes to %s\n", written, buffer);
 				}
 				fclose(pre);
 
-				sprintf(&buffer, "../tmp/post/%s.class", cfname);
+				sprintf(buffer, "../tmp/post/%s.class", cfname);
 				post = fopen(buffer, "w");
 				if (post == NULL) {
 					fatal_error("could not open file %d: %s (%s)\n", buffer, strerror(errno));
@@ -592,8 +590,6 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 				if (written != newLength) {
 					err = ferror(post);
 					fatal_error("error %d writing file: %s (%s)\n", err, strerror(err), buffer);
-				} else {
-					//stdout_message("wrote %d bytes to %s\n", written, buffer);
 				}
 				fclose(post);
 

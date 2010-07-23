@@ -8,11 +8,15 @@
 <externalSettings>
 <externalSetting>
 <entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/rprof"/>
+<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/jvmti-lib"/>
 <entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/rprof/Debug"/>
+<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/jvmti-lib/objects"/>
+<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/jvmti-lib/classes"/>
+<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/jvmti-lib/bin"/>
 </externalSetting>
 </externalSettings>
 <extensions>
-<extension id="org.eclipse.cdt.core.MachO" point="org.eclipse.cdt.core.BinaryParser"/>
+<extension id="org.eclipse.cdt.core.MachO64" point="org.eclipse.cdt.core.BinaryParser"/>
 <extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -24,7 +28,13 @@
 <folderInfo id="cdt.managedbuild.config.macosx.so.debug.914282505." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.macosx.so.debug.1983116527" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.so.debug">
 <targetPlatform id="cdt.managedbuild.target.gnu.platform.macosx.so.debug.318008910" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.so.debug"/>
-<builder buildPath="${workspace_loc:/rprof}" id="cdt.managedbuild.target.gnu.builder.macosx.so.debug.264160074" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.macosx.so.debug"/>
+<builder buildPath="${workspace_loc:/jvmti-lib}" id="cdt.managedbuild.target.gnu.builder.macosx.so.debug.264160074" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.macosx.so.debug">
+<outputEntries>
+<entry flags="VALUE_WORKSPACE_PATH" kind="outputPath" name="objects"/>
+<entry flags="VALUE_WORKSPACE_PATH" kind="outputPath" name="classes"/>
+<entry flags="VALUE_WORKSPACE_PATH" kind="outputPath" name="bin"/>
+</outputEntries>
+</builder>
 <tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.so.debug.128504321" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.so.debug">
 <option defaultValue="true" id="macosx.c.link.macosx.so.debug.option.nostart.777327219" name="Do not use standard start files (-nostartfiles)" superClass="macosx.c.link.macosx.so.debug.option.nostart" valueType="boolean"/>
 <option defaultValue="true" id="macosx.c.link.macosx.so.debug.option.nodeflibs.1908900247" name="Do not use default libraries (-nodefaultlibs)" superClass="macosx.c.link.macosx.so.debug.option.nodeflibs" valueType="boolean"/>
@@ -55,6 +65,9 @@
 </tool>
 </toolChain>
 </folderInfo>
+<sourceEntries>
+<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src"/>
+</sourceEntries>
 </configuration>
 </storageModule>
 <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
@@ -331,7 +344,7 @@
 </externalSetting>
 </externalSettings>
 <extensions>
-<extension id="org.eclipse.cdt.core.MachO" point="org.eclipse.cdt.core.BinaryParser"/>
+<extension id="org.eclipse.cdt.core.MachO64" point="org.eclipse.cdt.core.BinaryParser"/>
 <extension id="org.eclipse.cdt.core.MakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>

@@ -362,16 +362,6 @@ public class Weaver extends HttpServlet {
 
 	private static class GetTrackerGenerator extends GeneratorAdapter implements Opcodes {
 
-		public static final Method ct;
-
-		static {
-			try {
-				ct = Thread.class.getMethod("currentThread");
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-
 		public GetTrackerGenerator(MethodVisitor mv, MethodRecord mr) {
 			super(mv, mr.access, mr.name, mr.desc);
 		}

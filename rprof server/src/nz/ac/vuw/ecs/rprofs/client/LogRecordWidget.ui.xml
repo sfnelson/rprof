@@ -1,0 +1,12 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+	</ui:style>
+	<g:HTMLPanel>
+		<g:InlineLabel ui:field="thread"></g:InlineLabel>
+		<g:InlineHTML ui:field="event"></g:InlineHTML>
+		<g:InlineLabel ui:field="cname"></g:InlineLabel>.<g:InlineLabel ui:field="mname"></g:InlineLabel>(
+		<g:InlineLabel ui:field="args"></g:InlineLabel>)
+	</g:HTMLPanel>
+</ui:UiBinder> 

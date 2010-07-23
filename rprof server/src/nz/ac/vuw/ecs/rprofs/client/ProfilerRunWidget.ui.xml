@@ -1,0 +1,26 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+		.row {
+			padding-left: 1em;
+		}
+		.date {
+			display: inline-block;
+			width: 12em;
+		}
+		.className {
+			display: inline-block;
+			width: 16em;
+		}
+		.button {
+		}
+	</ui:style>
+	<g:FlowPanel styleName='{style.row}'>
+		<g:InlineLabel ui:field="started" styleName='{style.date}' />
+		<g:InlineLabel ui:field="stopped" styleName='{style.date}' />
+		<g:InlineLabel ui:field="program" styleName='{style.className}' />
+		<g:Button ui:field="inspect" styleName='{style.button}'>Inspect</g:Button>
+		<g:Button ui:field="delete" styleName='{style.button}'>Delete</g:Button>
+	</g:FlowPanel>
+</ui:UiBinder> 

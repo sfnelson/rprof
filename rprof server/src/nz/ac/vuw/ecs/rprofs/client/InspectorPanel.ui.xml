@@ -1,0 +1,96 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.InspectorPanel.Style">
+		.header {
+			position: absolute;
+			top: 0;
+			width: 100%;
+			height: 20ex;
+			overflow: auto;
+		}
+		.closed .header {
+			display: none;
+		}
+		.menu {
+			position: absolute;
+			top: 20ex;
+			left: 0;
+			right: 0;
+			height: 4ex;
+			background-color: #777;
+		}
+		.closed .menu {
+			top: 0;
+		}
+		.content {
+			position: absolute;
+			top: 24ex;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			overflow: auto;
+			padding: 0 0.5ex;
+		}
+		.closed .content {
+			top: 4ex;
+		}
+		.menuWrapper {
+			position: absolute;
+			top: 1px;
+			bottom: 1px;
+			left: 0;
+			right: 0;
+			border-bottom: solid 1px #ccc;
+			background-color: #bbb;
+			padding-left: 0.5em;
+		}
+		.button {
+			height: 100%;
+			border: none;
+			background-color: transparent;
+			padding: 0 1em 0 1.2em;
+			margin: 0 0.5em;
+			border-left: solid 1px transparent;
+			border-right: solid 1px transparent;
+		}
+		.selected {
+			border-color: #999;
+			background-color: #aaa;
+		}
+		.closeButton {
+			position: absolute;
+			right: 1ex;
+			top: 2px;
+			bottom: 2px;
+			width: 2ex;
+			padding: 1ex;
+			padding-top: 1.5ex;
+		}
+		.closeButton:hover {
+			background-color: #999;
+		}
+		.closeButtonInner {
+			line-height: 0;
+			padding: 0;
+			font-size: 120%;
+			cursor: default;
+			\-webkit-transform: rotate(90deg);
+			\-moz-transform: rotate(90deg);
+		}
+	</ui:style>
+	<g:HTMLPanel ui:field='panel'>
+		<div class='{style.header}'>
+			<g:FlowPanel ui:field='header'></g:FlowPanel>
+		</div>
+		<div class='{style.menu}'>
+			<g:FlowPanel styleName='{style.menuWrapper}' ui:field='menu'></g:FlowPanel>
+			<g:FocusPanel styleName='{style.closeButton}' ui:field='close'>
+				<g:HTML styleName='{style.closeButtonInner}' ui:field='closeText'></g:HTML>
+			</g:FocusPanel>
+		</div>
+		<div class='{style.content}'>
+			<g:FlowPanel ui:field='content'></g:FlowPanel>
+		</div>
+	</g:HTMLPanel>
+</ui:UiBinder> 

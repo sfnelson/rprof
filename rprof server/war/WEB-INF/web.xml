@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+  
+  <!-- Servlets -->
+  <servlet>
+    <servlet-name>weaver</servlet-name>
+    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Weaver</servlet-class>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>inspector</servlet-name>
+    <servlet-class>nz.ac.vuw.ecs.rprofs.server.InspectorImpl</servlet-class>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>logger</servlet-name>
+    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Logger</servlet-class>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>start</servlet-name>
+    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Start</servlet-class>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>stop</servlet-name>
+    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Stop</servlet-class>
+  </servlet>
+    
+  <servlet-mapping>
+    <servlet-name>weaver</servlet-name>
+    <url-pattern>/weaver</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>inspector</servlet-name>
+    <url-pattern>/inspector</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>inspector</servlet-name>
+    <url-pattern>/rprof_server/inspector</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>logger</servlet-name>
+    <url-pattern>/logger</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>start</servlet-name>
+    <url-pattern>/start</url-pattern>
+  </servlet-mapping>
+  
+  <servlet-mapping>
+    <servlet-name>stop</servlet-name>
+    <url-pattern>/stop</url-pattern>
+  </servlet-mapping>
+  
+  <!-- Default page to serve -->
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+  </welcome-file-list>
+
+</web-app>

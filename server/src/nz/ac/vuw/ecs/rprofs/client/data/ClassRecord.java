@@ -2,42 +2,33 @@ package nz.ac.vuw.ecs.rprofs.client.data;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
-public class ClassRecord implements Serializable {
+public class ClassRecord<T extends MethodRecord> implements Serializable {
 	
 	private static final long serialVersionUID = 2390564187873117774L;
 
 	public int id;
-	
-	public String request;
-	public int requestLength;
-	
-	public String[] headers;
-	public String[] values;
-	
-	public int responseLength;
-
-	public int version;
-	public int access;
 	public String name;
-	public String signature;
-	public String superName;
-	public String[] interfaces;
-
-	public ArrayList<MethodRecord> methods = new ArrayList<MethodRecord>();
+	private List<T> methods = new ArrayList<T>();
 	
-	public int id() {
-		return id;
-	}
-	
-	public void init(int version, int access, String name, String signature,
-			String superName, String[] interfaces) {
-		this.version = version;
-		this.access = access;
+	public ClassRecord() {}
+	protected ClassRecord(int id, String name) {
+		this.id = id;
 		this.name = name;
-		this.signature = signature;
-		this.superName = superName;
-		this.interfaces = interfaces;
 	}
-
+	
+	public List<T> getMethods() {
+		return methods;
+	}
+	
+	public ClassRecord<MethodRecord> toRPC() {
+		ClassRecord<MethodRecord> cr = new ClassRecord<MethodRecord>(id, name);
+		
+		for (T mr: getMethods()) {
+			cr.methods.add(mr.toRPC());
+		}
+		
+		return cr;
+	}
 }

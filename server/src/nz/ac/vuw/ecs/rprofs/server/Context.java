@@ -2,7 +2,10 @@ package nz.ac.vuw.ecs.rprofs.server;
 
 
 import java.util.Calendar;
+import java.util.List;
 
+import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 
 import org.springframework.context.ApplicationContext;
@@ -10,8 +13,18 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class Context {
 
-	Database db;
-	ProfilerRun current;
+	private static Context context;
+
+	public static Context getInstance() {
+		if (context == null) {
+			context = new Context();
+		}
+
+		return context;
+	}
+	
+	private Database db;
+	private ProfilerRun current;
 
 	public Context() {
 		ApplicationContext c =
@@ -22,10 +35,6 @@ public class Context {
 
 	public Database db() {
 		return db;
-	}
-
-	public ProfilerRun current() {
-		return current;
 	}
 
 	public void start() {
@@ -45,21 +54,22 @@ public class Context {
 		current = null;
 		
 		run.stopped = Calendar.getInstance().getTime();
-		context.db().update(run);
+		context.db.update(run);
 		
 		System.out.println("profiler run stopped at " + run.stopped);
-
-		context.db().storeClasses(run, Weaver.classes);
-		Weaver.classes.clear();
 	}
 
-	private static Context context;
+	public void storeLogs(List<LogRecord> records) {
+		db.storeLogs(current, records);
+	}
 
-	public static Context getInstance() {
-		if (context == null) {
-			context = new Context();
-		}
-
-		return context;
+	public ClassRecord createClassRecord() {
+		ClassRecord cr = new ClassRecord();
+		cr.id = current.numClasses++;
+		return cr;
+	}
+	
+	public void storeClassRecord(ClassRecord cr) {
+		db.storeClass(current, cr);
 	}
 }

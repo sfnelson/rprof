@@ -31,7 +31,7 @@ public class ProfilerRunsPane extends Composite implements ProfilerRunListener {
 
 	@UiField FlowPanel panel;
 
-	public ProfilerRunsPane(Rprof_server root) {
+	public ProfilerRunsPane(Inspector root) {
 		initWidget(uiBinder.createAndBindUi(this));
 		
 		root.addProfilerRunListener(this);

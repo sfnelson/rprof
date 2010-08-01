@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='inspector'>
+  <inherits name='com.google.gwt.user.User'></inherits>
+  <entry-point class='nz.ac.vuw.ecs.rprofs.client.Inspector'/>
+  <source path='client'/>
+</module>

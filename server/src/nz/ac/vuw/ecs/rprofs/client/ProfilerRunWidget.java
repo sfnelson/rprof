@@ -43,13 +43,13 @@ public class ProfilerRunWidget extends Composite {
 
 	@UiHandler("inspect")
 	void inspectClicked(ClickEvent e) {
-		Rprof_server.getInstance().setProfilerRun(run);
+		Inspector.getInstance().setProfilerRun(run);
 		parent.select(this);
 	}
 	
 	@UiHandler("delete")
 	void onClick(ClickEvent e) {
-		Rprof_server.getInstance().dropProfilerRun(run);
+		Inspector.getInstance().dropProfilerRun(run);
 	}
 
 }

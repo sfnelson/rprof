@@ -12,4 +12,5 @@ public class ProfilerRun implements Serializable {
 	public Date started;
 	public Date stopped;
 	public String handle;
+	public int numClasses;
 }

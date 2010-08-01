@@ -23,7 +23,7 @@ public class LogViewer extends Composite implements LogListener, View {
 	interface LogViewerUiBinder extends UiBinder<Widget, LogViewer> {
 	}
 	
-	private final Rprof_server server;
+	private final Inspector server;
 	
 	private final List<LogRecordWidget> records = new ArrayList<LogRecordWidget>();
 	private int available = 0;
@@ -32,7 +32,7 @@ public class LogViewer extends Composite implements LogListener, View {
 	
 	private Button button;
 
-	public LogViewer(Rprof_server rprofServer) {
+	public LogViewer(Inspector rprofServer) {
 		initWidget(uiBinder.createAndBindUi(this));
 		
 		server = rprofServer;

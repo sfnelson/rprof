@@ -1,4 +1,5 @@
 bin
 objects
 classes
-tmp
+tmp/pre/*
+tmp/post/*

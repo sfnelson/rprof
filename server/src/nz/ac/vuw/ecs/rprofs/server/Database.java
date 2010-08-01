@@ -3,12 +3,15 @@ package nz.ac.vuw.ecs.rprofs.server;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
-import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -31,12 +34,14 @@ public class Database implements InitializingBean {
 		//template.update("create table profiler_runs (program varchar(20), started timestamp, stopped timestamp, handle varchar(63))");
 	}
 
-	public void storeClasses(ProfilerRun run, List<ClassRecord> classes) {
-		for (ClassRecord record: classes) {
-			template.update("insert into classes_" + run.handle + " (id, name) values (?, ?);", record.id, record.name);
+	public void storeClass(ProfilerRun run, ClassRecord cr) {
+		template.update("insert into classes_" + run.handle + " (id, name) values (?, ?);", cr.id, cr.name);
+
+		for (MethodRecord mr: cr.getMethods()) {
+			template.update("insert into methods_" + run.handle + "(mid, cid, name) values (?, ?, ?);", mr.id, mr.parent.id, mr.name);
 		}
 	}
-	
+
 	public List<ClassRecord> getClasses(ProfilerRun run) {
 		List<ClassRecord> classes = template.query("select * from classes_" + run.handle + ";",
 				new RowMapper<ClassRecord>() {
@@ -45,6 +50,22 @@ public class Database implements InitializingBean {
 				cr.id = rs.getInt(1);
 				cr.name = rs.getString(2);
 				return cr;
+			}
+		});
+
+		final Map<Integer, ClassRecord> classMap = new HashMap<Integer, ClassRecord>();
+		for (ClassRecord cr: classes) {
+			classMap.put(cr.id, cr);
+		}
+
+		template.query("select * from methods_" + run.handle + ";", new RowMapper<MethodRecord>() {
+			public MethodRecord mapRow(ResultSet rs, int row) throws SQLException {
+				MethodRecord mr = new MethodRecord();
+				mr.id = rs.getInt(1);
+				mr.parent = classMap.get(rs.getInt(2));
+				mr.parent.getMethods().add(mr);
+				mr.name = rs.getString(3);
+				return mr;
 			}
 		});
 
@@ -84,6 +105,7 @@ public class Database implements InitializingBean {
 				run.program, run.started, run.stopped, run.handle);
 
 		template.update("create table classes_" + run.handle + " (id integer, name varchar(255));");
+		template.update("create table methods_" + run.handle + " (mid integer, cid integer, name varchar(255));");
 		template.update("create table events_" + run.handle
 				+ " (index serial, thread bigint, event varchar(63), cname varchar(255), mname varchar(255), cnum integer, mnum integer, len integer"
 				+ ", arg0 bigint, arg1 bigint, arg2 bigint, arg3 bigint, arg4 bigint, arg5 bigint, arg6 bigint, arg7 bigint, arg8 bigint, arg9 bigint, arg10 bigint, arg11 bigint, arg12 bigint, arg13 bigint, arg14 bigint, arg15 bigint"
@@ -110,30 +132,30 @@ public class Database implements InitializingBean {
 
 		return classes;
 	}
-	
+
 	public List<LogRecord> getLogs(ProfilerRun run, int offset, int limit) {
 		List<LogRecord> classes = template.query(
 				"select * from events_" + run.handle + " order by index limit "
-					+ limit + " offset " + offset + ";",
+				+ limit + " offset " + offset + ";",
 				new LogRowMapper());
 
 		return classes;
 	}
-	
+
 	public int getNumLogs(ProfilerRun run) {
 		List<Integer> number = template.query(
 				"select count(1) from events_" + run.handle + ";",
 				new RowMapper<Integer>() {
 
 					public Integer mapRow(ResultSet rs, int row)
-							throws SQLException {
+					throws SQLException {
 						return rs.getInt(1);
 					}
-					
+
 				});
 		return number.get(0);
 	}
-	
+
 	private static class LogRowMapper implements RowMapper<LogRecord> {
 		public LogRecord mapRow(ResultSet rs, int row) throws SQLException {
 			LogRecord r = new LogRecord();
@@ -144,7 +166,7 @@ public class Database implements InitializingBean {
 			r.methodName = rs.getString("mname");
 			r.classNumber = rs.getInt("cnum");
 			r.methodNumber = rs.getInt("mnum");
-			
+
 			int numArgs = rs.getInt("len");
 			r.arguments = new long[numArgs];
 			for (int i = 0; i < numArgs; i++) {

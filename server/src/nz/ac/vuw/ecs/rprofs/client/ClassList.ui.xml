@@ -5,7 +5,10 @@
 		.hide {
 			display: none;
 		}
+		.header {
+			font-weight: bold;
+		}
 	</ui:style>
-	<g:VerticalPanel ui:field="panel">
-	</g:VerticalPanel>
+	<g:Grid ui:field="panel">
+	</g:Grid>
 </ui:UiBinder> 

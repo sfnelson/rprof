@@ -81,6 +81,7 @@ JNIEXPORT void JNICALL log_profiler_started()
 	}
 
 	curl_slist_free_all(headers); /* free the header list */
+	curl_easy_cleanup(handle);
 }
 
 JNIEXPORT void JNICALL log_profiler_stopped()
@@ -110,6 +111,7 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 	}
 
 	curl_slist_free_all(headers); /* free the header list */
+	curl_easy_cleanup(handle);
 }
 
 #define EVENT_BUFFER_SIZE 64
@@ -131,7 +133,7 @@ JNIEXPORT void JNICALL log_method_event(jlong thread, const char* message,
 	memset(record, 0, sizeof(record));
 	record->thread_upper = htonl((thread >> 32) & 0xffffffff);
 	record->thread_lower = htonl(thread & 0xffffffff);
-	strcpy(&record->message, message);
+	strcpy(record->message, message);
 	record->cnum = htonl(cnum);
 	record->mnum = htonl(mnum);
 	record->len = htonl(len);
@@ -176,6 +178,7 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 	}
 
 	curl_slist_free_all(headers); /* free the header list */
+	curl_easy_cleanup(handle);
 
 	event_index = 0;
 }
@@ -231,5 +234,6 @@ JNIEXPORT void JNICALL weave_classfile(
 	}
 
 	curl_slist_free_all(headers); /* free the header list */
+	curl_easy_cleanup(handle);
 }
 

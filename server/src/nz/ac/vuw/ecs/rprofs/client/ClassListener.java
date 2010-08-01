@@ -3,9 +3,10 @@ package nz.ac.vuw.ecs.rprofs.client;
 import java.util.List;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 
 public interface ClassListener {
 
-	public void classesChanged(List<ClassRecord> cr);
+	public void classesChanged(List<ClassRecord<MethodRecord>> cr);
 	
 }

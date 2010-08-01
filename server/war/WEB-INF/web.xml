@@ -13,7 +13,7 @@
   
   <servlet>
     <servlet-name>inspector</servlet-name>
-    <servlet-class>nz.ac.vuw.ecs.rprofs.server.InspectorImpl</servlet-class>
+    <servlet-class>nz.ac.vuw.ecs.rprofs.server.InspectorServiceImpl</servlet-class>
   </servlet>
   
   <servlet>
@@ -43,7 +43,7 @@
   
   <servlet-mapping>
     <servlet-name>inspector</servlet-name>
-    <url-pattern>/rprof_server/inspector</url-pattern>
+    <url-pattern>/inspector/inspector</url-pattern>
   </servlet-mapping>
   
   <servlet-mapping>

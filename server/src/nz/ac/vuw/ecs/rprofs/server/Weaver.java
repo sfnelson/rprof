@@ -15,8 +15,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.weaving.ClassVisitorDispatcher;
+import nz.ac.vuw.ecs.rprofs.server.weaving.GenericClassWeaver;
+import nz.ac.vuw.ecs.rprofs.server.weaving.ThreadClassWeaver;
+import nz.ac.vuw.ecs.rprofs.server.weaving.TrackingClassWeaver;
 
 import com.google.gwt.dev.asm.ClassAdapter;
 import com.google.gwt.dev.asm.ClassReader;
@@ -35,19 +39,13 @@ import com.google.gwt.dev.asm.commons.GeneratorAdapter;
 @SuppressWarnings("serial")
 public class Weaver extends HttpServlet {
 
-	static ArrayList<ClassRecord> classes = new ArrayList<ClassRecord>();
-
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
 
-		ClassRecord cr = new ClassRecord();
-		cr.id = Weaver.classes.size();
-		Weaver.classes.add(cr.id, cr);
+		ClassRecord cr = Context.getInstance().createClassRecord();
 
-		cr.request = req.getRequestURL().substring(8);
-		cr.requestLength = req.getContentLength();
 		Map<String, String> headers = new HashMap<String, String>();
 		for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements();) {
 			String key = e.nextElement();
@@ -68,17 +66,47 @@ public class Weaver extends HttpServlet {
 		resp.setContentType("application/rprof");
 		resp.getOutputStream().write(buffer);
 
-		cr.responseLength = buffer.length;
+		Context.getInstance().storeClassRecord(cr);
 	}
 
 	public byte[] weave(byte[] classfile, ClassRecord cr) {
 		ClassReader reader = new ClassReader(classfile);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 
-		reader.accept(new ClassWeaver(writer, cr), ClassReader.EXPAND_FRAMES);
+		reader.accept(new Dispatcher(writer, cr), ClassReader.EXPAND_FRAMES);
 		return writer.toByteArray();
 	}
+	
+	private static class Dispatcher extends ClassVisitorDispatcher {
 
+		private ClassVisitor cv;
+		private ClassRecord cr;
+		
+		public Dispatcher(ClassVisitor cv, ClassRecord cr) {
+			this.cv = cv;
+			this.cr = cr;
+		}
+
+		@Override
+		public void visit(int version, int access, String name,
+				String signature, String superName, String[] interfaces) {
+			
+			if (Type.getInternalName(HeapTracker.class).equals(name)) {
+				cv = new TrackingClassWeaver(cv, cr);
+			}
+			else if (Type.getInternalName(Thread.class).equals(name)) {
+				cv = new ThreadClassWeaver(cv, cr);
+			}
+			else {
+				cv = new GenericClassWeaver(cv, cr);
+			}
+			
+			setClassVisitor(cv);
+			cv.visit(version, access, name, signature, superName, interfaces);
+		}
+		
+	}
+	
 	private static class ClassWeaver extends ClassAdapter {
 
 		private ClassRecord record;
@@ -124,10 +152,10 @@ public class Weaver extends HttpServlet {
 			MethodRecord mr = MethodRecord.create(record, access, name, desc, signature, exceptions);
 			if (isTracker) {
 				if (name.equals("_getTracker")) {
-					mv = new GetTrackerGenerator(mv, mr);
+					//mv = new TrackingClassWeaver(mv, mr);
 				}
 				else if (name.equals("_setTracker")) {
-					mv = new SetTrackerGenerator(mv, mr);
+					//mv = new SetTrackerGenerator(mv, mr);
 				}
 			} else if (name.equals("main")
 					&& "([Ljava/lang/String;)V".equals(desc)
@@ -239,8 +267,8 @@ public class Weaver extends HttpServlet {
 			List<Integer> args = getArgs(record.desc);
 
 			super.visitCode();												// stack:
-			push(record.parent.id());										// stack: cnum
-			push(record.id());												// stack: cnum, mnum
+			push(record.parent.id);											// stack: cnum
+			push(record.id);												// stack: cnum, mnum
 			push(args.size());												// stack: cnum, mnum, numArgs
 			sVisitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));	// stack: cnum, mnum, args
 
@@ -300,8 +328,8 @@ public class Weaver extends HttpServlet {
 			case DRETURN:
 			case ARETURN:
 			case RETURN:
-				push(record.parent.id());
-				push(record.id());
+				push(record.parent.id);
+				push(record.id);
 				visitMethodInsn(INVOKESTATIC, Type.getInternalName(TRACKER), exit.getName(), Type.getMethodDescriptor(exit));
 				break;
 			}
@@ -336,8 +364,8 @@ public class Weaver extends HttpServlet {
 		@Override
 		public void visitCode() {
 			super.visitCode();
-			push(record.parent.id());
-			push(record.id());
+			push(record.parent.id);
+			push(record.id);
 			visitMethodInsn(INVOKESTATIC, Type.getInternalName(TRACKER), main.getName(), Type.getMethodDescriptor(main));
 		}
 
@@ -350,84 +378,13 @@ public class Weaver extends HttpServlet {
 			case DRETURN:
 			case ARETURN:
 			case RETURN:
-				push(record.parent.id());
-				push(record.id());
+				push(record.parent.id);
+				push(record.id);
 				visitMethodInsn(INVOKESTATIC, Type.getInternalName(TRACKER), exit.getName(), Type.getMethodDescriptor(exit));
 				break;
 			}
 
 			super.visitInsn(opcode);
-		}
-	}
-
-	private static class GetTrackerGenerator extends GeneratorAdapter implements Opcodes {
-
-		public GetTrackerGenerator(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr.access, mr.name, mr.desc);
-		}
-
-		@Override
-		public void visitCode() {
-			super.visitCode();
-
-			//return Thread.currentThread()._rprof;
-
-			// locals: [thread]
-			// stack:  []
-			
-			super.visitVarInsn(ALOAD, 0);
-			
-			// locals: [thread]
-			// stack:  [thread]
-			
-			Type t = Type.getType(HeapTracker.class);
-			super.visitFieldInsn(GETFIELD, Type.getInternalName(Thread.class), "_rprof", t.getDescriptor());
-			
-			// locals: [thread]
-			// stack:  [tracker]
-			
-			super.visitInsn(ARETURN);
-			
-			super.visitMaxs(1, 1);
-			
-			super.visitEnd();
-		}
-	}
-
-	private static class SetTrackerGenerator extends GeneratorAdapter implements Opcodes {
-
-		public SetTrackerGenerator(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr.access, mr.name, mr.desc);
-		}
-
-		@Override
-		public void visitCode() {
-			super.visitCode();
-
-			// Thread.currentThread()._rprof = c; // c is first argument
-
-			// locals: [thread, tracker]
-			// stack:  []
-
-			super.visitVarInsn(ALOAD, 0);
-			
-			// locals: [thread, tracker]
-			// stack:  [thread]
-
-			super.visitVarInsn(ALOAD, 1);
-
-			// locals: [thread, tracker]
-			// stack:  [thread, tracker]
-
-			Type t = Type.getType(HeapTracker.class);
-			super.visitFieldInsn(PUTFIELD, Type.getInternalName(Thread.class), "_rprof", t.getDescriptor());
-			
-			// locals: [thread, tracker]
-			// stack:  []			
-			
-			super.visitMaxs(2, 2);
-			
-			super.visitEnd();
 		}
 	}
 }

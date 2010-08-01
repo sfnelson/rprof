@@ -336,8 +336,6 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 		/* Indicate VM has started */
 		gdata->vmStarted = JNI_TRUE;
 
-		log_profiler_started();
-
 	} exitCriticalSection(jvmti);
 }
 
@@ -435,7 +433,6 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 		gdata->vmDead = JNI_TRUE;
 
 		flush_method_event_buffer();
-		log_profiler_stopped();
 
 	} exitCriticalSection(jvmti);
 
@@ -673,6 +670,8 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	/* initialize comm utilities */
 	init_comm();
 
+	log_profiler_started();
+
 	/* Setup initial global agent data area
 	 *   Use of static/extern data should be handled carefully here.
 	 *   We need to make sure that we are able to cleanup after ourselves
@@ -775,6 +774,8 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 JNIEXPORT void JNICALL
 Agent_OnUnload(JavaVM *vm)
 {
+
+	log_profiler_stopped();
 	/* Skip any cleanup, VM is about to die anyway */
 }
 

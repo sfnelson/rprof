@@ -69,7 +69,7 @@ public abstract class ClassVisitorDispatcher implements ClassVisitor {
 	}
 
 	@Override
-	public final MethodVisitor visitMethod(int access, String name, String desc,
+	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
 		return cv.visitMethod(access, name, desc, signature, exceptions);
 	}

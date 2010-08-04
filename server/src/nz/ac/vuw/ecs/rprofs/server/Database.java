@@ -36,7 +36,6 @@ public class Database implements InitializingBean {
 
 	public void storeClass(ProfilerRun run, ClassRecord cr) {
 		template.update("insert into classes_" + run.handle + " (id, name) values (?, ?);", cr.id, cr.name);
-
 		for (MethodRecord mr: cr.getMethods()) {
 			template.update("insert into methods_" + run.handle + "(mid, cid, name) values (?, ?, ?);", mr.id, mr.parent.id, mr.name);
 		}

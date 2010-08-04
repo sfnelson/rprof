@@ -2,11 +2,8 @@ package nz.ac.vuw.ecs.rprofs.server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -16,21 +13,15 @@ import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ClassVisitorDispatcher;
 import nz.ac.vuw.ecs.rprofs.server.weaving.GenericClassWeaver;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ThreadClassWeaver;
 import nz.ac.vuw.ecs.rprofs.server.weaving.TrackingClassWeaver;
 
-import com.google.gwt.dev.asm.ClassAdapter;
 import com.google.gwt.dev.asm.ClassReader;
 import com.google.gwt.dev.asm.ClassVisitor;
 import com.google.gwt.dev.asm.ClassWriter;
-import com.google.gwt.dev.asm.FieldVisitor;
-import com.google.gwt.dev.asm.MethodVisitor;
-import com.google.gwt.dev.asm.Opcodes;
 import com.google.gwt.dev.asm.Type;
-import com.google.gwt.dev.asm.commons.GeneratorAdapter;
 
 
 /**
@@ -66,7 +57,13 @@ public class Weaver extends HttpServlet {
 		resp.setContentType("application/rprof");
 		resp.getOutputStream().write(buffer);
 
-		Context.getInstance().storeClassRecord(cr);
+		try {
+			Context.getInstance().storeClassRecord(cr);
+		} catch (NullPointerException ex) {
+			ex.printStackTrace();
+			System.err.println("Null pointer when storing class, exiting");
+			System.exit(1);
+		}
 	}
 
 	public byte[] weave(byte[] classfile, ClassRecord cr) {
@@ -104,117 +101,9 @@ public class Weaver extends HttpServlet {
 			setClassVisitor(cv);
 			cv.visit(version, access, name, signature, superName, interfaces);
 		}
-		
-	}
-	
-	private static class ClassWeaver extends ClassAdapter {
-
-		private ClassRecord record;
-		private boolean isTracker = false;
-		private boolean doOnce = true;
-
-		public ClassWeaver(ClassVisitor cv, ClassRecord record) {
-			super(cv);
-
-			this.record = record;
-		}
-
-		@Override
-		public void visit(int version, int access, String name,
-				String signature, String superName, String[] interfaces) {
-			record.init(version, access, name, signature, superName, interfaces);
-
-			if (Type.getInternalName(HeapTracker.class).equals(name)) {
-				isTracker = true;
-			}
-			super.visit(version, access, name, signature, superName, interfaces);
-		}
-
-		@Override
-		public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-
-			if (record.name.equals(Type.getInternalName(Thread.class)) && doOnce) {
-				doOnce = false;
-				Type t = Type.getType(HeapTracker.class);
-				FieldVisitor fv = super.visitField(Opcodes.ACC_PUBLIC, "_rprof", t.getDescriptor(), null, null);
-				if (fv != null) {
-					fv.visitEnd();
-				}
-			}
-
-			return super.visitField(access, name, desc, signature, value);
-		}
-
-		@Override
-		public MethodVisitor visitMethod(int access, String name, String desc,
-				String signature, String[] exceptions) {
-			MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-			MethodRecord mr = MethodRecord.create(record, access, name, desc, signature, exceptions);
-			if (isTracker) {
-				if (name.equals("_getTracker")) {
-					//mv = new TrackingClassWeaver(mv, mr);
-				}
-				else if (name.equals("_setTracker")) {
-					//mv = new SetTrackerGenerator(mv, mr);
-				}
-			} else if (name.equals("main")
-					&& "([Ljava/lang/String;)V".equals(desc)
-					&& (Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC) == access) {
-				mv = new MainMethodWeaver(mv, mr);
-			} else if ((Opcodes.ACC_STATIC & access) == 0
-					&& (Opcodes.ACC_PUBLIC & access) != 0
-					&& !name.equals("<init>")
-					&& !name.equals("<clinit>")) {
-				mv = new StandardMethodWeaver(mv, mr);
-			} else if (name.equals("<init>")) {
-				mv = new InitMethodWeaver(mv, mr);
-			}
-			return mv;
-		}
-
 	}
 
-	private static class MethodWeaver extends GeneratorAdapter implements Opcodes {
-
-		protected static final Class<HeapTracker> TRACKER = HeapTracker.class;
-
-		protected static final Method enter = getTrackerMethod("enter");
-		protected static final Method exit = getTrackerMethod("exit");
-		protected static final Method newarr = getTrackerMethod("newarr");
-		protected static final Method newobj = getTrackerMethod("newobj");
-
-		protected MethodRecord record;
-
-		public MethodWeaver(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr.access, mr.name, mr.desc);
-
-			this.record = mr;
-		}
-
-		protected static Method getTrackerMethod(String name) {
-			try {
-				Method[] methods = TRACKER.getMethods();
-				Method e = null;
-				for (Method m: methods) {
-					if (m.getName() == name) {
-						e = m;
-						break;
-					}
-				}
-				if (e == null) {
-					throw new NoSuchMethodException();
-				} else {
-					return e;
-				}
-			} catch (SecurityException e) {
-				throw new RuntimeException(e);
-			} catch (NoSuchMethodException e) {
-				throw new RuntimeException(e);
-			}
-
-		}
-	}
-
+	/*
 	private static class StandardMethodWeaver extends MethodWeaver {
 
 		public StandardMethodWeaver(MethodVisitor mv, MethodRecord mr) {
@@ -253,11 +142,6 @@ public class Weaver extends HttpServlet {
 			visitMethodInsn(INVOKESTATIC, Type.getInternalName(TRACKER), newarr.getName(), Type.getMethodDescriptor(newarr));
 		}
 
-
-		/**
-		 * Visits a type instruction ({@link MethodVisitor#visitTypeInsn(int, String)})
-		 * without adding tracking code.
-		 */
 		protected void sVisitTypeInsn(int opcode, String type) {
 			super.visitTypeInsn(opcode, type);
 		}
@@ -336,55 +220,5 @@ public class Weaver extends HttpServlet {
 
 			super.visitInsn(opcode);
 		}
-	}
-
-	private static class InitMethodWeaver extends MethodWeaver {
-
-		public InitMethodWeaver(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr);
-		}
-
-		@Override
-		public void visitCode() {
-			super.visitCode();
-			visitIntInsn(ALOAD, 0);
-			visitMethodInsn(INVOKESTATIC, Type.getInternalName(TRACKER), newobj.getName(), Type.getMethodDescriptor(newobj));
-		}
-	}
-
-	private static class MainMethodWeaver extends MethodWeaver {
-
-		protected static final Method main = getTrackerMethod("main");
-		protected static final Method exit = getTrackerMethod("exit");
-
-		public MainMethodWeaver(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr);
-		}
-
-		@Override
-		public void visitCode() {
-			super.visitCode();
-			push(record.parent.id);
-			push(record.id);
-			visitMethodInsn(INVOKESTATIC, Type.getInternalName(TRACKER), main.getName(), Type.getMethodDescriptor(main));
-		}
-
-		@Override
-		public void visitInsn(int opcode) {
-			switch (opcode) {
-			case IRETURN:
-			case LRETURN:
-			case FRETURN:
-			case DRETURN:
-			case ARETURN:
-			case RETURN:
-				push(record.parent.id);
-				push(record.id);
-				visitMethodInsn(INVOKESTATIC, Type.getInternalName(TRACKER), exit.getName(), Type.getMethodDescriptor(exit));
-				break;
-			}
-
-			super.visitInsn(opcode);
-		}
-	}
+	}*/
 }

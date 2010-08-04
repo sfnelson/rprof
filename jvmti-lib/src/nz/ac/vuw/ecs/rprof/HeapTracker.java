@@ -45,10 +45,10 @@ public class HeapTracker {
 
 	private static int engaged = 0;
 
-	private static native void _newobj(Object thread, Object o, long id);
-	public static void newobj(Object o) {
+	private static native void _newobj(Object thread, int cnum, int mnum, Object o, long id);
+	public static void newobj(int cnum, int mnum, Object o) {
 		if ( engaged != 0 && !(o instanceof HeapTracker)) {
-			_newobj(Thread.currentThread(), o, id(o));
+			_newobj(Thread.currentThread(), cnum, mnum, o, id(o));
 		}
 	}
 

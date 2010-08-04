@@ -160,7 +160,7 @@ logEvent(JNIEnv *env, jvmtiEnv *jvmti, jthread thread, jobject o, const char* fo
 
 /* Java Native Method for Object.<init> */
 static void
-HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, jobject o, jlong id)
+HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, int cnum, int mnum, jobject o, jlong id)
 {
 	jvmtiError error;
 	jvmtiEnv *jvmti;
@@ -184,7 +184,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, jobject o,
 		check_jvmti_error(jvmti, error, "Cannot read tag");
 	}
 
-	log_method_event(threadId, "object allocated", 0, 0, 1, &id, 0);
+	log_method_event(threadId, "object allocated", cnum, mnum, 1, &id, 0);
 }
 
 /* Java Native Method for newarray */
@@ -306,7 +306,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 
 		/* Java Native Methods for class */
 		static JNINativeMethod registry[5] = {
-				{STRING(HEAP_TRACKER_native_newobj), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newobj},
+				{STRING(HEAP_TRACKER_native_newobj), "(Ljava/lang/Object;IILjava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newobj},
 				{STRING(HEAP_TRACKER_native_newarr), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newarr},
 				{STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
 				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_exit},

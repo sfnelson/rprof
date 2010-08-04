@@ -30,4 +30,8 @@ public class ClassRecord extends nz.ac.vuw.ecs.rprofs.client.data.ClassRecord<Me
 		this.superName = superName;
 		this.interfaces = interfaces;
 	}
+	
+	public String toString() {
+		return "c:" + name;
+	}
 }

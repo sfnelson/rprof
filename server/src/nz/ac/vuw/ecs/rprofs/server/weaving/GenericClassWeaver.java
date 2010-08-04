@@ -3,12 +3,13 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 
 import com.google.gwt.dev.asm.ClassAdapter;
 import com.google.gwt.dev.asm.ClassVisitor;
 import com.google.gwt.dev.asm.MethodVisitor;
+import com.google.gwt.dev.asm.Opcodes;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -30,14 +31,22 @@ public class GenericClassWeaver extends ClassAdapter {
 		cr.init(version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
-
-	/* (non-Javadoc)
-	 * @see com.google.gwt.dev.asm.ClassAdapter#visitMethod(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String[])
-	 */
+	
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
-		MethodRecord.create(cr, access, name, desc, signature, exceptions);
-		return super.visitMethod(access, name, desc, signature, exceptions);
+		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+		MethodRecord mr = MethodRecord.create(cr, access, name, desc, signature, exceptions);
+		
+		// check for: public static void main(String[])
+		if ("main".equals(name) && "([Ljava/lang/String;)V".equals(desc)
+				&& (Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC) == access) {
+			mv = new MainMethodWeaver(mv, mr);
+		}
+		// check for <init>(..)
+		else if (name.equals("<init>")) {
+			mv = new InitMethodWeaver(mv, mr);
+		}
+		return mv;
 	}
 }

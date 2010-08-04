@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 
@@ -70,33 +72,23 @@ public class Logger extends HttpServlet {
 				}
 			}
 
-			/*
-			ClassRecord cls = null;
-			if (cnum >= 0 && cnum < Weaver.classes.size()) {
-				cls = Weaver.classes.get(cnum);
-			}
-
-			MethodRecord mth = null;
-			if (cls != null && mnum >= 0 && mnum < cls.methods.size()) {
-				mth = cls.methods.get(mnum);
-			}*/
+			
+			ClassRecord cls = Context.getInstance().getClass(cnum);
+			MethodRecord mth = Context.getInstance().getMethod(cls, mnum);
 
 			LogRecord record = new LogRecord();
 			record.threadId = thread;
 			record.event = event;
-			//record.className = (cls == null)?String.valueOf(cnum):cls.name;
-			//record.methodName = (mth == null)?String.valueOf(mnum):mth.name;
+			record.className = (cls == null)?String.valueOf(cnum):cls.name;
+			record.methodName = (mth == null)?String.valueOf(mnum):mth.name;
 			record.classNumber = cnum;
 			record.methodNumber = mnum;
 			record.arguments = args;
 			records.add(record);
 			
-			/*
-			if ("main method entered".equals(event)) {
-				ProfilerRun current = Context.getInstance().current();
-				current.program = cls.name;
-				Context.getInstance().db().update(current);
-			}*/
+			if ("main method entered".equals(event) && cls != null) {
+				Context.getInstance().setMainMethod(cls.name);
+			}
 		}
 		
 		return records;

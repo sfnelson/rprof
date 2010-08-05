@@ -3,24 +3,27 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
 	<ui:style>
 		.row {
-			padding-left: 1em;
+			width: 100%;
+			position: relative;
+			overflow: auto;
 		}
-		.date {
+		.date, .className {
 			display: inline-block;
-			width: 12em;
+			padding: 0.5ex 0.5em;
+			width: 15em;
 		}
-		.className {
-			display: inline-block;
-			width: 16em;
+		.buttonPanel {
+			float: right;
 		}
-		.button {
-		}
+		.button {}
 	</ui:style>
-	<g:FlowPanel styleName='{style.row}'>
+	<g:HTMLPanel styleName='{style.row}'>
 		<g:InlineLabel ui:field="started" styleName='{style.date}' />
 		<g:InlineLabel ui:field="stopped" styleName='{style.date}' />
 		<g:InlineLabel ui:field="program" styleName='{style.className}' />
-		<g:Button ui:field="inspect" styleName='{style.button}'>Inspect</g:Button>
-		<g:Button ui:field="delete" styleName='{style.button}'>Delete</g:Button>
-	</g:FlowPanel>
+		<div class="{style.buttonPanel}">
+			<g:Button ui:field="inspect" styleName='{style.button}'>Inspect</g:Button>
+			<g:Button ui:field="delete" styleName='{style.button}'>Delete</g:Button>
+		</div>
+	</g:HTMLPanel>
 </ui:UiBinder> 

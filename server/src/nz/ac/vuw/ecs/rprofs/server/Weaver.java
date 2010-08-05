@@ -15,6 +15,7 @@ import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ClassVisitorDispatcher;
 import nz.ac.vuw.ecs.rprofs.server.weaving.GenericClassWeaver;
+import nz.ac.vuw.ecs.rprofs.server.weaving.ObjectClassWeaver;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ThreadClassWeaver;
 import nz.ac.vuw.ecs.rprofs.server.weaving.TrackingClassWeaver;
 
@@ -56,14 +57,6 @@ public class Weaver extends HttpServlet {
 		resp.setContentLength(buffer.length);
 		resp.setContentType("application/rprof");
 		resp.getOutputStream().write(buffer);
-
-		try {
-			Context.getInstance().storeClassRecord(cr);
-		} catch (NullPointerException ex) {
-			ex.printStackTrace();
-			System.err.println("Null pointer when storing class, exiting");
-			System.exit(1);
-		}
 	}
 
 	public byte[] weave(byte[] classfile, ClassRecord cr) {
@@ -93,6 +86,9 @@ public class Weaver extends HttpServlet {
 			}
 			else if (Type.getInternalName(Thread.class).equals(name)) {
 				cv = new ThreadClassWeaver(cv, cr);
+			}
+			else if (Type.getInternalName(Object.class).equals(name)) {
+				cv = new ObjectClassWeaver(cv, cr);
 			}
 			else {
 				cv = new GenericClassWeaver(cv, cr);

@@ -18,7 +18,7 @@ public class Start extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
 		
-		Context.getInstance().start();
+		Context.start();
 	}
 
 }

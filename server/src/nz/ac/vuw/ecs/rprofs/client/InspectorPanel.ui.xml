@@ -30,7 +30,7 @@
 			right: 0;
 			bottom: 0;
 			overflow: auto;
-			padding: 0 0.5ex;
+			padding: 0;
 		}
 		.closed .content {
 			top: 4ex;
@@ -89,8 +89,6 @@
 				<g:HTML styleName='{style.closeButtonInner}' ui:field='closeText'></g:HTML>
 			</g:FocusPanel>
 		</div>
-		<div class='{style.content}'>
-			<g:FlowPanel ui:field='content'></g:FlowPanel>
-		</div>
+		<g:FlowPanel ui:field='content' styleName='{style.content}'></g:FlowPanel>
 	</g:HTMLPanel>
 </ui:UiBinder> 

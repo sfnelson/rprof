@@ -29,6 +29,7 @@ public class ClassRecord extends nz.ac.vuw.ecs.rprofs.client.data.ClassRecord<Me
 		this.signature = signature;
 		this.superName = superName;
 		this.interfaces = interfaces;
+		this.instances = 0;
 	}
 	
 	public String toString() {

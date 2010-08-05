@@ -4,6 +4,8 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
@@ -25,6 +27,43 @@ public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 	
 	protected void visitTrackerMethod(Method m) {
 		visitMethodInsn(INVOKESTATIC, Tracker.getName(), m.getName(), Type.getMethodDescriptor(m));
+	}
+	
+	protected List<Integer> getArgs() {
+		List<Integer> useful = new ArrayList<Integer>(); 
+		int argIndex = 0;
+
+		// mark 'this'
+		useful.add(0);
+		argIndex++;
+
+		outer:
+			for (int i = 0; i < record.desc.length(); i++) {
+				switch(record.desc.charAt(i)) {
+				case ')': break outer;
+				case 'J': // long
+				case 'D': // double
+					argIndex++;
+				case 'B': // byte
+				case 'C': // character
+				case 'S': // short
+				case 'Z': // boolean
+				case 'F': // float
+				case 'I': // int
+					argIndex++;
+					break;
+				case 'L': // object, followed by FQ name, terminated by ';'
+				case '[': // array, followed by a second type descriptor
+					useful.add(argIndex++);
+					while (record.desc.charAt(i) == '[') i++;
+					if (record.desc.charAt(i) == 'L') {
+						while (record.desc.charAt(++i) != ';');
+					}
+					break;
+				}
+			}
+
+		return useful;
 	}
 	
 	protected static class Tracker {

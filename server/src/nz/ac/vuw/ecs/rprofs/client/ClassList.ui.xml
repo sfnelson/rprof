@@ -1,14 +1,19 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client">
 	<ui:style type="nz.ac.vuw.ecs.rprofs.client.ClassList.Style">
-		.hide {
-			display: none;
+		.heading span, .container span {
+			text-align: right;
 		}
-		.header {
-			font-weight: bold;
+		.container {
+			border-bottom: solid 1px #eee;
+			outline-bottom: solid 1px white;
 		}
 	</ui:style>
-	<g:Grid ui:field="panel">
-	</g:Grid>
+	<g:HTMLPanel>
+		<p:ClassEntry ui:field="heading" styleName="{style.heading}"></p:ClassEntry>
+		<g:FlowPanel ui:field="container" styleName="{style.container}">
+		</g:FlowPanel>
+	</g:HTMLPanel>
 </ui:UiBinder> 

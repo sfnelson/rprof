@@ -7,16 +7,16 @@ public class MethodRecord implements Serializable {
 
 	public int id;
 	public String name;
+	public String desc;
 	
 	public MethodRecord() {}
-	protected MethodRecord(int id, String name) {
+	protected MethodRecord(int id, String name, String desc) {
 		this.id = id;
 		this.name = name;
+		this.desc = desc;
 	}
-	/**
-	 * @return
-	 */
+
 	public MethodRecord toRPC() {
-		return new MethodRecord(id, name);
+		return new MethodRecord(id, name, desc);
 	}
 }

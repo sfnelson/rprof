@@ -14,32 +14,32 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 public class InspectorServiceImpl extends RemoteServiceServlet implements InspectorService {
 
 	public List<ProfilerRun> getProfilerRuns() {
-		return Context.getInstance().db().getProfiles();
+		return Context.db().getProfiles();
 	}
 	
 	public void dropProfilerRun(ProfilerRun run) {
-		Context.getInstance().db().dropRun(run);
+		Context.db().dropRun(run);
 	}
 	
 	public List<ClassRecord<MethodRecord>> getClasses(ProfilerRun run) {
 		List<ClassRecord<MethodRecord>> cl = Collections.newList();
 		for (nz.ac.vuw.ecs.rprofs.server.data.ClassRecord cr:
-				Context.getInstance().db().getClasses(run)) {
+				Context.db().getClasses(run)) {
 			cl.add(cr.toRPC());
 		}
 		return cl;
 	}
 
 	public List<LogRecord> getLogs(ProfilerRun run) {
-		return Context.getInstance().db().getLogs(run);
+		return Context.db().getLogs(run);
 	}
 	
 	public List<LogRecord> getLogs(ProfilerRun run, int offset, int limit) {
-		return Context.getInstance().db().getLogs(run, offset, limit);
+		return Context.db().getLogs(run, offset, limit);
 	}
 
 	public int refreshLogs(ProfilerRun run) {
-		return Context.getInstance().db().getNumLogs(run);
+		return Context.db().getNumLogs(run);
 	}
 
 }

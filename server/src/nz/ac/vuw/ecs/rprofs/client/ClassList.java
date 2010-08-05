@@ -1,96 +1,90 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.Grid;
-import com.google.gwt.user.client.ui.InlineLabel;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 
-public class ClassList extends Composite implements ClassListener, View {
+public class ClassList extends Composite {
 
 	private static ClassListUiBinder uiBinder = GWT.create(ClassListUiBinder.class);
 
 	private final Inspector server;
-	private Button button;
 
 	@UiField Style style;
-	@UiField Grid panel;
+	@UiField(provided=true) ClassEntry heading;
+	@UiField Panel container;
 
+	private List<String> classes = new ArrayList<String>();
+	private Map<String, ClassRecord<MethodRecord>> recordMap = new HashMap<String, ClassRecord<MethodRecord>>();
+	private Map<String, ClassEntry> entryMap = new HashMap<String, ClassEntry>();
+
+	private boolean expanded = false;
+	
 	interface Style extends CssResource {
-		String hide();
-		String header();
 	}
 
 	interface ClassListUiBinder extends UiBinder<Widget, ClassList> {
 	}
 
-	public ClassList(Inspector server) {
+	public ClassList(String pkg, Inspector server) {
+		heading = new ClassEntry(pkg);
+
 		initWidget(uiBinder.createAndBindUi(this));
 
 		this.server = server;
-		button = new Button("Classes");
-
-		server.addClassListener(this);
-
-		panel.setWidget(0, 0, new InlineLabel("Methods"));
-		panel.setWidget(0, 1, new InlineLabel("Equals"));
-		panel.setWidget(0, 2, new InlineLabel("Hash"));
-		panel.setWidget(0, 3, new InlineLabel("Class"));
-
-		panel.getRowFormatter().addStyleName(0, style.header());
 	}
 
-	public void classesChanged(List<ClassRecord<MethodRecord>> records) {
-		panel.clear();
+	public void add(ClassRecord<MethodRecord> cr) {
+		String name = cr.getClassName();
+		classes.add(name);
+		recordMap.put(name, cr);
 
-		panel.resizeRows(1 + records.size());
+		int equals = 0;
+		int hashes = 0;
 
-		int i = 1;
-		for (ClassRecord<MethodRecord> cr: records) {
-			panel.setText(i, 0, String.valueOf(cr.getMethods().size()));
-			panel.setText(i, 3, cr.name);
-			
-			String equals = "";
-			String hash = "";
-			for (MethodRecord mr: cr.getMethods()) {
-				if (mr.name.equals("equals")) {
-					equals = "true";
-				}
-				else if (mr.name.equals("hashCode")) {
-					hash = "true";
-				}
+		for (MethodRecord mr: cr.getMethods()) {
+			if ("equals".equals(mr.name) && "(Ljava/lang/Object;)Z".equals(mr.desc)) {
+				equals = 1;
 			}
-			panel.setText(i, 1, equals);
-			panel.setText(i, 2, hash);
-			
-			i++;
+			else if ("hashCode".equals(mr.name) && "()I".equals(mr.desc)) {
+				hashes = 1;
+			}
 		}
+
+		ClassEntry ce = new ClassEntry(name, cr.getMethods().size(), cr.instances, equals, hashes);
+		entryMap.put(name, ce);
+
+		heading.add(ce);
 	}
 
-	public Widget getContentItem() {
-		return this;
-	}
-
-	public Button getMenuButton() {
-		return button;
-	}
-
-	public void refresh() {
-		server.getClasses();
-	}
-
-	@UiFactory
-	Grid createGrid() {
-		return new Grid(1, 4);
+	@UiHandler("heading")
+	public void expand(ClickEvent ev) {
+		if (expanded) {
+			container.clear();
+		}
+		else {
+			Collections.sort(classes);
+			for (String cls: classes) {
+				ClassEntry entry = entryMap.get(cls);
+				container.add(entry);
+			}
+		}
+		
+		expanded = !expanded;
 	}
 }

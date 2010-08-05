@@ -16,61 +16,61 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class Context {
 
-	private static Context context;
-
-	public static Context getInstance() {
-		if (context == null) {
-			context = new Context();
-		}
-
-		return context;
-	}
+	private static Database db;
+	private static Context current;
 	
-	private Database db;
-	private ProfilerRun current;
-	
-	private Map<Integer, ClassRecord> classes = new HashMap<Integer, ClassRecord>();
-
-	public Context() {
+	static {
 		ApplicationContext c =
 			new ClassPathXmlApplicationContext("nz/ac/vuw/ecs/rprofs/server/context.xml");
 
 		db = c.getBean(Database.class);
 	}
 
-	public Database db() {
+	public static Context getInstance() {
+		return current;
+	}
+	
+	
+	private final ProfilerRun run;
+	
+	private Map<Integer, ClassRecord> classes = new HashMap<Integer, ClassRecord>();
+
+	public Context() {
+		run = db.createRun();
+	}
+
+	public static Database db() {
 		return db;
 	}
 
-	public void start() {
+	public static void start() {
 		if (current != null) {
-			stop();
+			current.stop();
 		}
 		
-		ProfilerRun run = db.createRun();
+		current = new Context();
 
-		System.out.println("profiler run started at " + run.started);		
-
-		current = run;
+		System.out.println("profiler run started at " + current.run.started);
 	}
 
 	public void stop() {
-		ProfilerRun run = current;
 		current = null;
 		
 		run.stopped = Calendar.getInstance().getTime();
-		context.db.update(run);
+		db.update(run);
+		
+		db.storeClasses(run, classes.values());
 		
 		System.out.println("profiler run stopped at " + run.stopped);
 	}
 
 	public void storeLogs(List<LogRecord> records) {
-		db.storeLogs(current, records);
+		db.storeLogs(run, records);
 	}
 
 	public ClassRecord createClassRecord() {
 		ClassRecord cr = new ClassRecord();
-		cr.id = current.numClasses++;
+		cr.id = run.numClasses++;
 		classes.put(cr.id, cr);
 		return cr;
 	}
@@ -82,15 +82,11 @@ public class Context {
 		cr.getMethods().add(mr.id, mr);
 		return mr;
 	}
-	
-	public void storeClassRecord(ClassRecord cr) {
-		db.storeClass(current, cr);
-	}
 
 	public void setMainMethod(String name) {
-		if (current.program == null) {
-			current.program = name;
-			db.update(current);
+		if (run.program == null) {
+			run.program = name;
+			db.update(run);
 		}
 	}
 

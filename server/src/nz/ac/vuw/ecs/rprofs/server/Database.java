@@ -31,13 +31,15 @@ public class Database implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		template = new JdbcTemplate(db);
 
-		//template.update("create table profiler_runs (program varchar(20), started timestamp, stopped timestamp, handle varchar(63))");
+		//template.update("create table profiler_runs (program varchar(255), started timestamp, stopped timestamp, handle varchar(63))");
 	}
 
-	public void storeClass(ProfilerRun run, ClassRecord cr) {
-		template.update("insert into classes_" + run.handle + " (id, name) values (?, ?);", cr.id, cr.name);
-		for (MethodRecord mr: cr.getMethods()) {
-			template.update("insert into methods_" + run.handle + "(mid, cid, name) values (?, ?, ?);", mr.id, mr.parent.id, mr.name);
+	public void storeClasses(ProfilerRun run, Iterable<ClassRecord> classes) {
+		for (ClassRecord cr: classes) {
+			template.update("insert into classes_" + run.handle + " (id, name, instances) values (?, ?, ?);", cr.id, cr.name, cr.instances);
+			for (MethodRecord mr: cr.getMethods()) {
+				template.update("insert into methods_" + run.handle + "(mid, cid, name, description) values (?, ?, ?, ?);", mr.id, mr.parent.id, mr.name, mr.desc);
+			}
 		}
 	}
 
@@ -48,6 +50,7 @@ public class Database implements InitializingBean {
 				ClassRecord cr = new ClassRecord();
 				cr.id = rs.getInt(1);
 				cr.name = rs.getString(2);
+				cr.instances = rs.getInt(3);
 				return cr;
 			}
 		});
@@ -64,6 +67,7 @@ public class Database implements InitializingBean {
 				mr.parent = classMap.get(rs.getInt(2));
 				mr.parent.getMethods().add(mr);
 				mr.name = rs.getString(3);
+				mr.desc = rs.getString(4);
 				return mr;
 			}
 		});
@@ -72,7 +76,7 @@ public class Database implements InitializingBean {
 	}
 
 	public List<ProfilerRun> getProfiles() {
-		List<ProfilerRun> runs = template.query("select * from profiler_runs;", new RowMapper<ProfilerRun>() {
+		List<ProfilerRun> runs = template.query("select * from profiler_runs order by started;", new RowMapper<ProfilerRun>() {
 			public ProfilerRun mapRow(ResultSet rs, int row) throws SQLException {
 				ProfilerRun run = new ProfilerRun();
 				run.program = rs.getString(1);
@@ -103,10 +107,10 @@ public class Database implements InitializingBean {
 		template.update("insert into profiler_runs (program, started, stopped, handle) values (?, ?, ?, ?)",
 				run.program, run.started, run.stopped, run.handle);
 
-		template.update("create table classes_" + run.handle + " (id integer, name varchar(255));");
-		template.update("create table methods_" + run.handle + " (mid integer, cid integer, name varchar(255));");
+		template.update("create table classes_" + run.handle + " (id integer, name varchar(255), instances integer);");
+		template.update("create table methods_" + run.handle + " (mid integer, cid integer, name varchar(255), description varchar(255));");
 		template.update("create table events_" + run.handle
-				+ " (index serial, thread bigint, event varchar(63), cname varchar(255), mname varchar(255), cnum integer, mnum integer, len integer"
+				+ " (index serial, thread bigint, event varchar(63), cname varchar(1023), mname varchar(1023), cnum integer, mnum integer, len integer"
 				+ ", arg0 bigint, arg1 bigint, arg2 bigint, arg3 bigint, arg4 bigint, arg5 bigint, arg6 bigint, arg7 bigint, arg8 bigint, arg9 bigint, arg10 bigint, arg11 bigint, arg12 bigint, arg13 bigint, arg14 bigint, arg15 bigint"
 				+ ");");
 
@@ -122,6 +126,7 @@ public class Database implements InitializingBean {
 		template.update("delete from profiler_runs where started=?;", run.started);
 		template.update("drop table classes_" + run.handle + ";");
 		template.update("drop table events_" + run.handle + ";");
+		template.update("drop table methods_" + run.handle + ";");
 	}
 
 	public List<LogRecord> getLogs(ProfilerRun run) {

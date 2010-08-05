@@ -32,7 +32,7 @@ public class Inspector implements EntryPoint {
 		instance = this;
 
 		panel = new InspectorPanel(new ProfilerRunsPane(this));
-		panel.addView(new ClassList(this));
+		panel.addView(new PackageList(this));
 		panel.addView(new LogViewer(this));
 		RootPanel.get().add(panel);
 

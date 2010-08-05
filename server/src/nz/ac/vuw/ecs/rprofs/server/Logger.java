@@ -89,6 +89,9 @@ public class Logger extends HttpServlet {
 			if ("main method entered".equals(event) && cls != null) {
 				Context.getInstance().setMainMethod(cls.name);
 			}
+			else if ("<init>".equals(record.methodName) && cls != null) {
+				cls.instances++;
+			}
 		}
 		
 		return records;

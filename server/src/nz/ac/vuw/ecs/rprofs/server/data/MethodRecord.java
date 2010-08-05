@@ -15,7 +15,6 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 	public ClassRecord parent;
 	
 	public int access;
-	public String desc;
 	public String signature;
 	public String[] exceptions;
 	

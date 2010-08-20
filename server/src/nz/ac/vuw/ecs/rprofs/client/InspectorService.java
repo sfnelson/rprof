@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.client;
 import java.util.List;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.client.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
@@ -16,7 +17,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("inspector")
 public interface InspectorService extends RemoteService {
 	List<ProfilerRun> getProfilerRuns();
-	List<ClassRecord<MethodRecord>> getClasses(ProfilerRun run);
+	List<ClassRecord<MethodRecord, FieldRecord>> getClasses(ProfilerRun run);
 	List<LogRecord> getLogs(ProfilerRun run);
 	List<LogRecord> getLogs(ProfilerRun run, int offset, int limit);
 	void dropProfilerRun(ProfilerRun run);

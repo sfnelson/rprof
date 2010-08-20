@@ -9,6 +9,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 
 import com.google.gwt.dev.asm.ClassAdapter;
 import com.google.gwt.dev.asm.ClassVisitor;
+import com.google.gwt.dev.asm.FieldVisitor;
 import com.google.gwt.dev.asm.MethodVisitor;
 import com.google.gwt.dev.asm.Opcodes;
 import com.google.gwt.dev.asm.Type;
@@ -43,6 +44,17 @@ public class TrackingClassWeaver extends ClassAdapter {
 			mv = new SetTrackerGenerator(mv, mr);
 		}
 		return mv;
+	}
+	
+	@Override
+	public FieldVisitor visitField(int access, String name, String desc,
+			String signature, Object value) {
+		if (name.equals("cnum")) {
+			return super.visitField(access, name, desc, signature, new Integer(record.id));
+		}
+		else {
+			return super.visitField(access, name, desc, signature, value);
+		}
 	}
 
 	private static class GetTrackerGenerator extends GeneratorAdapter implements Opcodes {

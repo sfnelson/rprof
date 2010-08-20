@@ -38,10 +38,26 @@ public class ProfilerRunsPane extends Composite implements ProfilerRunListener {
 	}
 
 	public void profilerRunsAvailable(List<ProfilerRun> runs) {
-		panel.clear();
+		int i = 0;
+		while (i < runs.size()) {
+			ProfilerRun run = runs.get(i);
+			if (i < panel.getWidgetCount()) {
+				ProfilerRunWidget w = (ProfilerRunWidget) panel.getWidget(i);
+				if (w.run.equals(run)) {
+					w.update(run);
+					i++;
+				}
+				else {
+					panel.remove(w);
+				}
+			}
+			else {
+				panel.add(new ProfilerRunWidget(this, run));
+			}
+		}
 		
-		for (ProfilerRun run: runs) {
-			panel.add(new ProfilerRunWidget(this, run));
+		while (i < panel.getWidgetCount()) {
+			panel.remove(i);
 		}
 	}
 

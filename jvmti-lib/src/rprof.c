@@ -72,6 +72,8 @@
 #define HEAP_TRACKER_newarr			newarr		/* Name of java newarray method */
 #define HEAP_TRACKER_native_newobj	_newobj		/* Name of java newobj native */
 #define HEAP_TRACKER_native_newarr	_newarr		/* Name of java newarray native */
+#define HEAP_TRACKER_newcls			newcls
+#define HEAP_TRACKER_native_newcls	_newcls
 #define HEAP_TRACKER_enter			enter		/* Name of java method execution method */
 #define HEAP_TRACKER_exit			exit		/* Name of java method return method */
 #define HEAP_TRACKER_native_enter	_menter		/* Name of java method execution native */
@@ -79,6 +81,8 @@
 #define HEAP_TRACKER_engaged		engaged		/* Name of static field switch */
 #define HEAP_TRACKER_main			main		/* Name of java main method tracker */
 #define HEAP_TRACKER_native_main	_main		/* Name of java main method tracker native */
+#define HEAP_TRACKER_watch			watch		/* Name of java watch method */
+#define HEAP_TRACKER_native_watch	_watch		/* Name of java watch method native */
 
 /* C macros to create strings from tokens */
 #define _STRING(s) #s
@@ -101,8 +105,7 @@ typedef struct {
 	jrawMonitorID  lock;
 	/* Counter on classes where BCI has been applied */
 	jint           ccount;
-	/* Counter for object ids */
-	jlong		   oid;
+	jlong		   nullCounter;
 } GlobalAgentData;
 
 static GlobalAgentData *gdata;
@@ -129,12 +132,11 @@ exitCriticalSection(jvmtiEnv *jvmti)
 
 /* Method to get a new object id */
 static jlong getNewObjectId() {
+	// Because this is called from within cbObjectTagger we can't call JNI functions.
 
-	jlong id;
-
-	enterCriticalSection(gdata->jvmti); {
-		id = gdata->oid++;
-	} exitCriticalSection(gdata->jvmti);
+	jlong id = gdata->nullCounter;
+	id++;
+	gdata->nullCounter = id;
 
 	return id;
 }
@@ -158,18 +160,43 @@ logEvent(JNIEnv *env, jvmtiEnv *jvmti, jthread thread, jobject o, const char* fo
 	stdout_message(format, id, signature);
 }
 
-/* Java Native Method for Object.<init> */
+/* Java Native Method for <clinit> */
 static void
-HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, int cnum, int mnum, jobject o, jlong id)
+HEAP_TRACKER_native_newcls(JNIEnv *env, jclass klass, jobject cls, int cnum)
 {
 	jvmtiError error;
 	jvmtiEnv *jvmti;
-	char* signature;
+	jlong tag;
+
+	if ( gdata->vmDead ) {
+		return;
+	}
+
+	jvmti = gdata->jvmti;
+
+	tag = RPROF_MAGIC | cnum;
+
+	error = (*jvmti)->SetTag(jvmti, cls, tag);
+	check_jvmti_error(jvmti, error, "Cannot tag class with id");
+
+	log_method_event(0, RPROF_CLASS_INITIALIZED, cnum, 0, 1, &tag);
+}
+
+/* Java Native Method for Object.<init> */
+static void
+HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, jobject o, jlong id)
+{
+	jvmtiError error;
+	jvmtiEnv *jvmti;
 	jclass cls;
 	jlong threadId = 0;
 
 	if ( gdata->vmDead ) {
 		return;
+	}
+
+	if (id == 0) {
+		id = getNewObjectId();
 	}
 
 	jvmti = gdata->jvmti;
@@ -184,7 +211,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, int cnum, 
 		check_jvmti_error(jvmti, error, "Cannot read tag");
 	}
 
-	log_method_event(threadId, "object allocated", cnum, mnum, 1, &id, 0);
+	log_method_event(threadId, RPROF_OBJECT_ALLOCATED, 0, 0, 1, &id);
 }
 
 /* Java Native Method for newarray */
@@ -208,7 +235,7 @@ HEAP_TRACKER_native_newarr(JNIEnv *env, jclass klass, jthread thread, jobject a,
 	check_jvmti_error(jvmti, error, "Cannot read tag");
 
 	//logEvent(env, jvmti, thread, a, "array allocated:  %x (%s)\n");
-	log_method_event(threadId, "array allocated", 0, 0, 1, &id, 0);
+	log_method_event(threadId, RPROF_ARRAY_ALLOCATED, 0, 0, 1, &id);
 }
 
 /* Java Native Method for method execution */
@@ -228,8 +255,12 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 
 		jvmti = gdata->jvmti;
 
-		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
-		check_jvmti_error(jvmti, error, "Cannot read tag");
+		if (thread != NULL) {
+			error = (*jvmti)->GetTag(jvmti, thread, &threadId);
+			check_jvmti_error(jvmti, error, "Cannot read thread tag");
+		} else {
+			threadId = 0;
+		}
 
 		jsize len = (*env)->GetArrayLength(env, args);
 		jlong tags[len];
@@ -237,19 +268,19 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 			jobject o = (*env)->GetObjectArrayElement(env, args, i);
 			if (o != NULL) {
 				error = (*jvmti)->GetTag(jvmti, o, &tags[i]);
-				check_jvmti_error(jvmti, error, "Cannot read tag");
+				check_jvmti_error(jvmti, error, "Cannot read object tag");
 			} else {
-				tags[i] = -1;
+				tags[i] = 0;
 			}
 		}
 
-		log_method_event(threadId, "method entered", cnum, mnum, len, tags, 0);
+		log_method_event(threadId, RPROF_METHOD_ENTER, cnum, mnum, len, tags);
 	}
 }
 
 /* Java Native Method for method return */
 static void
-HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum)
+HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum, jobject arg)
 {
 	if (gdata->vmInitialized) {
 		jvmtiError error;
@@ -264,11 +295,23 @@ HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 		jvmti = gdata->jvmti;
 
 		jlong threadId;
+		jlong argId;
+
+		jint numArgs = 0;
+		jlong* args = NULL;
 
 		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
-		check_jvmti_error(jvmti, error, "Cannot read tag");
+		check_jvmti_error(jvmti, error, "Cannot read thread tag");
 
-		log_method_event(threadId, "method exited", cnum, mnum, 0, NULL, 0);
+		if (arg != NULL) {
+			error = (*jvmti)->GetTag(jvmti, arg, &argId);
+			check_jvmti_error(jvmti, error, "Cannot read object tag");
+
+			numArgs = 1;
+			args = &argId;
+		}
+
+		log_method_event(threadId, RPROF_METHOD_RETURN, cnum, mnum, numArgs, args);
 	}
 }
 
@@ -291,8 +334,14 @@ HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
 		check_jvmti_error(jvmti, error, "Cannot read tag");
 
-		log_method_event(threadId, "main method entered", cnum, mnum, 0, NULL, 0);
+		log_method_event(threadId, RPROF_METHOD_ENTER, cnum, mnum, 0, NULL);
 	}
+}
+
+static void
+HEAP_TRACKER_native_watch(JNIEnv *env, jclass klass, jthread thread)
+{
+
 }
 
 /* Callback for JVMTI_EVENT_VM_START */
@@ -305,12 +354,13 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 		jint rc;
 
 		/* Java Native Methods for class */
-		static JNINativeMethod registry[5] = {
-				{STRING(HEAP_TRACKER_native_newobj), "(Ljava/lang/Object;IILjava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newobj},
+		static JNINativeMethod registry[6] = {
+				{STRING(HEAP_TRACKER_native_newobj), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newobj},
 				{STRING(HEAP_TRACKER_native_newarr), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newarr},
 				{STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
-				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_exit},
-				{STRING(HEAP_TRACKER_native_main), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_main}
+				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;IILjava/lang/Object;)V", (void*)&HEAP_TRACKER_native_exit},
+				{STRING(HEAP_TRACKER_native_main), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_main},
+				{STRING(HEAP_TRACKER_native_newcls), "(Ljava/lang/Object;I)V", (void*)&HEAP_TRACKER_native_newcls}
 		};
 
 		/* Register Natives for class whose methods we use */
@@ -319,7 +369,8 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 			fatal_error("ERROR: JNI: Cannot find %s with FindClass\n",
 					STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
 		}
-		rc = (*env)->RegisterNatives(env, klass, registry, 5);
+
+		rc = (*env)->RegisterNatives(env, klass, registry, 6);
 		if ( rc != 0 ) {
 			fatal_error("ERROR: JNI: Cannot register natives for class %s\n",
 					STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
@@ -341,10 +392,21 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 
 /* Iterate Through Heap callback */
 static jint JNICALL
-cbObjectTagger(jlong class_tag, jlong size, jlong* tag_ptr, jint length,
-		void *user_data)
+cbObjectTagger(jlong class_tag, jlong size, jlong* tag_ptr, jint length, void* userData)
 {
-	*tag_ptr = getNewObjectId();
+	jint cnum;
+
+	if (length != -1) {
+		// TODO: stop ignoring arrays!
+		return JVMTI_VISIT_OBJECTS;
+	}
+
+	if (*tag_ptr == 0) {
+		*tag_ptr = getNewObjectId();
+	}
+
+	cnum = (jint)(class_tag & 0xFFFFFFFFll);
+	log_method_event(0, RPROF_OBJECT_TAGGED, cnum, 0, 1, tag_ptr);
 
 	return JVMTI_VISIT_OBJECTS;
 }
@@ -356,16 +418,20 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 	jvmtiHeapCallbacks heapCallbacks;
 	jvmtiError         error;
 
-	stdout_message("-------- tagging exiting objects\n");
+	stdout_message("-------- tagging existing objects\n");
+
+	jclass object_class = (*env)->FindClass(env, "java/lang/Object");
+	error = (*jvmti)->SetTag(jvmti, object_class, RPROF_MAGIC | 1ll);
+	check_jvmti_error(jvmti, error, "Cannot set tag on Object.class");
 
 	/* Iterate through heap, find all untagged objects allocated before this */
 	(void)memset(&heapCallbacks, 0, sizeof(heapCallbacks));
 	heapCallbacks.heap_iteration_callback = &cbObjectTagger;
-	error = (*jvmti)->IterateThroughHeap(jvmti, JVMTI_HEAP_FILTER_TAGGED,
+	error = (*jvmti)->IterateThroughHeap(jvmti, 0, //JVMTI_HEAP_FILTER_TAGGED,
 			NULL, &heapCallbacks, NULL);
 	check_jvmti_error(jvmti, error, "Cannot iterate through heap");
 
-	stdout_message("-------- done tagging exiting objects\n");
+	stdout_message("-------- done tagging existing objects\n");
 
 	enterCriticalSection(jvmti); {
 

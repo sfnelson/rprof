@@ -19,10 +19,23 @@ public class GenericClassWeaver extends ClassAdapter {
 
 	private final ClassRecord cr;
 	
+	private boolean visitedCLInit = false;
+	
 	public GenericClassWeaver(ClassVisitor cv, ClassRecord cr) {
 		super(cv);
 		
 		this.cr = cr;
+	}
+
+	@Override
+	public void visitEnd() {
+		if (!visitedCLInit) {
+			MethodVisitor mv = visitMethod(0, "<clinit>", "()V", null, null);
+			mv.visitCode();
+			mv.visitInsn(Opcodes.RETURN);
+			mv.visitEnd();
+		}
+		super.visitEnd();
 	}
 
 	@Override
@@ -39,13 +52,25 @@ public class GenericClassWeaver extends ClassAdapter {
 		MethodRecord mr = MethodRecord.create(cr, access, name, desc, signature, exceptions);
 		
 		// check for: public static void main(String[])
-		if ("main".equals(name) && "([Ljava/lang/String;)V".equals(desc)
-				&& (Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC) == access) {
+		if (mr.isMain()) {
 			mv = new MainMethodWeaver(mv, mr);
 		}
 		// check for <init>(..)
-		else if (name.equals("<init>")) {
+		else if (mr.isInit()) {
 			mv = new InitMethodWeaver(mv, mr);
+		}
+		// check for: public boolean equals(Object)
+		else if (mr.isEquals()) {
+			mv = new EqualsMethodWeaver(mv, mr);
+		}
+		// check for: public int hashCode()
+		else if (mr.isHashCode()) {
+			mv = new HashCodeMethodWeaver(mv, mr);
+		}
+		// check for: <clinit>()
+		else if (mr.isCLInit()) {
+			visitedCLInit = true;
+			mv = new CLInitMethodWeaver(mv, mr);
 		}
 		return mv;
 	}

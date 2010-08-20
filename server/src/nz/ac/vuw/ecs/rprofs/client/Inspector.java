@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Set;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.client.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -37,6 +39,12 @@ public class Inspector implements EntryPoint {
 		RootPanel.get().add(panel);
 
 		refreshRuns();
+		
+		new Timer() {
+			public void run() {
+				refreshRuns();
+			}
+		}.scheduleRepeating(15000);
 	}
 
 	private void refreshRuns() {
@@ -74,12 +82,12 @@ public class Inspector implements EntryPoint {
 		if (currentRun == null) {
 			return;
 		}
-		inspector.getClasses(currentRun, new AsyncCallback<List<ClassRecord<MethodRecord>>>() {
+		inspector.getClasses(currentRun, new AsyncCallback<List<ClassRecord<MethodRecord, FieldRecord>>>() {
 			public void onFailure(Throwable caught) {
 				RootPanel.get().add(new Label("Failed to retrieve classes!"));
 			}
 
-			public void onSuccess(List<ClassRecord<MethodRecord>> result) {
+			public void onSuccess(List<ClassRecord<MethodRecord, FieldRecord>> result) {
 				for (ClassListener l: classListeners) {
 					l.classesChanged(result);
 				}

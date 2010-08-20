@@ -72,7 +72,9 @@ public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 		public static final Method exit = getTrackerMethod("exit");
 		public static final Method newarr = getTrackerMethod("newarr");
 		public static final Method newobj = getTrackerMethod("newobj");
+		public static final Method newcls = getTrackerMethod("newcls");
 		public static final Method main = getTrackerMethod("main");
+		public static final Method create = getTrackerMethod("create");
 
 		public static String getName() {
 			return Type.getInternalName(cls);

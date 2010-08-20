@@ -13,8 +13,8 @@ JNIEXPORT void JNICALL log_profiler_started();
 
 JNIEXPORT void JNICALL log_profiler_stopped();
 
-JNIEXPORT void JNICALL log_method_event(jlong thread, const char* message,
-		jint cnum, jint mnum, jint len, jlong* params, int force_send);
+JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
+		jint cnum, jint mnum, jint len, jlong* params);
 
 JNIEXPORT void JNICALL flush_method_event_buffer();
 
@@ -23,10 +23,9 @@ JNIEXPORT void JNICALL flush_method_event_buffer();
 struct EventRecord {
 	int thread_upper;
 	int thread_lower;
-	char message[64];
+	int message;
 	int cnum;
 	int mnum;
 	int len;
 	int params[MAX_PARAMETERS * 2];
 };
-

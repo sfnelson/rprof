@@ -11,6 +11,8 @@
 			display: inline-block;
 			padding: 0.5ex 0.5em;
 			width: 15em;
+			white-space: nowrap;
+			overflow: hidden;
 		}
 		.buttonPanel {
 			float: right;

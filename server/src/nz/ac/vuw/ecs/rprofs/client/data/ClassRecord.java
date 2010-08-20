@@ -4,14 +4,15 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClassRecord<T extends MethodRecord> implements Serializable {
+public class ClassRecord<M extends MethodRecord, F extends FieldRecord> implements Serializable {
 	
 	private static final long serialVersionUID = 2390564187873117774L;
 
 	public int id;
 	public String name;
 	public int instances;
-	private List<T> methods = new ArrayList<T>();
+	private List<M> methods = new ArrayList<M>();
+	private List<F> fields = new ArrayList<F>();
 	
 	public ClassRecord() {}
 	protected ClassRecord(int id, String name, int instances) {
@@ -20,15 +21,24 @@ public class ClassRecord<T extends MethodRecord> implements Serializable {
 		this.instances = instances;
 	}
 	
-	public List<T> getMethods() {
+	public List<M> getMethods() {
 		return methods;
 	}
 	
-	public ClassRecord<MethodRecord> toRPC() {
-		ClassRecord<MethodRecord> cr = new ClassRecord<MethodRecord>(id, name, instances);
+	public List<F> getFields() {
+		return fields;
+	}
+	
+	public ClassRecord<MethodRecord, FieldRecord> toRPC() {
+		ClassRecord<MethodRecord, FieldRecord> cr
+			= new ClassRecord<MethodRecord, FieldRecord>(id, name, instances);
 		
-		for (T mr: getMethods()) {
+		for (M mr: getMethods()) {
 			cr.methods.add(mr.toRPC());
+		}
+		
+		for (F fr: getFields()) {
+			cr.fields.add(fr.toRPC());
 		}
 		
 		return cr;

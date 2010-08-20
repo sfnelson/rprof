@@ -32,6 +32,7 @@ class MainMethodWeaver extends MethodWeaver {
 		case RETURN:
 			push(record.parent.id);
 			push(record.id);
+			visitInsn(ACONST_NULL);
 			visitTrackerMethod(Tracker.exit);
 			break;
 		}

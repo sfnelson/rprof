@@ -1,12 +1,12 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.client.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 
 import com.google.gwt.core.client.GWT;
@@ -23,14 +23,12 @@ public class ClassList extends Composite {
 
 	private static ClassListUiBinder uiBinder = GWT.create(ClassListUiBinder.class);
 
-	private final Inspector server;
-
 	@UiField Style style;
 	@UiField(provided=true) ClassEntry heading;
 	@UiField Panel container;
 
 	private List<String> classes = new ArrayList<String>();
-	private Map<String, ClassRecord<MethodRecord>> recordMap = new HashMap<String, ClassRecord<MethodRecord>>();
+	private Map<String, ClassRecord<MethodRecord, FieldRecord>> recordMap = Collections.newMap();
 	private Map<String, ClassEntry> entryMap = new HashMap<String, ClassEntry>();
 
 	private boolean expanded = false;
@@ -45,11 +43,9 @@ public class ClassList extends Composite {
 		heading = new ClassEntry(pkg);
 
 		initWidget(uiBinder.createAndBindUi(this));
-
-		this.server = server;
 	}
 
-	public void add(ClassRecord<MethodRecord> cr) {
+	public void add(ClassRecord<MethodRecord, FieldRecord> cr) {
 		String name = cr.getClassName();
 		classes.add(name);
 		recordMap.put(name, cr);

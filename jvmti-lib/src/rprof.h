@@ -62,6 +62,18 @@
 
 /* Agent library externals to export. */
 
+#define RPROF_OBJECT_ALLOCATED 1
+#define RPROF_ARRAY_ALLOCATED 2
+#define RPROF_METHOD_ENTER 3
+#define RPROF_METHOD_RETURN 4
+#define RPROF_FIELD_READ 5
+#define RPROF_FIELD_WRITE 6
+#define RPROF_CLASS_WEAVE 7
+#define RPROF_CLASS_INITIALIZED 8
+#define RPROF_OBJECT_TAGGED 9
+
+#define RPROF_MAGIC (0xABCDEll << 32)
+
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved);
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm);
 

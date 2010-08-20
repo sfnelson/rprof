@@ -24,7 +24,7 @@ class InitMethodWeaver extends MethodWeaver {
 
 		push(record.parent.id);											// stack: cnum
 		push(record.id);												// stack: cnum, mnum
-		push(args.size() - 1);												// stack: cnum, mnum, numArgs
+		push(args.size() - 1);											// stack: cnum, mnum, numArgs
 		visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));	// stack: cnum, mnum, args
 
 		// ignore 'this', it hasn't been initialized yet
@@ -40,8 +40,9 @@ class InitMethodWeaver extends MethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == RETURN) {
-			push(record.parent.id);											// stack: cnum
-			push(record.id);												// stack: cnum, mnum
+			push(record.parent.id);										// stack: cnum
+			push(record.id);											// stack: cnum, mnum
+			visitIntInsn(ALOAD, 0);										// stack: cnum, mnum, this
 			visitTrackerMethod(Tracker.exit);
 		}
 

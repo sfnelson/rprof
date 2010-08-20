@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.client.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 
 import com.google.gwt.core.client.GWT;
@@ -52,13 +53,13 @@ public class PackageList extends Composite implements ClassListener, View {
 	}
 
 	@Override
-	public void classesChanged(List<ClassRecord<MethodRecord>> classes) {
+	public void classesChanged(List<ClassRecord<MethodRecord, FieldRecord>> classes) {
 		container.clear();
 		
 		List<String> packages = new ArrayList<String>();
 		Map<String, ClassList> packageMap = new HashMap<String, ClassList>();
 		
-		for (ClassRecord<MethodRecord> cr: classes) {
+		for (ClassRecord<MethodRecord, FieldRecord> cr: classes) {
 			String pkg = cr.getPackage();
 			
 			ClassList list = packageMap.get(pkg);

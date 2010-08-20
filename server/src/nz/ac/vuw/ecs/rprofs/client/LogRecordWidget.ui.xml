@@ -1,12 +1,35 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
-	<ui:style>
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.LogRecordWidget.Style">
+		.container {
+			height: 3ex;
+			border-left: solid 1px #eee;
+			padding-left: 0.2em;
+			white-space: nowrap;
+		}
+		.thread {
+			position: absolute;
+			display: block;
+			width: 0.8em;
+			height: 3ex;
+			left: 0.1em;
+			background-color: #ddf;
+			border-left: solid 1px #aaf;
+			border-right: solid 1px #aaf;
+		}
+		.object span {
+			display: none;
+		}
+		.object .thread, .object .event, .object .args {
+			display: inline;
+		}
+		.field {}
+		.method {}
 	</ui:style>
-	<g:HTMLPanel>
-		<g:InlineLabel ui:field="thread"></g:InlineLabel>
-		<g:InlineHTML ui:field="event"></g:InlineHTML>
-		<g:InlineLabel ui:field="cname"></g:InlineLabel>.<g:InlineLabel ui:field="mname"></g:InlineLabel>(
-		<g:InlineLabel ui:field="args"></g:InlineLabel>)
+	<g:HTMLPanel styleName="{style.container}">
+		<g:InlineHTML ui:field="thread" styleName="{style.thread}"></g:InlineHTML>
+		<g:InlineHTML ui:field="event" styleName="{style.event}"></g:InlineHTML>
+		<g:InlineLabel ui:field="cname"></g:InlineLabel><span>.</span><g:InlineLabel ui:field="mname"></g:InlineLabel><g:InlineHTML ui:field="args" styleName="{style.args}"></g:InlineHTML>
 	</g:HTMLPanel>
 </ui:UiBinder> 

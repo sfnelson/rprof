@@ -20,81 +20,53 @@ import nz.ac.vuw.ecs.rprofs.server.Context;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord {
-	private static final long serialVersionUID = -357201240938009655L;
+public class FieldRecord extends nz.ac.vuw.ecs.rprofs.client.data.FieldRecord {
+	private static final long serialVersionUID = 2503578755127962360L;
 
 	public ClassRecord parent;
 	
 	public int access;
-	public String signature;
-	public String[] exceptions;
 	
-	public MethodRecord() {}
+	public FieldRecord() {}
 	
-	public MethodRecord(ClassRecord parent) {
+	public FieldRecord(ClassRecord parent) {
 		this.parent = parent;
 	}
 
-	public static MethodRecord create(ClassRecord parent, int access, String name, String desc,
-			String signature, String[] exceptions) {
-		MethodRecord mr = Context.getInstance().createMethodRecord(parent);
-		mr.access = access;
+	public static FieldRecord create(ClassRecord parent, int access, String name, String desc) {
+		FieldRecord mr = Context.getInstance().createFieldRecord(parent);
 		mr.name = name;
 		mr.desc = desc;
-		mr.signature = signature;
-		mr.exceptions = exceptions;
+		mr.access = access;
 		return mr;
 	}
 	
 	public String toString() {
-		return "m:" + parent + "." + name + ":" + desc;
-	}
-	
-	public boolean isMain() {
-		return "main".equals(name) && "([Ljava/lang/String;)V".equals(desc)
-		&& (Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC) == access;
-	}
-
-	public boolean isInit() {
-		return name.equals("<init>");
-	}
-	
-	public boolean isCLInit() {
-		return name.equals("<clinit>");
-	}
-	
-	public boolean isEquals() {
-		return "equals".equals(name) && "(Ljava/lang/Object;)Z".equals(desc)
-			&& Opcodes.ACC_PUBLIC == access;
-	}
-	
-	public boolean isHashCode() {
-		return "hashCode".equals(name) && "()I".equals(desc)
-			&& Opcodes.ACC_PUBLIC == access;
+		return "f:" + parent + "." + name + ":" + desc;
 	}
 	
 	public boolean isStatic() {
 		return (Opcodes.ACC_STATIC & access) != 0;
 	}
 	
-	public static Template<MethodRecord, ProfilerRun> getTemplate() {
+	public static Template<FieldRecord, ProfilerRun> getTemplate() {
 		return template;
 	}
 
-	private static final Template<MethodRecord, ProfilerRun> template = new Template<MethodRecord, ProfilerRun>() {
+	private static final Template<FieldRecord, ProfilerRun> template = new Template<FieldRecord, ProfilerRun>() {
 
 		@Override
-		public String createTable(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run) {
-			return "create table methods_" + run.handle + " (mid integer, cid integer, name varchar(255), description varchar(255));";
+		public String createTable(ProfilerRun run) {
+			return "create table fields_" + run.handle + " (mid integer, cid integer, name varchar(255), description varchar(255));";
 		}
 
 		@Override
-		public String insert(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun p) {
+		public String insert(ProfilerRun p) {
 			return "insert into methods_" + p.handle + " (mid, cid, name, description) values (?, ?, ?, ?);";
 		}
 
 		@Override
-		public PreparedStatementSetter inserter(final MethodRecord mr) {
+		public PreparedStatementSetter inserter(final FieldRecord mr) {
 			return new PreparedStatementSetter() {
 				@Override
 				public void setValues(PreparedStatement cr) throws SQLException {
@@ -108,14 +80,14 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public <T> RowMapper<MethodRecord> mapper(T param) {
+		public <T> RowMapper<FieldRecord> mapper(T param) {
 			final Map<Integer, ClassRecord> map = (Map<Integer, ClassRecord>) param;
-			return new RowMapper<MethodRecord>() {
-				public MethodRecord mapRow(ResultSet rs, int row) throws SQLException {
-					MethodRecord mr = new MethodRecord();
+			return new RowMapper<FieldRecord>() {
+				public FieldRecord mapRow(ResultSet rs, int row) throws SQLException {
+					FieldRecord mr = new FieldRecord();
 					mr.id = rs.getInt(1);
 					mr.parent = map.get(rs.getInt(2));
-					mr.parent.getMethods().add(mr);
+					mr.parent.getFields().add(mr);
 					mr.name = rs.getString(3);
 					mr.desc = rs.getString(4);
 					return mr;
@@ -125,27 +97,27 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 
 		@Override
 		public String countSelectAll(ProfilerRun p) {
-			return "select count(1) from methods_" + p.handle + ";";
+			return "select count(1) from fields_" + p.handle + ";";
 		}
 
 		@Override
 		public String selectAll(ProfilerRun p) {
-			return "select * from methods_" + p.handle + ";";
+			return "select * from fields_" + p.handle + ";";
 		}
 		
 		@Override
 		public String select(ProfilerRun p, int offset, int limit) {
-			return "select * from methods_" + p.handle + " order by id limit "
+			return "select * from fields_" + p.handle + " order by id limit "
 			+ limit + " offset " + offset + ";";
 		}
 
 		@Override
 		public String update(ProfilerRun p) {
-			return "update methods_" + p.handle + " set name = ?, desc = ? where id = ?;";
+			return "update fields_" + p.handle + " set name = ?, desc = ? where id = ?;";
 		}
 
 		@Override
-		public PreparedStatementSetter updater(final MethodRecord r) {
+		public PreparedStatementSetter updater(final FieldRecord r) {
 			return new PreparedStatementSetter() {
 				@Override
 				public void setValues(PreparedStatement cr) throws SQLException {
@@ -158,11 +130,11 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 
 		@Override
 		public String delete(ProfilerRun p) {
-			return "delete from methods_" + p.handle + " where id = ?;";
+			return "delete from fields_" + p.handle + " where id = ?;";
 		}
 
 		@Override
-		public PreparedStatementSetter deleter(final MethodRecord r) {
+		public PreparedStatementSetter deleter(final FieldRecord r) {
 			return new PreparedStatementSetter() {
 				@Override
 				public void setValues(PreparedStatement cr) throws SQLException {
@@ -173,7 +145,7 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 
 		@Override
 		public String drop(ProfilerRun run) {
-			return "drop table methods_" + run.handle + ";";
+			return "drop table fields_" + run.handle + ";";
 		}
 	};
 }

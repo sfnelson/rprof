@@ -66,9 +66,7 @@
 			width: 2ex;
 			padding: 1ex;
 			padding-top: 1.5ex;
-		}
-		.closeButton:hover {
-			background-color: #999;
+			outline: none;
 		}
 		.closeButtonInner {
 			line-height: 0;

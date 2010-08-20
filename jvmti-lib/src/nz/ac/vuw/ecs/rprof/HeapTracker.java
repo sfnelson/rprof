@@ -36,19 +36,32 @@
 
 package nz.ac.vuw.ecs.rprof;
 
-
 /* Java class to hold static methods which will be called in byte code
  *    injections of all class files.
  */
 
 public class HeapTracker {
 
-	private static int engaged = 0;
+	private static int engaged;
+	private static int cnum;
+	private static HeapTracker nullCounter;
+	private static volatile long nextThreadId;
+	
+	public static HeapTracker create() {
+		return new HeapTracker();
+	}
+	
+	private static native void _newcls(Object cls, int cnum);
+	public static void newcls(Object cls, int cnum) {
+		if ( engaged != 0 ) {
+			_newcls(cls, cnum);
+		}
+	}
 
-	private static native void _newobj(Object thread, int cnum, int mnum, Object o, long id);
-	public static void newobj(int cnum, int mnum, Object o) {
-		if ( engaged != 0 && !(o instanceof HeapTracker)) {
-			_newobj(Thread.currentThread(), cnum, mnum, o, id(o));
+	private static native void _newobj(Object thread, Object o, long id);
+	public static void newobj(Object o) {
+		if ( engaged != 0 ) {
+			_newobj(Thread.currentThread(), o, id(o));
 		}
 	}
 
@@ -66,10 +79,10 @@ public class HeapTracker {
 		}
 	}
 
-	private static native void _mexit(Object thread, int cnum, int mnum);
-	public static void exit(int cnum, int mnum) {
+	private static native void _mexit(Object thread, int cnum, int mnum, Object arg);
+	public static void exit(int cnum, int mnum, Object arg) {
 		if ( engaged != 0) {
-			_mexit(Thread.currentThread(), cnum, mnum);
+			_mexit(Thread.currentThread(), cnum, mnum, arg);
 		}
 	}
 
@@ -80,22 +93,20 @@ public class HeapTracker {
 		}
 	}
 
-	private static HeapTracker nullCounter;
+	private static long id(Object o) {
+		return getTracker().newId();
+	}
+
 	private static HeapTracker getTracker() {
-		HeapTracker c;
+		HeapTracker c = null;
 		Thread current = Thread.currentThread();
-		if (current == null) {
-			c = nullCounter;
-			if (c == null) {
-				c = new HeapTracker();
-				nullCounter = c;
-			}
-		} else {
+		
+		if (current != null) {
 			c = _getTracker(current);
-			if (c == null) {
-				c = new HeapTracker();
-				_setTracker(current, c);
-			}
+		}
+		
+		if (c == null) {
+			c = nullCounter;
 		}
 
 		return c;
@@ -109,41 +120,36 @@ public class HeapTracker {
 		// current._rprof = tracker;
 	}
 
-	private static long id(Object o) {
-		if (o instanceof HeapTracker) {
-			return nextThreadId;
-		}
-
-		try {
-			return getTracker().newId();
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		}
-	}
-
-	static {
-		nextThreadId = (1l << 32);
-		//map = new WeakHashMap<Thread, HeapTracker>();
-	}
-
-	private static volatile long nextThreadId;
-	//private static final WeakHashMap<Thread, HeapTracker> map;
-
 	private static synchronized long nextThreadId() {
 		long id = nextThreadId;
 		nextThreadId = id + (1l << 32);
 		return id;
 	}
+	
+	static {
+		engaged = 0;
+		nextThreadId = (1l << 32);
+		nullCounter = new HeapTracker(0); 
+	}
 
 	private final long threadId;
 	private long counter = 0;
 
+	{
+		// If this is called from <clinit> we never see it
+		newcls(HeapTracker.class, cnum);
+	}
+	
 	private HeapTracker() {
 		threadId = nextThreadId();
 	}
+	
+	private HeapTracker(long threadId) {
+		this.threadId = threadId;
+	}
 
 	public long newId() {
-		return threadId | ++counter;
+		return (threadId == 0) ? 0 : (threadId | ++counter);
 	}
 }
 

@@ -6,7 +6,6 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 
-import com.google.gwt.dev.asm.ClassAdapter;
 import com.google.gwt.dev.asm.ClassVisitor;
 import com.google.gwt.dev.asm.MethodVisitor;
 
@@ -14,20 +13,15 @@ import com.google.gwt.dev.asm.MethodVisitor;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class ObjectClassWeaver extends ClassAdapter {
-
-	private final ClassRecord cr;
-
+public class ObjectClassWeaver extends GenericClassWeaver {
+	
 	public ObjectClassWeaver(ClassVisitor cv, ClassRecord cr) {
-		super(cv);
-
-		this.cr = cr;
+		super(cv, cr);
 	}
 
 	@Override
 	public void visit(int version, int access, String name, String signature,
 			String superName, String[] interfaces) {
-		cr.init(version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
@@ -35,9 +29,10 @@ public class ObjectClassWeaver extends ClassAdapter {
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		MethodRecord mr = MethodRecord.create(cr, access, name, desc, signature, exceptions);
+		MethodRecord mr;
 
 		if (name.equals("<init>")) {
+			mr = ((InitMethodWeaver) mv).record;
 			mv = new ObjectInitWeaver(mv, mr);
 		}
 		return mv;
@@ -52,9 +47,6 @@ public class ObjectClassWeaver extends ClassAdapter {
 		@Override
 		public void visitCode() {
 			super.visitCode();
-
-			push(record.parent.id);
-			push(record.id);
 			visitIntInsn(ALOAD, 0); // this
 			visitTrackerMethod(Tracker.newobj);
 		}

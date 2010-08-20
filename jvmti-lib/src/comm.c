@@ -97,7 +97,7 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 
 	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
-	stdout_message("profiler started.\n");
+	stdout_message("profiler stopped.\n");
 
 	CURLcode err = curl_easy_perform(handle); /* post away! */
 
@@ -119,8 +119,8 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 struct EventRecord record_buffer[EVENT_BUFFER_SIZE];
 int event_index = 0;
 
-JNIEXPORT void JNICALL log_method_event(jlong thread, const char* message,
-		jint cnum, jint mnum, jint len, jlong* params, int force_send)
+JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
+		jint cnum, jint mnum, jint len, jlong* params)
 {
 	int i;
 
@@ -133,7 +133,7 @@ JNIEXPORT void JNICALL log_method_event(jlong thread, const char* message,
 	memset(record, 0, sizeof(record));
 	record->thread_upper = htonl((thread >> 32) & 0xffffffff);
 	record->thread_lower = htonl(thread & 0xffffffff);
-	strcpy(record->message, message);
+	record->message = htonl(message);
 	record->cnum = htonl(cnum);
 	record->mnum = htonl(mnum);
 	record->len = htonl(len);
@@ -142,7 +142,7 @@ JNIEXPORT void JNICALL log_method_event(jlong thread, const char* message,
 		record->params[i * 2 + 1] = htonl(params[i] & 0xffffffff);
 	}
 
-	if (force_send || event_index >= EVENT_BUFFER_SIZE) {
+	if (event_index >= EVENT_BUFFER_SIZE) {
 		flush_method_event_buffer();
 	}
 }

@@ -4,6 +4,7 @@ import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -14,6 +15,8 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class ProfilerRunWidget extends Composite {
 	
+	private static final DateTimeFormat date = DateTimeFormat.getFormat("yyyy-MM-dd HH:mm:ss");
+	
 	private static ProfilerRunWidgetUiBinder uiBinder = GWT
 			.create(ProfilerRunWidgetUiBinder.class);
 
@@ -22,7 +25,7 @@ public class ProfilerRunWidget extends Composite {
 	}
 	
 	private ProfilerRunsPane parent;
-	private ProfilerRun run;
+	ProfilerRun run;
 
 	@UiField InlineLabel program;
 	@UiField InlineLabel started;
@@ -36,8 +39,8 @@ public class ProfilerRunWidget extends Composite {
 		this.parent = parent;
 		this.run = run;
 		
-		started.setText(run.started.toString());
-		if (run.stopped != null) stopped.setText(run.stopped.toString());
+		started.setText(date.format(run.started));
+		if (run.stopped != null) stopped.setText(date.format(run.stopped));
 		if (run.program != null) program.setText(run.program);
 	}
 
@@ -50,6 +53,14 @@ public class ProfilerRunWidget extends Composite {
 	@UiHandler("delete")
 	void onClick(ClickEvent e) {
 		Inspector.getInstance().dropProfilerRun(run);
+	}
+
+	public void update(ProfilerRun run) {
+		if (this.run.stopped == null) {
+			this.run = run;
+			if (run.stopped != null) stopped.setText(date.format(run.stopped));
+			if (run.program != null) program.setText(run.program);
+		}
 	}
 
 }

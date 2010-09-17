@@ -3,7 +3,9 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import org.springframework.jdbc.core.PreparedStatementSetter;
+import java.util.List;
+
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
 
 /**
@@ -14,15 +16,15 @@ public interface Template<Data, Parameter> {
 	public String createTable(Parameter p);
 	
 	public String insert(Parameter p);
-	public PreparedStatementSetter inserter(final Data r);
+	public BatchPreparedStatementSetter inserter(final List<Data> classes);
 	public String update(Parameter p);
-	public PreparedStatementSetter updater(final Data r);
+	public BatchPreparedStatementSetter updater(final List<Data> records);
 	public String delete(Parameter p);
-	public PreparedStatementSetter deleter(final Data r);
+	public BatchPreparedStatementSetter deleter(final List<Data> records);
 	
-	public String countSelectAll(Parameter p);
-	public String selectAll(Parameter p);
-	public String select(Parameter p, int offset, int limit);
+	public String countSelect(Parameter p, Object... filter);
+	public String select(Parameter p, Object... filter);
+	public String select(Parameter p, int offset, int limit, Object... filter);
 	public <T> RowMapper<Data> mapper(T param);
 
 	public String drop(Parameter p);

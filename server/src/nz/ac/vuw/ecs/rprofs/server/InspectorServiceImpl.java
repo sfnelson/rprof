@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
@@ -9,50 +10,96 @@ import nz.ac.vuw.ecs.rprofs.client.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
+import nz.ac.vuw.ecs.rprofs.client.data.Report;
+import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
+import nz.ac.vuw.ecs.rprofs.server.reports.ReportGenerator;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 @SuppressWarnings("serial")
 public class InspectorServiceImpl extends RemoteServiceServlet implements InspectorService {
 
-	public List<ProfilerRun> getProfilerRuns() {
-		List<ProfilerRun> profiles = Collections.newList();
-		for (ProfilerRun run: Context.db().getProfiles()) {
+	@Override
+	public ArrayList<ProfilerRun> getProfilerRuns() {
+		ArrayList<ProfilerRun> profiles = Collections.newList();
+		for (ProfilerRun run: Context.getRuns()) {
 			profiles.add(run.toRPC());
 		}
 		return profiles;
 	}
 	
+	@Override
 	public void dropProfilerRun(ProfilerRun run) {
-		Context.db().dropRun(run);
+		Context.dropRun(run);
 	}
 	
-	public List<ClassRecord<MethodRecord, FieldRecord>> getClasses(ProfilerRun run) {
-		List<ClassRecord<MethodRecord, FieldRecord>> cl = Collections.newList();
-		for (ClassRecord<? extends MethodRecord, ? extends FieldRecord> cr: Context.db().getClasses(run)) {
+	@Override
+	public ArrayList<ClassRecord<MethodRecord, FieldRecord>> getClasses(ProfilerRun run) {
+		ArrayList<ClassRecord<MethodRecord, FieldRecord>> cl = Collections.newList();
+		for (ClassRecord<? extends MethodRecord, ? extends FieldRecord> cr: Context.getInstance(run).getClasses()) {
 			cl.add(cr.toRPC());
 		}
 		return cl;
 	}
 
-	public List<LogRecord> getLogs(ProfilerRun run) {
-		List<LogRecord> records = Collections.newList();
-		for (LogRecord r: Context.db().getLogs(run)) {
-			records.add(r.toRPC());
-		}
-		return records;
-	}
-	
-	public List<LogRecord> getLogs(ProfilerRun run, int offset, int limit) {
-		List<LogRecord> records = Collections.newList();
-		for (LogRecord r: Context.db().getLogs(run, offset, limit)) {
+	@Override
+	public ArrayList<LogRecord> getLogs(ProfilerRun run, int type,
+			int offset, int limit) {
+		ArrayList<LogRecord> records = Collections.newList();
+		for (LogRecord r: Context.getInstance(run).getLogs(run, offset, limit, type)) {
 			records.add(r.toRPC());
 		}
 		return records;
 	}
 
-	public int refreshLogs(ProfilerRun run) {
-		return Context.db().getNumLogs(run);
+	@Override
+	public int getNumLogs(ProfilerRun run, int type) {
+		int result = Context.getInstance(run).getNumLogs(run, type);
+		return result;
+	}
+
+	@Override
+	public Status generateReport(Report report, ProfilerRun run) {
+		return Context.getInstance(run).getReport(report).generate();
+	}
+
+	@Override
+	public Integer getReportData(Report report, ProfilerRun run, Report.Entry key) {
+		List<? extends Report.Entry> data = Context.getInstance(run).getReport(report).getReportData(key);
+		
+		System.out.println(data.size() + " records available for " + report.name + " (" + key + ")");
+		return data.size();
+	}
+	
+	@Override
+	public ArrayList<? extends Report.Entry> getReportData(Report report, ProfilerRun run, Report.Entry key, int offset, int limit) {
+		ArrayList<? extends Report.Entry> data = Context.getInstance(run).getReport(report).getReportData(key);
+		
+		if (offset == 0 && data.size() <= limit) {
+			System.out.println("returning " + data.size() + " records for " + report.name + " (" + key + ")");
+			return data;
+		}
+		
+		Collections.sort(data, Collections.HASH_COMPARATOR);
+		
+		ArrayList<Report.Entry> result = Collections.newList();
+		for (int i = offset; i < result.size(); i++) {
+			if (i >= offset + limit) break;
+			result.add(data.get(i));
+		}
+		
+		System.out.println("returning " + result.size() + " records for " + report.name + " (" + key + ")");
+		return result;
+	}
+
+	@Override
+	public Status getReportStatus(Report report, ProfilerRun run) {
+		return Context.getInstance(run).getReport(report).getStatus();
+	}
+
+	@Override
+	public ArrayList<Report> getReports() {
+		return ReportGenerator.getReports();
 	}
 
 }

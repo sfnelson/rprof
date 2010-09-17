@@ -81,8 +81,6 @@
 #define HEAP_TRACKER_engaged		engaged		/* Name of static field switch */
 #define HEAP_TRACKER_main			main		/* Name of java main method tracker */
 #define HEAP_TRACKER_native_main	_main		/* Name of java main method tracker native */
-#define HEAP_TRACKER_watch			watch		/* Name of java watch method */
-#define HEAP_TRACKER_native_watch	_watch		/* Name of java watch method native */
 
 /* C macros to create strings from tokens */
 #define _STRING(s) #s
@@ -91,6 +89,13 @@
 /* ------------------------------------------------------------------- */
 
 /* Global agent data structure */
+
+typedef struct {
+	jfieldID field;
+	jclass cls;
+	jint cnum;
+	jint fnum;
+} rField;
 
 typedef struct {
 	/* JVMTI Environment */
@@ -103,9 +108,13 @@ typedef struct {
 	int            maxDump;
 	/* Data access Lock */
 	jrawMonitorID  lock;
-	/* Counter on classes where BCI has been applied */
-	jint           ccount;
+
+	/* Counter for the number of untagged objects which have been tagged natively */
 	jlong		   nullCounter;
+
+	int			   mapSize;
+	int			   mapLength;
+	rField*		   fieldMap;
 } GlobalAgentData;
 
 static GlobalAgentData *gdata;
@@ -141,6 +150,8 @@ static jlong getNewObjectId() {
 	return id;
 }
 
+#define RPROF_DEBUG 0
+
 /* Method to log an event */
 static void
 logEvent(JNIEnv *env, jvmtiEnv *jvmti, jthread thread, jobject o, const char* format)
@@ -160,17 +171,119 @@ logEvent(JNIEnv *env, jvmtiEnv *jvmti, jthread thread, jobject o, const char* fo
 	stdout_message(format, id, signature);
 }
 
+static int hashField(rField *map, int len, jfieldID field) {
+	int index = 0;
+	int key = ((long unsigned int) field) % len;
+	int i = 0;
+	while (i < len) {
+		index = ((int)(key + i/2.0f + i*i/2.0f)) % len;
+		if (map[index].field == NULL) return index;
+		if (map[index].field == field) return index;
+		i++;
+	}
+	fatal_error("ERROR: probed all hash table entries without finding entry\n");
+	return -1;
+}
+
+static rField
+getField(rField* map, int len, jfieldID field) {
+	return map[hashField(map, len, field)];
+}
+
+static void
+storeFields(rField *entries, int num) {
+	jvmtiEnv *jvmti;
+	jvmti = gdata->jvmti;
+
+	enterCriticalSection(jvmti); {
+		rField *oldMap;
+		int oldLen, size, len, i, index;
+		rField *map;
+		rField tmp;
+		jvmtiError error;
+
+		oldMap = gdata->fieldMap;
+		oldLen = gdata->mapLength;
+		if (oldMap != NULL) {
+			size = gdata->mapSize + num;
+			len = gdata->mapLength;
+		}
+		else {
+			size = num;
+			len = 1;
+			oldLen = 0;
+		}
+
+		while (size > 0.8f * len) {
+			len = len * 2;
+		}
+
+		error = (*jvmti)->Allocate(jvmti, sizeof(rField) * len, (unsigned char**)&map);
+		check_jvmti_error(jvmti, error, "Cannot allocate memory for field table");
+
+		(void)memset((void*)map, 0, sizeof(rField) * len);
+
+		for (i = 0; i < oldLen; i++) {
+			tmp = oldMap[i];
+			if (tmp.field != NULL) {
+				index = hashField(map, len, tmp.field);
+				map[index] = tmp;
+			}
+		}
+
+		for (i = 0; i < num; i++) {
+			tmp = entries[i];
+			index = hashField(map, len, tmp.field);
+			map[index] = tmp;
+		}
+
+		gdata->fieldMap = map;
+		gdata->mapSize = size;
+		gdata->mapLength = len;
+
+		if (oldMap != NULL) {
+			(*jvmti)->Deallocate(jvmti, (unsigned char*) oldMap);
+		}
+
+	} exitCriticalSection(jvmti);
+}
+
+static void
+watch_fields(jvmtiEnv *jvmti, rField* fields, int len)
+{
+	int i;
+	rField field;
+	jvmtiError error;
+
+	for (i = 0; i < len; i++) {
+		field = fields[i];
+		if (field.field == NULL) continue;
+		error = (*jvmti)->SetFieldAccessWatch(jvmti, field.cls, field.field);
+		check_jvmti_error(jvmti, error, "Cannot add access watch to field");
+		error = (*jvmti)->SetFieldModificationWatch(jvmti, field.cls, field.field);
+		check_jvmti_error(jvmti, error, "Cannot add modify watch to field");
+	}
+}
+
 /* Java Native Method for <clinit> */
 static void
-HEAP_TRACKER_native_newcls(JNIEnv *env, jclass klass, jobject cls, int cnum)
+HEAP_TRACKER_native_newcls(JNIEnv *env, jclass klass, jobject cls, jint cnum, jintArray fieldsToWatch)
 {
 	jvmtiError error;
 	jvmtiEnv *jvmti;
 	jlong tag;
+	jint numFields;
+	jint* targetFields;
+	jfieldID* fields;
+	int i;
+	rField* fieldsToStore;
+	rField field;
 
 	if ( gdata->vmDead ) {
 		return;
 	}
+
+	if (RPROF_DEBUG) stdout_message("----> newcls (%d)\n", cnum);
 
 	jvmti = gdata->jvmti;
 
@@ -180,6 +293,28 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass klass, jobject cls, int cnum)
 	check_jvmti_error(jvmti, error, "Cannot tag class with id");
 
 	log_method_event(0, RPROF_CLASS_INITIALIZED, cnum, 0, 1, &tag);
+
+	if (fieldsToWatch != NULL) {
+		jsize len = (*env)->GetArrayLength(env, fieldsToWatch);
+		fieldsToStore = malloc(sizeof(rField) * len);
+		targetFields = (*env)->GetIntArrayElements(env, fieldsToWatch, NULL);
+		(*jvmti)->GetClassFields(jvmti, cls, &numFields, &fields);
+		for (i = 0; i < len; i++) {
+			field.cnum = cnum;
+			field.fnum = targetFields[i];
+			field.cls = (*env)->NewGlobalRef(env, cls);
+			field.field = fields[targetFields[i] - 1]; // Fields begin at 1 in our profiler and 0 in jvmti
+			fieldsToStore[i] = field;
+		}
+		storeFields(fieldsToStore, len); // always store fields, they're looked up later
+		if (gdata->vmInitialized == JNI_TRUE) {
+			watch_fields(jvmti, fieldsToStore, len);
+		}
+		(*jvmti)->Deallocate(jvmti, (unsigned char*) fields);
+		(*env)->ReleaseIntArrayElements(env, fieldsToWatch, targetFields, JNI_ABORT);
+	}
+
+	if (RPROF_DEBUG) stdout_message("<---- newcls (%d)\n", cnum);
 }
 
 /* Java Native Method for Object.<init> */
@@ -203,8 +338,6 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass klass, jthread thread, jobject o,
 
 	error = (*jvmti)->SetTag(jvmti, o, id);
 	check_jvmti_error(jvmti, error, "Cannot tag object with id");
-
-	//logEvent(env, jvmti, thread, o, "object allocated: %x (%s)\n");
 
 	if (thread != NULL) {
 		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
@@ -234,7 +367,6 @@ HEAP_TRACKER_native_newarr(JNIEnv *env, jclass klass, jthread thread, jobject a,
 	error = (*jvmti)->GetTag(jvmti, thread, &threadId);
 	check_jvmti_error(jvmti, error, "Cannot read tag");
 
-	//logEvent(env, jvmti, thread, a, "array allocated:  %x (%s)\n");
 	log_method_event(threadId, RPROF_ARRAY_ALLOCATED, 0, 0, 1, &id);
 }
 
@@ -262,19 +394,25 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 			threadId = 0;
 		}
 
-		jsize len = (*env)->GetArrayLength(env, args);
-		jlong tags[len];
-		for (i = 0; i < len; i++) {
-			jobject o = (*env)->GetObjectArrayElement(env, args, i);
-			if (o != NULL) {
-				error = (*jvmti)->GetTag(jvmti, o, &tags[i]);
-				check_jvmti_error(jvmti, error, "Cannot read object tag");
-			} else {
-				tags[i] = 0;
+		if (args != NULL) {
+			jsize len = (*env)->GetArrayLength(env, args);
+			jlong tags[len];
+			for (i = 0; i < len; i++) {
+				jobject o = (*env)->GetObjectArrayElement(env, args, i);
+				if (o != NULL) {
+					error = (*jvmti)->GetTag(jvmti, o, &tags[i]);
+					check_jvmti_error(jvmti, error, "Cannot read object tag");
+				} else {
+					tags[i] = 0;
+				}
 			}
+
+			log_method_event(threadId, RPROF_METHOD_ENTER, cnum, mnum, len, tags);
+		}
+		else {
+			log_method_event(threadId, RPROF_METHOD_ENTER, cnum, mnum, 0, NULL);
 		}
 
-		log_method_event(threadId, RPROF_METHOD_ENTER, cnum, mnum, len, tags);
 	}
 }
 
@@ -338,12 +476,6 @@ HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 	}
 }
 
-static void
-HEAP_TRACKER_native_watch(JNIEnv *env, jclass klass, jthread thread)
-{
-
-}
-
 /* Callback for JVMTI_EVENT_VM_START */
 static void JNICALL
 cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
@@ -360,7 +492,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 				{STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
 				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;IILjava/lang/Object;)V", (void*)&HEAP_TRACKER_native_exit},
 				{STRING(HEAP_TRACKER_native_main), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_main},
-				{STRING(HEAP_TRACKER_native_newcls), "(Ljava/lang/Object;I)V", (void*)&HEAP_TRACKER_native_newcls}
+				{STRING(HEAP_TRACKER_native_newcls), "(Ljava/lang/Object;I[I)V", (void*)&HEAP_TRACKER_native_newcls}
 		};
 
 		/* Register Natives for class whose methods we use */
@@ -418,7 +550,12 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 	jvmtiHeapCallbacks heapCallbacks;
 	jvmtiError         error;
 
-	stdout_message("-------- tagging existing objects\n");
+	if (RPROF_DEBUG) stdout_message("----- trying gc at init\n");
+	error = (*jvmti)->ForceGarbageCollection(jvmti);
+	check_jvmti_error(jvmti, error, "Cannot force garbage collection");
+	if (RPROF_DEBUG) stdout_message("----- gc ok on init\n");
+
+	// stdout_message("-------- tagging existing objects\n");
 
 	jclass object_class = (*env)->FindClass(env, "java/lang/Object");
 	error = (*jvmti)->SetTag(jvmti, object_class, RPROF_MAGIC | 1ll);
@@ -431,12 +568,21 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 			NULL, &heapCallbacks, NULL);
 	check_jvmti_error(jvmti, error, "Cannot iterate through heap");
 
-	stdout_message("-------- done tagging existing objects\n");
+	// stdout_message("-------- done tagging existing objects\n");
+
+	error = (*jvmti)->SetEventNotificationMode(jvmti, JVMTI_ENABLE,
+			JVMTI_EVENT_FIELD_MODIFICATION, (jthread)NULL);
+	check_jvmti_error(jvmti, error, "Cannot set event notification");
+	error = (*jvmti)->SetEventNotificationMode(jvmti, JVMTI_ENABLE,
+			JVMTI_EVENT_FIELD_ACCESS, (jthread)NULL);
+	check_jvmti_error(jvmti, error, "Cannot set event notification");
 
 	enterCriticalSection(jvmti); {
 
 		/* Indicate VM is initialized */
 		gdata->vmInitialized = JNI_TRUE;
+
+		watch_fields(jvmti, gdata->fieldMap, gdata->mapLength);
 
 	} exitCriticalSection(jvmti);
 }
@@ -448,11 +594,15 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 	jvmtiHeapCallbacks heapCallbacks;
 	jvmtiError         error;
 
+	if (RPROF_DEBUG) stdout_message("----- vm death\n");
+
 	/* These are purposely done outside the critical section */
 
 	/* Force garbage collection now so we get our ObjectFree calls */
 	error = (*jvmti)->ForceGarbageCollection(jvmti);
 	check_jvmti_error(jvmti, error, "Cannot force garbage collection");
+
+	if (RPROF_DEBUG) stdout_message("----- gc finished\n");
 
 	/* Iterate through heap and find all objects */
 	//(void)memset(&heapCallbacks, 0, sizeof(heapCallbacks));
@@ -512,28 +662,14 @@ cbVMObjectAlloc(jvmtiEnv *jvmti, JNIEnv *env, jthread thread,
 	jlong id;
 	jvmtiError error;
 
-	if ( gdata->vmDead ) {
-		return;
-	}
-
-	id = getNewObjectId(env);
-
-	error = (*jvmti)->SetTag(jvmti, o, id);
-	check_jvmti_error(jvmti, error, "Cannot tag object with id");
-
-	//logEvent(env, jvmti, thread, o, "object allocated: %x (%s)\n");
+	HEAP_TRACKER_native_newobj(env, object_klass, thread, o, 0);
 }
 
 /* Callback for JVMTI_EVENT_OBJECT_FREE */
 static void JNICALL
 cbObjectFree(jvmtiEnv *jvmti, jlong id)
 {
-
-	if ( gdata->vmDead ) {
-		return;
-	}
-
-	//stdout_message("object freed: %x\n", id);
+	log_method_event(0, RPROF_OBJECT_FREED, 0, 0, 1, &id);
 }
 
 /* Callback for JVMTI_EVENT_CLASS_FILE_LOAD_HOOK */
@@ -573,9 +709,6 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 
 			//stdout_message("weaving %s\n", classname);
 
-			/* Get number for every class file image loaded */
-			cnum = gdata->ccount++;
-
 			/* Is it a system class? If the class load is before VmStart
 			 *   then we will consider it a system class that should
 			 *   be treated carefully. (See java_crw_demo)
@@ -592,31 +725,11 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 					class_data_len, class_data,
 					&newLength, &newImage);
 
-
-			/* Call the class file reader/write demo code */
-			/*java_crw_demo(cnum,
-						classname,
-						class_data,
-						class_data_len,
-						systemClass,
-						STRING(HEAP_TRACKER_package/HEAP_TRACKER_class),
-						"L" STRING(HEAP_TRACKER_package/HEAP_TRACKER_class) ";",
-						STRING(HEAP_TRACKER_enter), "(II[Ljava/lang/Object;)V", // Method offset 0
-						STRING(HEAP_TRACKER_exit), "(ILjava/lang/String;ILjava/lang/String;)V", // Method return
-						STRING(HEAP_TRACKER_newobj), "(Ljava/lang/Object;)V", // Object <init>
-						STRING(HEAP_TRACKER_newarr), "(Ljava/lang/Object;)V", // new array opcode
-						STRING(HEAP_TRACKER_main), "()V", // main method
-						&newImage,
-						&newLength,
-						NULL,
-						NULL);*/
-
 			/* If we got back a new class image, return it back as "the"
 			 *   new class image. This must be JVMTI Allocate space.
 			 */
 			if ( newLength > 0 && newImage != NULL) {
 				unsigned char *jvmti_space;
-
 
 				char cfname[strlen(classname)+1];
 				strcpy(cfname, classname);
@@ -658,6 +771,7 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 
 				jvmti_space = (unsigned char *)allocate(jvmti, (jint)newLength);
 				(void)memcpy((void*)jvmti_space, (void*)newImage, (int)newLength);
+
 				*new_class_data_len = (jint)newLength;
 				*new_class_data     = jvmti_space; /* VM will deallocate */
 			}
@@ -672,51 +786,104 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 	} exitCriticalSection(jvmti);
 }
 
-/* Parse the options for this heapTracker agent */
-static void
-parse_agent_options(char *options)
+/* Callback for JVMTI_EVENT_FIELD_ACCESS */
+static void JNICALL
+cbFieldAccess(jvmtiEnv *jvmti,
+		JNIEnv* env,
+		jthread thread,
+		jmethodID method,
+		jlocation location,
+		jclass field_klass,
+		jobject object,
+		jfieldID field)
 {
-#define MAX_TOKEN_LENGTH        16
-	char  token[MAX_TOKEN_LENGTH];
-	char *next;
+	jlong threadID = 0;
+	jlong objectID = 0;
+	jlong classID = 0;
+	jint cnum = 0;
+	jint mnum = 0;
+	jvmtiError error;
 
-	/* Defaults */
-	gdata->maxDump = 20;
-
-	/* Parse options and set flags in gdata */
-	if ( options==NULL ) {
-		return;
+	rField fieldRecord = getField(gdata->fieldMap, gdata->mapLength, field);
+	if (fieldRecord.field == field) {
+		mnum = fieldRecord.fnum;
 	}
 
-	/* Get the first token from the options string. */
-	next = get_token(options, ",=", token, (int)sizeof(token));
+	if (thread != NULL) {
+		error = (*jvmti)->GetTag(jvmti, thread, &threadID);
+		check_jvmti_error(jvmti, error, "Cannot read thread tag");
+	}
 
-	/* While not at the end of the options string, process this option. */
-	while ( next != NULL ) {
-		if ( strcmp(token,"help")==0 ) {
-			stdout_message("The heapTracker JVMTI demo agent\n");
-			stdout_message("\n");
-			stdout_message(" java -agent:heapTracker[=options] ...\n");
-			stdout_message("\n");
-			stdout_message("The options are comma separated:\n");
-			stdout_message("\t help\t\t\t Print help information\n");
-			stdout_message("\t maxDump=n\t\t\t How many TraceInfo's to dump\n");
-			stdout_message("\n");
-			exit(0);
-		} else if ( strcmp(token,"maxDump")==0 ) {
-			char  number[MAX_TOKEN_LENGTH];
+	if (object != NULL) {
+		error = (*jvmti)->GetTag(jvmti, object, &objectID);
+		check_jvmti_error(jvmti, error, "Cannot read object tag");
+	}
 
-			next = get_token(next, ",=", number, (int)sizeof(number));
-			if ( next == NULL ) {
-				fatal_error("ERROR: Cannot parse maxDump=number: %s\n", options);
-			}
-			gdata->maxDump = atoi(number);
-		} else if ( token[0]!=0 ) {
-			/* We got a non-empty token and we don't know what it is. */
-			fatal_error("ERROR: Unknown option: %s\n", token);
+	if (field_klass != NULL) {
+		error = (*jvmti)->GetTag(jvmti, field_klass, &classID);
+		check_jvmti_error(jvmti, error, "Cannot read class tag");
+		cnum = (jint)(classID & 0xFFFFFFFFll);
+	}
+
+	log_method_event(threadID, RPROF_FIELD_READ, cnum, mnum, 1, &objectID);
+}
+
+/* Callback for JVMTI_EVENT_FIELD_MODIFICATION */
+static void JNICALL
+cbFieldModification(jvmtiEnv *jvmti,
+		JNIEnv* env,
+		jthread thread,
+		jmethodID method,
+		jlocation location,
+		jclass field_klass,
+		jobject object,
+		jfieldID field,
+		char signature_type,
+		jvalue new_value)
+{
+	jlong threadID = 0;
+	jlong classID = 0;
+	jint cnum = 0;
+	jint mnum = 0;
+	jvmtiError error;
+	jlong params[2];
+
+	rField fieldRecord = getField(gdata->fieldMap, gdata->mapLength, field);
+	if (fieldRecord.field == field) {
+		mnum = fieldRecord.fnum;
+	}
+
+	if (thread != NULL) {
+		error = (*jvmti)->GetTag(jvmti, thread, &threadID);
+		check_jvmti_error(jvmti, error, "Cannot read thread tag");
+	}
+
+	if (object != NULL) {
+		error = (*jvmti)->GetTag(jvmti, object, &params[0]);
+		check_jvmti_error(jvmti, error, "Cannot read object tag");
+	}
+
+	if (field_klass != NULL) {
+		error = (*jvmti)->GetTag(jvmti, field_klass, &classID);
+		check_jvmti_error(jvmti, error, "Cannot read class tag");
+		cnum = (jint)(classID & 0xFFFFFFFFll);
+	}
+
+	switch (signature_type) {
+	case 'L':
+	case '[':
+		if (new_value.l != NULL) {
+			error = (*jvmti)->GetTag(jvmti, new_value.l, &params[1]);
+			check_jvmti_error(jvmti, error, "Cannot read param tag");
 		}
-		/* Get the next token (returns NULL if there are no more) */
-		next = get_token(next, ",=", token, (int)sizeof(token));
+		else {
+			params[1] = 0;
+		}
+		log_method_event(threadID, RPROF_FIELD_WRITE, cnum, mnum, 2, params);
+		break;
+	default:
+		log_method_event(threadID, RPROF_FIELD_WRITE, cnum, mnum, 1, params);
+		break;
 	}
 }
 
@@ -747,6 +914,8 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	(void)memset((void*)&data, 0, sizeof(data));
 	gdata = &data;
 
+	data.fieldMap = NULL;
+
 	/* First thing we need to do is get the jvmtiEnv* or JVMTI environment */
 	res = (*vm)->GetEnv(vm, (void **)&jvmti, JVMTI_VERSION_1);
 	if (res != JNI_OK) {
@@ -762,9 +931,6 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	/* Here we save the jvmtiEnv* for Agent_OnUnload(). */
 	gdata->jvmti = jvmti;
 
-	/* Parse any options supplied on java command line */
-	parse_agent_options(options);
-
 	/* Immediately after getting the jvmtiEnv* we need to ask for the
 	 *   capabilities this agent will need.
 	 */
@@ -772,10 +938,12 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	capabilities.can_generate_all_class_hook_events = 1;
 	capabilities.can_tag_objects  = 1;
 	capabilities.can_generate_object_free_events  = 1;
-	capabilities.can_get_source_file_name  = 1;
-	capabilities.can_get_line_numbers  = 1;
+	// capabilities.can_get_source_file_name  = 1;
+	// capabilities.can_get_line_numbers  = 1;
 	capabilities.can_generate_vm_object_alloc_events  = 1;
-	capabilities.can_access_local_variables = 1;
+	// capabilities.can_access_local_variables = 1;
+	capabilities.can_generate_field_access_events = 1;
+	capabilities.can_generate_field_modification_events = 1;
 	error = (*jvmti)->AddCapabilities(jvmti, &capabilities);
 	check_jvmti_error(jvmti, error, "Unable to get necessary JVMTI capabilities.");
 
@@ -795,6 +963,10 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	callbacks.VMObjectAlloc     = &cbVMObjectAlloc;
 	/* JVMTI_EVENT_CLASS_FILE_LOAD_HOOK */
 	callbacks.ClassFileLoadHook = &cbClassFileLoadHook;
+	/* JVMTI_EVENT_FIELD_MODIFICATION */
+	callbacks.FieldModification = &cbFieldModification;
+	/* JVMTI_EVENT_FIELD_ACCESS */
+	callbacks.FieldAccess = &cbFieldAccess;
 	error = (*jvmti)->SetEventCallbacks(jvmti, &callbacks, (jint)sizeof(callbacks));
 	check_jvmti_error(jvmti, error, "Cannot set jvmti callbacks");
 

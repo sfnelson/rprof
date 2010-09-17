@@ -1,0 +1,37 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.Entry.Style">
+		.string, .count, .flag, .object {
+			display: inline-block;
+			font-size: small;
+			margin: 0;
+			overflow: hidden;
+			width: 5em;
+			padding: 0.2ex 0.5em;
+			border-right: solid 1px #eee;
+			text-align: right;
+		}
+		.string {
+			width: 15em;
+			text-align: left ! important;
+		}
+		.number {
+			text-align: right ! important;
+		}
+		.entries {
+			padding-left: 1em;
+		}
+		.children {
+			display: none;
+		}
+		.open>.children {
+			display: block;
+		}
+	</ui:style>
+	<g:HTMLPanel>
+		<p:Entry.EntryPanel ui:field="entries" styleName="{style.entries}"></p:Entry.EntryPanel>
+		<g:FlowPanel ui:field="children" styleName="{style.children}"></g:FlowPanel>
+	</g:HTMLPanel>
+</ui:UiBinder> 

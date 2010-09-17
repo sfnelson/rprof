@@ -22,6 +22,7 @@ import nz.ac.vuw.ecs.rprofs.server.weaving.ObjectClassWeaver;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ThreadClassWeaver;
 import nz.ac.vuw.ecs.rprofs.server.weaving.TrackingClassWeaver;
 
+import com.google.gwt.dev.asm.ClassAdapter;
 import com.google.gwt.dev.asm.ClassReader;
 import com.google.gwt.dev.asm.ClassVisitor;
 import com.google.gwt.dev.asm.ClassWriter;
@@ -39,7 +40,7 @@ public class Weaver extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
 
-		ClassRecord cr = Context.getInstance().createClassRecord();
+		ClassRecord cr = Context.getCurrent().createClassRecord();
 
 		Map<String, String> headers = new HashMap<String, String>();
 		for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements();) {
@@ -65,7 +66,7 @@ public class Weaver extends HttpServlet {
 		record.event = LogRecord.CLASS_WEAVE;
 		record.cnum = cr.id;
 		record.args = new long[0];
-		Context.getInstance().storeLogs(Arrays.asList(record));
+		Context.getCurrent().storeLogs(Arrays.asList(record));
 	}
 
 	public byte[] weave(byte[] classfile, ClassRecord cr) {
@@ -74,6 +75,7 @@ public class Weaver extends HttpServlet {
 
 		reader.accept(new FieldReader(cr), ClassReader.SKIP_CODE);
 		reader.accept(new Dispatcher(writer, cr), ClassReader.EXPAND_FRAMES);
+		
 		return writer.toByteArray();
 	}
 	
@@ -91,17 +93,44 @@ public class Weaver extends HttpServlet {
 		public void visit(int version, int access, String name,
 				String signature, String superName, String[] interfaces) {
 			
+			ClassVisitor cv = null;
+			
+			
+			String[] filters = new String[] {
+				"sun/reflect/.*",	// jhotdraw crashes in this package
+				"java/awt/.*",		// jhotdraw has font problems if this packages is included
+				"com/apple/.*",		// might help jhotdraw?
+				"java/lang/IncompatibleClassChangeError",	// gc blows up if this is woven
+				"java/lang/LinkageError"					// gc blows up if this is woven
+			};
+			
 			if (Type.getInternalName(HeapTracker.class).equals(name)) {
-				cv = new TrackingClassWeaver(cv, cr);
+				cr.flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
+				cv = new TrackingClassWeaver(this.cv, cr);
 			}
 			else if (Type.getInternalName(Thread.class).equals(name)) {
-				cv = new ThreadClassWeaver(cv, cr);
+				cr.flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
+				cv = new ThreadClassWeaver(this.cv, cr);
+			}
+			else if (Type.getInternalName(Throwable.class).equals(name)) {
+				cr.flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
+				cv = new ThreadClassWeaver(this.cv, cr);
 			}
 			else if (Type.getInternalName(Object.class).equals(name)) {
-				cv = new ObjectClassWeaver(cv, cr);
+				cr.flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
+				cv = new ObjectClassWeaver(this.cv, cr);
 			}
 			else {
-				cv = new GenericClassWeaver(cv, cr);
+				for (String filter: filters) {
+					if (name.matches(filter)) {
+						cr.flags |= ClassRecord.CLASS_IGNORED_PACKAGE_FILTER;
+						cv = new ClassAdapter(this.cv);
+					}
+				}
+			}
+			
+			if (cv == null) {
+				cv = new GenericClassWeaver(this.cv, cr);
 			}
 			
 			setClassVisitor(cv);

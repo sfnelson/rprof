@@ -9,15 +9,15 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
-import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-@SuppressWarnings("serial")
 public class ProfilerRun extends nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun {
 
 	public ProfilerRun() {
@@ -60,12 +60,14 @@ public class ProfilerRun extends nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun {
 		public String insert(Void p) {
 			return "insert into profiler_runs (program, started, stopped, handle) values (?, ?, ?, ?);";
 		}
-
+		
 		@Override
-		public PreparedStatementSetter inserter(final ProfilerRun cr) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter inserter(final List<ProfilerRun> runs) {
+			return new BatchPreparedStatementSetter() {
+				
 				@Override
-				public void setValues(PreparedStatement ps) throws SQLException {
+				public void setValues(PreparedStatement ps, int i) throws SQLException {
+					ProfilerRun cr = runs.get(i);
 					String program = cr.program;
 					if (program != null && program.length() > 255) {
 						program = program.substring(0, 255);
@@ -91,21 +93,26 @@ public class ProfilerRun extends nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun {
 					ps.setTimestamp(3, stopped);
 					ps.setString(4, handle);
 				}
+				
+				@Override
+				public int getBatchSize() {
+					return runs.size();
+				}
 			};
 		}
 		
 		@Override
-		public String countSelectAll(Void param) {
+		public String countSelect(Void param, Object... filter) {
 			return "select count(1) from profiler_runs;";
 		}
 
 		@Override
-		public String selectAll(Void p) {
+		public String select(Void p, Object... filter) {
 			return "select * from profiler_runs order by started;";
 		}
 		
 		@Override
-		public String select(Void p, int offset, int limit) {
+		public String select(Void p, int offset, int limit, Object... filter) {
 			return "select * from profiler_runs order by started limit "
 			+ limit + " offset " + offset + ";";
 		}
@@ -133,10 +140,11 @@ public class ProfilerRun extends nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun {
 		}
 
 		@Override
-		public PreparedStatementSetter updater(final ProfilerRun r) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter updater(final List<ProfilerRun> runs) {
+			return new BatchPreparedStatementSetter() {
 				@Override
-				public void setValues(PreparedStatement ps) throws SQLException {
+				public void setValues(PreparedStatement ps, int i) throws SQLException {
+					ProfilerRun r = runs.get(i);
 					String program = r.program;
 					if (program != null && program.length() > 255) {
 						program = program.substring(0, 255);
@@ -156,6 +164,11 @@ public class ProfilerRun extends nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun {
 					ps.setTimestamp(2, stopped);
 					ps.setTimestamp(3, started);
 				}
+
+				@Override
+				public int getBatchSize() {
+					return runs.size();
+				}
 			};
 		}
 
@@ -165,16 +178,21 @@ public class ProfilerRun extends nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun {
 		}
 
 		@Override
-		public PreparedStatementSetter deleter(final ProfilerRun r) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter deleter(final List<ProfilerRun> runs) {
+			return new BatchPreparedStatementSetter() {
 				@Override
-				public void setValues(PreparedStatement ps) throws SQLException {
+				public void setValues(PreparedStatement ps, int i) throws SQLException {
+					ProfilerRun r = runs.get(i);
 					Timestamp started = null;
 					if (r.started != null) {
 						started = new Timestamp(r.started.getTime());
 					}
 					
 					ps.setTimestamp(1, started);
+				}
+				@Override
+				public int getBatchSize() {
+					return runs.size();
 				}
 			};
 		}

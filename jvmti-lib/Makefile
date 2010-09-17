@@ -13,7 +13,7 @@ COMMON_FLAGS=-fno-strict-aliasing -fPIC -fno-omit-frame-pointer
 # Error checking flags
 COMMON_FLAGS+= -W -Wall  -Wno-unused -Wno-parentheses
 
-CFLAGS=-O2 $(COMMON_FLAGS)
+CFLAGS=-O2 -g $(COMMON_FLAGS)
 CFLAGS += -arch x86_64 -arch i386
 
 CFLAGS += -I$(JDK)/Headers
@@ -41,12 +41,10 @@ $(JARFILE): $(JAVA_SOURCES)
 	(cd classes; $(JDK)/Home/bin/jar cf ../$@ *)
 
 clean:
-	rm -f -r bin classes objects
+	rm -f -r bin classes objects tmp/pre/* tmp/post/*
 
 test: all
-	date
 	(cd bin; $(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ../classes Test)
-	date
 
 test2: all
 	(cd bin; $(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ~/Desktop/jhotdraw/#prof/ CH/ifa/draw/samples/javadraw/JavaDrawApp)

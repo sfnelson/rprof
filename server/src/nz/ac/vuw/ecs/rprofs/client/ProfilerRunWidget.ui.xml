@@ -10,9 +10,12 @@
 		.date, .className {
 			display: inline-block;
 			padding: 0.5ex 0.5em;
-			width: 15em;
+			width: 12em;
 			white-space: nowrap;
 			overflow: hidden;
+		}
+		.className {
+			width: 20em;
 		}
 		.buttonPanel {
 			float: right;

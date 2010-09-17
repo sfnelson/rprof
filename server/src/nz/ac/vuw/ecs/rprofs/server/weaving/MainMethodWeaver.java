@@ -19,21 +19,25 @@ class MainMethodWeaver extends MethodWeaver {
 		push(record.parent.id);
 		push(record.id);
 		visitTrackerMethod(Tracker.main);
+		setStack(2);
 	}
 
 	@Override
 	public void visitInsn(int opcode) {
 		switch (opcode) {
-		case IRETURN:
-		case LRETURN:
-		case FRETURN:
 		case DRETURN:
+		case LRETURN:
+			setStack(5);
+		case IRETURN:
+		case FRETURN:
 		case ARETURN:
+			setStack(4);
 		case RETURN:
 			push(record.parent.id);
 			push(record.id);
 			visitInsn(ACONST_NULL);
 			visitTrackerMethod(Tracker.exit);
+			setStack(3);
 			break;
 		}
 

@@ -16,21 +16,23 @@ import nz.ac.vuw.ecs.rprofs.server.data.Template;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.google.gwt.dev.util.collect.Lists;
+
 
 public class Database implements InitializingBean, ProfilerDataSource<ClassRecord, MethodRecord, FieldRecord, ProfilerRun, LogRecord> {
 
 	private DataSource db;
 	private JdbcTemplate template;
-	
+
 	private final Template<ProfilerRun, Void> prt = ProfilerRun.getTemplate();
 	private final Template<ClassRecord, nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun> crt
-		= ClassRecord.getTemplate();
+	= ClassRecord.getTemplate();
 	private final Template<MethodRecord, nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun> mrt
-		= MethodRecord.getTemplate();
+	= MethodRecord.getTemplate();
 	private final Template<FieldRecord, nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun> frt
-		= FieldRecord.getTemplate();
+	= FieldRecord.getTemplate();
 	private final Template<LogRecord, nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun> lrt
-		= LogRecord.getTemplate();
+	= LogRecord.getTemplate();
 
 	public void setDataSource(DataSource db) {
 		this.db = db;
@@ -42,41 +44,43 @@ public class Database implements InitializingBean, ProfilerDataSource<ClassRecor
 		//template.update(prt.createTable(null));
 	}
 
-	public void storeClasses(ProfilerRun run, Iterable<ClassRecord> classes) {
+	public void storeClasses(ProfilerRun run, List<ClassRecord> classes) {
+		template.batchUpdate(crt.insert(run), crt.inserter(classes));
 		for (ClassRecord cr: classes) {
-			template.update(crt.insert(run), crt.inserter(cr));
-			for (MethodRecord mr: cr.getMethods()) {
-				template.update(mrt.insert(run), mrt.inserter(mr));
-			}
-			for (FieldRecord fr: cr.getFields()) {
-				template.update(frt.insert(run), frt.inserter(fr));
-			}
+			template.batchUpdate(mrt.insert(run), mrt.inserter(cr.getMethods()));
+			template.batchUpdate(frt.insert(run), frt.inserter(cr.getFields()));
 		}
 	}
 
+	public int getNumClasses(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run) {
+		return template.queryForInt(crt.countSelect(run));
+	}
+
+	@Override
 	public List<ClassRecord> getClasses(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run) {
-		List<ClassRecord> classes = template.query(crt.selectAll(run), crt.mapper(null));
+		List<ClassRecord> classes = template.query(crt.select(run), crt.mapper(null));
 
 		final Map<Integer, ClassRecord> classMap = new HashMap<Integer, ClassRecord>();
 		for (ClassRecord cr: classes) {
 			classMap.put(cr.id, cr);
 		}
 
-		template.query(mrt.selectAll(run), mrt.mapper(classMap));
-		template.query(frt.selectAll(run), mrt.mapper(classMap));
+		template.query(mrt.select(run), mrt.mapper(classMap));
+		template.query(frt.select(run), frt.mapper(classMap));
 
 		return classes;
 	}
 
+	@Override
 	public List<ProfilerRun> getProfiles() {
-		return template.query(prt.selectAll(null), prt.mapper(null));
+		return template.query(prt.select(null), prt.mapper(null));
 	}
 
 	public ProfilerRun createRun() {
-		
+
 		ProfilerRun run = new ProfilerRun();
 
-		template.update(prt.insert(null), prt.inserter(run));
+		template.batchUpdate(prt.insert(null), prt.inserter(Lists.create(run)));
 		template.update(crt.createTable(run));
 		template.update(mrt.createTable(run));
 		template.update(frt.createTable(run));
@@ -86,42 +90,46 @@ public class Database implements InitializingBean, ProfilerDataSource<ClassRecor
 	}
 
 	public void update(ProfilerRun run) {
-		template.update(prt.update(null), prt.updater(run));
+		template.batchUpdate(prt.update(null), prt.updater(Lists.create(run)));
 	}
 
+	@Override
 	public void dropRun(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run) {
-		template.update(prt.delete(null), prt.deleter(new ProfilerRun(run)));
-		template.update(crt.drop(run));
-		template.update(mrt.drop(run));
-		template.update(frt.drop(run));
-		template.update(lrt.drop(run));
+		template.batchUpdate(prt.delete(null), prt.deleter(Lists.create(new ProfilerRun(run))));
+		drop(crt.drop(run));
+		drop(mrt.drop(run));
+		drop(frt.drop(run));
+		drop(lrt.drop(run));
 	}
 
-	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run) {
-		return template.query(lrt.selectAll(run), lrt.mapper(null));
+	private void drop(String table) {
+		try {
+			template.update(table);
+		} catch (Exception ex) {
+			System.err.println("Unable to drop table: " + ex.getMessage() + "\n\t(" + table + ")");
+		}
+	}
+	
+	@Override
+	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, int offset, int limit, int flags) {
+		return template.query(lrt.select(run, offset, limit, flags), lrt.mapper(null));
 	}
 
-	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, int offset, int limit) {
-		return template.query(lrt.select(run, offset, limit), lrt.mapper(null));
-	}
-
-	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run) {
-		return template.queryForInt(lrt.countSelectAll(run));
+	@Override
+	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run,
+			int flags) {
+		return template.queryForInt(lrt.countSelect(run, flags));
 	}
 
 	public void storeLogs(ProfilerRun run, List<LogRecord> records) {
-		for (LogRecord record: records) {
-			template.update(lrt.insert(run), lrt.inserter(record));
-		}
+		template.batchUpdate(lrt.insert(run), lrt.inserter(records));
 	}
 
-	public void update(ProfilerRun run, LogRecord record) {
-		template.update(lrt.update(run), lrt.updater(record));
+	public void update(ProfilerRun run, List<LogRecord> records) {
+		template.batchUpdate(lrt.update(run), lrt.updater(records));
 	}
 
 	public void deleteLogs(ProfilerRun run, List<LogRecord> toDelete) {
-		for (LogRecord r: toDelete) {
-			template.update(lrt.delete(run), lrt.deleter(r));
-		}
+		template.batchUpdate(lrt.delete(run), lrt.deleter(toDelete));
 	}
 }

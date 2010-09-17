@@ -6,15 +6,16 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
-
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.jdbc.core.RowMapper;
-
-import com.google.gwt.dev.asm.Opcodes;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.server.Context;
+
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
+import org.springframework.jdbc.core.RowMapper;
+
+import com.google.gwt.dev.asm.Opcodes;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -34,11 +35,14 @@ public class FieldRecord extends nz.ac.vuw.ecs.rprofs.client.data.FieldRecord {
 	}
 
 	public static FieldRecord create(ClassRecord parent, int access, String name, String desc) {
-		FieldRecord mr = Context.getInstance().createFieldRecord(parent);
-		mr.name = name;
-		mr.desc = desc;
-		mr.access = access;
-		return mr;
+		FieldRecord fr = Context.getCurrent().createFieldRecord(parent);
+		fr.name = name;
+		fr.desc = desc;
+		fr.access = access;
+		if ((Opcodes.ACC_STATIC & access) == 0) {
+			parent.addWatch(fr);
+		}
+		return fr;
 	}
 	
 	public String toString() {
@@ -57,23 +61,30 @@ public class FieldRecord extends nz.ac.vuw.ecs.rprofs.client.data.FieldRecord {
 
 		@Override
 		public String createTable(ProfilerRun run) {
-			return "create table fields_" + run.handle + " (mid integer, cid integer, name varchar(255), description varchar(255));";
+			return "create table fields_" + run.handle + " (mid integer, cid integer, name varchar(255), description varchar(255), equals boolean, hash boolean);";
 		}
 
 		@Override
 		public String insert(ProfilerRun p) {
-			return "insert into methods_" + p.handle + " (mid, cid, name, description) values (?, ?, ?, ?);";
+			return "insert into fields_" + p.handle + " (mid, cid, name, description, equals, hash) values (?, ?, ?, ?, ?, ?);";
 		}
 
 		@Override
-		public PreparedStatementSetter inserter(final FieldRecord mr) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter inserter(final List<FieldRecord> records) {
+			return new BatchPreparedStatementSetter() {
 				@Override
-				public void setValues(PreparedStatement cr) throws SQLException {
-					cr.setInt(1, mr.id);
-					cr.setInt(2, mr.parent.id);
-					cr.setString(3, mr.name.substring(0, Math.min(mr.name.length(), 255)));
-					cr.setString(4, mr.desc.substring(0, Math.min(mr.desc.length(), 255)));
+				public void setValues(PreparedStatement ps, int i) throws SQLException {
+					FieldRecord r = records.get(i);
+					ps.setInt(1, r.id);
+					ps.setInt(2, r.parent.id);
+					ps.setString(3, r.name.substring(0, Math.min(r.name.length(), 255)));
+					ps.setString(4, r.desc.substring(0, Math.min(r.desc.length(), 255)));
+					ps.setBoolean(5, r.equals);
+					ps.setBoolean(6, r.hash);
+				}
+				@Override
+				public int getBatchSize() {
+					return records.size();
 				}
 			};
 		}
@@ -90,40 +101,49 @@ public class FieldRecord extends nz.ac.vuw.ecs.rprofs.client.data.FieldRecord {
 					mr.parent.getFields().add(mr);
 					mr.name = rs.getString(3);
 					mr.desc = rs.getString(4);
+					mr.equals = rs.getBoolean(5);
+					mr.hash = rs.getBoolean(6);
 					return mr;
 				}
 			};
 		}
 
 		@Override
-		public String countSelectAll(ProfilerRun p) {
+		public String countSelect(ProfilerRun p, Object... filter) {
 			return "select count(1) from fields_" + p.handle + ";";
 		}
 
 		@Override
-		public String selectAll(ProfilerRun p) {
+		public String select(ProfilerRun p, Object... filter) {
 			return "select * from fields_" + p.handle + ";";
 		}
 		
 		@Override
-		public String select(ProfilerRun p, int offset, int limit) {
+		public String select(ProfilerRun p, int offset, int limit, Object... filter) {
 			return "select * from fields_" + p.handle + " order by id limit "
 			+ limit + " offset " + offset + ";";
 		}
 
 		@Override
 		public String update(ProfilerRun p) {
-			return "update fields_" + p.handle + " set name = ?, desc = ? where id = ?;";
+			return "update fields_" + p.handle + " set name = ?, desc = ?, equals = ?, hash = ? where id = ?;";
 		}
 
 		@Override
-		public PreparedStatementSetter updater(final FieldRecord r) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter updater(final List<FieldRecord> records) {
+			return new BatchPreparedStatementSetter() {
 				@Override
-				public void setValues(PreparedStatement cr) throws SQLException {
+				public void setValues(PreparedStatement cr, int i) throws SQLException {
+					FieldRecord r = records.get(i);
 					cr.setString(1, r.name.substring(0, Math.min(r.name.length(), 255)));
 					cr.setString(2, r.desc.substring(0, Math.min(r.desc.length(), 255)));
-					cr.setInt(3, r.id);
+					cr.setBoolean(3, r.equals);
+					cr.setBoolean(4, r.hash);
+					cr.setInt(5, r.id);
+				}
+				@Override
+				public int getBatchSize() {
+					return records.size();
 				}
 			};
 		}
@@ -134,11 +154,16 @@ public class FieldRecord extends nz.ac.vuw.ecs.rprofs.client.data.FieldRecord {
 		}
 
 		@Override
-		public PreparedStatementSetter deleter(final FieldRecord r) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter deleter(final List<FieldRecord> records) {
+			return new BatchPreparedStatementSetter() {
 				@Override
-				public void setValues(PreparedStatement cr) throws SQLException {
+				public void setValues(PreparedStatement cr, int i) throws SQLException {
+					FieldRecord r = records.get(i);
 					cr.setInt(1, r.id);
+				}
+				@Override
+				public int getBatchSize() {
+					return records.size();
 				}
 			};
 		}

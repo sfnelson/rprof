@@ -5,15 +5,22 @@ import java.io.Serializable;
 public class LogRecord implements Serializable {
 	private static final long serialVersionUID = -2196809197295190606L;
 	
-	public static final int OBJECT_ALLOCATED = 1;
-	public static final int ARRAY_ALLOCATED = 2;
-	public static final int METHOD_ENTER = 3;
-	public static final int METHOD_RETURN = 4;
-	public static final int FIELD_READ = 5;
-	public static final int FIELD_WRITE = 6;
-	public static final int CLASS_WEAVE = 7;
-	public static final int CLASS_INITIALIZED = 8;
-	public static final int OBJECT_TAGGED = 9;
+	public static final int OBJECT_ALLOCATED = 0x1;
+	public static final int ARRAY_ALLOCATED = 0x2;
+	public static final int METHOD_ENTER = 0x4;
+	public static final int METHOD_RETURN = 0x8;
+	public static final int FIELD_READ = 0x10;
+	public static final int FIELD_WRITE = 0x20;
+	public static final int CLASS_WEAVE = 0x40;
+	public static final int CLASS_INITIALIZED = 0x80;
+	public static final int OBJECT_TAGGED = 0x100;
+	public static final int OBJECT_FREED = 0x200;
+
+	public static final int ALL = 0xFFF;
+	public static final int ALLOCATION = OBJECT_ALLOCATED | OBJECT_TAGGED;
+	public static final int METHODS = METHOD_ENTER | METHOD_RETURN;
+	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
+	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
 	
 	public long index;
 	public long thread;

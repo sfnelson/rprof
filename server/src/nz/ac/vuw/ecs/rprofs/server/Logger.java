@@ -23,7 +23,7 @@ public class Logger extends HttpServlet {
 		int length = req.getContentLength();
 
 		List<LogRecord> records = parse(length, req.getInputStream());
-		Context.getInstance().storeLogs(records);
+		Context.getCurrent().storeLogs(records);
 		
 		resp.setStatus(201);
 	}

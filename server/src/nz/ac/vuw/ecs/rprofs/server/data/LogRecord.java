@@ -6,12 +6,13 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.server.Context;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.springframework.jdbc.core.PreparedStatementSetter;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
 
 /**
@@ -22,7 +23,7 @@ import org.springframework.jdbc.core.RowMapper;
 public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 	
 	public static LogRecord create() {
-		return new LogRecord(Context.getInstance().nextEvent());
+		return new LogRecord(Context.getCurrent().nextEvent());
 	}
 	
 	public LogRecord(long index) {
@@ -41,23 +42,34 @@ public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 		@Override
 		public String createTable(ProfilerRun p) {
 			return "create table events_" + p.handle
-			+ " (index bigint, thread bigint, event varchar(63), cnum integer, mnum integer, args bigint[]);";
+			+ " (index bigint, thread bigint, event integer, cnum integer, mnum integer, args bigint[]);";
 		}
 
 		@Override
-		public String countSelectAll(ProfilerRun p) {
-			return "select count(1) from events_" + p.handle + ";";
+		public String countSelect(ProfilerRun p, Object... filter) {
+			return "select count(1) from events_" + p.handle
+				+ getFilterClause(filter) + ";";
 		}
 		
 		@Override
-		public String selectAll(ProfilerRun p) {
-			return "select * from events_" + p.handle + ";";
+		public String select(ProfilerRun p, Object... filter) {
+			return "select * from events_" + p.handle
+			+ getFilterClause(filter) + ";";
 		}
 		
 		@Override
-		public String select(ProfilerRun p, int offset, int limit) {
-			return "select * from events_" + p.handle + " order by index limit "
-			+ limit + " offset " + offset + ";";
+		public String select(ProfilerRun p, int offset, int limit, Object... filter) {
+			return "select * from events_" + p.handle + getFilterClause(filter)
+			+ " order by index limit " + limit + " offset " + offset + ";";
+		}
+		
+		private String getFilterClause(Object... filter) {
+			assert(filter.length == 1);
+			assert(filter[0] != null);
+			assert(filter[0] instanceof Integer);
+			int type = (Integer) filter[0];
+			if (type == LogRecord.ALL) return "";
+			return " where (event & " + type + ") <> 0";
 		}
 
 		@Override
@@ -84,17 +96,22 @@ public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 		}
 
 		@Override
-		public PreparedStatementSetter inserter(final LogRecord cr) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter inserter(final List<LogRecord> records) {
+			return new BatchPreparedStatementSetter() {
 				@Override
-				public void setValues(PreparedStatement ps)
+				public void setValues(PreparedStatement ps, int i)
 						throws SQLException {
-					ps.setLong(1, cr.index);
-					ps.setLong(2, cr.thread);
-					ps.setInt(3, cr.event);
-					ps.setInt(4, cr.cnum);
-					ps.setInt(5, cr.mnum);
-					ps.setArray(6, ps.getConnection().createArrayOf("bigint", ArrayUtils.toObject(cr.args)));
+					LogRecord r = records.get(i);
+					ps.setLong(1, r.index);
+					ps.setLong(2, r.thread);
+					ps.setInt(3, r.event);
+					ps.setInt(4, r.cnum);
+					ps.setInt(5, r.mnum);
+					ps.setArray(6, ps.getConnection().createArrayOf("bigint", ArrayUtils.toObject(r.args)));
+				}
+				@Override
+				public int getBatchSize() {
+					return records.size();
 				}
 			};
 		}
@@ -105,14 +122,18 @@ public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 		}
 
 		@Override
-		public PreparedStatementSetter updater(final LogRecord r) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter updater(final List<LogRecord> records) {
+			return new BatchPreparedStatementSetter() {
 				@Override
-				public void setValues(PreparedStatement ps)
-						throws SQLException {
+				public void setValues(PreparedStatement ps, int i) throws SQLException {
+					LogRecord r = records.get(i);
 					ps.setInt(1, r.cnum);
 					ps.setInt(2, r.mnum);
 					ps.setLong(3, r.index);
+				}
+				@Override
+				public int getBatchSize() {
+					return records.size();
 				}
 			};
 		}
@@ -123,11 +144,16 @@ public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 		}
 
 		@Override
-		public PreparedStatementSetter deleter(final LogRecord r) {
-			return new PreparedStatementSetter() {
+		public BatchPreparedStatementSetter deleter(final List<LogRecord> records) {
+			return new BatchPreparedStatementSetter() {
 				@Override
-				public void setValues(PreparedStatement ps) throws SQLException {
+				public void setValues(PreparedStatement ps, int i) throws SQLException {
+					LogRecord r = records.get(i);
 					ps.setLong(1, r.index);
+				}
+				@Override
+				public int getBatchSize() {
+					return records.size();
 				}
 			};
 		}

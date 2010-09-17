@@ -2,7 +2,7 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
 	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client">
-	<ui:style type="nz.ac.vuw.ecs.rprofs.client.PackageList.Style">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.InstanceView.Style">
 	.panel {}
 	.background {
 		position: absolute;
@@ -21,11 +21,9 @@
 		border-bottom: solid 1px #ccc;
 	}
 	.heading span {
-		display: inline-block;
 		padding-top: 0.5ex;
 		padding-bottom: 0.5ex;
 		border-color: #bbb;
-		height: 2.5ex;
 	}
 	.even {
 		background-color: #eef;
@@ -40,8 +38,8 @@
 	}
 	</ui:style>
 	<g:FlowPanel styleName="{style.panel}">
-		<p:ClassEntry styleName="{style.background}"></p:ClassEntry>
-		<p:ClassEntry styleName="{style.heading}"></p:ClassEntry>
+		<p:Entry ui:field="background" styleName="{style.background}"></p:Entry>
+		<p:Entry ui:field="heading" styleName="{style.heading}"></p:Entry>
 		<g:FlowPanel ui:field="container" styleName="{style.container}">
 		</g:FlowPanel>
 	</g:FlowPanel>

@@ -52,9 +52,10 @@ public class LogRecordWidget extends Composite {
 		event.getElement().getStyle().setPaddingLeft(indent, Unit.EM);
 	}
 
-	public void init(nz.ac.vuw.ecs.rprofs.client.LogViewer.Style parent,
-			ClassRecord<MethodRecord, FieldRecord> cr, Map<Long, String> objects,
-			int thread) {
+	public void init(final nz.ac.vuw.ecs.rprofs.client.LogView.Style parent,
+			final ClassRecord<MethodRecord, FieldRecord> cr,
+			final MethodRecord mr, final Map<Long, String> objects,
+			final int thread) {
 
 		// Set parent class
 		switch (record.event) {
@@ -81,6 +82,10 @@ public class LogRecordWidget extends Composite {
 			break;
 		case LogRecord.OBJECT_TAGGED:
 			addStyleName(parent.objectTagged());
+			break;
+		case LogRecord.OBJECT_FREED:
+			addStyleName(parent.objectFreed());
+			break;
 		}
 
 		// Set internal class
@@ -93,20 +98,13 @@ public class LogRecordWidget extends Composite {
 		case LogRecord.OBJECT_TAGGED:
 		case LogRecord.CLASS_WEAVE:
 		case LogRecord.CLASS_INITIALIZED:
+		case LogRecord.OBJECT_FREED:
 			addStyleName(style.object());
 			break;
 		case LogRecord.FIELD_READ:
 		case LogRecord.FIELD_WRITE:
 			addStyleName(style.field());
 			break;
-		}
-
-		if (cr != null) {
-			switch (record.event) {
-			case LogRecord.OBJECT_ALLOCATED:
-			case LogRecord.OBJECT_TAGGED:
-				objects.put(record.args[0], cr.name);
-			}
 		}
 
 		// Set thread text
@@ -132,12 +130,8 @@ public class LogRecordWidget extends Composite {
 		case LogRecord.METHOD_RETURN:
 		case LogRecord.OBJECT_ALLOCATED:
 			mname.setText(String.valueOf(record.mnum));
-			if (cr != null) {
-				for (MethodRecord mr: cr.getMethods()) {
-					if (mr.id == record.mnum) {
-						mname.setText(mr.name);
-					}
-				}
+			if (mr != null) {
+				mname.setText(mr.name);
 			}
 			break;
 		case LogRecord.FIELD_READ:
@@ -179,6 +173,9 @@ public class LogRecordWidget extends Composite {
 		case LogRecord.OBJECT_TAGGED:
 			event.setHTML("<em>tagged</em>");
 			break;
+		case LogRecord.OBJECT_FREED:
+			event.setHTML("<em>free</em>");
+			break;
 		default:
 			event.setHTML("<em>unknown ("+record.event+")</em>");
 		}
@@ -207,6 +204,7 @@ public class LogRecordWidget extends Composite {
 			break;
 		case LogRecord.OBJECT_ALLOCATED:
 		case LogRecord.OBJECT_TAGGED:
+		case LogRecord.OBJECT_FREED:
 			this.args.setHTML(getObjectString(objects, record.args[0]) + " (" + record.cnum + ")");
 			break;
 		case LogRecord.CLASS_INITIALIZED:
@@ -214,6 +212,19 @@ public class LogRecordWidget extends Composite {
 			break;
 		case LogRecord.CLASS_WEAVE:
 			this.args.setHTML(cr.name + " (" + record.cnum + ")");
+			break;
+		case LogRecord.FIELD_READ:
+			this.args.setHTML(" (" + getObjectString(objects, record.args[0]) + ")");
+			break;
+		case LogRecord.FIELD_WRITE:
+			if (record.args.length == 2) {
+				this.args.setHTML(" = " + getObjectString(objects, record.args[1])
+					+ " (" + getObjectString(objects, record.args[0]) + ")"
+					);
+			}
+			else {
+				this.args.setHTML(" (" + getObjectString(objects, record.args[0]) + ")");
+			}
 			break;
 		}
 	}

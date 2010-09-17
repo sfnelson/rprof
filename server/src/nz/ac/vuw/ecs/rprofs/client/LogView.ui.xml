@@ -1,7 +1,7 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
-	<ui:style type="nz.ac.vuw.ecs.rprofs.client.LogViewer.Style">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.LogView.Style">
 		.filters {
 			background-color: #ddd;
 			border-bottom: solid 1px #ccc;
@@ -31,7 +31,8 @@
 		.objectAllocated .objectAllocated, .classWeave .classWeave,
 		.fieldWrite .fieldWrite, .fieldRead .fieldRead,
 		.methodEnter .methodEnter, .methodReturn .methodReturn,
-		.classInitialized .classInitialized, .objectTagged .objectTagged {
+		.classInitialized .classInitialized, .objectTagged .objectTagged,
+		.objectFreed .objectFreed {
 			display: none;
 		}
 	</ui:style>

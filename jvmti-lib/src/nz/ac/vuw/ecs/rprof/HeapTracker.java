@@ -51,10 +51,10 @@ public class HeapTracker {
 		return new HeapTracker();
 	}
 	
-	private static native void _newcls(Object cls, int cnum);
-	public static void newcls(Object cls, int cnum) {
+	private static native void _newcls(Object cls, int cnum, int[] fieldsToWatch);
+	public static void newcls(Object cls, int cnum, int[] fieldsToWatch) {
 		if ( engaged != 0 ) {
-			_newcls(cls, cnum);
+			_newcls(cls, cnum, fieldsToWatch);
 		}
 	}
 
@@ -129,7 +129,7 @@ public class HeapTracker {
 	static {
 		engaged = 0;
 		nextThreadId = (1l << 32);
-		nullCounter = new HeapTracker(0); 
+		nullCounter = new HeapTracker(0l);
 	}
 
 	private final long threadId;
@@ -137,7 +137,7 @@ public class HeapTracker {
 
 	{
 		// If this is called from <clinit> we never see it
-		newcls(HeapTracker.class, cnum);
+		newcls(HeapTracker.class, cnum, null);
 	}
 	
 	private HeapTracker() {
@@ -153,3 +153,39 @@ public class HeapTracker {
 	}
 }
 
+/* Empty version for testing */
+
+/*public class HeapTracker {
+	
+	private static int engaged = 0;
+
+	public static HeapTracker create() {
+		return new HeapTracker();
+	}
+	
+	private static native void _newcls(Object cls, int cnum, int[] fieldsToWatch);
+	public static void newcls(Object cls, int cnum, int[] fieldsToWatch) {}
+
+	private static native void _newobj(Object thread, Object o, long id);
+	public static void newobj(Object o) {}
+
+	private static native void _newarr(Object thread, Object a, long id);
+	public static void newarr(Object a) {}
+
+	private static native void _menter(Object thread, int cnum, int mnum, Object[] args);
+	public static void enter(int cnum, int mnum, Object[] args) {}
+
+	private static native void _mexit(Object thread, int cnum, int mnum, Object arg);
+	public static void exit(int cnum, int mnum, Object arg) {}
+
+	private static native void _main(Object thread, int cnum, int mnum);
+	public static void main(int cnum, int mnum) {}
+	
+	public static HeapTracker _getTracker(Thread current) {
+		return null; // return current._rprof;
+	}
+
+	public static void _setTracker(Thread current, HeapTracker tracker) {
+		// current._rprof = tracker;
+	}
+}*/

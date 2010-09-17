@@ -18,11 +18,27 @@ import com.google.gwt.dev.asm.commons.GeneratorAdapter;
 public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 
 	protected final MethodRecord record;
+	
+	protected int maxStack = 0;
+	protected int maxLocals = 0;
 
 	public MethodWeaver(MethodVisitor mv, MethodRecord mr) {
 		super(mv, mr.access, mr.name, mr.desc);
-
 		this.record = mr;
+	}
+	
+	protected void setStack(int stack) {
+		maxStack = Math.max(maxStack, stack);
+	}
+	
+	protected void setLocals(int locals) {
+		maxLocals = Math.max(maxLocals, locals);
+	}
+	
+	public void visitMaxs(int stack, int locals) {
+		setStack(stack);
+		setLocals(locals);
+		super.visitMaxs(maxStack, maxLocals);
 	}
 	
 	protected void visitTrackerMethod(Method m) {

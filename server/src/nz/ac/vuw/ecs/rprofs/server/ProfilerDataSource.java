@@ -20,7 +20,6 @@ public interface ProfilerDataSource<CR extends ClassRecord<MR, FR>, MR extends M
 	public List<CR> getClasses(ProfilerRun run);
 	public List<PR> getProfiles();
 	public void dropRun(ProfilerRun run);
-	public List<LR> getLogs(ProfilerRun run);
-	public List<LR> getLogs(ProfilerRun run, int offset, int limit);
-	public int getNumLogs(ProfilerRun run);
+	public int getNumLogs(ProfilerRun run, int type);
+	public List<LR> getLogs(ProfilerRun run, int offset, int limit, int type);
 }

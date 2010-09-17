@@ -1,12 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
+import nz.ac.vuw.ecs.rprofs.client.data.Report;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -16,10 +17,15 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("inspector")
 public interface InspectorService extends RemoteService {
-	List<ProfilerRun> getProfilerRuns();
-	List<ClassRecord<MethodRecord, FieldRecord>> getClasses(ProfilerRun run);
-	List<LogRecord> getLogs(ProfilerRun run);
-	List<LogRecord> getLogs(ProfilerRun run, int offset, int limit);
+	ArrayList<ProfilerRun> getProfilerRuns();
+	ArrayList<ClassRecord<MethodRecord, FieldRecord>> getClasses(ProfilerRun run);
+	int getNumLogs(ProfilerRun currentRun, int flags);
+	ArrayList<LogRecord> getLogs(ProfilerRun run, int flags, int offset, int limit);
 	void dropProfilerRun(ProfilerRun run);
-	int refreshLogs(ProfilerRun currentRun);
+	
+	ArrayList<Report> getReports();
+	Report.Status getReportStatus(Report report, ProfilerRun run);
+	Report.Status generateReport(Report report, ProfilerRun run);
+	Integer getReportData(Report report, ProfilerRun run, Report.Entry key);
+	ArrayList<? extends Report.Entry> getReportData(Report report, ProfilerRun run, Report.Entry key, int offset, int limit);
 }

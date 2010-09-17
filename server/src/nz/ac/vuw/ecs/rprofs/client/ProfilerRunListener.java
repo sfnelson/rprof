@@ -6,6 +6,6 @@ import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 
 public interface ProfilerRunListener {
 
-	public void profilerRunsAvailable(List<ProfilerRun> runs);
+	public void profilerRunsAvailable(List<ProfilerRun> result);
 	
 }

@@ -67,7 +67,7 @@ JNIEXPORT void JNICALL log_profiler_started()
 
 	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
-	stdout_message("profiler started.\n");
+	// stdout_message("profiler started.\n");
 
 	CURLcode err = curl_easy_perform(handle); /* post away! */
 
@@ -97,7 +97,7 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 
 	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
-	stdout_message("profiler stopped.\n");
+	// stdout_message("profiler stopped.\n");
 
 	CURLcode err = curl_easy_perform(handle); /* post away! */
 
@@ -114,9 +114,9 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 	curl_easy_cleanup(handle);
 }
 
-#define EVENT_BUFFER_SIZE 64
+#define EVENT_BUFFER_SIZE 1024
 
-struct EventRecord record_buffer[EVENT_BUFFER_SIZE];
+static EventRecord record_buffer[EVENT_BUFFER_SIZE];
 int event_index = 0;
 
 JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
@@ -128,7 +128,7 @@ JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
 		fatal_error("max method parameters exceeded! %d.%d %d > %d\n", cnum, mnum, len, MAX_PARAMETERS);
 	}
 
-	struct EventRecord* record = &(record_buffer[event_index++]);
+	EventRecord* record = &(record_buffer[event_index++]);
 
 	memset(record, 0, sizeof(record));
 	record->thread_upper = htonl((thread >> 32) & 0xffffffff);

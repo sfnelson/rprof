@@ -33,6 +33,7 @@ public class GenericClassWeaver extends ClassAdapter {
 			MethodVisitor mv = visitMethod(0, "<clinit>", "()V", null, null);
 			mv.visitCode();
 			mv.visitInsn(Opcodes.RETURN);
+			mv.visitMaxs(0, 0);
 			mv.visitEnd();
 		}
 		super.visitEnd();
@@ -41,6 +42,12 @@ public class GenericClassWeaver extends ClassAdapter {
 	@Override
 	public void visit(int version, int access, String name, String signature,
 			String superName, String[] interfaces) {
+		int major = version & 0xFFFF;
+		//int minor = (version >> 16) & 0xFFFF;
+		if (major < 49) {
+			version = 49;
+			cr.flags |= ClassRecord.CLASS_VERSION_UPDATED;
+		}
 		cr.init(version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}

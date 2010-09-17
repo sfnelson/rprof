@@ -3,10 +3,11 @@
  */
 package nz.ac.vuw.ecs.rprofs.client.data;
 
-import java.io.Serializable;
 import java.util.Date;
 
-public class ProfilerRun implements Serializable {
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class ProfilerRun implements IsSerializable {
 	private static final long serialVersionUID = -6622668634504415045L;
 	public String program;
 	public Date started;

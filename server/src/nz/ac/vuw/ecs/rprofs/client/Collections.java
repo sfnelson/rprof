@@ -29,8 +29,8 @@ public class Collections {
 	public static <T> HashSet<T> newSet() {
 		return new HashSet<T>();
 	}
-	
-	public static <T extends Comparable<T>> void sort(List<T> list) {
+
+	public static <T extends Comparable<? super T>> void sort(List<T> list) {
 		java.util.Collections.sort(list);
 	}
 	

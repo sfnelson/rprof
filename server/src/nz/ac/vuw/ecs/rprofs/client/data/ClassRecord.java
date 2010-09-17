@@ -1,12 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.client.data;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClassRecord<M extends MethodRecord, F extends FieldRecord> implements Serializable, Comparable<ClassRecord<?, ?>> {
-	
-	private static final long serialVersionUID = 2390564187873117774L;
+import nz.ac.vuw.ecs.rprofs.client.Collections;
+
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class ClassRecord<M extends MethodRecord, F extends FieldRecord> implements IsSerializable, Comparable<ClassRecord<?, ?>> {
 	
 	public static final int CLASS_VERSION_UPDATED = 0x1;
 	public static final int CLASS_IGNORED_PACKAGE_FILTER = 0x2;
@@ -15,8 +16,8 @@ public class ClassRecord<M extends MethodRecord, F extends FieldRecord> implemen
 	public int id;
 	public String name;
 	public int flags;
-	private List<M> methods = new ArrayList<M>();
-	private List<F> fields = new ArrayList<F>();
+	private ArrayList<M> methods = Collections.newList();
+	private ArrayList<F> fields = Collections.newList();
 	
 	public ClassRecord() {}
 	protected ClassRecord(int id, String name, int flags) {

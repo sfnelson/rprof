@@ -1,10 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.client.data;
 
-import java.io.Serializable;
+import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class FieldRecord implements Serializable {
-	private static final long serialVersionUID = -2753149845892424476L;
-	
+public class FieldRecord implements IsSerializable {
 	public int id;
 	public String name;
 	public String desc;

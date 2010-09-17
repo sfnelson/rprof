@@ -3,4 +3,7 @@
   <inherits name='com.google.gwt.user.User'></inherits>
   <entry-point class='nz.ac.vuw.ecs.rprofs.client.Inspector'/>
   <source path='client'/>
+  
+  <extend-configuration-property name="rpc.blacklist" 
+value="com.google.gwt.user.client.ui.*Collection"/>
 </module>

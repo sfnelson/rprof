@@ -66,6 +66,7 @@ public abstract class ReportGenerator {
 				ReportGenerator.this.run();
 				status.progress = 100;
 				status.state = Report.State.READY;
+				status.stage = "Generating";
 			}
 		}.start();
 		return status;

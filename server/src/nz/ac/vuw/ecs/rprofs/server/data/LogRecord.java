@@ -19,7 +19,6 @@ import org.springframework.jdbc.core.RowMapper;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-@SuppressWarnings("serial")
 public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 	
 	public static LogRecord create() {

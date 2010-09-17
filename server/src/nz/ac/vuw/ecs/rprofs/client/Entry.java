@@ -92,7 +92,8 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 
 	@Override
 	public Void visitClassEntry(ClassEntry entry) {
-		visitEntry("", entry.cls.name, entry.instances, entry);
+		String name = entry.cls.getClassName();
+		visitEntry("", name, entry.instances, entry);
 		return null;
 	}
 

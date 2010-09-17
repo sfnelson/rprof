@@ -4,6 +4,7 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
@@ -14,6 +15,7 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.ClassEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Entry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.InstanceEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
+import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
 import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
@@ -37,9 +39,14 @@ public class InstanceReportGenerator extends ReportGenerator implements Report.E
 	}
 
 	public void run() {
-
+		Status status = getStatus();		
+		
 		try {
-			for (ClassRecord cr: getDB().getClasses(getRun())) {
+			status.progress = 0;
+			status.stage = "Loading Class List (1/3)";
+			List<ClassRecord> classList = getDB().getClasses(getRun());
+			for (int i = 0; i < classList.size(); i++) {
+				ClassRecord cr = classList.get(i);
 				InstanceReport<Void, String, ClassRecord> pkg = packages.get(cr.getPackage());
 				if (pkg == null) {
 					pkg = InstanceReport.create(null, cr.getPackage());
@@ -49,8 +56,12 @@ public class InstanceReportGenerator extends ReportGenerator implements Report.E
 				cls.classes = 1;
 				classes.put(cr, cls);
 				classMap.put(cr.id, cr);
+				status.progress = i * 100 / classList.size();
 			}
-
+			
+			status.progress = 0;
+			status.stage = "Processing Allocation Logs (2/3)";
+			int progress = 0;
 			int available = getDB().getNumLogs(getRun(), LogRecord.ALLOCATION);
 			for (LogRecord lr: getDB().getLogs(getRun(), 0, available, LogRecord.ALLOCATION)) {
 				ClassRecord cr = classMap.get(lr.cnum);
@@ -72,9 +83,15 @@ public class InstanceReportGenerator extends ReportGenerator implements Report.E
 					instance.instances = 1;
 					instances.put(ir, instance);
 				}
+				
+				progress++;
+				status.progress = progress * 100 / available;
 			}
-
+			
+			status.progress = 0;
+			status.stage = "Processing field accesses (3/3)";
 			available = getDB().getNumLogs(getRun(), LogRecord.FIELDS);
+			progress = 0;
 			for (LogRecord lr: getDB().getLogs(getRun(), 0, available, LogRecord.FIELDS)) {
 				InstanceRecord ir = instanceMap.get(lr.args[0]);
 				ClassRecord cr = classMap.get(lr.cnum);
@@ -92,10 +109,16 @@ public class InstanceReportGenerator extends ReportGenerator implements Report.E
 						instances.get(ir).ewrites++;
 					}
 				}
+
+				progress++;
+				status.progress = progress * 100 / available;
 			}
 		} catch (DatabaseNotAvailableException ex) {
 			// Run was disposed while it the report was being generated, fail quietly.
 		}
+		
+		status.progress = 100;
+		status.stage = "Done";
 	}
 
 	/**

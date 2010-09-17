@@ -1,9 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.client.data;
 
-import java.io.Serializable;
+import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class LogRecord implements Serializable {
-	private static final long serialVersionUID = -2196809197295190606L;
+public class LogRecord implements IsSerializable {
 	
 	public static final int OBJECT_ALLOCATED = 0x1;
 	public static final int ARRAY_ALLOCATED = 0x2;

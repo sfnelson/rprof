@@ -3,8 +3,7 @@
  */
 package nz.ac.vuw.ecs.rprofs.client.data;
 
-import java.io.Serializable;
-import java.util.List;
+import java.util.ArrayList;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
 
@@ -17,8 +16,8 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class Report implements IsSerializable, Comparable<Report> {
 	
 	public String name;
-	public List<String> headings;
-	public List<Type> types;
+	public ArrayList<String> headings;
+	public ArrayList<Type> types;
 	
 	public Report() {}
 	public Report(String name) {
@@ -47,13 +46,14 @@ public class Report implements IsSerializable, Comparable<Report> {
 	public static class Status implements IsSerializable {
 		public State state;
 		public int progress;
+		public String stage;
 	}
 	
-	public static abstract class Entry implements IsSerializable {
-		public Serializable[] values;
+	public static abstract class Entry implements IsSerializable, Comparable<Entry> {
+		public Integer[] values;
 		
 		public Entry() {}
-		public Entry(Serializable... values) {
+		public Entry(Integer... values) {
 			this.values = values;
 		}
 		
@@ -66,7 +66,7 @@ public class Report implements IsSerializable, Comparable<Report> {
 		public int instances;
 		
 		public PackageEntry() {}
-		public PackageEntry(String pkg, int classes, int instances, Serializable... values) {
+		public PackageEntry(String pkg, int classes, int instances, Integer... values) {
 			super(values);
 			this.pkg = pkg;
 			this.classes = classes;
@@ -82,6 +82,16 @@ public class Report implements IsSerializable, Comparable<Report> {
 		public String toString() {
 			return "pkg:" + pkg;
 		}
+		
+		@Override
+		public int compareTo(Entry o) {
+			if (o instanceof PackageEntry) {
+				return pkg.compareTo(((PackageEntry) o).pkg);
+			}
+			else {
+				return -1;
+			}
+		}
 	}
 	
 	public static class ClassEntry extends Entry {
@@ -89,7 +99,7 @@ public class Report implements IsSerializable, Comparable<Report> {
 		public int instances;
 		
 		public ClassEntry() {}
-		public ClassEntry(ClassRecord<MethodRecord, FieldRecord> cls, int instances, Serializable... values) {
+		public ClassEntry(ClassRecord<MethodRecord, FieldRecord> cls, int instances, Integer... values) {
 			super(values);
 			this.cls = cls;
 			this.instances = instances;
@@ -104,13 +114,23 @@ public class Report implements IsSerializable, Comparable<Report> {
 		public String toString() {
 			return "cls:" + cls.name;
 		}
+
+		@Override
+		public int compareTo(Entry o) {
+			if (o instanceof ClassEntry) {
+				return cls.compareTo(((ClassEntry) o).cls);
+			}
+			else {
+				return -o.compareTo(this);
+			}
+		}
 	}
 	
 	public static class InstanceEntry extends Entry {
 		public long id;
 		
 		public InstanceEntry() {}
-		public InstanceEntry(long id, Serializable... values) {
+		public InstanceEntry(long id, Integer... values) {
 			super(values);
 			this.id = id;
 		}
@@ -123,6 +143,16 @@ public class Report implements IsSerializable, Comparable<Report> {
 		@Override
 		public String toString() {
 			return "id:" + id;
+		}
+		
+		@Override
+		public int compareTo(Entry o) {
+			if (o instanceof InstanceEntry) {
+				return (int)((InstanceEntry) o).id - (int) id;
+			}
+			else {
+				return 1;
+			}
 		}
 	}
 	

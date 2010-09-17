@@ -1,10 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.client.data;
 
-import java.io.Serializable;
+import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class MethodRecord implements Serializable {
-	private static final long serialVersionUID = -8480719569305048438L;
-
+public class MethodRecord implements IsSerializable {
+	
 	public int id;
 	public String name;
 	public String desc;

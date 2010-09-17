@@ -46,8 +46,7 @@ public class Inspector implements EntryPoint {
 			@Override
 			public void onSuccess(ArrayList<Report> result) {
 				for (Report r: result) {
-					System.out.println("adding view: " + r.name);
-					panel.addView(new InstanceView(Inspector.this, r));
+					panel.addView(new ReportView(Inspector.this, r));
 				}
 				panel.addView(new LogView(Inspector.this));
 			}
@@ -172,6 +171,8 @@ public class Inspector implements EntryPoint {
 		private final Report report;
 		private final ProfilerRun run;
 		private final ReportListener<T> listener;
+		
+		private int available;
 
 		public ReportCallback(Report report, ProfilerRun run, ReportListener<T> listener) {
 			this.report = report;
@@ -188,7 +189,7 @@ public class Inspector implements EntryPoint {
 				}
 				@Override
 				public void onSuccess(ArrayList<? extends Report.Entry> result) {
-					listener.handleData(parent, target, offset, limit, result, ReportCallback.this);
+					listener.handleData(parent, target, offset, limit, available, result, ReportCallback.this);
 				}
 			});
 		}
@@ -202,6 +203,7 @@ public class Inspector implements EntryPoint {
 				}
 				@Override
 				public void onSuccess(Integer result) {
+					available = result;
 					listener.dataAvailable(parent, target, result, ReportCallback.this);
 				}
 			});

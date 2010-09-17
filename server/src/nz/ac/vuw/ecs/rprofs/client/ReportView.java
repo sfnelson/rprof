@@ -1,6 +1,3 @@
-/**
- * 
- */
 package nz.ac.vuw.ecs.rprofs.client;
 
 import java.util.List;
@@ -15,6 +12,7 @@ import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Panel;
@@ -24,10 +22,10 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class InstanceView extends Composite implements ReportListener<Entry>, ClickHandler, HasEntries, View {
+public class ReportView extends Composite implements ReportListener<Entry>, ClickHandler, HasEntries, View {
 
 	private static InstanceViewUiBinder uiBinder = GWT.create(InstanceViewUiBinder.class);
-	interface InstanceViewUiBinder extends UiBinder<Widget, InstanceView> {}
+	interface InstanceViewUiBinder extends UiBinder<Widget, ReportView> {}
 	interface Style extends CssResource {
 		String even();
 	}
@@ -41,7 +39,7 @@ public class InstanceView extends Composite implements ReportListener<Entry>, Cl
 	@UiField Entry background;
 	@UiField Entry heading;
 
-	public InstanceView(Inspector server, Report report) {
+	public ReportView(Inspector server, Report report) {
 		this.button = new Button(report.name);
 		this.server = server;
 		this.report = report;
@@ -75,7 +73,8 @@ public class InstanceView extends Composite implements ReportListener<Entry>, Cl
 			server.generateReport(report, this);
 			break;
 		case GENERATING:
-			ErrorPanel.showMessage("generating: " + status.progress);
+			ErrorPanel.showMessage(status.stage + " (" + status.progress + ")");
+			timer.schedule(1000);
 			break;
 		case READY:
 			server.getReportData(report, null, null, this);
@@ -84,9 +83,9 @@ public class InstanceView extends Composite implements ReportListener<Entry>, Cl
 	}
 
 	@Override
-	public void dataAvailable(Report.Entry key, Entry target, int entries, ReportCallback<Entry> callback) {
+	public void dataAvailable(Report.Entry key, Entry target, int available, ReportCallback<Entry> callback) {
 		if (target == null) {
-			callback.getData(key, target, 0, entries);
+			callback.getData(key, target, 0, available);
 		}
 		else {
 			callback.getData(key, target, 0, 50);
@@ -94,8 +93,8 @@ public class InstanceView extends Composite implements ReportListener<Entry>, Cl
 	}
 
 	@Override
-	public void handleData(Report.Entry key, Entry target, int offset, int limit, List<? extends Report.Entry> result,
-			ReportCallback<Entry> callback) {
+	public void handleData(final Report.Entry key, final Entry target, final int offset, final int limit,
+			int available, List<? extends Report.Entry> result, final ReportCallback<Entry> callback) {
 
 		HasEntries container;
 		if (target == null) {
@@ -109,6 +108,14 @@ public class InstanceView extends Composite implements ReportListener<Entry>, Cl
 			Entry e = new Entry(report, r);
 			e.addClickHandler(this);
 			container.add(e);
+		}
+		
+		if (offset + limit < available) {
+			new Timer() {
+				public void run() {
+					callback.getData(key, target, offset + limit, limit);
+				}
+			}.schedule(200);
 		}
 	}
 
@@ -131,4 +138,10 @@ public class InstanceView extends Composite implements ReportListener<Entry>, Cl
 	Entry createHeading() {
 		return new Entry(report);
 	}
+	
+	private Timer timer = new Timer() {
+		public void run() {
+			server.getReportStatus(report, ReportView.this);
+		}
+	};
 }

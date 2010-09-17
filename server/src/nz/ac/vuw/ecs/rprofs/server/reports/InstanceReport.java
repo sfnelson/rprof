@@ -3,7 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-import java.io.Serializable;
 import java.util.Set;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
@@ -66,7 +65,7 @@ public class InstanceReport<P, T, C> {
 	
 	public void toEntry(PackageEntry e) {
 		InstanceReport<P, T, C> rpc = toRPC();
-		Serializable[] result = new Serializable[] { rpc.reads, rpc.writes, rpc.ereads, rpc.ewrites };
+		Integer[] result = new Integer[] { rpc.reads, rpc.writes, rpc.ereads, rpc.ewrites };
 		e.values = result;
 		e.classes = rpc.classes;
 		e.instances = rpc.instances;
@@ -74,14 +73,14 @@ public class InstanceReport<P, T, C> {
 	
 	public void toEntry(ClassEntry e) {
 		InstanceReport<P, T, C> rpc = toRPC();
-		Serializable[] result = new Serializable[] { rpc.reads, rpc.writes, rpc.ereads, rpc.ewrites };
+		Integer[] result = new Integer[] { rpc.reads, rpc.writes, rpc.ereads, rpc.ewrites };
 		e.values = result;
 		e.instances = rpc.instances;
 	}
 	
 	public void toEntry(InstanceEntry e) {
 		InstanceReport<P, T, C> rpc = toRPC();
-		Serializable[] result = new Serializable[] { rpc.reads, rpc.writes, rpc.ereads, rpc.ewrites };
+		Integer[] result = new Integer[] { rpc.reads, rpc.writes, rpc.ereads, rpc.ewrites };
 		e.values = result;
 	}
 	

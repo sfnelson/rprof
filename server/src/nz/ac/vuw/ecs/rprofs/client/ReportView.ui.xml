@@ -2,7 +2,7 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
 	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client">
-	<ui:style type="nz.ac.vuw.ecs.rprofs.client.InstanceView.Style">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.ReportView.Style">
 	.panel {}
 	.background {
 		position: absolute;
@@ -40,7 +40,7 @@
 	<g:FlowPanel styleName="{style.panel}">
 		<p:Entry ui:field="background" styleName="{style.background}"></p:Entry>
 		<p:Entry ui:field="heading" styleName="{style.heading}"></p:Entry>
-		<g:FlowPanel ui:field="container" styleName="{style.container}">
+		<g:FlowPanel ui:field="container" styleName="{style.container} list">
 		</g:FlowPanel>
 	</g:FlowPanel>
 </ui:UiBinder> 

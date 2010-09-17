@@ -67,28 +67,24 @@ public class InspectorServiceImpl extends RemoteServiceServlet implements Inspec
 	public Integer getReportData(Report report, ProfilerRun run, Report.Entry key) {
 		List<? extends Report.Entry> data = Context.getInstance(run).getReport(report).getReportData(key);
 		
-		System.out.println(data.size() + " records available for " + report.name + " (" + key + ")");
 		return data.size();
 	}
 	
 	@Override
 	public ArrayList<? extends Report.Entry> getReportData(Report report, ProfilerRun run, Report.Entry key, int offset, int limit) {
 		ArrayList<? extends Report.Entry> data = Context.getInstance(run).getReport(report).getReportData(key);
+		Collections.sort(data);
 		
 		if (offset == 0 && data.size() <= limit) {
-			System.out.println("returning " + data.size() + " records for " + report.name + " (" + key + ")");
 			return data;
 		}
 		
-		Collections.sort(data, Collections.HASH_COMPARATOR);
-		
 		ArrayList<Report.Entry> result = Collections.newList();
-		for (int i = offset; i < result.size(); i++) {
-			if (i >= offset + limit) break;
+		for (int i = offset; i < data.size(); i++) {
+			if (i - offset >= limit) break;
 			result.add(data.get(i));
 		}
 		
-		System.out.println("returning " + result.size() + " records for " + report.name + " (" + key + ")");
 		return result;
 	}
 

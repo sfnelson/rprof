@@ -21,6 +21,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -78,7 +79,7 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 	
 	private void initFields() {
 		for (int i = 0; i < fields.length; i++) {
-			HTML field = new HTML();
+			HTML field = new InlineHTML();
 			switch (report.types.get(i)) {
 			case OBJECT: field.setStyleName(style.object()); break;
 			case COUNT: field.setStyleName(style.count()); break;

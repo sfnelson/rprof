@@ -33,6 +33,8 @@ public class ReportView extends Composite implements ReportListener<Entry>, Clic
 	private final Inspector server;
 	private final Report report;
 	private final Button button;
+	
+	private int numEntries;
 
 	@UiField Style style;
 	@UiField Panel container;
@@ -88,6 +90,7 @@ public class ReportView extends Composite implements ReportListener<Entry>, Clic
 			callback.getData(key, target, 0, available);
 		}
 		else {
+			target.setPopulated(true);
 			callback.getData(key, target, 0, 50);
 		}
 	}
@@ -122,6 +125,10 @@ public class ReportView extends Composite implements ReportListener<Entry>, Clic
 	@Override
 	public void add(Entry entry) {
 		container.add(entry);
+		numEntries++;
+		if (numEntries%2 == 0) {
+			entry.addStyleName(style.even());
+		}
 	}
 	
 	@Override

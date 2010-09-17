@@ -11,7 +11,7 @@
 		color: transparent;
 		z-index: -1;
 	}
-	.background span {
+	.background span, .background div {
 		height: 100%;
 		padding-top: 0;
 		padding-bottom: 0;

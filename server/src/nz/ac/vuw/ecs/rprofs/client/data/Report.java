@@ -3,10 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.client.data;
 
-import java.util.ArrayList;
-
-import nz.ac.vuw.ecs.rprofs.client.Collections;
-
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
@@ -16,14 +12,18 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class Report implements IsSerializable, Comparable<Report> {
 	
 	public String name;
-	public ArrayList<String> headings;
-	public ArrayList<Type> types;
+	public String[] headings;
+	public String[] headingTitle;
+	public Type[] types;
+	public String[][] flags;
 	
 	public Report() {}
-	public Report(String name) {
+	public Report(String name, int length) {
 		this.name = name;
-		headings = Collections.newList();
-		types = Collections.newList();
+		headings = new String[length];
+		headingTitle = new String[length];
+		types = new Type[length];
+		flags = new String[length][];
 	}
 	
 	@Override
@@ -46,14 +46,15 @@ public class Report implements IsSerializable, Comparable<Report> {
 	public static class Status implements IsSerializable {
 		public State state;
 		public int progress;
+		public int limit;
 		public String stage;
 	}
 	
 	public static abstract class Entry implements IsSerializable, Comparable<Entry> {
-		public Integer[] values;
+		public int[] values;
 		
 		public Entry() {}
-		public Entry(Integer... values) {
+		public Entry(int... values) {
 			this.values = values;
 		}
 		
@@ -66,7 +67,7 @@ public class Report implements IsSerializable, Comparable<Report> {
 		public int instances;
 		
 		public PackageEntry() {}
-		public PackageEntry(String pkg, int classes, int instances, Integer... values) {
+		public PackageEntry(String pkg, int classes, int instances, int... values) {
 			super(values);
 			this.pkg = pkg;
 			this.classes = classes;
@@ -99,7 +100,7 @@ public class Report implements IsSerializable, Comparable<Report> {
 		public int instances;
 		
 		public ClassEntry() {}
-		public ClassEntry(ClassRecord<MethodRecord, FieldRecord> cls, int instances, Integer... values) {
+		public ClassEntry(ClassRecord<MethodRecord, FieldRecord> cls, int instances, int... values) {
 			super(values);
 			this.cls = cls;
 			this.instances = instances;
@@ -128,11 +129,16 @@ public class Report implements IsSerializable, Comparable<Report> {
 	
 	public static class InstanceEntry extends Entry {
 		public long id;
+		public String name;
 		
 		public InstanceEntry() {}
-		public InstanceEntry(long id, Integer... values) {
+		public InstanceEntry(long id, int... values) {
 			super(values);
 			this.id = id;
+		}
+		public InstanceEntry(String name, int... values) {
+			super(values);
+			this.name = name;
 		}
 
 		@Override
@@ -142,17 +148,34 @@ public class Report implements IsSerializable, Comparable<Report> {
 		
 		@Override
 		public String toString() {
-			return "id:" + id;
+			if (name == null) {
+				return "id:" + id;
+			}
+			else {
+				return name;
+			}
 		}
 		
 		@Override
 		public int compareTo(Entry o) {
 			if (o instanceof InstanceEntry) {
-				return (int)((InstanceEntry) o).id - (int) id;
+				if (name == null) {
+					return (int)((InstanceEntry) o).id - (int) id;
+				}
+				else {
+					return name.compareTo(((InstanceEntry) o).name);
+				}
 			}
 			else {
 				return 1;
 			}
+		}
+		
+		public Object id() {
+			if (name == null) {
+				return id;
+			}
+			return name;
 		}
 	}
 	

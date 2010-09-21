@@ -76,7 +76,7 @@ public class ReportView extends Composite implements ReportListener<Entry>, Clic
 			break;
 		case GENERATING:
 			ErrorPanel.showMessage(status.stage + " (" + status.progress + ")");
-			timer.schedule(1000);
+			timer.schedule(500);
 			break;
 		case READY:
 			server.getReportData(report, null, null, this);

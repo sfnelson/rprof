@@ -7,6 +7,10 @@ public class Test extends A {
 		t.a = 4;
 		System.out.println(t.a);
 		t = new Test(t);
+		
+		B b = new B();
+		b.foo();
+		b.bar();
 	}
 	
 	public Test(Object foo) {
@@ -38,5 +42,19 @@ class A {
 			return false;
 		}
 		return ((A) o).a == a;
+	}
+}
+
+class B {
+	private int a;
+	public B() {
+		a = 1;
+	}
+	public void foo() {
+		a = 2;
+	}
+	public void bar() {
+		if (a == 2);
+		a = 3;
 	}
 }

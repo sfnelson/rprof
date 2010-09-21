@@ -5,6 +5,7 @@ package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
@@ -20,26 +21,32 @@ import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
  */
 public abstract class ReportGenerator {
 	
-	protected interface ReportGeneratorFactory {
-		public ReportGenerator create(ProfilerRun run, Database db);
-	}
-	
-	private static Map<Report, ReportGeneratorFactory> reports = Collections.newMap();
+	private static ArrayList<Report> reportList;
+	private static Map<Report, ReportFactory> reports;
 	
 	static {
-		reports.put(InstanceReportGenerator.getReport(), InstanceReportGenerator.getFactory());
+		Set<ReportFactory> factories = Collections.newSet();
+		factories.add(InstancesReportGenerator.getFactory());
+		factories.add(ClassesReportGenerator.getFactory());
+		factories.add(WritesReportGenerator.getFactory());
+		
+		reportList = Collections.newList();
+		reports = Collections.newMap();
+		for (ReportFactory f: factories) {
+			reportList.add(f.getReport());
+			reports.put(f.getReport(), f);
+		}
+		
+		Collections.sort(reportList);
 	}
 
 	public static ArrayList<Report> getReports() {
-		ArrayList<Report> list = Collections.newList();
-		list.addAll(reports.keySet());
-		Collections.sort(list);
-		return list;
+		return reportList;
 	}
 
-	public static ReportGenerator create(Report report, ProfilerRun run, Database db) {
+	public static ReportGenerator create(Report report, Database db, ProfilerRun run) {
 		if (reports.containsKey(report)) {
-			return reports.get(report).create(run, db);
+			return reports.get(report).createGenerator(db, run);
 		}
 		return null;
 	}
@@ -61,12 +68,22 @@ public abstract class ReportGenerator {
 	public Status generate() {
 		status.state = Report.State.GENERATING;
 		status.progress = 0;
+		status.progress = 0;
+		status.stage = "Generating";
 		new Thread() {
 			public void run() {
-				ReportGenerator.this.run();
-				status.progress = 100;
-				status.state = Report.State.READY;
-				status.stage = "Generating";
+				try {
+					ReportGenerator.this.run();
+					status.progress = 0;
+					status.limit = 0;
+					status.state = Report.State.READY;
+					status.stage = "Done";
+				} catch (DatabaseNotAvailableException e) {
+					status.progress = 0;
+					status.limit = 0;
+					status.state = Report.State.UNINITIALIZED;
+					status.stage = "Cancelled";
+				}
 			}
 		}.start();
 		return status;
@@ -77,7 +94,7 @@ public abstract class ReportGenerator {
 	}
 	
 	public abstract ArrayList<? extends Entry> getReportData(Entry parent);
-	protected abstract void run();
+	protected abstract void run() throws DatabaseNotAvailableException;
 	
 	protected Database getDB() throws DatabaseNotAvailableException {
 		if (database == null) throw new DatabaseNotAvailableException();

@@ -14,7 +14,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
-import nz.ac.vuw.ecs.rprofs.server.reports.InstanceReportGenerator;
+import nz.ac.vuw.ecs.rprofs.server.reports.InstancesReportGenerator;
 import nz.ac.vuw.ecs.rprofs.server.reports.ReportGenerator;
 
 import org.springframework.context.ApplicationContext;
@@ -98,6 +98,7 @@ public class Context {
 	}
 	
 	private void initClasses() {
+		System.out.println("init classes");
 		classes = Collections.newMap();
 		for (ClassRecord cr: db.getClasses(run)) {
 			classes.put(cr.id, cr);
@@ -126,15 +127,15 @@ public class Context {
 	private Map<Report, ReportGenerator> reports = Collections.newMap();
 	public ReportGenerator getReport(Report report) {
 		if (!reports.containsKey(report)) {
-			reports.put(report, ReportGenerator.create(report, run, db)); 
+			reports.put(report, ReportGenerator.create(report, db, run)); 
 		}
 		return reports.get(report);
 	}
 	
-	private InstanceReportGenerator instanceReport;
-	public InstanceReportGenerator getInstanceReport() {
+	private InstancesReportGenerator instanceReport;
+	public InstancesReportGenerator getInstanceReport() {
 		if (instanceReport == null) {
-			instanceReport = new InstanceReportGenerator(run, db);
+			instanceReport = new InstancesReportGenerator(run, db);
 		}
 		return instanceReport;
 	}
@@ -146,11 +147,12 @@ public class Context {
 		
 		public ActiveContext() {
 			super(db.createRun());
+			System.out.println("new context");
 			
 			classes = Collections.newMap();
 			objects = Collections.newMap();
 			
-			System.out.println("profiler run started at " + current.run.started);
+			System.out.println("profiler run started at " + run.started);
 		}
 
 		public void stop() {
@@ -236,6 +238,14 @@ public class Context {
 		
 		public long nextEvent() {
 			return eventId++;
+		}
+		
+		public ClassRecord getClass(int cnum) {
+			return classes.get(cnum);
+		}
+
+		public Collection<ClassRecord> getClasses() {
+			return Collections.immutable(classes.values());
 		}
 	}
 }

@@ -24,6 +24,7 @@
 		padding-top: 0.5ex;
 		padding-bottom: 0.5ex;
 		border-color: #bbb;
+		text-align: left;
 	}
 	.even {
 		background-color: #eef;

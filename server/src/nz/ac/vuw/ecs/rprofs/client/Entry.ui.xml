@@ -15,10 +15,10 @@
 		}
 		.string {
 			width: 15em;
-			text-align: left ! important;
+			text-align: left;
 		}
 		.number {
-			text-align: right ! important;
+			text-align: right;
 		}
 		.entries {
 			padding-left: 1em;

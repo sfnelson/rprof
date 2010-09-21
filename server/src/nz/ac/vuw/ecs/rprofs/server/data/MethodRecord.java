@@ -48,6 +48,10 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 		return "m:" + parent + "." + name + ":" + desc;
 	}
 	
+	public String toMethodString() {
+		return name + ":" + desc;
+	}
+	
 	public static Template<MethodRecord, ProfilerRun> getTemplate() {
 		return template;
 	}

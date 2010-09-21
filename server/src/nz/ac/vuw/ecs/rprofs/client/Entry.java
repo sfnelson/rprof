@@ -56,7 +56,7 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 	public Entry(Report report, Report.Entry entry) {
 		this.report = report;
 		this.target = entry;
-		this.fields = new HTML[report.headings.size()];
+		this.fields = new HTML[report.headings.length];
 
 		initWidget(uiBinder.createAndBindUi(this));
 		initFields();
@@ -67,20 +67,26 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 	public Entry(Report report) {
 		this.report = report;
 		this.target = null;
-		this.fields = new HTML[report.headings.size()];
+		this.fields = new HTML[report.headings.length];
 
 		initWidget(uiBinder.createAndBindUi(this));
 		initFields();
 
-		for (int i = 0; i < report.headings.size(); i++) {
-			initField(report.types.get(i), report.headings.get(i), fields[i]);
+		for (int i = 0; i < report.headings.length; i++) {
+			setHTML(report.types[i], report.headings[i], fields[i]);
+			
+			String heading = report.headingTitle[i];
+			if (heading == null) {
+				heading = report.headings[i];
+			}
+			setTitle(report.types[i], report.flags[i], heading, fields[i]);
 		}
 	}
 	
 	private void initFields() {
 		for (int i = 0; i < fields.length; i++) {
 			HTML field = new InlineHTML();
-			switch (report.types.get(i)) {
+			switch (report.types[i]) {
 			case OBJECT: field.setStyleName(style.object()); break;
 			case COUNT: field.setStyleName(style.count()); break;
 			case NAME: field.setStyleName(style.string()); break;
@@ -100,7 +106,7 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 
 	@Override
 	public Void visitInstanceEntry(InstanceEntry entry) {
-		visitEntry("", "", entry.id, entry);
+		visitEntry("", "", entry.id(), entry);
 		return null;
 	}
 
@@ -117,28 +123,27 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 	private void visitEntry(Object pkg, Object cls, Object id, Report.Entry entry) {
 		int index = 0;
 
-		if (report.headings.get(index).equals("Package")) {
-			initField(report.types.get(index), pkg, fields[index]);
+		if (report.headings[index].equals("Package")) {
+			setHTML(report.types[index], pkg, fields[index]);
+			setTitle(report.types[index], report.flags[index], pkg, fields[index]);
 			index++;
 		}
-		if (report.headings.get(index).equals("Class")) {
-			initField(report.types.get(index), cls, fields[index]);
+		if (report.headings[index].equals("Class")) {
+			setHTML(report.types[index], cls, fields[index]);
+			setTitle(report.types[index], report.flags[index], cls, fields[index]);
 			index++;
 		}
-		if (report.headings.get(index).equals("Instance")) {
-			initField(report.types.get(index), id, fields[index]);
+		if (report.headings[index].equals("Instance") || report.headings[index].equals("Method")) {
+			setHTML(report.types[index], id, fields[index]);
+			setTitle(report.types[index], report.flags[index], id, fields[index]);
 			index++;
 		}
 
 		for (Object value: entry.values) {
-			initField(report.types.get(index), value, fields[index]);
+			setHTML(report.types[index], value, fields[index]);
+			setTitle(report.types[index], report.flags[index], value, fields[index]);
 			index++;
 		}
-	}
-
-	private void initField(Report.Type type, Object value, HTML field) {
-		setHTML(type, value, field);
-		setTitle(type, value, field);
 	}
 
 	public Report.Entry getTarget() {
@@ -209,6 +214,19 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 			}
 			html = String.valueOf(value);
 			break;
+		case FLAG:
+			if (value instanceof Integer) {
+				if (((Integer) value) == 0) {
+					html = "";
+				}
+				else {
+					html = "&#9888;";
+				}
+			}
+			else {
+				html = String.valueOf(value);
+			}
+			break;
 		default:
 			html = String.valueOf(value);
 			break;
@@ -216,16 +234,33 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 		field.setHTML(html);
 	}
 
-	protected void setTitle(Report.Type type, Object value, HTML field) {
-		String title;
+	protected void setTitle(Report.Type type, String[] flags, Object value, HTML field) {
+		String title = "";
 		switch (type) {
+		case FLAG:
+			if (value instanceof Integer) {
+				int val = (Integer) value;
+				for (int flag = 0; val != 0; flag++, val = val / 2) {
+					if (val % 2 == 1) {
+						String f = flags[flag];
+						if (title.length() == 0) title = f;
+						else title += '\n' + f;
+					}
+				}
+			}
+			else {
+				title = String.valueOf(value);
+			}
+			break;
 		case OBJECT:
 			if (value instanceof Long) {
 				long arg = (Long) value;
 				if (arg == 0) {
 					title = "null";
+					break;
 				}
 				title = String.valueOf(arg>> 32) + "." + String.valueOf(arg & 0xffffffffl);
+				break;
 			}
 		default:
 			title = String.valueOf(value);

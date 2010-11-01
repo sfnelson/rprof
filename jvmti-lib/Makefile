@@ -6,20 +6,31 @@ JARFILE=bin/rprof.jar
 
 OBJECTS=objects/rprof.o objects/agent_util.o objects/java_crw_demo.o objects/comm.o
 
-JDK=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0
-
 # Required flags
 COMMON_FLAGS=-fno-strict-aliasing -fPIC -fno-omit-frame-pointer
 # Error checking flags
 COMMON_FLAGS+= -W -Wall  -Wno-unused -Wno-parentheses
 
-CFLAGS=-O2 -g $(COMMON_FLAGS)
-CFLAGS += -arch x86_64 -arch i386
+OS=$(shell uname)
 
-CFLAGS += -I$(JDK)/Headers
+ifeq ($(OS),Darwin)
+	JDK=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home
+	CC=cc
+	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -arch i386 -I$(JDK)/Headers
+	LIBRARY=bin/lib$(LIBNAME).jnilib
+	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
+	LD_LIBRARY_PATH=
+endif
 
-LIBRARY=bin/lib$(LIBNAME).jnilib
-LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
+ifeq ($(OS),NetBSD)
+	JDK=/usr/pkg/java/jdk-1.6.0
+	CC=gcc
+	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/netbsd
+	LIBRARY=bin/lib$(LIBNAME).so
+	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
+	LD_LIBRARY_PATH=.:/usr/pkg/lib
+endif
+
 LIBRARIES=-lc -lcurl
 LINK_SHARED=$(LINK.c) -shared -o $@
 
@@ -31,24 +42,21 @@ $(LIBRARY): $(OBJECTS)
 
 objects/%.o: src/%.c
 	mkdir -p objects
-	cc $(CFLAGS) -c $? -o $@
+	$(CC) $(CFLAGS) -c $? -o $@
 
 # Build jar file
 $(JARFILE): $(JAVA_SOURCES)
 	mkdir -p bin
 	mkdir -p classes
-	$(JDK)/Home/bin/javac -d classes $(JAVA_SOURCES)
-	(cd classes; $(JDK)/Home/bin/jar cf ../$@ *)
+	$(JDK)/bin/javac -d classes $(JAVA_SOURCES)
+	(cd classes; $(JDK)/bin/jar cf ../$@ *)
 
 clean:
 	rm -f -r bin classes objects tmp/pre/* tmp/post/*
 
 test: all
-	(cd bin; $(JDK)/Home/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ../classes Test)
-
-test2: all
-	(cd bin; $(JDK)/Home/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ~/Desktop/jhotdraw/#prof/ CH/ifa/draw/samples/javadraw/JavaDrawApp)
+	(cd bin; LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ../classes Test)
 
 server: all
-	(cd classes; $(JDK)/Home/bin/java nz.ac.vuw.ecs.rprof.Logger)
+	(cd classes; $(JDK)/bin/java nz.ac.vuw.ecs.rprof.Logger)
 

@@ -50,6 +50,14 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 		}
 		return null;
 	}
+	
+	@Override
+	protected void reset() {
+		packages.clear();
+		classes.clear();
+		instances.clear();
+		classMap.clear();
+	}
 
 	@Override
 	protected void run() throws DatabaseNotAvailableException {
@@ -76,8 +84,8 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 
 		status.progress = 0;
 		status.stage = "Processing allocations (2/3)";
-		status.limit = getDB().getNumLogs(getRun(), LogRecord.ALLOCATION);
-		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.ALLOCATION)) {
+		status.limit = getDB().getNumLogs(getRun(), LogRecord.ALLOCATION, 0);
+		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.ALLOCATION, 0)) {
 			long id = lr.args[0];
 			if (!instances.containsKey(id)) {
 				InstanceReport ir = WritesReport.create(id);
@@ -93,8 +101,8 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 
 		status.progress = 0;
 		status.stage = "Processing events (3/3)";
-		status.limit = getDB().getNumLogs(getRun(), LogRecord.METHODS | LogRecord.FIELDS);
-		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.METHODS | LogRecord.FIELDS)) {
+		status.limit = getDB().getNumLogs(getRun(), LogRecord.METHODS | LogRecord.FIELDS, 0);
+		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.METHODS | LogRecord.FIELDS, 0)) {
 			if (lr.args.length > 0) {
 				InstanceReport ir = instances.get(lr.args[0]);
 				MethodRecord mr = getMethodRecord(lr.cnum, lr.mnum);
@@ -104,6 +112,7 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 						if (mr != null && (mr.isEquals() || mr.isHashCode())) {
 							ir.equalsCalled = true;
 						}
+					case LogRecord.METHOD_EXCEPTION:
 					case LogRecord.METHOD_RETURN:
 						if (mr != null && mr.isInit()) {
 							ir.constructor = 0;

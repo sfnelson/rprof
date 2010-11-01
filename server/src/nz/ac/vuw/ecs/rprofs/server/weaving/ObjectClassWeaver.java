@@ -15,8 +15,12 @@ import com.google.gwt.dev.asm.MethodVisitor;
  */
 public class ObjectClassWeaver extends GenericClassWeaver {
 	
+	private final ClassRecord cr;
+	
 	public ObjectClassWeaver(ClassVisitor cv, ClassRecord cr) {
 		super(cv, cr);
+		
+		this.cr = cr;
 	}
 
 	@Override
@@ -28,17 +32,23 @@ public class ObjectClassWeaver extends GenericClassWeaver {
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
-		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		MethodRecord mr;
+		MethodVisitor mv = super.visitMethodRaw(access, name, desc, signature, exceptions);
+		MethodRecord mr = MethodRecord.create(cr, access, name, desc, signature, exceptions);
 
-		if (name.equals("<init>")) {
-			mr = ((InitMethodWeaver) mv).record;
+		// check for <init>(..)
+		if (mr.isInit()) {
 			mv = new ObjectInitWeaver(mv, mr);
 		}
+		// check for: <clinit>()
+		else if (mr.isCLInit()) {
+			super.visitedCLInit = true;
+			mv = new CLInitMethodWeaver(mv, mr);
+		}
+		
 		return mv;
 	}
 
-	private static class ObjectInitWeaver extends MethodWeaver {
+	private static class ObjectInitWeaver extends InitMethodWeaver {
 
 		public ObjectInitWeaver(MethodVisitor mv, MethodRecord mr) {
 			super(mv, mr);

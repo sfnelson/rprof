@@ -28,6 +28,7 @@
 		<g:InlineLabel ui:field="program" styleName='{style.className}' />
 		<div class="{style.buttonPanel}">
 			<g:Button ui:field="inspect" styleName='{style.button}'>Inspect</g:Button>
+			<g:Button ui:field="stop" styleName='{style.button}'>Stop</g:Button>
 			<g:Button ui:field="delete" styleName='{style.button}'>Delete</g:Button>
 		</div>
 	</g:HTMLPanel>

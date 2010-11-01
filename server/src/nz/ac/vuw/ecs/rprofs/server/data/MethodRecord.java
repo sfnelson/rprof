@@ -45,7 +45,7 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 	}
 	
 	public String toString() {
-		return "m:" + parent + "." + name + ":" + desc;
+		return parent + "." + name + ":" + desc;
 	}
 	
 	public String toMethodString() {

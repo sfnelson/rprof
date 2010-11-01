@@ -8,5 +8,6 @@ public interface View {
 	Widget getContentItem();
 	Button getMenuButton();
 	void refresh();
+	void hide();
 
 }

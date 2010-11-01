@@ -72,6 +72,7 @@ public class InspectorPanel extends Composite {
 		content.add(view.getContentItem());
 		if (active != null) {
 			active.getMenuButton().removeStyleName(style.selected());
+			active.hide();
 		}
 		active = view;
 		active.getMenuButton().addStyleName(style.selected());

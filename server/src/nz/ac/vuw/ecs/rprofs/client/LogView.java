@@ -11,7 +11,6 @@ import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Style.Float;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -26,6 +25,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 public class LogView extends Composite implements LogListener, ClassListener, View {
@@ -49,6 +49,7 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 		String objectTagged();
 		String classInitialized();
 		String objectFreed();
+		String checkbox();
 	}
 
 	@UiField Style style;
@@ -72,8 +73,11 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 	@UiField Panel content;
 
 	private Button button;
+	private TextBox filter;
 
 	private boolean pending = false;
+	private int cls = 0;
+	private boolean visible = false;
 
 	public LogView(Inspector rprofServer) {
 		initWidget(uiBinder.createAndBindUi(this));
@@ -92,15 +96,26 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 		filters.add(new Filter("Tag", style.objectTagged(), false));
 		filters.add(new Filter("Free", style.objectFreed()));
 		
+		Button update = new Button("Update");
+		update.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				refresh();
+			}
+		});
+		filters.add(update);
+		
+		filter = new TextBox();
+		filters.add(filter);
+		
 		CheckBox all = new CheckBox("All Events");
 		all.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<Boolean> event) {
 				showAll = event.getValue();
-				refresh();
 			}
 		});
-		all.getElement().getStyle().setFloat(Float.RIGHT);
+		all.setStyleName(style.checkbox());
 		filters.add(all);
 	}
 
@@ -135,7 +150,9 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 
 
 	@Override
-	public void logsAvailable(int type, int available, LogCallback callback) {
+	public void logsAvailable(int type, int cls, int available, LogCallback callback) {
+		if (!visible || cls != this.cls) return;
+		
 		content.clear();
 		records.clear();
 		objects.clear();
@@ -150,8 +167,9 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 	}
 
 	@Override
-	public void logsAvailable(int type, int offset, int limit,
+	public void logsAvailable(int type, int cls, int offset, int limit,
 			Collection<LogRecord> result, final LogCallback callback) {
+		if (!visible || cls != this.cls) return;
 
 		for (LogRecord r: result) {
 			ClassRecord<MethodRecord, FieldRecord> cr = classes.get(r.cnum);
@@ -166,6 +184,7 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 					objects.put(r.args[0], cr.name);
 				case LogRecord.METHOD_ENTER:
 				case LogRecord.METHOD_RETURN:
+				case LogRecord.METHOD_EXCEPTION:
 					for (MethodRecord m: cr.getMethods()) {
 						if (m.id == r.mnum) {
 							mr = m;
@@ -189,6 +208,7 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 			// Determine the indent for the record, based on current thread's indent level
 			switch (r.event) {
 			case LogRecord.METHOD_RETURN:
+			case LogRecord.METHOD_EXCEPTION:
 				changeIndent(r.thread, -1);
 				indent = getIndent(r.thread);
 				break;
@@ -207,7 +227,9 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 				w.init(style, cr, mr, objects, threads.get(r.thread));
 				content.add(w);
 				
-				if (mr != null && r.event == LogRecord.METHOD_RETURN && r.cnum == mainClass && r.mnum == mainMethod) {
+				if (mr != null && 
+						(r.event == LogRecord.METHOD_RETURN || r.event == LogRecord.METHOD_EXCEPTION)
+						&& r.cnum == mainClass && r.mnum == mainMethod) {
 					inMain = false;
 				}
 			}
@@ -233,12 +255,24 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 	}
 
 	public void refresh() {
+		visible = true;
+		
 		if (classes.isEmpty()) {
 			pending = true;
 			server.getClasses();
 		}
 		else {
-			server.getLogs(LogRecord.ALL, this);
+			int cnum = 0;
+			if (!this.filter.getText().isEmpty()) {
+				try {
+					cnum = Integer.parseInt(this.filter.getText());
+				}
+				catch (NumberFormatException ex) {
+					this.filter.setText("");
+				}
+			}
+			server.getLogs(LogRecord.ALL, cnum, this);
+			this.cls = cnum;
 		}
 	}
 
@@ -252,8 +286,13 @@ public class LogView extends Composite implements LogListener, ClassListener, Vi
 
 		if (pending) {
 			pending = false;
-			server.getLogs(LogRecord.ALL, this);
+			refresh();
 		}
+	}
+	
+	@Override
+	public void hide() {
+		visible = false;
 	}
 
 	private class Filter extends Composite implements ClickHandler {

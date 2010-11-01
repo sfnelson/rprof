@@ -37,11 +37,20 @@
 		right: 0;
 		overflow: auto;
 	}
+	.refresh {
+		display: inline-block;
+		padding: 0.1ex;
+		margin: 0.2ex 0.5em;
+		float: right;
+		text-decoration: none;
+		color: black;
+	}
 	</ui:style>
 	<g:FlowPanel styleName="{style.panel}">
 		<p:Entry ui:field="background" styleName="{style.background}"></p:Entry>
 		<p:Entry ui:field="heading" styleName="{style.heading}"></p:Entry>
 		<g:FlowPanel ui:field="container" styleName="{style.container} list">
 		</g:FlowPanel>
+		<p:ProgressBar ui:field="progress"></p:ProgressBar>
 	</g:FlowPanel>
 </ui:UiBinder> 

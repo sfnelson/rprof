@@ -26,6 +26,9 @@
 		.children {
 			display: none;
 		}
+		.open>.entries {
+			color: #aaa;
+		}
 		.open>.children {
 			display: block;
 		}

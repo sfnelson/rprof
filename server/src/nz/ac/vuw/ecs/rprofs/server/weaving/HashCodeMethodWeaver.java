@@ -13,7 +13,7 @@ import com.google.gwt.dev.asm.Type;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class HashCodeMethodWeaver extends MethodWeaver {
+public class HashCodeMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 	public HashCodeMethodWeaver(MethodVisitor mv, MethodRecord mr) {
 		super(mv, mr);
@@ -21,6 +21,8 @@ public class HashCodeMethodWeaver extends MethodWeaver {
 
 	@Override
 	public void visitCode() {
+		super.visitCode();
+		
 		push(record.parent.id);		// stack: cid
 		push(record.id);			// stack: cid, mid
 		push(1);					// stack: cid, mid, 1
@@ -44,7 +46,8 @@ public class HashCodeMethodWeaver extends MethodWeaver {
 			push(record.id);
 			visitIntInsn(ALOAD, 0);
 			visitTrackerMethod(Tracker.exit);
-			setStack(3);
+			
+			setStack(4); // ret, cid, mid, this
 		}
 
 		super.visitInsn(code);

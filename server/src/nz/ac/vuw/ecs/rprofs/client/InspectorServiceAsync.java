@@ -14,9 +14,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public interface InspectorServiceAsync {
 	void getProfilerRuns(AsyncCallback<ArrayList<ProfilerRun>> callback);
 	void getClasses(ProfilerRun run, AsyncCallback<ArrayList<ClassRecord<MethodRecord, FieldRecord>>> callback);
+	void stopProfilerRun(ProfilerRun run, AsyncCallback<Void> callback);
 	void dropProfilerRun(ProfilerRun run, AsyncCallback<Void> callback);
-	void getNumLogs(ProfilerRun run, int flags, AsyncCallback<Integer> callback);
-	void getLogs(ProfilerRun run, int flags, int offset, int limit, AsyncCallback<ArrayList<LogRecord>> callback);
+	void getNumLogs(ProfilerRun run, int flags, int cls, AsyncCallback<Integer> callback);
+	void getLogs(ProfilerRun run, int flags, int cls, int offset, int limit, AsyncCallback<ArrayList<LogRecord>> callback);
 
 	void getReports(AsyncCallback<ArrayList<Report>> asyncCallback);
 	void getReportStatus(Report report, ProfilerRun run, AsyncCallback<Report.Status> asyncCallback);

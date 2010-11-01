@@ -46,7 +46,11 @@ public class FieldRecord extends nz.ac.vuw.ecs.rprofs.client.data.FieldRecord {
 	}
 	
 	public String toString() {
-		return "f:" + parent + "." + name + ":" + desc;
+		return parent + "." + name + ":" + desc;
+	}
+
+	public String toFieldString() {
+		return name + ":" + desc;
 	}
 	
 	public boolean isStatic() {

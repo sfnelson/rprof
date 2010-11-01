@@ -99,9 +99,13 @@ public class Weaver extends HttpServlet {
 			String[] filters = new String[] {
 				"sun/reflect/.*",	// jhotdraw crashes in this package
 				"java/awt/.*",		// jhotdraw has font problems if this packages is included
+				"com/sun/.*",
+				"sun/.*",
+				"apple/.*",
 				"com/apple/.*",		// might help jhotdraw?
 				"java/lang/IncompatibleClassChangeError",	// gc blows up if this is woven
-				"java/lang/LinkageError"					// gc blows up if this is woven
+				"java/lang/LinkageError",					// gc blows up if this is woven
+				"java/lang/NullPointerException"			// something blows up - null pointers appear as runtime exceptions with this change
 			};
 			
 			if (Type.getInternalName(HeapTracker.class).equals(name)) {

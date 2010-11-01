@@ -10,7 +10,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 import com.google.gwt.dev.asm.MethodVisitor;
 import com.google.gwt.dev.asm.Type;
 
-class InitMethodWeaver extends MethodWeaver {
+class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 	public InitMethodWeaver(MethodVisitor mv, MethodRecord mr) {
 		super(mv, mr);

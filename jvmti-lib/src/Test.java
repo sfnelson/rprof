@@ -3,6 +3,7 @@ public class Test extends A {
 		Test t = new Test("test");
 		t.greet(t);
 		t.equals(null);
+		t.equals(t);
 		t.hashCode();
 		t.a = 4;
 		System.out.println(t.a);
@@ -11,6 +12,27 @@ public class Test extends A {
 		B b = new B();
 		b.foo();
 		b.bar();
+		
+		C c = new C(5);
+		c.equals(null);
+		c.equals(c);
+		
+		try {
+			c.equals(t);
+		}
+		catch (Exception ex) {}
+		
+		try {
+			c.hashCode();
+		}
+		catch (Exception ex) {}
+		
+		try {
+			new D();
+		}
+		catch (Exception ex) {}
+		
+		throw new RuntimeException("test main method exception");
 	}
 	
 	public Test(Object foo) {
@@ -58,3 +80,27 @@ class B {
 		a = 3;
 	}
 }
+
+class C {
+	private int a;
+	public C(int a) {
+		this.a = a;
+	}
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (o instanceof C) {
+			return ((C) o).a == a;
+		}
+		throw new NullPointerException("test equals exception");
+	}
+	public int hashCode() {
+		throw new NullPointerException("test hashcode exception");
+	}
+}
+
+class D {
+	public D() {
+		throw new NullPointerException("test constructor exception");
+	}
+}
+

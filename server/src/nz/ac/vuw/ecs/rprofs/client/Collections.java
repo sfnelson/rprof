@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -28,6 +29,10 @@ public class Collections {
 	
 	public static <T> HashSet<T> newSet() {
 		return new HashSet<T>();
+	}
+	
+	public static <T> Stack<T> newStack() {
+		return new Stack<T>();
 	}
 
 	public static <T extends Comparable<? super T>> void sort(List<T> list) {

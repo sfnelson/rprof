@@ -13,7 +13,7 @@ import com.google.gwt.dev.asm.Type;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class EqualsMethodWeaver extends MethodWeaver {
+public class EqualsMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 	public EqualsMethodWeaver(MethodVisitor mv, MethodRecord mr) {
 		super(mv, mr);
@@ -21,6 +21,8 @@ public class EqualsMethodWeaver extends MethodWeaver {
 
 	@Override
 	public void visitCode() {
+		super.visitCode();
+		
 		push(record.parent.id);		// stack: cid
 		push(record.id);			// stack: cid, mid
 		push(2);					// stack: cid, mid, 2
@@ -51,7 +53,7 @@ public class EqualsMethodWeaver extends MethodWeaver {
 			visitIntInsn(ALOAD, 0);
 			visitTrackerMethod(Tracker.exit);
 			
-			setStack(3);
+			setStack(4); // ret, cid, mid, this
 		}
 
 		super.visitInsn(code);

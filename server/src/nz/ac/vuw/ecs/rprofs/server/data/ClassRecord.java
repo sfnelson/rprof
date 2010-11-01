@@ -46,7 +46,7 @@ public class ClassRecord extends nz.ac.vuw.ecs.rprofs.client.data.ClassRecord<Me
 	}
 	
 	public String toString() {
-		return "c:" + name;
+		return name;
 	}
 	
 	private Set<FieldRecord> watches = Collections.newSet();

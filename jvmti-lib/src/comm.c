@@ -12,17 +12,72 @@
 
 #include "comm.h"
 #include "agent_util.h"
+#include "rprof.h"
 
-JNIEXPORT void JNICALL init_comm()
-{
-	curl_global_init(CURL_GLOBAL_ALL);
-}
+#define EVENT_BUFFER_SIZE 1024
 
 struct response {
 	jint* length;
 	unsigned char** image;
 	unsigned int offset;
 };
+
+typedef struct {
+	int thread_upper;
+	int thread_lower;
+	int message;
+	int cnum;
+	int mnum;
+	int len;
+	int params[MAX_PARAMETERS * 2];
+} EventRecord;
+
+typedef struct {
+	jvmtiEnv      *jvmti;
+	jrawMonitorID  lock;
+	EventRecord    records[EVENT_BUFFER_SIZE];
+	unsigned int   event_index;
+} GlobalCommData;
+
+static GlobalCommData *cdata;
+
+/* Enter a critical section by doing a JVMTI Raw Monitor Enter */
+static void
+enterCriticalSection()
+{
+	jvmtiEnv *jvmti = cdata->jvmti;
+	jvmtiError error;
+
+	error = (*jvmti)->RawMonitorEnter(jvmti, cdata->lock);
+	check_jvmti_error(jvmti, error, "Cannot enter with raw monitor");
+}
+
+/* Exit a critical section by doing a JVMTI Raw Monitor Exit */
+static void
+exitCriticalSection()
+{
+	jvmtiEnv *jvmti = cdata->jvmti;
+	jvmtiError error;
+
+	error = (*jvmti)->RawMonitorExit(jvmti, cdata->lock);
+	check_jvmti_error(jvmti, error, "Cannot exit with raw monitor");
+}
+
+JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti)
+{
+	static GlobalCommData data;
+	jvmtiError error;
+
+	(void)memset((void*)&data, 0, sizeof(data));
+	cdata = &data;
+
+	cdata->jvmti = jvmti;
+
+	error = (*jvmti)->CreateRawMonitor(jvmti, "comm data", &(cdata->lock));
+	check_jvmti_error(jvmti, error, "Cannot create raw monitor");
+
+	curl_global_init(CURL_GLOBAL_ALL);
+}
 
 size_t read_header(void *ptr, size_t size, size_t nmemb, struct response* response) {
 	unsigned int len, i;
@@ -114,37 +169,35 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 	curl_easy_cleanup(handle);
 }
 
-#define EVENT_BUFFER_SIZE 1024
-
-static EventRecord record_buffer[EVENT_BUFFER_SIZE];
-int event_index = 0;
-
 JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
 		jint cnum, jint mnum, jint len, jlong* params)
 {
 	int i;
+	EventRecord* record;
 
 	if (len > MAX_PARAMETERS) {
 		fatal_error("max method parameters exceeded! %d.%d %d > %d\n", cnum, mnum, len, MAX_PARAMETERS);
 	}
 
-	EventRecord* record = &(record_buffer[event_index++]);
+	enterCriticalSection(); {
+		record = &(cdata->records[cdata->event_index++]);
+		memset(record, 0, sizeof(record));
 
-	memset(record, 0, sizeof(record));
-	record->thread_upper = htonl((thread >> 32) & 0xffffffff);
-	record->thread_lower = htonl(thread & 0xffffffff);
-	record->message = htonl(message);
-	record->cnum = htonl(cnum);
-	record->mnum = htonl(mnum);
-	record->len = htonl(len);
-	for (i = 0; i < len; i++) {
-		record->params[i * 2] = htonl((params[i] >> 32) & 0xffffffff);
-		record->params[i * 2 + 1] = htonl(params[i] & 0xffffffff);
-	}
+		record->thread_upper = htonl((thread >> 32) & 0xffffffff);
+		record->thread_lower = htonl(thread & 0xffffffff);
+		record->message = htonl(message);
+		record->cnum = htonl(cnum);
+		record->mnum = htonl(mnum);
+		record->len = htonl(len);
+		for (i = 0; i < len; i++) {
+			record->params[i * 2] = htonl((params[i] >> 32) & 0xffffffff);
+			record->params[i * 2 + 1] = htonl(params[i] & 0xffffffff);
+		}
 
-	if (event_index >= EVENT_BUFFER_SIZE) {
-		flush_method_event_buffer();
-	}
+		if (cdata->event_index >= EVENT_BUFFER_SIZE) {
+			flush_method_event_buffer();
+		}
+	}; exitCriticalSection();
 }
 
 JNIEXPORT void JNICALL flush_method_event_buffer()
@@ -152,21 +205,26 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 	CURL* handle = curl_easy_init();
 	char* host = "http://localhost:8888/logger";
 	long status;
+	CURLcode err;
 
 	curl_easy_setopt(handle, CURLOPT_URL, host);
 
 	struct curl_slist *headers=NULL;
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
 
-	/* post binary data */
-	curl_easy_setopt(handle, CURLOPT_POSTFIELDS, &record_buffer);
+	enterCriticalSection(); {
+		/* post binary data */
+		curl_easy_setopt(handle, CURLOPT_POSTFIELDS, &(cdata->records));
 
-	/* set the size of the postfields data */
-	curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, sizeof(record_buffer[0]) * event_index);
+		/* set the size of the postfields data */
+		curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, sizeof(EventRecord) * cdata->event_index);
 
-	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+		curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
-	CURLcode err = curl_easy_perform(handle); /* post away! */
+		err = curl_easy_perform(handle); /* post away! */
+
+		cdata->event_index = 0;
+	}; exitCriticalSection();
 
 	if (err != 0) {
 		fatal_error("error sending log! %d: %s\n", err, curl_easy_strerror(err));
@@ -179,8 +237,6 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 
 	curl_slist_free_all(headers); /* free the header list */
 	curl_easy_cleanup(handle);
-
-	event_index = 0;
 }
 
 JNIEXPORT void JNICALL weave_classfile(

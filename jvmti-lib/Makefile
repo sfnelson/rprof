@@ -44,10 +44,10 @@ clean:
 	rm -f -r bin classes objects tmp/pre/* tmp/post/*
 
 test: all
-	(cd bin; $(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ../classes Test)
+	(cd bin; $(JDK)/Home/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ../classes Test)
 
 test2: all
-	(cd bin; $(JDK)/Home/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ~/Desktop/jhotdraw/#prof/ CH/ifa/draw/samples/javadraw/JavaDrawApp)
+	(cd bin; $(JDK)/Home/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ~/Desktop/jhotdraw/#prof/ CH/ifa/draw/samples/javadraw/JavaDrawApp)
 
 server: all
 	(cd classes; $(JDK)/Home/bin/java nz.ac.vuw.ecs.rprof.Logger)

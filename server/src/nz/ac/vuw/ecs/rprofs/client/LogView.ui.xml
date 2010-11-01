@@ -6,23 +6,40 @@
 			background-color: #ddd;
 			border-bottom: solid 1px #ccc;
 			padding: 0.5ex 1em;
-			height: 2.5ex;
+			height: 3ex;
 		}
 		.content {
 			position: absolute;
-			top: 3.5ex;
+			top: 4ex;
 			bottom: 0;
 			left: 0;
 			right: 0;
 			overflow: auto;
 		}
+		.filters .checkbox {
+			display: inline-block;
+			margin: 0.25ex 0.25em;
+			float: right;
+		}
+		.filters input, .filters button {
+			margin: 0 0.25em;
+			float: right;
+		}
+		.filters input {
+			text-align: right;
+			width: 3em;
+		}
+		.filters .checkbox input {
+			margin: 0.5ex 0;
+		}
 		.filter {
+			display: inline-block;
 			text-decoration: none;
 			color: inherit;
 			outline: none;
 			padding: 0.25ex 0.5em;
 			border-radius: 1em;
-			margin-right: 0.5em;
+			margin: 0.25ex 0.25em;
 		}
 		.active {
 			background-color: #999;
@@ -31,6 +48,7 @@
 		.objectAllocated .objectAllocated, .classWeave .classWeave,
 		.fieldWrite .fieldWrite, .fieldRead .fieldRead,
 		.methodEnter .methodEnter, .methodReturn .methodReturn,
+		.methodException .methodException,
 		.classInitialized .classInitialized, .objectTagged .objectTagged,
 		.objectFreed .objectFreed {
 			display: none;

@@ -84,7 +84,13 @@ public class ClassesReportGenerator extends ReportGenerator implements EntryVisi
 	private Map<Integer, ClassReport> classes = Collections.newMap();
 
 	@Override
-	public void run() throws DatabaseNotAvailableException {
+	protected void reset() {
+		packages.clear();
+		classes.clear();
+	}
+	
+	@Override
+	protected void run() throws DatabaseNotAvailableException {
 		Status status = getStatus();
 
 		status.limit = getDB().getNumClasses(getRun());

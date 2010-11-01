@@ -19,7 +19,7 @@ public class GenericClassWeaver extends ClassAdapter {
 
 	private final ClassRecord cr;
 	
-	private boolean visitedCLInit = false;
+	protected boolean visitedCLInit = false;
 	
 	public GenericClassWeaver(ClassVisitor cv, ClassRecord cr) {
 		super(cv);
@@ -80,5 +80,10 @@ public class GenericClassWeaver extends ClassAdapter {
 			mv = new CLInitMethodWeaver(mv, mr);
 		}
 		return mv;
+	}
+	
+	protected MethodVisitor visitMethodRaw(int access, String name, String desc,
+			String signature, String[] exceptions) {
+		return super.visitMethod(access, name, desc, signature, exceptions);
 	}
 }

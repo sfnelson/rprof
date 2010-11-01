@@ -115,13 +115,13 @@ public class Context {
 		return cls.getMethods().get(mnum - 1);
 	}
 	
-	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run2, int type) {
-		return db.getNumLogs(run2, type);
+	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run2, int type, int cls) {
+		return db.getNumLogs(run2, type, cls);
 	}
 	
 	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run2,
-			int offset, int limit, int type) {
-		return db.getLogs(run2, offset, limit, type);
+			int offset, int limit, int type, int cls) {
+		return db.getLogs(run2, offset, limit, type, cls);
 	}
 	
 	private Map<Report, ReportGenerator> reports = Collections.newMap();

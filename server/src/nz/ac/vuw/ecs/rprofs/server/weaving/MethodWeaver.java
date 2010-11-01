@@ -86,6 +86,7 @@ public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 		public static final Class<HeapTracker> cls = HeapTracker.class;
 		public static final Method enter = getTrackerMethod("enter");
 		public static final Method exit = getTrackerMethod("exit");
+		public static final Method except = getTrackerMethod("except");
 		public static final Method newarr = getTrackerMethod("newarr");
 		public static final Method newobj = getTrackerMethod("newobj");
 		public static final Method newcls = getTrackerMethod("newcls");

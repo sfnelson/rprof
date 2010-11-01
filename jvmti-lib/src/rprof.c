@@ -76,8 +76,10 @@
 #define HEAP_TRACKER_native_newcls	_newcls
 #define HEAP_TRACKER_enter			enter		/* Name of java method execution method */
 #define HEAP_TRACKER_exit			exit		/* Name of java method return method */
+#define HEAP_TRACKER_except			except
 #define HEAP_TRACKER_native_enter	_menter		/* Name of java method execution native */
 #define HEAP_TRACKER_native_exit	_mexit		/* Name of java method return native */
+#define HEAP_TRACKER_native_except  _mexcept
 #define HEAP_TRACKER_engaged		engaged		/* Name of static field switch */
 #define HEAP_TRACKER_main			main		/* Name of java main method tracker */
 #define HEAP_TRACKER_native_main	_main		/* Name of java main method tracker native */
@@ -453,6 +455,43 @@ HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 	}
 }
 
+/* Java Native Method for method exceptional return */
+static void
+HEAP_TRACKER_native_except(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum, jobject thrown)
+{
+	if (gdata->vmInitialized) {
+		jvmtiError error;
+		jvmtiEnv *jvmti;
+		char* signature;
+		jclass cls;
+
+		if ( gdata->vmDead ) {
+			return;
+		}
+
+		jvmti = gdata->jvmti;
+
+		jlong threadId;
+		jlong argId;
+
+		jint numArgs = 0;
+		jlong* args = NULL;
+
+		error = (*jvmti)->GetTag(jvmti, thread, &threadId);
+		check_jvmti_error(jvmti, error, "Cannot read thread tag");
+
+		if (thrown != NULL) {
+			error = (*jvmti)->GetTag(jvmti, thrown, &argId);
+			check_jvmti_error(jvmti, error, "Cannot read object tag");
+
+			numArgs = 1;
+			args = &argId;
+		}
+
+		log_method_event(threadId, RPROF_METHOD_EXCEPTION, cnum, mnum, numArgs, args);
+	}
+}
+
 static void
 HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum)
 {
@@ -486,11 +525,12 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 		jint rc;
 
 		/* Java Native Methods for class */
-		static JNINativeMethod registry[6] = {
+		static JNINativeMethod registry[7] = {
 				{STRING(HEAP_TRACKER_native_newobj), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newobj},
 				{STRING(HEAP_TRACKER_native_newarr), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newarr},
 				{STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
 				{STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;IILjava/lang/Object;)V", (void*)&HEAP_TRACKER_native_exit},
+				{STRING(HEAP_TRACKER_native_except), "(Ljava/lang/Object;IILjava/lang/Object;)V", (void*)&HEAP_TRACKER_native_except},
 				{STRING(HEAP_TRACKER_native_main), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_main},
 				{STRING(HEAP_TRACKER_native_newcls), "(Ljava/lang/Object;I[I)V", (void*)&HEAP_TRACKER_native_newcls}
 		};
@@ -502,7 +542,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 					STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
 		}
 
-		rc = (*env)->RegisterNatives(env, klass, registry, 6);
+		rc = (*env)->RegisterNatives(env, klass, registry, 7);
 		if ( rc != 0 ) {
 			fatal_error("ERROR: JNI: Cannot register natives for class %s\n",
 					STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
@@ -594,6 +634,8 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 	jvmtiHeapCallbacks heapCallbacks;
 	jvmtiError         error;
 
+	flush_method_event_buffer(jvmti);
+
 	if (RPROF_DEBUG) stdout_message("----- vm death\n");
 
 	/* These are purposely done outside the critical section */
@@ -648,10 +690,9 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 		 */
 		gdata->vmDead = JNI_TRUE;
 
-		flush_method_event_buffer();
-
 	} exitCriticalSection(jvmti);
 
+	flush_method_event_buffer(jvmti);
 }
 
 /* Callback for JVMTI_EVENT_VM_OBJECT_ALLOC */
@@ -900,11 +941,6 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	jvmtiCapabilities      capabilities;
 	jvmtiEventCallbacks    callbacks;
 
-	/* initialize comm utilities */
-	init_comm();
-
-	log_profiler_started();
-
 	/* Setup initial global agent data area
 	 *   Use of static/extern data should be handled carefully here.
 	 *   We need to make sure that we are able to cleanup after ourselves
@@ -930,6 +966,11 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 
 	/* Here we save the jvmtiEnv* for Agent_OnUnload(). */
 	gdata->jvmti = jvmti;
+
+	/* initialize comm utilities */
+	init_comm(jvmti);
+
+	log_profiler_started();
 
 	/* Immediately after getting the jvmtiEnv* we need to ask for the
 	 *   capabilities this agent will need.
@@ -1014,6 +1055,7 @@ Agent_OnUnload(JavaVM *vm)
 {
 
 	log_profiler_stopped();
+
 	/* Skip any cleanup, VM is about to die anyway */
 }
 

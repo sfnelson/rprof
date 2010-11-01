@@ -7,7 +7,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 
 import com.google.gwt.dev.asm.MethodVisitor;
 
-class MainMethodWeaver extends MethodWeaver {
+class MainMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 	public MainMethodWeaver(MethodVisitor mv, MethodRecord mr) {
 		super(mv, mr);
@@ -16,6 +16,7 @@ class MainMethodWeaver extends MethodWeaver {
 	@Override
 	public void visitCode() {
 		super.visitCode();
+		
 		push(record.parent.id);
 		push(record.id);
 		visitTrackerMethod(Tracker.main);

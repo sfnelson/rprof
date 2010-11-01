@@ -14,10 +14,11 @@ public class LogRecord implements IsSerializable {
 	public static final int CLASS_INITIALIZED = 0x80;
 	public static final int OBJECT_TAGGED = 0x100;
 	public static final int OBJECT_FREED = 0x200;
+	public static final int METHOD_EXCEPTION = 0x400;
 
 	public static final int ALL = 0xFFF;
 	public static final int ALLOCATION = OBJECT_ALLOCATED | OBJECT_TAGGED;
-	public static final int METHODS = METHOD_ENTER | METHOD_RETURN;
+	public static final int METHODS = METHOD_ENTER | METHOD_RETURN | METHOD_EXCEPTION;
 	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
 	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
 	

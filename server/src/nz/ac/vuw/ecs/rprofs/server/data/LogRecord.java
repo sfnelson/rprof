@@ -63,12 +63,20 @@ public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 		}
 		
 		private String getFilterClause(Object... filter) {
-			assert(filter.length == 1);
+			assert(filter.length == 2);
 			assert(filter[0] != null);
+			assert(filter[1] != null);
 			assert(filter[0] instanceof Integer);
+			assert(filter[1] instanceof Integer);
 			int type = (Integer) filter[0];
-			if (type == LogRecord.ALL) return "";
-			return " where (event & " + type + ") <> 0";
+			int cls = (Integer) filter[1];
+			
+			if (type == LogRecord.ALL && cls == 0) return "";
+			else if (cls == 0) return " where (event & " + type + ") <> 0";
+			else if (type == LogRecord.ALL) return " where cnum = " + cls;
+			else {
+				return " where (event & " + type + ") <> 0 and cnum = " + cls;
+			}
 		}
 
 		@Override

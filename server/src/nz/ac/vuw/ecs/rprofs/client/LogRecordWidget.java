@@ -65,6 +65,9 @@ public class LogRecordWidget extends Composite {
 		case LogRecord.METHOD_RETURN:
 			addStyleName(parent.methodReturn());
 			break;
+		case LogRecord.METHOD_EXCEPTION:
+			addStyleName(parent.methodReturn());
+			break;
 		case LogRecord.OBJECT_ALLOCATED:
 			addStyleName(parent.objectAllocated());
 			break;
@@ -92,6 +95,7 @@ public class LogRecordWidget extends Composite {
 		switch (record.event) {
 		case LogRecord.METHOD_ENTER:
 		case LogRecord.METHOD_RETURN:
+		case LogRecord.METHOD_EXCEPTION:
 			addStyleName(style.method());
 			break;
 		case LogRecord.OBJECT_ALLOCATED:
@@ -123,13 +127,16 @@ public class LogRecordWidget extends Composite {
 		else {
 			cname.setText(String.valueOf(record.cnum));
 		}
+		cname.setTitle(String.valueOf(record.cnum));
 
 		// Set Method/Field text
 		switch (record.event) {
 		case LogRecord.METHOD_ENTER:
 		case LogRecord.METHOD_RETURN:
+		case LogRecord.METHOD_EXCEPTION:
 		case LogRecord.OBJECT_ALLOCATED:
 			mname.setText(String.valueOf(record.mnum));
+			mname.setTitle(String.valueOf(record.mnum));
 			if (mr != null) {
 				mname.setText(mr.name);
 			}
@@ -154,6 +161,9 @@ public class LogRecordWidget extends Composite {
 			break;
 		case LogRecord.METHOD_RETURN:
 			event.setHTML("&larr;");
+			break;
+		case LogRecord.METHOD_EXCEPTION:
+			event.setHTML("&#x219A;");
 			break;
 		case LogRecord.OBJECT_ALLOCATED:
 			event.setHTML("<strong>new</strong>");
@@ -184,6 +194,7 @@ public class LogRecordWidget extends Composite {
 		switch (record.event) {
 		case LogRecord.METHOD_ENTER:
 		case LogRecord.METHOD_RETURN:
+		case LogRecord.METHOD_EXCEPTION:
 			StringBuilder args = new StringBuilder("(");
 			if (record.event == LogRecord.METHOD_RETURN && record.args.length > 0) {
 				args.append("):");

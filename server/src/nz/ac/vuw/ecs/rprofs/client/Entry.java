@@ -100,42 +100,48 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 	@Override
 	public Void visitClassEntry(ClassEntry entry) {
 		String name = entry.cls.getClassName();
-		visitEntry("", name, entry.instances, entry);
+		String title = entry.cls.getClassName() + " (" + entry.cls.id + ")";
+		visitEntry("", "", name, title, entry.instances, entry.instances, entry);
 		return null;
 	}
 
 	@Override
 	public Void visitInstanceEntry(InstanceEntry entry) {
-		visitEntry("", "", entry.id(), entry);
+		visitEntry("", "", "", "", entry.id(), entry.id(), entry);
 		return null;
 	}
 
 	@Override
 	public Void visitPackageEntry(PackageEntry entry) {
 		String pkg = entry.pkg;
+		String title = entry.pkg;
 		if (pkg.equals("")) {
 			pkg = "<em>default</em>";
+			title = "default";
 		}
-		visitEntry(pkg, entry.classes, entry.instances, entry);
+		visitEntry(pkg, title, entry.classes, entry.classes, entry.instances, entry.instances, entry);
 		return null;
 	}
 
-	private void visitEntry(Object pkg, Object cls, Object id, Report.Entry entry) {
+	private void visitEntry(String pkg, String pkgH, Object cls, Object clsH,
+			Object id, Object idH, Report.Entry entry) {
 		int index = 0;
 
 		if (report.headings[index].equals("Package")) {
 			setHTML(report.types[index], pkg, fields[index]);
-			setTitle(report.types[index], report.flags[index], pkg, fields[index]);
+			setTitle(report.types[index], report.flags[index], pkgH, fields[index]);
 			index++;
 		}
 		if (report.headings[index].equals("Class")) {
 			setHTML(report.types[index], cls, fields[index]);
-			setTitle(report.types[index], report.flags[index], cls, fields[index]);
+			setTitle(report.types[index], report.flags[index], clsH, fields[index]);
 			index++;
 		}
-		if (report.headings[index].equals("Instance") || report.headings[index].equals("Method")) {
+		if (report.headings[index].equals("Instance")
+				|| report.headings[index].equals("Method")
+				|| report.headings[index].equals("Field")) {
 			setHTML(report.types[index], id, fields[index]);
-			setTitle(report.types[index], report.flags[index], id, fields[index]);
+			setTitle(report.types[index], report.flags[index], idH, fields[index]);
 			index++;
 		}
 

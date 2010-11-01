@@ -59,7 +59,7 @@ public class Inspector implements EntryPoint {
 			public void run() {
 				refreshRuns();
 			}
-		}.scheduleRepeating(15000);
+		}.scheduleRepeating(5000);
 	}
 
 	private void refreshRuns() {
@@ -126,42 +126,55 @@ public class Inspector implements EntryPoint {
 		});
 	}
 
+	public void stopProfilerRun(ProfilerRun run) {
+		inspector.stopProfilerRun(run, new AsyncCallback<Void>() {
+			public void onFailure(Throwable caught) {
+				ErrorPanel.showMessage("Failed to stop profiler run!");
+			}
+			public void onSuccess(Void result) {
+				Inspector.getInstance().refreshRuns();
+			}
+		});
+	}
+
 	private class LogRequestCallback implements LogCallback {
 		private final ProfilerRun run;
 		private final int type;
+		private final int cls;
 		private final LogListener listener;
 
-		public LogRequestCallback(ProfilerRun run, int type, LogListener listener) {
+		public LogRequestCallback(ProfilerRun run, int type, int cls, LogListener listener) {
 			this.run = run;
 			this.type = type;
+			this.cls = cls;
 			this.listener = listener;
 		}
 
 		@Override
 		public void doRequest(final int offset, final int limit) {
-			inspector.getLogs(run, type, offset, limit, new AsyncCallback<ArrayList<LogRecord>>() {
+			inspector.getLogs(run, type, cls, offset, limit, new AsyncCallback<ArrayList<LogRecord>>() {
 				@Override
 				public void onFailure(Throwable caught) {
 					ErrorPanel.showMessage("Failed to retrieve logs!");
 				}
 				@Override
 				public void onSuccess(ArrayList<LogRecord> result) {
-					listener.logsAvailable(type, offset, limit, result, LogRequestCallback.this);
+					listener.logsAvailable(type, cls, offset, limit, result, LogRequestCallback.this);
 				}
 			});
 		}
 	}
 
-	public void getLogs(final int type, final LogListener listener) {
+	public void getLogs(final int type, final int cls, final LogListener listener) {
 		final ProfilerRun run = currentRun;
 		if (run == null) return;
-		final LogCallback callback = new LogRequestCallback(run, type, listener);
-		inspector.getNumLogs(currentRun, type, new AsyncCallback<Integer>() {
+		final LogCallback callback = new LogRequestCallback(run, type, cls, listener);
+		inspector.getNumLogs(currentRun, type, cls, new AsyncCallback<Integer>() {
 			public void onFailure(Throwable caught) {
 				ErrorPanel.showMessage("Failed to retrieve logs!");
 			}
 			public void onSuccess(Integer result) {
-				listener.logsAvailable(type, result, callback);
+				listener.logsAvailable(type, cls, result, callback);
 			}
 		});
 	}

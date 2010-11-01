@@ -29,6 +29,8 @@ public abstract class ReportGenerator {
 		factories.add(InstancesReportGenerator.getFactory());
 		factories.add(ClassesReportGenerator.getFactory());
 		factories.add(WritesReportGenerator.getFactory());
+		factories.add(EqualsReportGenerator.getFactory());
+		factories.add(ProblemReportGenerator.getFactory());
 		
 		reportList = Collections.newList();
 		reports = Collections.newMap();
@@ -65,11 +67,14 @@ public abstract class ReportGenerator {
 		status.progress = 0;
 	}
 
+	protected abstract void reset();
+	
 	public Status generate() {
 		status.state = Report.State.GENERATING;
 		status.progress = 0;
 		status.progress = 0;
 		status.stage = "Generating";
+		reset();
 		new Thread() {
 			public void run() {
 				try {

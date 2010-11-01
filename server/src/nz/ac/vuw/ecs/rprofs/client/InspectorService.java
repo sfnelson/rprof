@@ -19,8 +19,9 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface InspectorService extends RemoteService {
 	ArrayList<ProfilerRun> getProfilerRuns();
 	ArrayList<ClassRecord<MethodRecord, FieldRecord>> getClasses(ProfilerRun run);
-	int getNumLogs(ProfilerRun currentRun, int flags);
-	ArrayList<LogRecord> getLogs(ProfilerRun run, int flags, int offset, int limit);
+	int getNumLogs(ProfilerRun currentRun, int flags, int cls);
+	ArrayList<LogRecord> getLogs(ProfilerRun run, int flags, int cls, int offset, int limit);
+	void stopProfilerRun(ProfilerRun run);
 	void dropProfilerRun(ProfilerRun run);
 	
 	ArrayList<Report> getReports();

@@ -39,6 +39,14 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 	public InstancesReportGenerator(ProfilerRun run, Database database) {
 		super(run, database);
 	}
+	
+	protected void reset() {
+		packages.clear();
+		classes.clear();
+		instances.clear();
+		classMap.clear();
+		instanceMap.clear();
+	}
 
 	public void run() throws DatabaseNotAvailableException {
 		Status status = getStatus();		
@@ -62,8 +70,8 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 
 		status.stage = "Processing Allocation Logs (2/3)";
 		status.progress = 0;
-		status.limit = getDB().getNumLogs(getRun(), LogRecord.ALLOCATION);
-		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.ALLOCATION)) {
+		status.limit = getDB().getNumLogs(getRun(), LogRecord.ALLOCATION, 0);
+		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.ALLOCATION, 0)) {
 			ClassRecord cr = classMap.get(lr.cnum);
 			if (cr == null) continue;
 			ClassReport cls = classes.get(cr);
@@ -90,13 +98,24 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 
 		status.stage = "Processing field accesses (3/3)";
 		status.progress = 0;
-		status.limit = getDB().getNumLogs(getRun(), LogRecord.FIELDS);
-		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.FIELDS)) {
-			InstanceRecord ir = instanceMap.get(lr.args[0]);
-			ClassRecord cr = classMap.get(lr.cnum);
-			FieldRecord fr = cr.getFields().get(lr.mnum - 1);
-			if (ir == null) continue;
-			if (lr.event == LogRecord.FIELD_READ) {
+		status.limit = getDB().getNumLogs(getRun(), LogRecord.FIELDS, 0);
+		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.FIELDS, 0)) {
+			InstanceRecord ir = null;
+			ClassRecord cr = null;
+			FieldRecord fr = null;
+			
+			if (lr.args.length > 0) {
+				ir = instanceMap.get(lr.args[0]);
+			}
+			cr = classMap.get(lr.cnum);
+			if (cr != null && lr.mnum > 0 && cr.getFields().size() >= lr.mnum) {
+				fr = cr.getFields().get(lr.mnum - 1);
+			}
+			
+			if (ir == null || fr == null) {
+				System.err.printf("error reporting on field access: %d:%d\n", lr.cnum, lr.mnum);
+			}
+			else if (lr.event == LogRecord.FIELD_READ) {
 				instances.get(ir).reads++;
 				if (fr.equals || fr.hash) {
 					instances.get(ir).ereads++;

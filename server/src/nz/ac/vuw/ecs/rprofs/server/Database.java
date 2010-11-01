@@ -111,14 +111,14 @@ public class Database implements InitializingBean, ProfilerDataSource<ClassRecor
 	}
 	
 	@Override
-	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, int offset, int limit, int flags) {
-		return template.query(lrt.select(run, offset, limit, flags), lrt.mapper(null));
+	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, int offset, int limit, int flags, int cls) {
+		return template.query(lrt.select(run, offset, limit, flags, cls), lrt.mapper(null));
 	}
 
 	@Override
 	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run,
-			int flags) {
-		return template.queryForInt(lrt.countSelect(run, flags));
+			int flags, int cls) {
+		return template.queryForInt(lrt.countSelect(run, flags, cls));
 	}
 
 	public void storeLogs(ProfilerRun run, List<LogRecord> records) {

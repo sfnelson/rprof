@@ -81,8 +81,15 @@ public class HeapTracker {
 
 	private static native void _mexit(Object thread, int cnum, int mnum, Object arg);
 	public static void exit(int cnum, int mnum, Object arg) {
-		if ( engaged != 0) {
+		if ( engaged != 0 ) {
 			_mexit(Thread.currentThread(), cnum, mnum, arg);
+		}
+	}
+	
+	private static native void _mexcept(Object thread, int cnum, int mnum, Object arg);
+	public static void except(int cnum, int mnum, Object arg) {
+		if ( engaged != 0 ) {
+			_mexcept(Thread.currentThread(), cnum, mnum, arg);
 		}
 	}
 

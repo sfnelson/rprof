@@ -12,6 +12,7 @@ import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
+import nz.ac.vuw.ecs.rprofs.server.Context.ActiveContext;
 import nz.ac.vuw.ecs.rprofs.server.reports.ReportGenerator;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -34,6 +35,14 @@ public class InspectorServiceImpl extends RemoteServiceServlet implements Inspec
 	}
 	
 	@Override
+	public void stopProfilerRun(ProfilerRun run) {
+		ActiveContext current = Context.getCurrent();
+		if (current != null) {
+			current.stop();
+		}
+	}
+	
+	@Override
 	public ArrayList<ClassRecord<MethodRecord, FieldRecord>> getClasses(ProfilerRun run) {
 		ArrayList<ClassRecord<MethodRecord, FieldRecord>> cl = Collections.newList();
 		for (ClassRecord<? extends MethodRecord, ? extends FieldRecord> cr: Context.getInstance(run).getClasses()) {
@@ -43,18 +52,20 @@ public class InspectorServiceImpl extends RemoteServiceServlet implements Inspec
 	}
 
 	@Override
-	public ArrayList<LogRecord> getLogs(ProfilerRun run, int type,
+	public ArrayList<LogRecord> getLogs(ProfilerRun run, int type, int cls,
 			int offset, int limit) {
 		ArrayList<LogRecord> records = Collections.newList();
-		for (LogRecord r: Context.getInstance(run).getLogs(run, offset, limit, type)) {
+		for (LogRecord r: Context.getInstance(run).getLogs(run, offset, limit, type, cls)) {
 			records.add(r.toRPC());
 		}
+		System.out.println("returning events " + offset + " to " + (offset + limit));
 		return records;
 	}
 
 	@Override
-	public int getNumLogs(ProfilerRun run, int type) {
-		int result = Context.getInstance(run).getNumLogs(run, type);
+	public int getNumLogs(ProfilerRun run, int type, int cls) {
+		int result = Context.getInstance(run).getNumLogs(run, type, cls);
+		System.out.println(result + " events available");
 		return result;
 	}
 

@@ -3,7 +3,7 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.client.data.FieldRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 
 import com.google.gwt.dev.asm.MethodVisitor;
@@ -23,8 +23,8 @@ public class HashCodeMethodWeaver extends ExceptionHandlingMethodWeaver {
 	public void visitCode() {
 		super.visitCode();
 		
-		push(record.parent.id);		// stack: cid
-		push(record.id);			// stack: cid, mid
+		push(record.parent.getId());// stack: cid
+		push(record.getId());		// stack: cid, mid
 		push(1);					// stack: cid, mid, 1
 		visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));
 									// stack: cid, mid, args
@@ -42,8 +42,8 @@ public class HashCodeMethodWeaver extends ExceptionHandlingMethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == IRETURN) {
-			push(record.parent.id);
-			push(record.id);
+			push(record.parent.getId());
+			push(record.getId());
 			visitIntInsn(ALOAD, 0);
 			visitTrackerMethod(Tracker.exit);
 			

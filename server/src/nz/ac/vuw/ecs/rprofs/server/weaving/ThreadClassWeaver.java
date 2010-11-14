@@ -6,6 +6,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context.ActiveContext;
 
 import com.google.gwt.dev.asm.ClassAdapter;
 import com.google.gwt.dev.asm.ClassVisitor;
@@ -20,18 +21,20 @@ import com.google.gwt.dev.asm.Type;
  */
 public class ThreadClassWeaver extends ClassAdapter {
 
-	private ClassRecord cr;
+	private final ActiveContext context;
+	private final ClassRecord cr;
 	
-	public ThreadClassWeaver(ClassVisitor cv, ClassRecord cr) {
+	public ThreadClassWeaver(ActiveContext context, ClassVisitor cv, ClassRecord cr) {
 		super(cv);
 		
+		this.context = context;
 		this.cr = cr;
 	}
 	
 	@Override
 	public void visit(int version, int access, String name, String signature,
 			String superName, String[] interfaces) {
-		cr.init(version, access, name, signature, superName, interfaces);
+		context.initClassRecord(cr, version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 	
@@ -39,7 +42,8 @@ public class ThreadClassWeaver extends ClassAdapter {
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		MethodRecord mr = MethodRecord.create(cr, access, name, desc, signature, exceptions);
+		MethodRecord mr = context.createMethodRecord(cr);
+		context.initMethodRecord(mr, access, name, desc, signature, exceptions);
 		
 		// check for <init>(..)
 		if (mr.isInit()) {

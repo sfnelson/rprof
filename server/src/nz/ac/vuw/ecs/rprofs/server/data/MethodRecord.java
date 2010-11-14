@@ -7,10 +7,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 
+import nz.ac.vuw.ecs.rprofs.client.data.MethodInfo;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
-import nz.ac.vuw.ecs.rprofs.server.Context;
 
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.RowMapper;
@@ -19,39 +18,82 @@ import org.springframework.jdbc.core.RowMapper;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord {
+public class MethodRecord extends MethodInfo implements Comparable<MethodRecord> {
 	private static final long serialVersionUID = -357201240938009655L;
 
-	public ClassRecord parent;
-	
+	public final ClassRecord parent;
+	private final int id;
+
+	private String name;
+	private String desc;
+	private int access;
+
 	public String signature;
 	public String[] exceptions;
-	
-	public MethodRecord() {}
-	
-	public MethodRecord(ClassRecord parent) {
+
+	MethodRecord(ClassRecord parent, int id) {
 		this.parent = parent;
+		this.id = id;
+
+		parent.addMethod(this);
+	}
+	
+	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (o == this) return true;
+		if (o.getClass().equals(this.getClass())) {
+			MethodRecord mr = (MethodRecord) o;
+			if (this.parent.equals(mr.parent)) {
+				return mr.id == this.id;
+			}
+		}
+		return false;
+	}
+	
+	public int hashCode() {
+		return id;
 	}
 
-	public static MethodRecord create(ClassRecord parent, int access, String name, String desc,
-			String signature, String[] exceptions) {
-		MethodRecord mr = Context.getCurrent().createMethodRecord(parent);
-		mr.access = access;
-		mr.name = name;
-		mr.desc = desc;
-		mr.signature = signature;
-		mr.exceptions = exceptions;
-		return mr;
+	public int compareTo(MethodRecord mr) {
+		if (parent.equals(mr.parent)) {
+			return this.id - mr.id;
+		}
+		return parent.compareTo(mr.parent);
 	}
-	
+
+	public void init(int access, String name, String desc, String signature, String[] exceptions) {
+		this.access = access;
+		this.name = name;
+		this.desc = desc;
+		this.signature = signature;
+		this.exceptions = exceptions;
+	}
+
+
+	@Override
+	public int getAccess() {
+		return access;
+	}
+
+	@Override
+	public String getDescription() {
+		return desc;
+	}
+
+	@Override
+	public int getId() {
+		return id;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
 	public String toString() {
 		return parent + "." + name + ":" + desc;
 	}
-	
-	public String toMethodString() {
-		return name + ":" + desc;
-	}
-	
+
 	public static Template<MethodRecord, ProfilerRun> getTemplate() {
 		return template;
 	}
@@ -74,10 +116,10 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 				@Override
 				public void setValues(PreparedStatement cr, int i) throws SQLException {
 					MethodRecord mr = records.get(i);
-					cr.setInt(1, mr.id);
-					cr.setInt(2, mr.parent.id);
-					cr.setString(3, mr.name.substring(0, Math.min(mr.name.length(), 255)));
-					cr.setString(4, mr.desc.substring(0, Math.min(mr.desc.length(), 255)));
+					cr.setInt(1, mr.getId());
+					cr.setInt(2, mr.parent.getId());
+					cr.setString(3, mr.getName().substring(0, Math.min(mr.getName().length(), 255)));
+					cr.setString(4, mr.getDescription().substring(0, Math.min(mr.getDescription().length(), 255)));
 					cr.setInt(5, mr.access);
 				}
 				@Override
@@ -87,16 +129,13 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 			};
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
-		public <T> RowMapper<MethodRecord> mapper(T param) {
-			final Map<Integer, ClassRecord> map = (Map<Integer, ClassRecord>) param;
+		public RowMapper<MethodRecord> mapper(final Context param) {
 			return new RowMapper<MethodRecord>() {
 				public MethodRecord mapRow(ResultSet rs, int row) throws SQLException {
-					MethodRecord mr = new MethodRecord();
-					mr.id = rs.getInt(1);
-					mr.parent = map.get(rs.getInt(2));
-					mr.parent.getMethods().add(mr);
+					int id = rs.getInt(1);
+					int pid = rs.getInt(2);
+					MethodRecord mr = new MethodRecord(param.getClass(pid), id);
 					mr.name = rs.getString(3);
 					mr.desc = rs.getString(4);
 					mr.access = rs.getInt(5);
@@ -114,7 +153,7 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 		public String select(ProfilerRun p, Object... filter) {
 			return "select * from methods_" + p.handle + ";";
 		}
-		
+
 		@Override
 		public String select(ProfilerRun p, int offset, int limit, Object... filter) {
 			return "select * from methods_" + p.handle + " order by id limit "
@@ -132,10 +171,10 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 				@Override
 				public void setValues(PreparedStatement cr, int i) throws SQLException {
 					MethodRecord r = records.get(i);
-					cr.setString(1, r.name.substring(0, Math.min(r.name.length(), 255)));
-					cr.setString(2, r.desc.substring(0, Math.min(r.desc.length(), 255)));
-					cr.setInt(3, r.access);
-					cr.setInt(4, r.id);
+					cr.setString(1, r.getName().substring(0, Math.min(r.name.length(), 255)));
+					cr.setString(2, r.getDescription().substring(0, Math.min(r.desc.length(), 255)));
+					cr.setInt(3, r.getAccess());
+					cr.setInt(4, r.getId());
 				}
 				@Override
 				public int getBatchSize() {
@@ -154,7 +193,7 @@ public class MethodRecord extends nz.ac.vuw.ecs.rprofs.client.data.MethodRecord 
 			return new BatchPreparedStatementSetter() {
 				@Override
 				public void setValues(PreparedStatement cr, int i) throws SQLException {
-					cr.setInt(1, records.get(i).id);
+					cr.setInt(1, records.get(i).getId());
 				}
 				@Override
 				public int getBatchSize() {

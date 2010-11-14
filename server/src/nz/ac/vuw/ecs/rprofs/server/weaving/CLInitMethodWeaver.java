@@ -23,8 +23,8 @@ public class CLInitMethodWeaver extends MethodWeaver {
 	
 	@Override
 	public void visitCode() {
-		visitLdcInsn(Type.getType("L" + record.parent.name + ";"));
-		push(record.parent.id);					// stack: cls, cid
+		visitLdcInsn(Type.getType("L" + record.parent.getName() + ";"));
+		push(record.parent.getId());			// stack: cls, cid
 		
 		Collection<FieldRecord> watches = record.parent.getWatches();
 		if (watches.isEmpty()) {

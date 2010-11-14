@@ -1,13 +1,12 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
-import com.google.gwt.user.client.ui.Button;
+import nz.ac.vuw.ecs.rprofs.client.history.History;
+
 import com.google.gwt.user.client.ui.Widget;
 
 public interface View {
-
-	Widget getContentItem();
-	Button getMenuButton();
-	void refresh();
-	void hide();
-
+	String getIdentifier();
+	String getTitle();
+	String getDescription();
+	Widget createWidget(History history);
 }

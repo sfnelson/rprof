@@ -5,7 +5,7 @@
 		.row {
 			width: 100%;
 			position: relative;
-			overflow: auto;
+			overflow: hidden;
 		}
 		.date, .className {
 			display: inline-block;
@@ -15,19 +15,29 @@
 			overflow: hidden;
 		}
 		.className {
-			width: 20em;
+			position: absolute;
+			left: 26em;
+			right: 0;
+			width: auto;
 		}
 		.buttonPanel {
-			float: right;
+			display: inline-block;
+			position: absolute;
+			right: 0;
 		}
 		.button {}
+		a {
+			color: #447;
+		}
+		a:hover {
+			text-decoration: underline;
+		}
 	</ui:style>
 	<g:HTMLPanel styleName='{style.row}'>
 		<g:InlineLabel ui:field="started" styleName='{style.date}' />
 		<g:InlineLabel ui:field="stopped" styleName='{style.date}' />
-		<g:InlineLabel ui:field="program" styleName='{style.className}' />
+		<g:Anchor ui:field="program" styleName='{style.className}' />
 		<div class="{style.buttonPanel}">
-			<g:Button ui:field="inspect" styleName='{style.button}'>Inspect</g:Button>
 			<g:Button ui:field="stop" styleName='{style.button}'>Stop</g:Button>
 			<g:Button ui:field="delete" styleName='{style.button}'>Delete</g:Button>
 		</div>

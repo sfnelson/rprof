@@ -25,7 +25,7 @@ public interface Template<Data, Parameter> {
 	public String countSelect(Parameter p, Object... filter);
 	public String select(Parameter p, Object... filter);
 	public String select(Parameter p, int offset, int limit, Object... filter);
-	public <T> RowMapper<Data> mapper(T param);
+	public RowMapper<Data> mapper(Context context);
 
 	public String drop(Parameter p);
 }

@@ -32,6 +32,15 @@
 		.open>.children {
 			display: block;
 		}
+		.entries a {
+			color: #333;
+		}
+		.entries a:hover {
+			text-decoration: none;
+		}
+		.entries a.active:hover {
+			text-decoration: underline;
+		}
 	</ui:style>
 	<g:HTMLPanel>
 		<p:Entry.EntryPanel ui:field="entries" styleName="{style.entries}"></p:Entry.EntryPanel>

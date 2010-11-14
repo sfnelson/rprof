@@ -11,15 +11,19 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class Report implements IsSerializable, Comparable<Report> {
 	
-	public String name;
+	public String identifier;
+	public String title;
+	public String description;
 	public String[] headings;
 	public String[] headingTitle;
 	public Type[] types;
 	public String[][] flags;
 	
 	public Report() {}
-	public Report(String name, int length) {
-		this.name = name;
+	public Report(String identifier, String title, String description, int length) {
+		this.identifier = identifier;
+		this.title = title;
+		this.description = description;
 		headings = new String[length];
 		headingTitle = new String[length];
 		types = new Type[length];
@@ -30,17 +34,17 @@ public class Report implements IsSerializable, Comparable<Report> {
 	public boolean equals(Object o) {
 		if (o == null) return false;
 		if (!getClass().equals(o.getClass())) return false;
-		return name.equals(((Report) o).name);
+		return identifier.equals(((Report) o).identifier);
 	}
 	
 	@Override
 	public int hashCode() {
-		return name.hashCode();
+		return identifier.hashCode();
 	}
 	
 	@Override
 	public int compareTo(Report o) {
-		return this.name.compareTo(o.name);
+		return this.title.compareTo(o.title);
 	}
 	
 	public static class Status implements IsSerializable {
@@ -96,11 +100,11 @@ public class Report implements IsSerializable, Comparable<Report> {
 	}
 	
 	public static class ClassEntry extends Entry {
-		public ClassRecord<MethodRecord, FieldRecord> cls;
+		public ClassData cls;
 		public int instances;
 		
 		public ClassEntry() {}
-		public ClassEntry(ClassRecord<MethodRecord, FieldRecord> cls, int instances, int... values) {
+		public ClassEntry(ClassData cls, int instances, int... values) {
 			super(values);
 			this.cls = cls;
 			this.instances = instances;

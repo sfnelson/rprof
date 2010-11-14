@@ -118,7 +118,7 @@ public class ProfilerRun extends nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun {
 		}
 		
 		@Override
-		public <T> RowMapper<ProfilerRun> mapper(T param) {
+		public RowMapper<ProfilerRun> mapper(Context param) {
 			return mapper;
 		}
 		

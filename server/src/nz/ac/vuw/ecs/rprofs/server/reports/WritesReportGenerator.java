@@ -16,9 +16,9 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
 import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.server.reports.WritesReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.WritesReport.InstanceReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.WritesReport.PackageReport;
@@ -29,7 +29,7 @@ import nz.ac.vuw.ecs.rprofs.server.reports.WritesReport.PackageReport;
  */
 public class WritesReportGenerator extends ReportGenerator implements Report.EntryVisitor<ArrayList<? extends Report.Entry>> {
 
-	protected WritesReportGenerator(ProfilerRun run, Database database) {
+	protected WritesReportGenerator(Context run, Database database) {
 		super(run, database);
 	}
 
@@ -65,8 +65,8 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 
 		status.progress = 0;
 		status.stage = "Processing classes (1/3)";
-		status.limit = getDB().getNumClasses(getRun());
-		for (ClassRecord cr: getDB().getClasses(getRun())) {
+		status.limit = getContext().getClasses().size();
+		for (ClassRecord cr: getContext().getClasses()) {
 			PackageReport pkg = packages.get(cr.getPackage());
 			if (pkg == null) {
 				pkg = WritesReport.create(cr.getPackage());
@@ -76,8 +76,8 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 			ClassReport cls = WritesReport.create(cr);
 			cls.classes = 1;
 			pkg.addChild(cls);
-			classes.put(cr.id, cls);
-			classMap.put(cr.id, cr);
+			classes.put(cr.getId(), cls);
+			classMap.put(cr.getId(), cr);
 
 			status.progress++;
 		}
@@ -86,11 +86,11 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 		status.stage = "Processing allocations (2/3)";
 		status.limit = getDB().getNumLogs(getRun(), LogRecord.ALLOCATION, 0);
 		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.ALLOCATION, 0)) {
-			long id = lr.args[0];
+			long id = lr.getArguments()[0];
 			if (!instances.containsKey(id)) {
 				InstanceReport ir = WritesReport.create(id);
 				ir.instances = 1;
-				ClassReport cr = classes.get(lr.cnum);
+				ClassReport cr = classes.get(lr.getClassNumber());
 				if (cr != null) {
 					cr.addChild(ir);
 				}
@@ -103,11 +103,11 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 		status.stage = "Processing events (3/3)";
 		status.limit = getDB().getNumLogs(getRun(), LogRecord.METHODS | LogRecord.FIELDS, 0);
 		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.METHODS | LogRecord.FIELDS, 0)) {
-			if (lr.args.length > 0) {
-				InstanceReport ir = instances.get(lr.args[0]);
-				MethodRecord mr = getMethodRecord(lr.cnum, lr.mnum);
+			if (lr.getArguments().length > 0) {
+				InstanceReport ir = instances.get(lr.getArguments()[0]);
+				MethodRecord mr = getMethodRecord(lr.getClassNumber(), lr.getMethodNumber());
 				if (ir != null) {
-					switch (lr.event) {
+					switch (lr.getEvent()) {
 					case LogRecord.METHOD_ENTER:
 						if (mr != null && (mr.isEquals() || mr.isHashCode())) {
 							ir.equalsCalled = true;
@@ -183,7 +183,7 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 		private Report report;
 
 		{
-			report = new Report("Writes", 7);
+			report = new Report("writes", "Writes", "A list of classes showing writes to fields after particular events.", 7);
 			report.headings[0] = "Package";
 			report.types[0] = Report.Type.NAME;
 			report.headings[1] = "Class";
@@ -210,7 +210,7 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 		}
 
 		@Override
-		public ReportGenerator createGenerator(Database db, ProfilerRun run) {
+		public ReportGenerator createGenerator(Database db, Context run) {
 			return new WritesReportGenerator(run, db);
 		}
 	};

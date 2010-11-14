@@ -2,7 +2,7 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
 	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client">
-	<ui:style type="nz.ac.vuw.ecs.rprofs.client.ReportView.Style">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.ReportPanel.Style">
 	.panel {}
 	.background {
 		position: absolute;

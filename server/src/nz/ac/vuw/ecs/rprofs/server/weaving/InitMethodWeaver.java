@@ -22,20 +22,20 @@ class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 		List<Integer> args = getArgs();
 
-		push(record.parent.id);											// stack: cnum
-		push(record.id);												// stack: cnum, mnum
+		push(record.parent.getId());									// stack: cnum
+		push(record.getId());											// stack: cnum, mnum
 
 		if (args.size() > 1) {
-			push(args.size() - 1);											// stack: cnum, mnum, numArgs
-			visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));	// stack: cnum, mnum, args
+			push(args.size() - 1);										// stack: cnum, mnum, numArgs
+			visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));// stack: cnum, mnum, args
 			setStack(3);
 
 			// ignore 'this', it hasn't been initialized yet
 			for (int i = 0; i < args.size() - 1; i++) {
-				visitInsn(DUP);												// stack: cnum, mnum, args, args
-				push(i);													// stack: cnum, mnum, args, args, i
-				visitVarInsn(ALOAD, args.get(i + 1));						// stack: cnum, mnum, args, args, i, val
-				visitInsn(AASTORE);											// stack: cnum, mnum, args
+				visitInsn(DUP);											// stack: cnum, mnum, args, args
+				push(i);												// stack: cnum, mnum, args, args, i
+				visitVarInsn(ALOAD, args.get(i + 1));					// stack: cnum, mnum, args, args, i, val
+				visitInsn(AASTORE);										// stack: cnum, mnum, args
 				setStack(6);
 			}
 		}
@@ -50,8 +50,8 @@ class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == RETURN) {
-			push(record.parent.id);										// stack: cnum
-			push(record.id);											// stack: cnum, mnum
+			push(record.parent.getId());								// stack: cnum
+			push(record.getId());										// stack: cnum, mnum
 			visitIntInsn(ALOAD, 0);										// stack: cnum, mnum, this
 			visitTrackerMethod(Tracker.exit);
 			setStack(3);

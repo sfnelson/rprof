@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
-import nz.ac.vuw.ecs.rprofs.client.data.InstanceRecord;
-import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData;
+import nz.ac.vuw.ecs.rprofs.client.data.LogInfo;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.ClassEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Entry;
@@ -17,8 +17,10 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
 import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
+import nz.ac.vuw.ecs.rprofs.server.data.InstanceRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstancesReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstancesReport.InstanceReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstancesReport.PackageReport;
@@ -36,10 +38,10 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 	private Map<Integer, ClassRecord> classMap = Collections.newMap();
 	private Map<Long, InstanceRecord> instanceMap = Collections.newMap();
 
-	public InstancesReportGenerator(ProfilerRun run, Database database) {
+	public InstancesReportGenerator(Context run, Database database) {
 		super(run, database);
 	}
-	
+
 	protected void reset() {
 		packages.clear();
 		classes.clear();
@@ -53,8 +55,8 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 
 		status.stage = "Loading Class List (1/3)";
 		status.progress = 0;
-		status.limit = getDB().getNumClasses(getRun());
-		for (ClassRecord cr: getDB().getClasses(getRun())) {
+		status.limit = getContext().getClasses().size();
+		for (ClassRecord cr: getContext().getClasses()) {
 			PackageReport pkg = packages.get(cr.getPackage());
 			if (pkg == null) {
 				pkg = InstancesReport.create(cr.getPackage());
@@ -63,31 +65,32 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 			ClassReport cls = InstancesReport.create(cr);
 			cls.classes = 1;
 			classes.put(cr, cls);
-			classMap.put(cr.id, cr);
+			classMap.put(cr.getId(), cr);
 			pkg.addChild(cls);
 			status.progress++;
 		}
 
 		status.stage = "Processing Allocation Logs (2/3)";
 		status.progress = 0;
-		status.limit = getDB().getNumLogs(getRun(), LogRecord.ALLOCATION, 0);
-		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.ALLOCATION, 0)) {
-			ClassRecord cr = classMap.get(lr.cnum);
+		status.limit = getDB().getNumLogs(getRun(), LogData.ALLOCATION, 0);
+		for (LogInfo lr: getDB().getLogs(getRun(), 0, status.limit, LogData.ALLOCATION, 0)) {
+			ClassRecord cr = classMap.get(lr.getClassNumber());
 			if (cr == null) continue;
 			ClassReport cls = classes.get(cr);
 
-			InstanceRecord ir = instanceMap.get(lr.args[0]);
+			InstanceRecord ir = instanceMap.get(lr.getArguments()[0]);
 			if (ir == null) {
-				ir = new InstanceRecord();
-				ir.cnum = lr.cnum;
-				ir.mnum = lr.mnum;
-				ir.id = lr.args[0];
-				instanceMap.put(lr.args[0], ir);
+				MethodRecord mr = null;
+				if (lr.getMethodNumber() > 0) {
+					mr = cr.getMethods().get(lr.getMethodNumber() - 1);
+				}
+				ir = new InstanceRecord(lr.getArguments()[0], cr, mr);
+				instanceMap.put(lr.getArguments()[0], ir);
 			}
 
 			InstanceReport instance = instances.get(ir);
 			if (instance == null) {
-				instance = InstancesReport.create(ir.id);
+				instance = InstancesReport.create(ir.getId());
 				instance.instances = 1;
 				cls.addChild(instance);
 				instances.put(ir, instance);
@@ -98,24 +101,24 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 
 		status.stage = "Processing field accesses (3/3)";
 		status.progress = 0;
-		status.limit = getDB().getNumLogs(getRun(), LogRecord.FIELDS, 0);
-		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogRecord.FIELDS, 0)) {
+		status.limit = getDB().getNumLogs(getRun(), LogData.FIELDS, 0);
+		for (LogInfo lr: getDB().getLogs(getRun(), 0, status.limit, LogData.FIELDS, 0)) {
 			InstanceRecord ir = null;
 			ClassRecord cr = null;
 			FieldRecord fr = null;
-			
-			if (lr.args.length > 0) {
-				ir = instanceMap.get(lr.args[0]);
+
+			if (lr.getArguments().length > 0) {
+				ir = instanceMap.get(lr.getArguments()[0]);
 			}
-			cr = classMap.get(lr.cnum);
-			if (cr != null && lr.mnum > 0 && cr.getFields().size() >= lr.mnum) {
-				fr = cr.getFields().get(lr.mnum - 1);
+			cr = classMap.get(lr.getClassNumber());
+			if (cr != null && lr.getMethodNumber() > 0 && cr.getFields().size() >= lr.getMethodNumber()) {
+				fr = cr.getFields().get(lr.getMethodNumber() - 1);
 			}
-			
+
 			if (ir == null || fr == null) {
-				System.err.printf("error reporting on field access: %d:%d\n", lr.cnum, lr.mnum);
+				System.err.printf("error reporting on field access: %d:%d\n", lr.getClassNumber(), lr.getMethodNumber());
 			}
-			else if (lr.event == LogRecord.FIELD_READ) {
+			else if (lr.getEvent() == LogData.FIELD_READ) {
 				instances.get(ir).reads++;
 				if (fr.equals || fr.hash) {
 					instances.get(ir).ereads++;
@@ -190,13 +193,13 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 	private static ReportFactory factory = new ReportFactory() {
 		private Report report;
 		{
-			report = new Report("Instances", 7);
+			report = new Report("instances", "Instances", "A list of instances encountered, with counts of field reads and writes for each.", 7);
 			report.headings[0] = "Package";
 			report.types[0] = Report.Type.NAME;
 			report.headings[1] = "Class";
 			report.types[1] = Report.Type.NAME;
 			report.headings[2] = "Instance";
-			report.types[2] = Report.Type.NAME;
+			report.types[2] = Report.Type.OBJECT;
 			report.headings[3] = "Reads";
 			report.types[3] = Report.Type.COUNT;
 			report.headings[4] = "Writes";
@@ -207,7 +210,7 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 			report.types[6] = Report.Type.COUNT;
 		}
 		@Override
-		public ReportGenerator createGenerator(Database db, ProfilerRun run) {
+		public ReportGenerator createGenerator(Database db, Context run) {
 			return new InstancesReportGenerator(run, db);
 		}
 		@Override

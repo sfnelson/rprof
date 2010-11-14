@@ -5,6 +5,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context.ActiveContext;
 
 import com.google.gwt.dev.asm.ClassAdapter;
 import com.google.gwt.dev.asm.ClassVisitor;
@@ -17,13 +18,15 @@ import com.google.gwt.dev.asm.Opcodes;
  */
 public class GenericClassWeaver extends ClassAdapter {
 
+	private final ActiveContext context;
 	private final ClassRecord cr;
 	
 	protected boolean visitedCLInit = false;
 	
-	public GenericClassWeaver(ClassVisitor cv, ClassRecord cr) {
+	public GenericClassWeaver(ActiveContext context, ClassVisitor cv, ClassRecord cr) {
 		super(cv);
 		
+		this.context = context;
 		this.cr = cr;
 	}
 
@@ -46,9 +49,9 @@ public class GenericClassWeaver extends ClassAdapter {
 		//int minor = (version >> 16) & 0xFFFF;
 		if (major < 49) {
 			version = 49;
-			cr.flags |= ClassRecord.CLASS_VERSION_UPDATED;
+			cr.setFlags(cr.getFlags() | ClassRecord.CLASS_VERSION_UPDATED);
 		}
-		cr.init(version, access, name, signature, superName, interfaces);
+		context.initClassRecord(cr, version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 	
@@ -56,7 +59,8 @@ public class GenericClassWeaver extends ClassAdapter {
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		MethodRecord mr = MethodRecord.create(cr, access, name, desc, signature, exceptions);
+		MethodRecord mr = context.createMethodRecord(cr);
+		context.initMethodRecord(mr, access, name, desc, signature, exceptions);
 		
 		// check for: public static void main(String[])
 		if (mr.isMain()) {

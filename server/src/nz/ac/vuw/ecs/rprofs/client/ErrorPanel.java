@@ -13,6 +13,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.RootPanel;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -22,12 +23,15 @@ public class ErrorPanel extends Composite {
 
 	private static ErrorPanel instance;
 	
+	static {
+		instance = new ErrorPanel();
+		RootPanel.get().add(instance);
+	}
+	
 	private final Label message;
 	private int version;
 	
 	public ErrorPanel() {
-		instance = this;
-		
 		version = 0;
 		
 		Panel wrapper = new FlowPanel();
@@ -51,7 +55,7 @@ public class ErrorPanel extends Composite {
 		initWidget(wrapper);
 	}
 	
-	public static void showMessage(String message) {
+	public static void showMessage(String message, Throwable error) {
 		final int version = ++instance.version;
 		instance.message.setText(message);
 		instance.getElement().getStyle().setDisplay(Display.INLINE);
@@ -61,6 +65,7 @@ public class ErrorPanel extends Composite {
 				clear(version);
 			}
 		}.schedule(5000);
+		if (error != null) error.printStackTrace();
 	}
 	
 	private static void clear(int version) {

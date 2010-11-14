@@ -1,7 +1,7 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui">
-	<ui:style type="nz.ac.vuw.ecs.rprofs.client.LogView.Style">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.LogPanel.Style">
 		.filters {
 			background-color: #ddd;
 			border-bottom: solid 1px #ccc;

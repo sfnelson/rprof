@@ -29,6 +29,8 @@ public class ProfilerRun implements IsSerializable {
 	}
 	
 	public boolean equals(Object o) {
+		if (o == null) return false;
+		if (this == o) return true;
 		if (!this.getClass().equals(o.getClass())) return false;
 		ProfilerRun r = (ProfilerRun) o;
 		return r.handle.equals(handle);

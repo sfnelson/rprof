@@ -13,6 +13,7 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.Entry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.State;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
 import nz.ac.vuw.ecs.rprofs.server.Database;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
 
 /**
@@ -46,20 +47,20 @@ public abstract class ReportGenerator {
 		return reportList;
 	}
 
-	public static ReportGenerator create(Report report, Database db, ProfilerRun run) {
+	public static ReportGenerator create(Report report, Database db, Context run) {
 		if (reports.containsKey(report)) {
 			return reports.get(report).createGenerator(db, run);
 		}
 		return null;
 	}
 	
-	private final ProfilerRun run;
+	private final Context context;
 	private final Status status;
 	
 	private Database database;
 	
-	protected ReportGenerator(ProfilerRun run, Database database) {
-		this.run = run;
+	protected ReportGenerator(Context context, Database database) {
+		this.context = context;
 		this.database = database;
 		this.status = new Status();
 		
@@ -106,8 +107,12 @@ public abstract class ReportGenerator {
 		return database;
 	}
 	
+	protected Context getContext() {
+		return context;
+	}
+	
 	protected ProfilerRun getRun() {
-		return run;
+		return context.getRun();
 	}
 	
 	public void dispose() {

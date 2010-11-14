@@ -1,10 +1,16 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
+import java.util.Iterator;
 import java.util.List;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
+import nz.ac.vuw.ecs.rprofs.client.events.ProfilerRunHandler;
+import nz.ac.vuw.ecs.rprofs.client.history.History;
+import nz.ac.vuw.ecs.rprofs.client.history.HistoryManager;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -12,17 +18,18 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-public class ProfilerRunsPane extends Composite implements ProfilerRunListener {
+public class ProfilerRunsPane extends Composite implements Iterable<ProfilerRunWidget>,
+ProfilerRunHandler, ValueChangeHandler<History> {
 
 	private static ProfilerRunsPaneUiBinder uiBinder = GWT
-			.create(ProfilerRunsPaneUiBinder.class);
+	.create(ProfilerRunsPaneUiBinder.class);
 
 	interface ProfilerRunsPaneUiBinder extends
-			UiBinder<Widget, ProfilerRunsPane> {
+	UiBinder<Widget, ProfilerRunsPane> {
 	}
-	
+
 	private Widget selected;
-	
+
 	@UiField Style style;
 
 	interface Style extends CssResource {
@@ -33,41 +40,81 @@ public class ProfilerRunsPane extends Composite implements ProfilerRunListener {
 
 	public ProfilerRunsPane(Inspector root) {
 		initWidget(uiBinder.createAndBindUi(this));
-		
-		root.addProfilerRunListener(this);
+
+		HistoryManager.getInstance().addValueChangeHandler(this);
+
+		root.addProfilerRunHandler(this);
 	}
 
 	public void profilerRunsAvailable(List<ProfilerRun> runs) {
-		int i = 0;
-		while (i < runs.size()) {
-			ProfilerRun run = runs.get(i);
-			if (i < panel.getWidgetCount()) {
-				ProfilerRunWidget w = (ProfilerRunWidget) panel.getWidget(i);
-				if (w.run.equals(run)) {
-					w.update(run);
-					i++;
+		Iterator<ProfilerRunWidget> widget = iterator();
+		Iterator<ProfilerRun> run = runs.iterator();
+
+		if (run.hasNext()) {
+			ProfilerRun current = run.next();
+			while (current != null && widget.hasNext()) {
+				ProfilerRunWidget w = widget.next();
+				if (w.run.equals(current)) {
+					w.update(current);
+					current = run.hasNext() ? run.next() : null;
 				}
 				else {
-					panel.remove(w);
+					widget.remove();
 				}
 			}
-			else {
-				panel.add(new ProfilerRunWidget(this, run));
+			while (current != null) {
+				panel.add(new ProfilerRunWidget(this, current));
+				current = run.hasNext() ? run.next() : null;
 			}
 		}
 		
-		while (i < panel.getWidgetCount()) {
-			panel.remove(i);
+		updateSelection(HistoryManager.getInstance().getHistory().run);
+	}
+
+	public void select(ProfilerRunWidget w) {
+		History history = HistoryManager.getInstance().getHistory();
+		history.run = w.run;
+		HistoryManager.getInstance().update(history);
+	}
+
+	@Override
+	public void onValueChange(ValueChangeEvent<History> event) {
+		updateSelection(event.getValue().run);
+	}
+	
+	private void updateSelection(ProfilerRun run) {
+		if (selected != null) {
+			selected.removeStyleName(style.selected());
+		}
+
+		if (run == null) return;
+
+		for (ProfilerRunWidget w: this) {
+			if (w.run.equals(run)) {
+				w.addStyleName(style.selected());
+				selected = w;
+				return;
+			}
 		}
 	}
 
-	public void select(Widget w) {
-		if (w != selected) {
-			if (selected != null) {
-				selected.removeStyleName(style.selected());
+	@Override
+	public Iterator<ProfilerRunWidget> iterator() {
+		return new Iterator<ProfilerRunWidget>() {
+			private int i = -1;
+			public boolean hasNext() {
+				return (i + 1 < panel.getWidgetCount());
 			}
-			selected = w;
-			selected.addStyleName(style.selected());
-		}
+			public ProfilerRunWidget next() {
+				i++;
+				return (ProfilerRunWidget) panel.getWidget(i);
+			}
+			public void remove() {
+				if (i >= 0 && i < panel.getWidgetCount()) {
+					panel.remove(i);
+					i--;
+				}
+			}
+		};
 	}
 }

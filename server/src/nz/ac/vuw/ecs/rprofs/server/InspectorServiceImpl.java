@@ -5,14 +5,16 @@ import java.util.List;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
 import nz.ac.vuw.ecs.rprofs.client.InspectorService;
-import nz.ac.vuw.ecs.rprofs.client.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.client.data.FieldRecord;
-import nz.ac.vuw.ecs.rprofs.client.data.LogRecord;
-import nz.ac.vuw.ecs.rprofs.client.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
+import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData;
+import nz.ac.vuw.ecs.rprofs.client.data.LogInfo;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
-import nz.ac.vuw.ecs.rprofs.server.Context.ActiveContext;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.Context.ActiveContext;
 import nz.ac.vuw.ecs.rprofs.server.reports.ReportGenerator;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -30,32 +32,36 @@ public class InspectorServiceImpl extends RemoteServiceServlet implements Inspec
 	}
 	
 	@Override
-	public void dropProfilerRun(ProfilerRun run) {
+	public ArrayList<ProfilerRun> dropProfilerRun(ProfilerRun run) {
 		Context.dropRun(run);
+		
+		return getProfilerRuns();
 	}
 	
 	@Override
-	public void stopProfilerRun(ProfilerRun run) {
+	public ArrayList<ProfilerRun> stopProfilerRun(ProfilerRun run) {
 		ActiveContext current = Context.getCurrent();
 		if (current != null) {
 			current.stop();
 		}
+		
+		return getProfilerRuns();
 	}
 	
 	@Override
-	public ArrayList<ClassRecord<MethodRecord, FieldRecord>> getClasses(ProfilerRun run) {
-		ArrayList<ClassRecord<MethodRecord, FieldRecord>> cl = Collections.newList();
-		for (ClassRecord<? extends MethodRecord, ? extends FieldRecord> cr: Context.getInstance(run).getClasses()) {
+	public ArrayList<ClassData> getClasses(ProfilerRun run) {
+		ArrayList<ClassData> cl = Collections.newList();
+		for (ClassRecord cr: Context.getInstance(run).getClasses()) {
 			cl.add(cr.toRPC());
 		}
 		return cl;
 	}
 
 	@Override
-	public ArrayList<LogRecord> getLogs(ProfilerRun run, int type, int cls,
+	public ArrayList<LogData> getLogs(ProfilerRun run, int type, int cls,
 			int offset, int limit) {
-		ArrayList<LogRecord> records = Collections.newList();
-		for (LogRecord r: Context.getInstance(run).getLogs(run, offset, limit, type, cls)) {
+		ArrayList<LogData> records = Collections.newList();
+		for (LogInfo r: Context.getInstance(run).getLogs(offset, limit, type, cls)) {
 			records.add(r.toRPC());
 		}
 		System.out.println("returning events " + offset + " to " + (offset + limit));
@@ -64,7 +70,7 @@ public class InspectorServiceImpl extends RemoteServiceServlet implements Inspec
 
 	@Override
 	public int getNumLogs(ProfilerRun run, int type, int cls) {
-		int result = Context.getInstance(run).getNumLogs(run, type, cls);
+		int result = Context.getInstance(run).getNumLogs(type, cls);
 		System.out.println(result + " events available");
 		return result;
 	}
@@ -107,6 +113,11 @@ public class InspectorServiceImpl extends RemoteServiceServlet implements Inspec
 	@Override
 	public ArrayList<Report> getReports() {
 		return ReportGenerator.getReports();
+	}
+
+	@Override
+	public InstanceData getInstanceInformation(ProfilerRun run, long id) {
+		return Context.getInstance(run).getInstanceInformation(id);
 	}
 
 }

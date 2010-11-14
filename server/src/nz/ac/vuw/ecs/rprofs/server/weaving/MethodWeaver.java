@@ -23,7 +23,7 @@ public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 	protected int maxLocals = 0;
 
 	public MethodWeaver(MethodVisitor mv, MethodRecord mr) {
-		super(mv, mr.access, mr.name, mr.desc);
+		super(mv, mr.getAccess(), mr.getName(), mr.getDescription());
 		this.record = mr;
 	}
 	
@@ -53,9 +53,10 @@ public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 		useful.add(0);
 		argIndex++;
 
+		String desc = record.getDescription();
 		outer:
-			for (int i = 0; i < record.desc.length(); i++) {
-				switch(record.desc.charAt(i)) {
+			for (int i = 0; i < desc.length(); i++) {
+				switch(desc.charAt(i)) {
 				case ')': break outer;
 				case 'J': // long
 				case 'D': // double
@@ -71,9 +72,9 @@ public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 				case 'L': // object, followed by FQ name, terminated by ';'
 				case '[': // array, followed by a second type descriptor
 					useful.add(argIndex++);
-					while (record.desc.charAt(i) == '[') i++;
-					if (record.desc.charAt(i) == 'L') {
-						while (record.desc.charAt(++i) != ';');
+					while (desc.charAt(i) == '[') i++;
+					if (desc.charAt(i) == 'L') {
+						while (desc.charAt(++i) != ';');
 					}
 					break;
 				}

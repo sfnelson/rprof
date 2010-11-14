@@ -1,12 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.sql.DataSource;
 
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
@@ -19,7 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.google.gwt.dev.util.collect.Lists;
 
 
-public class Database implements InitializingBean, ProfilerDataSource<ClassRecord, MethodRecord, FieldRecord, ProfilerRun, LogRecord> {
+public class Database implements InitializingBean, ProfilerDataSource<ProfilerRun, LogRecord> {
 
 	private DataSource db;
 	private JdbcTemplate template;
@@ -56,19 +55,16 @@ public class Database implements InitializingBean, ProfilerDataSource<ClassRecor
 		return template.queryForInt(crt.countSelect(run));
 	}
 
-	@Override
-	public List<ClassRecord> getClasses(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run) {
-		List<ClassRecord> classes = template.query(crt.select(run), crt.mapper(null));
-
-		final Map<Integer, ClassRecord> classMap = new HashMap<Integer, ClassRecord>();
-		for (ClassRecord cr: classes) {
-			classMap.put(cr.id, cr);
-		}
-
-		template.query(mrt.select(run), mrt.mapper(classMap));
-		template.query(frt.select(run), frt.mapper(classMap));
-
-		return classes;
+	public List<ClassRecord> getClasses(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, Context context) {
+		return template.query(crt.select(run), crt.mapper(context));
+	}
+	
+	public List<FieldRecord> getFields(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, Context context) {
+		return template.query(frt.select(run), frt.mapper(context));
+	}
+	
+	public List<MethodRecord> getMethods(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, Context context) {
+		return template.query(mrt.select(run), mrt.mapper(context));
 	}
 
 	@Override
@@ -112,13 +108,22 @@ public class Database implements InitializingBean, ProfilerDataSource<ClassRecor
 	
 	@Override
 	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, int offset, int limit, int flags, int cls) {
-		return template.query(lrt.select(run, offset, limit, flags, cls), lrt.mapper(null));
+		if (cls == 0) return template.query(lrt.select(run, offset, limit, flags), lrt.mapper(null));
+		else return template.query(lrt.select(run, offset, limit, flags, cls), lrt.mapper(null));
 	}
 
 	@Override
-	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run,
-			int flags, int cls) {
-		return template.queryForInt(lrt.countSelect(run, flags, cls));
+	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, int flags, int cls) {
+		if (cls == 0) return template.queryForInt(lrt.countSelect(run, flags));
+		else return template.queryForInt(lrt.countSelect(run, flags, cls));
+	}
+	
+	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, int offset, int limit, int flags, long id) {
+		return template.query(lrt.select(run, offset, limit, flags, id), lrt.mapper(null));
+	}	
+	
+	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run, int flags, long id) {
+		return template.queryForInt(lrt.countSelect(run, flags, id));
 	}
 
 	public void storeLogs(ProfilerRun run, List<LogRecord> records) {

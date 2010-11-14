@@ -1,4 +1,4 @@
-package nz.ac.vuw.ecs.rprofs.server;
+package nz.ac.vuw.ecs.rprofs.server.data;
 
 
 import java.util.ArrayList;
@@ -8,13 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
-import nz.ac.vuw.ecs.rprofs.server.reports.InstancesReportGenerator;
+import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.reports.ReportGenerator;
 
 import org.springframework.context.ApplicationContext;
@@ -67,42 +63,60 @@ public class Context {
 	}
 	
 	protected final ProfilerRun run;
-	protected Map<Integer, ClassRecord> classes;
+	protected Map<Integer, ClassRecord> classIdMap;
+	protected Map<String, ClassRecord> classNameMap;
 	
 	public Context(ProfilerRun run) {
 		this.run = run;
 	}
 	
+	public ProfilerRun getRun() {
+		return run;
+	}
+	
 	private void dispose() {
 		contexts.remove(run.handle);
 		
-		if (instanceReport != null) {
-			instanceReport.dispose();
+		for (ReportGenerator r: reports.values()) {
+			r.dispose();
 		}
 	}
 
 	public ClassRecord getClass(int cnum) {
-		if (classes == null || db.getNumClasses(run) != classes.size()) {
+		if (classIdMap == null || db.getNumClasses(run) != classIdMap.size()) {
 			initClasses();
 		}
 		
-		return classes.get(cnum);
+		return classIdMap.get(cnum);
+	}
+
+	public ClassRecord getClass(String fqn) {
+		if (classIdMap == null || db.getNumClasses(run) != classIdMap.size()) {
+			initClasses();
+		}
+		
+		return classNameMap.get(fqn);
 	}
 
 	public Collection<ClassRecord> getClasses() {
-		if (classes == null || db.getNumClasses(run) != classes.size()) {
+		if (classIdMap == null || db.getNumClasses(run) != classIdMap.size()) {
 			initClasses();
 		}
 		
-		return Collections.immutable(classes.values());
+		return Collections.immutable(classIdMap.values());
 	}
 	
-	private void initClasses() {
-		System.out.println("init classes");
-		classes = Collections.newMap();
-		for (ClassRecord cr: db.getClasses(run)) {
-			classes.put(cr.id, cr);
+	protected void initClasses() {
+		classIdMap = Collections.newMap();
+		classNameMap = Collections.newMap();
+		
+		for (ClassRecord cr: db.getClasses(run, this)) {
+			classIdMap.put(cr.getId(), cr);
+			classNameMap.put(cr.getName(), cr);
 		}
+		
+		db.getFields(run, this);
+		db.getMethods(run, this);
 	}
 
 	public MethodRecord getMethod(ClassRecord cls, int mnum) {
@@ -115,29 +129,37 @@ public class Context {
 		return cls.getMethods().get(mnum - 1);
 	}
 	
-	public int getNumLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run2, int type, int cls) {
-		return db.getNumLogs(run2, type, cls);
+	public int getNumLogs(int type, int cls) {
+		return db.getNumLogs(run, type, cls);
 	}
 	
-	public List<LogRecord> getLogs(nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun run2,
-			int offset, int limit, int type, int cls) {
-		return db.getLogs(run2, offset, limit, type, cls);
+	public List<LogRecord> getLogs(int offset, int limit, int type, int cls) {
+		return db.getLogs(run, offset, limit, type, cls);
 	}
 	
 	private Map<Report, ReportGenerator> reports = Collections.newMap();
 	public ReportGenerator getReport(Report report) {
 		if (!reports.containsKey(report)) {
-			reports.put(report, ReportGenerator.create(report, db, run)); 
+			reports.put(report, ReportGenerator.create(report, db, this)); 
 		}
 		return reports.get(report);
 	}
 	
-	private InstancesReportGenerator instanceReport;
-	public InstancesReportGenerator getInstanceReport() {
-		if (instanceReport == null) {
-			instanceReport = new InstancesReportGenerator(run, db);
+	public InstanceData getInstanceInformation(long id) {
+		int count = db.getNumLogs(run, LogRecord.OBJECT_ALLOCATED, id);
+		if (count != 0) {
+			LogRecord alloc = db.getLogs(run, count - 1, 1, LogRecord.OBJECT_ALLOCATED, id).get(0);
+			ClassRecord cr = getClass(alloc.getClassNumber());
+			MethodRecord mr = cr.getMethods().get(alloc.getMethodNumber() - 1);
+			InstanceRecord info = new InstanceRecord(id, cr, mr);
+			
+			count = db.getNumLogs(run, LogRecord.FIELDS, id);
+			info.events = db.getLogs(run, 0, count, LogRecord.FIELDS, id);
+			return info.toRPC();
 		}
-		return instanceReport;
+		else {
+			return null;
+		}
 	}
 	
 	public static class ActiveContext extends Context {
@@ -149,10 +171,16 @@ public class Context {
 			super(db.createRun());
 			System.out.println("new context");
 			
-			classes = Collections.newMap();
+			classIdMap = Collections.newMap();
+			classNameMap = Collections.newMap();
 			objects = Collections.newMap();
 			
 			System.out.println("profiler run started at " + run.started);
+		}
+		
+		@Override
+		protected void initClasses() {
+			// don't do anything for active contexts, we don't want to pull from an empty database.
 		}
 
 		public void stop() {
@@ -162,7 +190,7 @@ public class Context {
 			db.update(run);
 
 			List<ClassRecord> c = new ArrayList<ClassRecord>();
-			c.addAll(this.classes.values());
+			c.addAll(getClasses());
 			db.storeClasses(run, c);
 
 			System.out.println("profiler run stopped at " + run.stopped);
@@ -173,29 +201,29 @@ public class Context {
 			List<LogRecord> updates = Collections.newList();
 			
 			for (LogRecord r : records) {
-				ClassRecord cls = getClass(r.cnum);
-				MethodRecord mth = getMethod(cls, r.mnum);
+				ClassRecord cls = getClass(r.getClassNumber());
+				MethodRecord mth = getMethod(cls, r.getMethodNumber());
 
-				switch (r.event) {
+				switch (r.getEvent()) {
 				case LogRecord.METHOD_ENTER:
 					if (mth == null || !mth.isMain()) break;
-					setMainMethod(cls.name);
+					setMainMethod(cls.getName());
 					break;
 				case LogRecord.METHOD_RETURN:
 					if (mth == null || !mth.isInit()) break;
 				case LogRecord.OBJECT_TAGGED:
-					LogRecord alloc = objects.get(r.args[0]);
+					LogRecord alloc = objects.get(r.getArguments()[0]);
 					if (alloc == null) break;
 					alloc.cnum = r.cnum;
 					alloc.mnum = r.mnum;
 					updates.add(alloc);
 					break;
 				case LogRecord.OBJECT_ALLOCATED:
-					objects.put(r.args[0], r);
+					objects.put(r.getArguments()[0], r);
 					remove.add(r);
 					break;
 				case LogRecord.OBJECT_FREED:
-					objects.remove(r.args[0]);
+					objects.remove(r.getArguments()[0]);
 					break;
 				}
 			}
@@ -207,26 +235,47 @@ public class Context {
 		}
 		
 		public ClassRecord createClassRecord() {
-			ClassRecord cr = new ClassRecord();
-			cr.id = ++run.numClasses;
-			classes.put(cr.id, cr);
+			ClassRecord cr = new ClassRecord(this, ++run.numClasses);
+			classIdMap.put(cr.getId(), cr);
 			return cr;
 		}
 		
-		public MethodRecord createMethodRecord(ClassRecord cr) {
-			MethodRecord mr = new MethodRecord();
-			mr.parent = cr;
-			cr.getMethods().add(mr);
-			mr.id = cr.getMethods().size();
-			return mr;
+		public void initClassRecord(ClassRecord cr, int version, int access, String name, String signature,
+				String superName, String[] interfaces) {
+			if (cr.context == this) {
+				cr.init(version, access, name, signature, superName, interfaces);
+				classNameMap.put(name, cr);
+			}
+			else {
+				throw new RuntimeException("class record not owned by this context");
+			}
 		}
-
+		
 		public FieldRecord createFieldRecord(ClassRecord cr) {
-			FieldRecord fr = new FieldRecord();
-			fr.parent = cr;
-			cr.getFields().add(fr);
-			fr.id = cr.getFields().size();
-			return fr;
+			return new FieldRecord(cr, cr.fields.size() + 1);
+		}
+		
+		public void initFieldRecord(FieldRecord fr, int access, String name, String desc) {
+			if (fr.parent.context == this) {
+				fr.init(access, name, desc);
+			}
+			else {
+				throw new RuntimeException("field record not owned by this context");
+			}
+		}
+		
+		public MethodRecord createMethodRecord(ClassRecord cr) {
+			return new MethodRecord(cr, cr.methods.size() + 1);
+		}
+		
+		public void initMethodRecord(MethodRecord mr, int access, String name, String desc,
+				String signature, String[] exceptions) {
+			if (mr.parent.context == this) {
+				mr.init(access, name, desc, signature, exceptions);
+			}
+			else {
+				throw new RuntimeException("method record not owned by this context");
+			}
 		}
 		
 		public void setMainMethod(String name) {
@@ -238,14 +287,6 @@ public class Context {
 		
 		public long nextEvent() {
 			return eventId++;
-		}
-		
-		public ClassRecord getClass(int cnum) {
-			return classes.get(cnum);
-		}
-
-		public Collection<ClassRecord> getClasses() {
-			return Collections.immutable(classes.values());
 		}
 	}
 }

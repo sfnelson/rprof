@@ -1,0 +1,34 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.ui.UIButton.Style">
+		.button {
+			position: absolute;
+			line-height: 3ex;
+			top: 0;
+			bottom: 2px;
+			right: 0.5ex;
+			display: block;
+			text-decoration: none;
+			color: black;
+			border: solid 1px transparent;
+			border-radius: 2px;
+			margin: 0.25ex;
+			padding: 0 1ex;
+			cursor: default;
+			color: #555;
+		}
+		.button:hover, .depressed {
+			text-decoration: none;
+			border-color: #777;
+			background-color: #aaa;
+			color: #444;
+		}
+		.depressed:hover {
+			background-color: #999;
+			color: #333;
+		}
+	</ui:style>
+	<g:Anchor ui:field="button" styleName="{style.button}" tabIndex="-1">
+	</g:Anchor>
+</ui:UiBinder>

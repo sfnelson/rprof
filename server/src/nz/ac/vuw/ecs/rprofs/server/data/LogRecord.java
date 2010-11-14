@@ -8,8 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import nz.ac.vuw.ecs.rprofs.client.data.LogInfo;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
-import nz.ac.vuw.ecs.rprofs.server.Context;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -19,19 +19,53 @@ import org.springframework.jdbc.core.RowMapper;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
+public class LogRecord extends LogInfo {
+
+	private final long index;
+	public long thread;
+	public int event;
+	public int cnum;
+	public int mnum;
+	public long[] args;
 	
 	public static LogRecord create() {
 		return new LogRecord(Context.getCurrent().nextEvent());
 	}
-	
+
 	public LogRecord(long index) {
 		this.index = index;
 	}
+	
+	@Override
+	public long[] getArguments() {
+		return args;
+	}
 
-	/**
-	 * @return
-	 */
+	@Override
+	public int getClassNumber() {
+		return cnum;
+	}
+
+	@Override
+	public int getEvent() {
+		return event;
+	}
+
+	@Override
+	public long getIndex() {
+		return index;
+	}
+
+	@Override
+	public int getMethodNumber() {
+		return mnum;
+	}
+
+	@Override
+	public long getThread() {
+		return thread;
+	}
+	
 	public static Template<LogRecord, ProfilerRun> getTemplate() {
 		return template;
 	}
@@ -47,40 +81,53 @@ public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 		@Override
 		public String countSelect(ProfilerRun p, Object... filter) {
 			return "select count(1) from events_" + p.handle
-				+ getFilterClause(filter) + ";";
+			+ getFilterClause(filter) + ";";
 		}
-		
+
 		@Override
 		public String select(ProfilerRun p, Object... filter) {
 			return "select * from events_" + p.handle
 			+ getFilterClause(filter) + ";";
 		}
-		
+
 		@Override
 		public String select(ProfilerRun p, int offset, int limit, Object... filter) {
 			return "select * from events_" + p.handle + getFilterClause(filter)
 			+ " order by index limit " + limit + " offset " + offset + ";";
 		}
-		
+
 		private String getFilterClause(Object... filter) {
-			assert(filter.length == 2);
+			assert(filter.length > 0);
 			assert(filter[0] != null);
-			assert(filter[1] != null);
 			assert(filter[0] instanceof Integer);
-			assert(filter[1] instanceof Integer);
 			int type = (Integer) filter[0];
-			int cls = (Integer) filter[1];
 			
-			if (type == LogRecord.ALL && cls == 0) return "";
-			else if (cls == 0) return " where (event & " + type + ") <> 0";
-			else if (type == LogRecord.ALL) return " where cnum = " + cls;
+			if (filter.length == 1) {
+				if (type == LogRecord.ALL) return "";
+				else return " where (event & " + type + ") <> 0";
+			}
+			
+			assert(filter[1] != null);
+			if (filter[1] instanceof Integer) { // cnum
+				int cnum = (Integer) filter[1];
+
+				if (type == LogRecord.ALL) return " where cnum = " + cnum;
+				else return " where (event & " + type + ") <> 0 and cnum = " + cnum;
+			}
+			else if (filter[1] instanceof Long) { // instance id
+				long id = (Long) filter[1];
+				
+				if (type == LogRecord.ALL) return " where args[1] = " + id;
+				else return " where (event & " + type + ") <> 0 and args[1] = " + id;
+			}
 			else {
-				return " where (event & " + type + ") <> 0 and cnum = " + cls;
+				assert(false);
+				return "";
 			}
 		}
 
 		@Override
-		public <T> RowMapper<LogRecord> mapper(T param) {
+		public RowMapper<LogRecord> mapper(Context context) {
 			return mapper;
 		}
 
@@ -107,7 +154,7 @@ public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 			return new BatchPreparedStatementSetter() {
 				@Override
 				public void setValues(PreparedStatement ps, int i)
-						throws SQLException {
+				throws SQLException {
 					LogRecord r = records.get(i);
 					ps.setLong(1, r.index);
 					ps.setLong(2, r.thread);
@@ -122,7 +169,7 @@ public class LogRecord extends nz.ac.vuw.ecs.rprofs.client.data.LogRecord {
 				}
 			};
 		}
-		
+
 		@Override
 		public String update(ProfilerRun p) {
 			return "update events_" + p.handle + " set cnum = ?, mnum = ? where index = ?;";

@@ -15,8 +15,8 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
 import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.server.reports.ProblemReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.ProblemReport.PackageReport;
 
@@ -26,8 +26,8 @@ import nz.ac.vuw.ecs.rprofs.server.reports.ProblemReport.PackageReport;
  */
 public class ProblemReportGenerator extends ReportGenerator implements Report.EntryVisitor<ArrayList<? extends Report.Entry>> {
 
-	protected ProblemReportGenerator(ProfilerRun run, Database database) {
-		super(run, database);
+	protected ProblemReportGenerator(Context context, Database database) {
+		super(context, database);
 	}
 
 	private Map<String, PackageReport> packages = Collections.newMap();
@@ -55,10 +55,10 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 		//Map<ClassReport, PackageReport> classMap = Collections.newMap(); 
 		
 		status.stage = "Loading Class List (1/3)";
-		status.limit = getDB().getNumClasses(getRun());
+		status.limit = getContext().getClasses().size();
 		status.progress = 0;
 		
-		for (ClassRecord cr: getDB().getClasses(getRun())) {
+		for (ClassRecord cr: getContext().getClasses()) {
 			PackageReport pr = packages.get(cr.getPackage());
 			if (pr == null) {
 				pr = ProblemReport.create(cr.getPackage());
@@ -66,9 +66,8 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 			}
 			ClassReport report = ProblemReport.create(cr);
 			report.classes = 1;
-			report.flags = cr.flags;
-			classes.put(cr.id, report);
-			//classMap.put(report, pr);
+			report.flags = cr.getFlags();
+			classes.put(cr.getId(), report);
 			pr.addChild(report);
 			status.progress++;
 		}
@@ -79,12 +78,12 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit,
 				LogRecord.CLASS_WEAVE | LogRecord.CLASS_INITIALIZED, 0)) {
 			
-			ClassReport cr = classes.get(lr.cnum);
+			ClassReport cr = classes.get(lr.getClassNumber());
 			if (cr == null) {
-				System.err.println("unknown class: " + lr.cnum);
+				System.err.println("unknown class: " + lr.getClassNumber());
 			}
 			
-			switch (lr.event) {
+			switch (lr.getEvent()) {
 			case LogRecord.CLASS_WEAVE:
 				cr.weave = 1;
 				break;
@@ -102,9 +101,9 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit,
 			LogRecord.OBJECT_ALLOCATED | LogRecord.OBJECT_TAGGED, 0)) {
 			
-			ClassReport cr = classes.get(lr.cnum);
+			ClassReport cr = classes.get(lr.getClassNumber());
 			if (cr == null) {
-				System.err.println("class not found: " + lr.cnum);
+				System.err.println("class not found: " + lr.getClassNumber());
 			}
 			else {
 				cr.instances = 1;
@@ -152,7 +151,7 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 	private static ReportFactory factory = new ReportFactory() {
 		private Report report;
 		{
-			report = new Report("Problems", 6);
+			report = new Report("problems", "Problems", "A list of classes showing which were woven, initialized, and instantiated.", 6);
 			report.headings[0] = "Package";
 			report.types[0] = Report.Type.NAME;
 			report.headings[1] = "Class";
@@ -167,8 +166,8 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 			report.types[5] = Report.Type.FLAG;
 		}
 		@Override
-		public ReportGenerator createGenerator(Database db, ProfilerRun run) {
-			return new ProblemReportGenerator(run, db);
+		public ReportGenerator createGenerator(Database db, Context context) {
+			return new ProblemReportGenerator(context, db);
 		}
 		@Override
 		public Report getReport() {

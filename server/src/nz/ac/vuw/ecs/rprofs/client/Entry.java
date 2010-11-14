@@ -8,20 +8,23 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.ClassEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.EntryVisitor;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.InstanceEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
+import nz.ac.vuw.ecs.rprofs.client.history.History;
+import nz.ac.vuw.ecs.rprofs.client.history.HistoryManager;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.dom.client.MouseOverEvent;
+import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -42,6 +45,7 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 		String flag();
 		String open();
 		String number();
+		String active();
 	}
 
 	@UiField Style style;
@@ -51,12 +55,12 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 
 	private final Report report;
 	private final Report.Entry target;
-	private final HTML[] fields;
+	private final Anchor[] fields;
 
 	public Entry(Report report, Report.Entry entry) {
 		this.report = report;
 		this.target = entry;
-		this.fields = new HTML[report.headings.length];
+		this.fields = new Anchor[report.headings.length];
 
 		initWidget(uiBinder.createAndBindUi(this));
 		initFields();
@@ -67,7 +71,7 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 	public Entry(Report report) {
 		this.report = report;
 		this.target = null;
-		this.fields = new HTML[report.headings.length];
+		this.fields = new Anchor[report.headings.length];
 
 		initWidget(uiBinder.createAndBindUi(this));
 		initFields();
@@ -85,7 +89,8 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 	
 	private void initFields() {
 		for (int i = 0; i < fields.length; i++) {
-			HTML field = new InlineHTML();
+			Anchor field = new Anchor();
+			field.getElement().removeAttribute("href");
 			switch (report.types[i]) {
 			case OBJECT: field.setStyleName(style.object()); break;
 			case COUNT: field.setStyleName(style.count()); break;
@@ -191,20 +196,33 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 
 	private boolean populated = false;
 
-	protected void setHTML(Report.Type type, Object value, HTML field) {
+	protected void setHTML(Report.Type type, final Object value, final Anchor field) {
 		String html;
 		switch (type) {
 		case OBJECT:
 			if (value instanceof Long) {
-				long arg = (Long) value;
+				final long arg = (Long) value;
 				if (arg == 0) {
 					html = "<strong>null</strong>";
 				}
-				html = String.valueOf(arg>> 32) + "." + String.valueOf(arg & 0xffffffffl);
+				else {
+					html = String.valueOf(arg>> 32) + "." + String.valueOf(arg & 0xffffffffl);
+					field.addStyleName(style.active());
+					field.addMouseOverHandler(new MouseOverHandler() {
+						@Override
+						public void onMouseOver(MouseOverEvent event) {
+							History h = HistoryManager.getInstance().getHistory();
+							h.id = (Long) value;
+							field.setHref("#"+h.toString());
+						}
+					});
+				}
 				break;
 			}
-			html = String.valueOf(value);
-			break;
+			else {
+				html = String.valueOf(value);
+				break;
+			}
 		case COUNT:
 			if (value instanceof Integer) {
 				if (((Integer) value) == 0) {
@@ -240,7 +258,7 @@ public class Entry extends Composite implements HasClickHandlers, HasEntries, En
 		field.setHTML(html);
 	}
 
-	protected void setTitle(Report.Type type, String[] flags, Object value, HTML field) {
+	protected void setTitle(Report.Type type, String[] flags, Object value, Anchor field) {
 		String title = "";
 		switch (type) {
 		case FLAG:

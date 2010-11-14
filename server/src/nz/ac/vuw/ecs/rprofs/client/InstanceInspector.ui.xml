@@ -1,0 +1,43 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:r="urn:import:nz.ac.vuw.ecs.rprofs.client.ui">
+	<ui:style>
+		.menu {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 4ex;
+			background-color: #777;
+		}
+		.menuBar {
+			position: absolute;
+			top: 0;
+			bottom: 1px;
+			left: 0;
+			right: 0;
+			border-bottom: solid 1px #ccc;
+			background-color: #bbb;
+			padding-left: 0.5em;
+			line-height: 4ex;
+		}
+		.content {
+			position: absolute;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			top: 4ex;
+		}
+	</ui:style>
+	<g:HTMLPanel>
+	  <div class="{style.menu}">
+	    <g:FlowPanel styleName="{style.menuBar}">
+	      <g:InlineHTML ui:field="title"></g:InlineHTML>
+	    </g:FlowPanel>
+	    <r:UIButton ui:field="close">&times;</r:UIButton>
+	  </div>
+	  <g:HTML ui:field="content" styleName="{style.content}">
+	  </g:HTML>
+	</g:HTMLPanel>
+</ui:UiBinder> 

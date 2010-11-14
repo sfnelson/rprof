@@ -5,6 +5,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context.ActiveContext;
 
 import com.google.gwt.dev.asm.AnnotationVisitor;
 import com.google.gwt.dev.asm.Attribute;
@@ -19,15 +20,17 @@ import com.google.gwt.dev.asm.MethodVisitor;
 public class FieldReader implements ClassVisitor {
 
 	private final ClassRecord record;
+	private final ActiveContext context;
 	
-	public FieldReader(ClassRecord cr) {
+	public FieldReader(ActiveContext context, ClassRecord cr) {
 		this.record = cr;
+		this.context = context;
 	}
 
 	@Override
 	public void visit(int version, int access, String name, String signature,
 			String superName, String[] interfaces) {
-		record.init(version, access, name, signature, superName, interfaces);
+		context.initClassRecord(record, version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
@@ -48,7 +51,8 @@ public class FieldReader implements ClassVisitor {
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc,
 			String signature, Object value) {
-		FieldRecord.create(record, access, name, desc);
+		FieldRecord fr = context.createFieldRecord(record);
+		context.initFieldRecord(fr, access, name, desc);
 		return null;
 	}
 

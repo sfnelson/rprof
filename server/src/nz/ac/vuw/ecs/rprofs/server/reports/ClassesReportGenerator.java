@@ -16,8 +16,8 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
 import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassesReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassesReport.MethodReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassesReport.PackageReport;
@@ -28,7 +28,7 @@ import nz.ac.vuw.ecs.rprofs.server.reports.ClassesReport.PackageReport;
  */
 public class ClassesReportGenerator extends ReportGenerator implements EntryVisitor<ArrayList<? extends Report.Entry>> {
 
-	public ClassesReportGenerator(ProfilerRun run, Database db) {
+	public ClassesReportGenerator(Context run, Database db) {
 		super(run, db);
 	}
 
@@ -93,10 +93,10 @@ public class ClassesReportGenerator extends ReportGenerator implements EntryVisi
 	protected void run() throws DatabaseNotAvailableException {
 		Status status = getStatus();
 
-		status.limit = getDB().getNumClasses(getRun());
+		status.limit = getContext().getClasses().size();
 		status.progress = 0;
 		status.stage = "Processing Class Records";
-		for (ClassRecord cr: getDB().getClasses(getRun())) {
+		for (ClassRecord cr: getContext().getClasses()) {
 			PackageReport pkg = packages.get(cr.getPackage());
 
 			if (pkg == null) {
@@ -107,10 +107,10 @@ public class ClassesReportGenerator extends ReportGenerator implements EntryVisi
 			ClassReport cls = ClassesReport.create(cr);
 			cls.classes = 1;
 			cls.methods = 0;
-			cls.flags = cr.flags;
+			cls.flags = cr.getFlags();
 			pkg.addChild(cls);
 
-			classes.put(cr.id, cls);
+			classes.put(cr.getId(), cls);
 
 			for (MethodRecord mr: cr.getMethods()) {
 				MethodReport method = ClassesReport.create(mr);
@@ -134,7 +134,7 @@ public class ClassesReportGenerator extends ReportGenerator implements EntryVisi
 		private Report report;
 
 		{
-			report = new Report("Classes", 6);
+			report = new Report("classes", "Classes", "A list of classes woven by the profiler.", 6);
 			report.headings[0] = "Package";
 			report.types[0] = Report.Type.NAME;
 			report.headings[1] = "Class";
@@ -155,7 +155,7 @@ public class ClassesReportGenerator extends ReportGenerator implements EntryVisi
 		}
 
 		@Override
-		public ReportGenerator createGenerator(Database db, ProfilerRun run) {
+		public ReportGenerator createGenerator(Database db, Context run) {
 			return new ClassesReportGenerator(run, db);
 		}
 

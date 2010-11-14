@@ -16,10 +16,10 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
 import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.server.reports.EqualsReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.EqualsReport.FieldReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.EqualsReport.PackageReport;
@@ -30,7 +30,7 @@ import nz.ac.vuw.ecs.rprofs.server.reports.EqualsReport.PackageReport;
  */
 public class EqualsReportGenerator extends ReportGenerator implements Report.EntryVisitor<ArrayList<? extends Report.Entry>> {
 
-	protected EqualsReportGenerator(ProfilerRun run, Database database) {
+	protected EqualsReportGenerator(Context run, Database database) {
 		super(run, database);
 	}
 
@@ -100,10 +100,10 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 		Map<String, PackageReport> packages = Collections.newMap();
 		Map<Integer, ClassReport> classes = Collections.newMap();
 
-		status.limit = getDB().getNumClasses(getRun());
+		status.limit = getContext().getClasses().size();
 		status.progress = 0;
 		status.stage = "Processing Class Records (1/2)";
-		for (ClassRecord cr: getDB().getClasses(getRun())) {
+		for (ClassRecord cr: getContext().getClasses()) {
 			PackageReport pkg = packages.get(cr.getPackage());
 
 			if (pkg == null) {
@@ -113,10 +113,9 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 
 			ClassReport cls = EqualsReport.create(cr);
 			cls.classes = 1;
-			//pkg.addChild(cls);
 
-			classes.put(cr.id, cls);
-			classMap.put(cr.id, cr);
+			classes.put(cr.getId(), cls);
+			classMap.put(cr.getId(), cr);
 
 			status.progress++;
 		}
@@ -128,43 +127,44 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 
 		Map<Long, Stack<MethodRecord>> stacks = Collections.newMap();
 		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, flags, 0)) {
-			Stack<MethodRecord> stack = stacks.get(lr.thread);
+			Stack<MethodRecord> stack = stacks.get(lr.getThread());
 			if (stack == null) {
 				stack = Collections.newStack();
-				stacks.put(lr.thread, stack);
+				stacks.put(lr.getThread(), stack);
 			}
 
 			ClassRecord cr = null;
 			MethodRecord mr = null;
 			FieldRecord fr = null;
 
-			cr = classMap.get(lr.cnum);
-			if (cr != null && lr.mnum > 0 && cr.getMethods().size() >= lr.mnum) {
-				mr = cr.getMethods().get(lr.mnum - 1);
+			cr = classMap.get(lr.getClassNumber());
+			if (cr != null && lr.getMethodNumber() > 0 && cr.getMethods().size() >= lr.getMethodNumber()) {
+				mr = cr.getMethods().get(lr.getMethodNumber() - 1);
 			}
 
-			switch (lr.event) {
+			switch (lr.getEvent()) {
 			case LogRecord.METHOD_ENTER:
 				if (mr != null && (mr.isEquals() || mr.isHashCode())) {
-					if (lr.args[0] == 0) {
+					if (lr.getArguments()[0] == 0) {
 						System.out.println("null <this>: ->" + mr); break;
 					}
 					stack.push(mr);
-					this.classes.put(cr.id, classes.get(cr.id));
+					this.classes.put(cr.getId(), classes.get(cr.getId()));
 					PackageReport pr = packages.get(cr.getPackage());
-					pr.addChild(classes.get(cr.id));
+					pr.addChild(classes.get(cr.getId()));
 					this.packages.put(cr.getPackage(), pr);
 				}
 				break;
 			case LogRecord.METHOD_EXCEPTION:
 			case LogRecord.METHOD_RETURN:
-				String type = (lr.event == LogRecord.METHOD_EXCEPTION) ? "</" : "<-";
+				String type = (lr.getEvent() == LogRecord.METHOD_EXCEPTION) ? "</" : "<-";
 				if (mr != null && (mr.isEquals() || mr.isHashCode())) {
-					if (lr.args[0] == 0) {
+					if (lr.getArguments()[0] == 0) {
 						System.out.println("null <this>: " + type + mr); break;
 					}
 					if (stack.isEmpty() || mr != stack.peek()) {
-						throw new RuntimeException("return was not matched! " + type + mr + " - " + lr.args[0] + " - " + lr.thread);
+						throw new RuntimeException("return was not matched! " + type + mr +
+								" - " + lr.getArguments()[0] + " - " + lr.getThread());
 					}
 					else {
 						stack.pop();
@@ -173,12 +173,12 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 				break;
 			case LogRecord.FIELD_READ:
 				if (stack.isEmpty()) break;
-				if (cr != null && lr.mnum > 0 && cr.getFields().size() >= lr.mnum) {
-					fr = cr.getFields().get(lr.mnum - 1);
+				if (cr != null && lr.getMethodNumber() > 0 && cr.getFields().size() >= lr.getMethodNumber()) {
+					fr = cr.getFields().get(lr.getMethodNumber() - 1);
 				}
 				if (fr != null) {
 					for (MethodRecord m: stack) {
-						ClassReport c = classes.get(m.parent.id);
+						ClassReport c = classes.get(m.parent.getId());
 						FieldReport f = c.fields.get(fr);
 						if (f == null) {
 							f = EqualsReport.create(fr);
@@ -214,7 +214,7 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 		private final Report report;
 
 		{
-			report = new Report("Fields", 5);
+			report = new Report("fields", "Fields", "A list of fields used in equals and hashcode methods", 5);
 			report.headings[0] = "Package";
 			report.headings[1] = "Class";
 			report.headings[2] = "Field";
@@ -228,7 +228,7 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 		}
 
 		@Override
-		public ReportGenerator createGenerator(Database db, ProfilerRun run) {
+		public ReportGenerator createGenerator(Database db, Context run) {
 			return new EqualsReportGenerator(run, db);
 		}
 

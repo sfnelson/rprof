@@ -1,0 +1,51 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:r="urn:import:nz.ac.vuw.ecs.rprofs.client.ui">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout.Style">
+		.wrapper { 
+		    /*
+		     * Activate the hasLayout property, which ensures sub-panels 
+		     * are positioned relative to this panel
+		     */
+			position: relative;
+		}
+		.top, .bottom, .center, .topSpacer, .bottomSpacer {
+			position: absolute;
+			left: 0;
+			right: 0;
+			background-color: white;
+		}
+		.top, .bottom, center {
+			overflow: auto;
+		}
+		.top {
+			top: 0;
+		}
+		.bottom {
+			bottom: 0;
+		}
+		.center {
+			margin: 2px 0;
+		}
+		.topSpacer, .bottomSpacer {
+			height: 1px;
+			border-top: solid 1px #777;
+			background-color: #ccc;
+			cursor: row-resize;
+		}
+		.hideTop .center {
+			margin-top: 0;
+		}
+		.hideBottom .center {
+			margin-bottom: 0;
+		}
+	</ui:style>
+	<r:ActivePanel ui:field="wrapper" styleName="{style.wrapper}">
+		<r:FrameLayout.BorderPanel styleName="{style.top}" ui:field="top" />
+		<r:FrameLayout.Spacer styleName="{style.topSpacer}" ui:field="topSpacer" />
+		<g:FlowPanel styleName="{style.center}" ui:field="center" />
+		<r:FrameLayout.Spacer styleName="{style.bottomSpacer}" ui:field="bottomSpacer" />
+		<r:FrameLayout.BorderPanel styleName="{style.bottom}" ui:field="bottom" />
+	</r:ActivePanel>
+</ui:UiBinder> 

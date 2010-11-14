@@ -14,7 +14,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.Context.ActiveContext;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ClassVisitorDispatcher;
 import nz.ac.vuw.ecs.rprofs.server.weaving.FieldReader;
 import nz.ac.vuw.ecs.rprofs.server.weaving.GenericClassWeaver;
@@ -40,7 +42,9 @@ public class Weaver extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
 
-		ClassRecord cr = Context.getCurrent().createClassRecord();
+		ActiveContext context = Context.getCurrent();
+		
+		ClassRecord cr = context.createClassRecord();
 
 		Map<String, String> headers = new HashMap<String, String>();
 		for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements();) {
@@ -55,7 +59,7 @@ public class Weaver extends HttpServlet {
 			i += is.read(buffer, i, buffer.length - i);
 		}
 
-		buffer = weave(buffer, cr);
+		buffer = weave(context, buffer, cr);
 
 		resp.setStatus(200);
 		resp.setContentLength(buffer.length);
@@ -64,27 +68,29 @@ public class Weaver extends HttpServlet {
 		
 		LogRecord record = LogRecord.create();
 		record.event = LogRecord.CLASS_WEAVE;
-		record.cnum = cr.id;
+		record.cnum = cr.getId();
 		record.args = new long[0];
-		Context.getCurrent().storeLogs(Arrays.asList(record));
+		context.storeLogs(Arrays.asList(record));
 	}
 
-	public byte[] weave(byte[] classfile, ClassRecord cr) {
+	public byte[] weave(ActiveContext context, byte[] classfile, ClassRecord cr) {
 		ClassReader reader = new ClassReader(classfile);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 
-		reader.accept(new FieldReader(cr), ClassReader.SKIP_CODE);
-		reader.accept(new Dispatcher(writer, cr), ClassReader.EXPAND_FRAMES);
+		reader.accept(new FieldReader(context, cr), ClassReader.SKIP_CODE);
+		reader.accept(new Dispatcher(context, writer, cr), ClassReader.EXPAND_FRAMES);
 		
 		return writer.toByteArray();
 	}
 	
 	private static class Dispatcher extends ClassVisitorDispatcher {
 
+		private ActiveContext context;
 		private ClassVisitor cv;
 		private ClassRecord cr;
 		
-		public Dispatcher(ClassVisitor cv, ClassRecord cr) {
+		public Dispatcher(ActiveContext context, ClassVisitor cv, ClassRecord cr) {
+			this.context = context;
 			this.cv = cv;
 			this.cr = cr;
 		}
@@ -108,33 +114,37 @@ public class Weaver extends HttpServlet {
 				"java/lang/NullPointerException"			// something blows up - null pointers appear as runtime exceptions with this change
 			};
 			
+			int flags = cr.getFlags();
+			
 			if (Type.getInternalName(HeapTracker.class).equals(name)) {
-				cr.flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
-				cv = new TrackingClassWeaver(this.cv, cr);
+				flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
+				cv = new TrackingClassWeaver(context, this.cv, cr);
 			}
 			else if (Type.getInternalName(Thread.class).equals(name)) {
-				cr.flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
-				cv = new ThreadClassWeaver(this.cv, cr);
+				flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
+				cv = new ThreadClassWeaver(context, this.cv, cr);
 			}
 			else if (Type.getInternalName(Throwable.class).equals(name)) {
-				cr.flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
-				cv = new ThreadClassWeaver(this.cv, cr);
+				flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
+				cv = new ThreadClassWeaver(context, this.cv, cr);
 			}
 			else if (Type.getInternalName(Object.class).equals(name)) {
-				cr.flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
-				cv = new ObjectClassWeaver(this.cv, cr);
+				flags |= ClassRecord.SPECIAL_CLASS_WEAVER;
+				cv = new ObjectClassWeaver(context, this.cv, cr);
 			}
 			else {
 				for (String filter: filters) {
 					if (name.matches(filter)) {
-						cr.flags |= ClassRecord.CLASS_IGNORED_PACKAGE_FILTER;
+						flags |= ClassRecord.CLASS_IGNORED_PACKAGE_FILTER;
 						cv = new ClassAdapter(this.cv);
 					}
 				}
 			}
 			
+			cr.setFlags(flags);
+			
 			if (cv == null) {
-				cv = new GenericClassWeaver(this.cv, cr);
+				cv = new GenericClassWeaver(context, this.cv, cr);
 			}
 			
 			setClassVisitor(cv);

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import nz.ac.vuw.ecs.rprofs.client.LogListener.LogCallback;
 import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
-import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.ExtendedInstanceData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
@@ -125,10 +125,10 @@ public class Inspector implements EntryPoint, HasHandlers {
 		manager.addHandler(ClassListEvent.getType(), handler);
 	}
 
-	private EventFactory<InstanceData> instanceInformationCallback =
-		new EventFactory<InstanceData>(this, "unable to get instance information") {
+	private EventFactory<ExtendedInstanceData> instanceInformationCallback =
+		new EventFactory<ExtendedInstanceData>(this, "unable to get instance information") {
 			@Override
-			public GwtEvent<? extends EventHandler> createEvent(InstanceData result) {
+			public GwtEvent<? extends EventHandler> createEvent(ExtendedInstanceData result) {
 				return new InstanceEvent(result);
 			}
 		};

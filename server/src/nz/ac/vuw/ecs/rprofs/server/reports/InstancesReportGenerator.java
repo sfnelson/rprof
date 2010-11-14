@@ -8,7 +8,6 @@ import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
-import nz.ac.vuw.ecs.rprofs.client.data.LogInfo;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.ClassEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Entry;
@@ -18,9 +17,9 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
 import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ExtendedInstanceRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.InstanceRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstancesReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstancesReport.InstanceReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstancesReport.PackageReport;
@@ -33,10 +32,10 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 
 	private Map<String, PackageReport> packages = Collections.newMap();
 	private Map<ClassRecord, ClassReport> classes = Collections.newMap();
-	private Map<InstanceRecord, InstanceReport> instances = Collections.newMap();
+	private Map<ExtendedInstanceRecord, InstanceReport> instances = Collections.newMap();
 
 	private Map<Integer, ClassRecord> classMap = Collections.newMap();
-	private Map<Long, InstanceRecord> instanceMap = Collections.newMap();
+	private Map<Long, ExtendedInstanceRecord> instanceMap = Collections.newMap();
 
 	public InstancesReportGenerator(Context run, Database database) {
 		super(run, database);
@@ -73,18 +72,14 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 		status.stage = "Processing Allocation Logs (2/3)";
 		status.progress = 0;
 		status.limit = getDB().getNumLogs(getRun(), LogData.ALLOCATION, 0);
-		for (LogInfo lr: getDB().getLogs(getRun(), 0, status.limit, LogData.ALLOCATION, 0)) {
+		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogData.ALLOCATION, 0)) {
 			ClassRecord cr = classMap.get(lr.getClassNumber());
 			if (cr == null) continue;
 			ClassReport cls = classes.get(cr);
 
-			InstanceRecord ir = instanceMap.get(lr.getArguments()[0]);
+			ExtendedInstanceRecord ir = instanceMap.get(lr.getArguments()[0]);
 			if (ir == null) {
-				MethodRecord mr = null;
-				if (lr.getMethodNumber() > 0) {
-					mr = cr.getMethods().get(lr.getMethodNumber() - 1);
-				}
-				ir = new InstanceRecord(lr.getArguments()[0], cr, mr);
+				ir = new ExtendedInstanceRecord(getContext(), lr.getArguments()[0], lr.getClassNumber(), lr.getMethodNumber());
 				instanceMap.put(lr.getArguments()[0], ir);
 			}
 
@@ -102,8 +97,8 @@ public class InstancesReportGenerator extends ReportGenerator implements Report.
 		status.stage = "Processing field accesses (3/3)";
 		status.progress = 0;
 		status.limit = getDB().getNumLogs(getRun(), LogData.FIELDS, 0);
-		for (LogInfo lr: getDB().getLogs(getRun(), 0, status.limit, LogData.FIELDS, 0)) {
-			InstanceRecord ir = null;
+		for (LogRecord lr: getDB().getLogs(getRun(), 0, status.limit, LogData.FIELDS, 0)) {
+			ExtendedInstanceRecord ir = null;
 			ClassRecord cr = null;
 			FieldRecord fr = null;
 

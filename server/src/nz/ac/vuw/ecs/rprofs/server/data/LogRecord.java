@@ -19,7 +19,7 @@ import org.springframework.jdbc.core.RowMapper;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class LogRecord extends LogInfo {
+public class LogRecord extends LogInfo<InstanceRecord, ClassRecord, MethodRecord, FieldRecord> {
 
 	private final long index;
 	public long thread;
@@ -217,4 +217,10 @@ public class LogRecord extends LogInfo {
 			return "drop table events_" + p.handle + ";";
 		}
 	};
+
+	@Override
+	public void visit(
+			LogInfo.Visitor<InstanceRecord, ClassRecord, MethodRecord, FieldRecord> visitor) {
+		throw new RuntimeException("unimplemented method");
+	}
 }

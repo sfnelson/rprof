@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.client.data;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class LogData extends LogInfo implements IsSerializable {
+public class LogData extends LogInfo<InstanceData, ClassData, MethodData, FieldData> implements IsSerializable {
 
 	public long index;
 	public long thread;
@@ -23,8 +23,7 @@ public class LogData extends LogInfo implements IsSerializable {
 
 	@Override
 	public long[] getArguments() {
-		// TODO Auto-generated method stub
-		return null;
+		return args;
 	}
 	
 	@Override
@@ -51,4 +50,35 @@ public class LogData extends LogInfo implements IsSerializable {
 	public long getThread() {
 		return thread;
 	}
+	
+	@Override
+	public void visit(LogInfo.Visitor<InstanceData, ClassData, MethodData, FieldData> visitor) {
+		DataManager.getInstance().visitLogEvent(this, visitor);
+	}
+	
+	public interface Visitor extends LogInfo.Visitor<InstanceData, ClassData, MethodData, FieldData> {
+		public void visitObjectAllocatedEvent(ObjectAllocated event);
+		public void visitArrayAllocatedEvent(ArrayAllocated event);
+		public void visitMethodEnterEvent(MethodEnter event);
+		public void visitMethodReturnEvent(MethodReturn event);
+		public void visitMethodExceptionEvent(MethodException event);
+		public void visitFieldReadEvent(FieldRead event);
+		public void visitFieldWriteEvent(FieldWrite event);
+		public void visitClassWeaveEvent(ClassWeave event);
+		public void visitClassInitializatedEvent(ClassInitialized event);
+		public void visitObjectTaggedEvent(ObjectTagged event);
+		public void visitObjectFreedEvent(ObjectFreed event);
+	}
+
+	public interface ObjectAllocated extends LogInfo.ObjectAllocated<InstanceData, ClassData, MethodData, FieldData> {}
+	public interface ArrayAllocated extends LogInfo.ArrayAllocated {}
+	public interface MethodEnter extends LogInfo.MethodEnter {}
+	public interface MethodReturn extends LogInfo.MethodReturn {}
+	public interface MethodException extends LogInfo.MethodException {}
+	public interface FieldRead extends LogInfo.FieldRead {}
+	public interface FieldWrite extends LogInfo.FieldWrite {}
+	public interface ClassWeave extends LogInfo.ClassWeave {}
+	public interface ClassInitialized extends LogInfo.ClassInitialized {}
+	public interface ObjectTagged extends LogInfo.ObjectTagged {}
+	public interface ObjectFreed extends LogInfo.ObjectFreed {}
 }

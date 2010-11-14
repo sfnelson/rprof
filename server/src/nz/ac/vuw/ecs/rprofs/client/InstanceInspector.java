@@ -8,7 +8,7 @@ import java.util.HashMap;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
 import nz.ac.vuw.ecs.rprofs.client.data.FieldData;
-import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.ExtendedInstanceData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.events.InstanceEvent;
 import nz.ac.vuw.ecs.rprofs.client.events.InstanceHandler;
@@ -79,7 +79,7 @@ public class InstanceInspector extends Composite implements ValueChangeHandler<H
 
 	@Override
 	public void onInstanceEvent(InstanceEvent event) {
-		InstanceData info = event.getValue();
+		ExtendedInstanceData info = event.getValue();
 		
 		if (info == null) {
 			ErrorPanel.showMessage("unable to retrieve the requested object id", new Exception("instance info was null"));

@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.client;
 import java.util.ArrayList;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
-import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.ExtendedInstanceData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
@@ -25,5 +25,5 @@ public interface InspectorServiceAsync {
 	void getReportData(Report report, ProfilerRun run, Report.Entry key, AsyncCallback<Integer> asyncCallback);
 	void getReportData(Report report, ProfilerRun run, Report.Entry key, int offset, int limit, AsyncCallback<ArrayList<? extends Report.Entry>> asyncCallback);
 
-	void getInstanceInformation(ProfilerRun run, long id, AsyncCallback<InstanceData> instanceInformationCallback);
+	void getInstanceInformation(ProfilerRun run, long id, AsyncCallback<ExtendedInstanceData> instanceInformationCallback);
 }

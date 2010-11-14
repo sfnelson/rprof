@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
-import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.ExtendedInstanceData;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
 import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.reports.ReportGenerator;
@@ -145,13 +145,13 @@ public class Context {
 		return reports.get(report);
 	}
 	
-	public InstanceData getInstanceInformation(long id) {
+	public ExtendedInstanceData getInstanceInformation(long id) {
 		int count = db.getNumLogs(run, LogRecord.OBJECT_ALLOCATED, id);
 		if (count != 0) {
 			LogRecord alloc = db.getLogs(run, count - 1, 1, LogRecord.OBJECT_ALLOCATED, id).get(0);
 			ClassRecord cr = getClass(alloc.getClassNumber());
 			MethodRecord mr = cr.getMethods().get(alloc.getMethodNumber() - 1);
-			InstanceRecord info = new InstanceRecord(id, cr, mr);
+			ExtendedInstanceRecord info = new ExtendedInstanceRecord(this, id, cr, mr);
 			
 			count = db.getNumLogs(run, LogRecord.FIELDS, id);
 			info.events = db.getLogs(run, 0, count, LogRecord.FIELDS, id);

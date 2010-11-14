@@ -3,7 +3,7 @@
  */
 package nz.ac.vuw.ecs.rprofs.client.events;
 
-import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.ExtendedInstanceData;
 
 import com.google.gwt.event.shared.GwtEvent;
 
@@ -15,13 +15,13 @@ public class InstanceEvent extends GwtEvent<InstanceHandler> {
 
 	private static final Type<InstanceHandler> TYPE = new Type<InstanceHandler>();
 	
-	private final InstanceData info;
+	private final ExtendedInstanceData info;
 	
-	public InstanceEvent(InstanceData result) {
+	public InstanceEvent(ExtendedInstanceData result) {
 		this.info = result;
 	}
 	
-	public InstanceData getValue() {
+	public ExtendedInstanceData getValue() {
 		return info;
 	}
 	

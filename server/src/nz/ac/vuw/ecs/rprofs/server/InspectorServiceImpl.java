@@ -6,7 +6,7 @@ import java.util.List;
 import nz.ac.vuw.ecs.rprofs.client.Collections;
 import nz.ac.vuw.ecs.rprofs.client.InspectorService;
 import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
-import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.ExtendedInstanceData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogInfo;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
@@ -116,7 +116,7 @@ public class InspectorServiceImpl extends RemoteServiceServlet implements Inspec
 	}
 
 	@Override
-	public InstanceData getInstanceInformation(ProfilerRun run, long id) {
+	public ExtendedInstanceData getInstanceInformation(ProfilerRun run, long id) {
 		return Context.getInstance(run).getInstanceInformation(id);
 	}
 

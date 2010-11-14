@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.client;
 import java.util.ArrayList;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
-import nz.ac.vuw.ecs.rprofs.client.data.InstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.ExtendedInstanceData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.data.ProfilerRun;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
@@ -30,5 +30,5 @@ public interface InspectorService extends RemoteService {
 	Integer getReportData(Report report, ProfilerRun run, Report.Entry key);
 	ArrayList<? extends Report.Entry> getReportData(Report report, ProfilerRun run, Report.Entry key, int offset, int limit);
 	
-	InstanceData getInstanceInformation(ProfilerRun run, long id);
+	ExtendedInstanceData getInstanceInformation(ProfilerRun run, long id);
 }

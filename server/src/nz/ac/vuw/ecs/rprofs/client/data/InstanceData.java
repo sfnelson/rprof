@@ -9,37 +9,25 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public class InstanceData extends InstanceInfo<ClassData, MethodData, FieldData, LogData> implements IsSerializable {
+public class InstanceData extends InstanceInfo<ClassData, MethodData, FieldData> implements IsSerializable {
 
-	long id;
-	ClassData type;
-	MethodData constructor;
-	LogData[] events;
+	private long id;
+	private ClassData type;
 	
 	public InstanceData() {}
-	public InstanceData(long id, ClassData type, MethodData constructor) {
+	public InstanceData(long id, ClassData type) {
 		this.id = id;
 		this.type = type;
-		this.events = new LogData[0];
 	}
 
-	@Override
-	public LogData[] getEvents() {
-		return events;
-	}
-	
 	@Override
 	public long getId() {
 		return id;
 	}
-	
+
 	@Override
 	public ClassData getType() {
 		return type;
 	}
-	
-	@Override
-	public MethodData getConstructor() {
-		return constructor;
-	}
+
 }

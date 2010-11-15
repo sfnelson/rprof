@@ -3,6 +3,8 @@
  */
 package nz.ac.vuw.ecs.rprofs.client.data;
 
+import java.util.ArrayList;
+
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
@@ -59,42 +61,74 @@ F extends FieldInfo> implements Comparable<LogInfo<?, ?, ?, ?>> {
 		return 0;
 	}
 
-	public abstract void visit(Visitor<I, C, M, F> visitor);
-
-	public interface Visitor<I extends InstanceInfo<C, M, F>,
-	C extends ClassInfo<C, M, F>,
-	M extends MethodInfo,
-	F extends FieldInfo> {
-		public void visitObjectAllocatedEvent(ObjectAllocated<I, C, M, F> event);
-		public void visitArrayAllocatedEvent(ArrayAllocated event);
-		public void visitMethodEnterEvent(MethodEnter event);
-		public void visitMethodReturnEvent(MethodReturn event);
-		public void visitMethodExceptionEvent(MethodException event);
-		public void visitFieldReadEvent(FieldRead event);
-		public void visitFieldWriteEvent(FieldWrite event);
-		public void visitClassWeaveEvent(ClassWeave event);
-		public void visitClassInitializatedEvent(ClassInitialized event);
-		public void visitObjectTaggedEvent(ObjectTagged event);
-		public void visitObjectFreedEvent(ObjectFreed event);
-	}
-
-	public interface ObjectAllocated<I extends InstanceInfo<C, M, F>,
-	C extends ClassInfo<C, M, F>,
-	M extends MethodInfo,
-	F extends FieldInfo>
+	private interface Typed<C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
 	{
-		public I getInstance();
-		public M getConstructor();
+		C getType();
+	}
+	
+	private interface Target<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Typed<C, M, F> {
+		I getTarget();
+	}
+	
+	private interface Field<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Target<I, C, M, F> {
+		F getField();
+	}
+	
+	private interface Method<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Target<I, C, M, F> {
+		M getMethod();
 	}
 
-	public interface ArrayAllocated {}
-	public interface MethodEnter {}
-	public interface MethodReturn {}
-	public interface MethodException {}
-	public interface FieldRead {}
-	public interface FieldWrite {}
-	public interface ClassWeave {}
-	public interface ClassInitialized {}
-	public interface ObjectTagged {}
-	public interface ObjectFreed {}
+	protected interface ObjectAllocated<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Target<I, C, M, F>
+	{
+		M getConstructor();
+	}
+
+	protected interface ArrayAllocated<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Target<I, C, M, F>
+	{
+		int getParameters();
+	}
+	
+	protected interface MethodEnter<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Method<I, C, M, F>
+	{
+		ArrayList<I> getParameters();
+	}
+	
+	protected interface MethodReturn<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Method<I, C, M, F>
+	{
+		I getReturnValue();
+	}
+	
+	protected interface MethodException<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Method<I, C, M, F>
+	{
+		I getThrowable();
+	}
+	
+	protected interface FieldRead<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Field<I, C, M, F> {}
+	
+	protected interface FieldWrite<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Field<I, C, M, F>
+	{
+		I getValue();
+	}
+	
+	protected interface ClassWeave<C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Typed<C, M, F> {}
+	
+	protected interface ClassInitialized<C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Typed<C, M, F> {}
+	
+	protected interface ObjectTagged<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Target<I, C, M, F> {}
+	
+	protected interface ObjectFreed<I extends InstanceInfo<C, M, F>, C extends ClassInfo<C, M, F>, M extends MethodInfo, F extends FieldInfo>
+	extends Target<I, C, M, F> {}
 }

@@ -217,10 +217,4 @@ public class LogRecord extends LogInfo<InstanceRecord, ClassRecord, MethodRecord
 			return "drop table events_" + p.handle + ";";
 		}
 	};
-
-	@Override
-	public void visit(
-			LogInfo.Visitor<InstanceRecord, ClassRecord, MethodRecord, FieldRecord> visitor) {
-		throw new RuntimeException("unimplemented method");
-	}
 }

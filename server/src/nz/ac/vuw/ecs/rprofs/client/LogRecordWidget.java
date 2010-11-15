@@ -6,6 +6,17 @@ import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
 import nz.ac.vuw.ecs.rprofs.client.data.FieldData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodData;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.ArrayAllocated;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.ClassInitialized;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.ClassWeave;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.FieldRead;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.FieldWrite;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.MethodEnter;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.MethodException;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.MethodReturn;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.ObjectAllocated;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.ObjectFreed;
+import nz.ac.vuw.ecs.rprofs.client.data.LogData.ObjectTagged;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Display;
@@ -18,7 +29,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
-public class LogRecordWidget extends Composite {
+public class LogRecordWidget extends Composite implements LogData.Visitor {
 
 	private static LogRecordWidgetUiBinder uiBinder = GWT
 	.create(LogRecordWidgetUiBinder.class);
@@ -33,6 +44,7 @@ public class LogRecordWidget extends Composite {
 	}
 
 	@UiField Style style;
+	LogPanel.Style parent;
 
 	@UiField HTML thread;
 	@UiField HTML event;
@@ -42,74 +54,23 @@ public class LogRecordWidget extends Composite {
 
 	private LogData record;
 
-	public LogRecordWidget(LogData log) {
+	public LogRecordWidget(LogData log, LogPanel.Style parent) {
 		initWidget(uiBinder.createAndBindUi(this));
 
 		this.record = log;
+		this.parent = parent;
+
+		log.visit(this);
 	}
 
 	public void setIndent(int indent) {
 		event.getElement().getStyle().setPaddingLeft(indent, Unit.EM);
 	}
 
-	public void init(final nz.ac.vuw.ecs.rprofs.client.LogPanel.Style parent,
+	public void init(final LogPanel.Style parent,
 			final ClassData cr,
 			final MethodData mr, final Map<Long, String> objects,
 			final int thread) {
-
-		// Set parent class
-		switch (record.event) {
-		case LogData.METHOD_ENTER:
-			addStyleName(parent.methodEnter());
-			break;
-		case LogData.METHOD_RETURN:
-			addStyleName(parent.methodReturn());
-			break;
-		case LogData.METHOD_EXCEPTION:
-			addStyleName(parent.methodReturn());
-			break;
-		case LogData.OBJECT_ALLOCATED:
-			addStyleName(parent.objectAllocated());
-			break;
-		case LogData.CLASS_WEAVE:
-			addStyleName(parent.classWeave());
-			break;
-		case LogData.FIELD_READ:
-			addStyleName(parent.fieldRead());
-			break;
-		case LogData.FIELD_WRITE:
-			addStyleName(parent.fieldWrite());
-			break;
-		case LogData.CLASS_INITIALIZED:
-			addStyleName(parent.classInitialized());
-			break;
-		case LogData.OBJECT_TAGGED:
-			addStyleName(parent.objectTagged());
-			break;
-		case LogData.OBJECT_FREED:
-			addStyleName(parent.objectFreed());
-			break;
-		}
-
-		// Set internal class
-		switch (record.event) {
-		case LogData.METHOD_ENTER:
-		case LogData.METHOD_RETURN:
-		case LogData.METHOD_EXCEPTION:
-			addStyleName(style.method());
-			break;
-		case LogData.OBJECT_ALLOCATED:
-		case LogData.OBJECT_TAGGED:
-		case LogData.CLASS_WEAVE:
-		case LogData.CLASS_INITIALIZED:
-		case LogData.OBJECT_FREED:
-			addStyleName(style.object());
-			break;
-		case LogData.FIELD_READ:
-		case LogData.FIELD_WRITE:
-			addStyleName(style.field());
-			break;
-		}
 
 		// Set thread text
 		if (thread == 0) {
@@ -119,6 +80,133 @@ public class LogRecordWidget extends Composite {
 			this.thread.setTitle(getObjectString(objects, record.thread));
 			this.thread.getElement().getStyle().setMarginLeft(thread - 0.5, Unit.EM);
 		}
+	}
+
+	private String getObjectString(Map<Long, String> objects, long arg) {
+		if (arg == 0) {
+			return "<strong>null</strong>";
+		}
+
+		String id = String.valueOf(arg>> 32) + "." + String.valueOf(arg & 0xffffffffl);
+		if (objects.containsKey(arg)) {
+			return objects.get(arg) + ":" + id;
+		}
+		else {
+			return "<em>unknown</em>:" + id;
+		}
+	}
+
+	@Override
+	public void visitArrayAllocatedEvent(ArrayAllocated event) {
+		addStyleName(parent.arrayAllocated());
+		addStyleName(style.object());
+
+		cname.setText(event.getType().toString());
+	}
+
+	@Override
+	public void visitClassInitializatedEvent(ClassInitialized event) {
+		addStyleName(parent.classInitialized());
+		addStyleName(style.object());
+		
+		cname.setText(event.getType().toString());
+	}
+
+	@Override
+	public void visitClassWeaveEvent(ClassWeave event) {
+		addStyleName(parent.classWeave());
+		addStyleName(style.object());
+		
+		cname.setText(event.getType().toString());
+	}
+
+	@Override
+	public void visitFieldReadEvent(FieldRead event) {
+		addStyleName(parent.fieldRead());
+		addStyleName(style.field());
+		
+		cname.setText(event.getType().toString());
+	}
+
+	@Override
+	public void visitFieldWriteEvent(FieldWrite event) {
+		addStyleName(parent.fieldWrite());
+		addStyleName(style.field());
+		
+		cname.setText(event.getType().toString());
+
+		if (record.args.length == 2) {
+			this.args.setHTML(" = " + getObjectString(objects, record.args[1])
+					+ " (" + getObjectString(objects, record.args[0]) + ")"
+			);
+		}
+		else {
+			this.args.setHTML(" (" + getObjectString(objects, record.args[0]) + ")");
+		}
+		break;
+	}
+
+	@Override
+	public void visitMethodEnterEvent(MethodEnter event) {
+		addStyleName(parent.methodEnter());
+		addStyleName(style.method());
+
+		cname.setText(event.getType().toString());
+		mname.setText(event.getMethod().getName());
+
+		this.event.setHTML("&rarr;");
+		args.setHTML(event.getParameters().toString());
+	}
+
+	@Override
+	public void visitMethodExceptionEvent(MethodException event) {
+		addStyleName(parent.methodReturn());
+		addStyleName(style.method());
+
+		cname.setText(event.getType().toString());
+		mname.setText(event.getMethod().getName());
+
+		this.event.setHTML("&#x219A;");
+		args.setHTML(event.getThrowable().toString());
+	}
+
+	@Override
+	public void visitMethodReturnEvent(MethodReturn event) {
+		addStyleName(parent.methodReturn());
+		addStyleName(style.method());
+
+		cname.setText(event.getType().toString());
+		mname.setText(event.getMethod().getName());
+
+		this.event.setHTML("&larr;");
+		args.setHTML(event.getReturnValue().toString());
+	}
+
+	@Override
+	public void visitObjectAllocatedEvent(ObjectAllocated event) {
+		addStyleName(parent.objectAllocated());
+		addStyleName(style.object());
+		
+		cname.setText(event.getType().toString());
+	}
+
+	@Override
+	public void visitObjectFreedEvent(ObjectFreed event) {
+		addStyleName(parent.objectFreed());
+		addStyleName(style.object());
+		
+		cname.setText(event.getType().toString());
+
+	}
+
+	@Override
+	public void visitObjectTaggedEvent(ObjectTagged event) {
+		addStyleName(parent.objectTagged());
+		addStyleName(style.object());
+
+		cname.setText(event.getType().toString());
+
+		
 
 		// Set Class text
 		if (cr != null) {
@@ -228,29 +316,7 @@ public class LogRecordWidget extends Composite {
 			this.args.setHTML(" (" + getObjectString(objects, record.args[0]) + ")");
 			break;
 		case LogData.FIELD_WRITE:
-			if (record.args.length == 2) {
-				this.args.setHTML(" = " + getObjectString(objects, record.args[1])
-					+ " (" + getObjectString(objects, record.args[0]) + ")"
-					);
-			}
-			else {
-				this.args.setHTML(" (" + getObjectString(objects, record.args[0]) + ")");
-			}
-			break;
-		}
-	}
-
-	private String getObjectString(Map<Long, String> objects, long arg) {
-		if (arg == 0) {
-			return "<strong>null</strong>";
-		}
-
-		String id = String.valueOf(arg>> 32) + "." + String.valueOf(arg & 0xffffffffl);
-		if (objects.containsKey(arg)) {
-			return objects.get(arg) + ":" + id;
-		}
-		else {
-			return "<em>unknown</em>:" + id;
+			
 		}
 	}
 }

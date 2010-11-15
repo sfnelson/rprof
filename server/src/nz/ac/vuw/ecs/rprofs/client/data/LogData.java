@@ -51,12 +51,11 @@ public class LogData extends LogInfo<InstanceData, ClassData, MethodData, FieldD
 		return thread;
 	}
 	
-	@Override
-	public void visit(LogInfo.Visitor<InstanceData, ClassData, MethodData, FieldData> visitor) {
+	public void visit(Visitor visitor) {
 		DataManager.getInstance().visitLogEvent(this, visitor);
 	}
-	
-	public interface Visitor extends LogInfo.Visitor<InstanceData, ClassData, MethodData, FieldData> {
+		
+	public interface Visitor {
 		public void visitObjectAllocatedEvent(ObjectAllocated event);
 		public void visitArrayAllocatedEvent(ArrayAllocated event);
 		public void visitMethodEnterEvent(MethodEnter event);
@@ -71,14 +70,14 @@ public class LogData extends LogInfo<InstanceData, ClassData, MethodData, FieldD
 	}
 
 	public interface ObjectAllocated extends LogInfo.ObjectAllocated<InstanceData, ClassData, MethodData, FieldData> {}
-	public interface ArrayAllocated extends LogInfo.ArrayAllocated {}
-	public interface MethodEnter extends LogInfo.MethodEnter {}
-	public interface MethodReturn extends LogInfo.MethodReturn {}
-	public interface MethodException extends LogInfo.MethodException {}
-	public interface FieldRead extends LogInfo.FieldRead {}
-	public interface FieldWrite extends LogInfo.FieldWrite {}
-	public interface ClassWeave extends LogInfo.ClassWeave {}
-	public interface ClassInitialized extends LogInfo.ClassInitialized {}
-	public interface ObjectTagged extends LogInfo.ObjectTagged {}
-	public interface ObjectFreed extends LogInfo.ObjectFreed {}
+	public interface ArrayAllocated extends LogInfo.ArrayAllocated<InstanceData, ClassData, MethodData, FieldData> {}
+	public interface MethodEnter extends LogInfo.MethodEnter<InstanceData, ClassData, MethodData, FieldData> {}
+	public interface MethodReturn extends LogInfo.MethodReturn<InstanceData, ClassData, MethodData, FieldData> {}
+	public interface MethodException extends LogInfo.MethodException<InstanceData, ClassData, MethodData, FieldData> {}
+	public interface FieldRead extends LogInfo.FieldRead<InstanceData, ClassData, MethodData, FieldData> {}
+	public interface FieldWrite extends LogInfo.FieldWrite<InstanceData, ClassData, MethodData, FieldData> {}
+	public interface ClassWeave extends LogInfo.ClassWeave<ClassData, MethodData, FieldData> {}
+	public interface ClassInitialized extends LogInfo.ClassInitialized<ClassData, MethodData, FieldData> {}
+	public interface ObjectTagged extends LogInfo.ObjectTagged<InstanceData, ClassData, MethodData, FieldData> {}
+	public interface ObjectFreed extends LogInfo.ObjectFreed<InstanceData, ClassData, MethodData, FieldData> {}
 }

@@ -43,6 +43,7 @@ public class LogPanel extends Composite implements LogListener, ClassListHandler
 		String active();
 		String methodEnter();
 		String methodReturn();
+		String arrayAllocated();
 		String objectAllocated();
 		String classWeave();
 		String fieldRead();
@@ -223,7 +224,7 @@ public class LogPanel extends Composite implements LogListener, ClassListHandler
 			}
 			
 			if (inMain || showAll) {
-				LogRecordWidget w = new LogRecordWidget(r);
+				LogRecordWidget w = new LogRecordWidget(r, style);
 				w.setIndent(indent);
 				w.init(style, cr, mr, objects, threads.get(r.thread));
 				content.add(w);

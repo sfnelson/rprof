@@ -9,7 +9,6 @@ import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodData;
 import nz.ac.vuw.ecs.rprofs.client.events.ClassListHandler;
-import nz.ac.vuw.ecs.rprofs.client.history.HistoryManager;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
@@ -85,7 +84,7 @@ public class LogPanel extends Composite implements LogListener, ClassListHandler
 		initWidget(uiBinder.createAndBindUi(this));
 
 		server = Inspector.getInstance();
-		server.addClassListHandler(this);
+		//server.addClassListHandler(this);
 		button = new Button("Events");
 
 		filters.add(new Filter("Allocate", style.objectAllocated()));
@@ -262,7 +261,7 @@ public class LogPanel extends Composite implements LogListener, ClassListHandler
 
 		if (classes.isEmpty()) {
 			pending = true;
-			server.getClasses(HistoryManager.getInstance().getHistory().run);
+			//server.getClasses(HistoryManager.getInstance().getHistory().run);
 		}
 		else {
 			int cnum = 0;
@@ -276,7 +275,7 @@ public class LogPanel extends Composite implements LogListener, ClassListHandler
 			}
 			ClassData cls = new ClassData();
 			cls.id = cnum;
-			server.getLogs(HistoryManager.getInstance().getHistory().run, LogData.ALL, cls, this);
+			//server.getLogs(HistoryManager.getInstance().getHistory().run, LogData.ALL, cls, this);
 			this.cls = cls;
 		}
 	}

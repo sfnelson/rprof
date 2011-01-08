@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -18,42 +17,43 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 
 	protected final MethodRecord record;
-	
+
 	protected int maxStack = 0;
 	protected int maxLocals = 0;
 
 	public MethodWeaver(MethodVisitor mv, MethodRecord mr) {
-		super(mv, mr.getAccess(), mr.getName(), mr.getDescription());
+		super(mv, mr.access, mr.name, mr.description);
 		this.record = mr;
 	}
-	
+
 	protected void setStack(int stack) {
 		maxStack = Math.max(maxStack, stack);
 	}
-	
+
 	protected void setLocals(int locals) {
 		maxLocals = Math.max(maxLocals, locals);
 	}
-	
+
+	@Override
 	public void visitMaxs(int stack, int locals) {
 		setStack(stack);
 		setLocals(locals);
 		super.visitMaxs(maxStack, maxLocals);
 	}
-	
+
 	protected void visitTrackerMethod(Method m) {
 		visitMethodInsn(INVOKESTATIC, Tracker.getName(), m.getName(), Type.getMethodDescriptor(m));
 	}
-	
+
 	protected List<Integer> getArgs() {
-		List<Integer> useful = new ArrayList<Integer>(); 
+		List<Integer> useful = new ArrayList<Integer>();
 		int argIndex = 0;
 
 		// mark 'this'
 		useful.add(0);
 		argIndex++;
 
-		String desc = record.getDescription();
+		String desc = record.description;
 		outer:
 			for (int i = 0; i < desc.length(); i++) {
 				switch(desc.charAt(i)) {
@@ -82,7 +82,7 @@ public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 
 		return useful;
 	}
-	
+
 	protected static class Tracker {
 		public static final Class<HeapTracker> cls = HeapTracker.class;
 		public static final Method enter = getTrackerMethod("enter");

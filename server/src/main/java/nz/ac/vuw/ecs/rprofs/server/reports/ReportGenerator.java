@@ -12,9 +12,9 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Entry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.State;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
-import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.RunRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DatasetId;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -47,7 +47,7 @@ public abstract class ReportGenerator {
 		return reportList;
 	}
 
-	public static ReportGenerator create(Report report, Database db, Context run) {
+	public static ReportGenerator create(Report report, Dataset db, Context run) {
 		if (reports.containsKey(report)) {
 			return reports.get(report).createGenerator(db, run);
 		}
@@ -57,9 +57,9 @@ public abstract class ReportGenerator {
 	private final Context context;
 	private final Status status;
 	
-	private Database database;
+	private Dataset database;
 	
-	protected ReportGenerator(Context context, Database database) {
+	protected ReportGenerator(Context context, Dataset database) {
 		this.context = context;
 		this.database = database;
 		this.status = new Status();
@@ -102,7 +102,7 @@ public abstract class ReportGenerator {
 	public abstract ArrayList<? extends Entry> getReportData(Entry parent);
 	protected abstract void run() throws DatabaseNotAvailableException;
 	
-	protected Database getDB() throws DatabaseNotAvailableException {
+	protected Dataset getDB() throws DatabaseNotAvailableException {
 		if (database == null) throw new DatabaseNotAvailableException();
 		return database;
 	}
@@ -111,7 +111,7 @@ public abstract class ReportGenerator {
 		return context;
 	}
 	
-	protected RunRecord getRun() {
+	protected DatasetId getRun() {
 		return context.getRun();
 	}
 	

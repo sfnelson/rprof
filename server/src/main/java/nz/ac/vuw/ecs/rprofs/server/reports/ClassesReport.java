@@ -6,8 +6,8 @@ package nz.ac.vuw.ecs.rprofs.server.reports;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.ClassEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.InstanceEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -62,28 +62,28 @@ public class ClassesReport<Target, Child extends ClassesReport<?, ?>> extends Ab
 		}
 	}
 
-	public static ClassReport create(ClassRecord target) {
+	public static ClassReport create(Class target) {
 		ClassReport report = new ClassReport();
 		report.setTarget(target);
 		return report;
 	}
 	
-	public static class ClassReport extends ClassesReport<ClassRecord, MethodReport> {
+	public static class ClassReport extends ClassesReport<Class, MethodReport> {
 		public ClassEntry toEntry() {
-			ClassesReport<ClassRecord, MethodReport> rpc = toRPC();
+			ClassesReport<Class, MethodReport> rpc = toRPC();
 			return new ClassEntry(getTarget().toRPC(), rpc.methods, rpc.getValues());
 		}
 	}
 	
-	public static MethodReport create(MethodRecord target) {
+	public static MethodReport create(Method target) {
 		MethodReport report = new MethodReport();
 		report.setTarget(target);
 		return report;
 	}
 	
-	public static class MethodReport extends ClassesReport<MethodRecord, ClassesReport<?, ?>> {
+	public static class MethodReport extends ClassesReport<Method, ClassesReport<?, ?>> {
 		public InstanceEntry toEntry() {
-			ClassesReport<MethodRecord, ClassesReport<?, ?>> rpc = toRPC();
+			ClassesReport<Method, ClassesReport<?, ?>> rpc = toRPC();
 			return new InstanceEntry(getTarget().toMethodString(), rpc.getValues());
 		}
 	}

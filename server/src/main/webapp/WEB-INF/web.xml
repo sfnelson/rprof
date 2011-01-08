@@ -8,12 +8,7 @@
   <!-- Servlets -->
   <servlet>
     <servlet-name>weaver</servlet-name>
-    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Weaver</servlet-class>
-  </servlet>
-  
-  <servlet>
-    <servlet-name>inspector</servlet-name>
-    <servlet-class>nz.ac.vuw.ecs.rprofs.server.InspectorServiceImpl</servlet-class>
+    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Weave</servlet-class>
   </servlet>
   
   <servlet>
@@ -29,6 +24,11 @@
   <servlet>
     <servlet-name>stop</servlet-name>
     <servlet-class>nz.ac.vuw.ecs.rprofs.server.Stop</servlet-class>
+  </servlet>
+  
+  <servlet>
+    <servlet-name>requestFactoryServlet</servlet-name>
+    <servlet-class>com.google.gwt.requestfactory.server.RequestFactoryServlet</servlet-class>
   </servlet>
     
   <servlet-mapping>
@@ -59,6 +59,11 @@
   <servlet-mapping>
     <servlet-name>stop</servlet-name>
     <url-pattern>/stop</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>requestFactoryServlet</servlet-name>
+    <url-pattern>/gwtRequest</url-pattern>
   </servlet-mapping>
   
   <!-- Default page to serve -->

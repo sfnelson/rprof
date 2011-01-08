@@ -12,7 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 @SuppressWarnings("serial")
 public class Logger extends HttpServlet {
@@ -23,13 +24,16 @@ public class Logger extends HttpServlet {
 
 		int length = req.getContentLength();
 
-		List<LogRecord> records = parse(length, req.getInputStream());
-		Context.getCurrent().storeLogs(records);
+		ActiveContext context = Context.getCurrent();
+
+		List<Event> records = parse(context, length, req.getInputStream());
+		context.storeLogs(records);
 
 		resp.setStatus(201);
 	}
 
-	private static List<LogRecord> parse(int length, InputStream in) throws IOException {
+	private static List<Event> parse(ActiveContext context, int length, InputStream in)
+	throws IOException {
 		DataInputStream dis = new DataInputStream(in);
 
 		//		#define MAX_PARAMETERS 16
@@ -44,7 +48,7 @@ public class Logger extends HttpServlet {
 		final int MAX_PARAMETERS = 16;
 		final int RECORD_LENGTH = 8 + 4 + 4 + 4 + 4 + MAX_PARAMETERS * 8;
 
-		List<LogRecord> records = new ArrayList<LogRecord>();
+		List<Event> records = new ArrayList<Event>();
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long thread = dis.readLong();
 			int event = dis.readInt();
@@ -65,13 +69,7 @@ public class Logger extends HttpServlet {
 				}
 			}
 
-			LogRecord record = new LogRecord();
-			record.thread = thread;
-			record.event = event;
-			record.cnum = cnum;
-			record.mnum = mnum;
-			record.args = args;
-			records.add(record);
+			records.add(context.createEvent(thread, event, cnum, mnum, args));
 		}
 
 		return records;

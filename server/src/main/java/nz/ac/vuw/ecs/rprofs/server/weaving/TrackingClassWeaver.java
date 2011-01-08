@@ -4,9 +4,6 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-import nz.ac.vuw.ecs.rprofs.server.data.ActiveContext;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
 
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
@@ -18,20 +15,18 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 public class TrackingClassWeaver extends ClassAdapter {
 
-	private final ActiveContext context;
 	private final ClassRecord record;
 
-	public TrackingClassWeaver(ActiveContext context, ClassVisitor cv, ClassRecord record) {
+	public TrackingClassWeaver(ClassVisitor cv, ClassRecord record) {
 		super(cv);
 
-		this.context = context;
 		this.record = record;
 	}
 
 	@Override
 	public void visit(int version, int access, String name,
 			String signature, String superName, String[] interfaces) {
-		context.initClassRecord(record, version, access, name, signature, superName, interfaces);
+		record.init(version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
@@ -39,8 +34,8 @@ public class TrackingClassWeaver extends ClassAdapter {
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		MethodRecord mr = context.createMethodRecord(record);
-		context.initMethodRecord(mr, access, name, desc, signature, exceptions);
+		MethodRecord mr = record.weaver.createMethodRecord(name);
+		mr.init(access, desc, signature, exceptions);
 
 		if (name.equals("_getTracker")) {
 			mv = new GetTrackerGenerator(mv, mr);
@@ -55,7 +50,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 	public FieldVisitor visitField(int access, String name, String desc,
 			String signature, Object value) {
 		if (name.equals("cnum")) {
-			return super.visitField(access, name, desc, signature, new Integer(record.getId()));
+			return super.visitField(access, name, desc, signature, new Integer(record.id));
 		}
 		else {
 			return super.visitField(access, name, desc, signature, value);
@@ -65,7 +60,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 	private static class GetTrackerGenerator extends GeneratorAdapter implements Opcodes {
 
 		public GetTrackerGenerator(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr.getAccess(), mr.getName(), mr.getDescription());
+			super(mv, mr.access, mr.name, mr.description);
 		}
 
 		@Override
@@ -98,7 +93,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 	private static class SetTrackerGenerator extends GeneratorAdapter implements Opcodes {
 
 		public SetTrackerGenerator(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr.getAccess(), mr.getName(), mr.getDescription());
+			super(mv, mr.access, mr.name, mr.description);
 		}
 
 		@Override

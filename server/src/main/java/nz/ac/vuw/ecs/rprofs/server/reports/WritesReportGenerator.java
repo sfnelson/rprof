@@ -14,11 +14,11 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.Entry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.InstanceEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
-import nz.ac.vuw.ecs.rprofs.server.Database;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.reports.WritesReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.WritesReport.InstanceReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.WritesReport.PackageReport;
@@ -29,7 +29,7 @@ import nz.ac.vuw.ecs.rprofs.server.reports.WritesReport.PackageReport;
  */
 public class WritesReportGenerator extends ReportGenerator implements Report.EntryVisitor<ArrayList<? extends Report.Entry>> {
 
-	protected WritesReportGenerator(Context run, Database database) {
+	protected WritesReportGenerator(Context run, Dataset database) {
 		super(run, database);
 	}
 
@@ -37,14 +37,14 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 	private final Map<Integer, ClassReport> classes = Collections.newMap();
 	private final Map<Long, InstanceReport> instances = Collections.newMap();
 
-	private final Map<Integer, ClassRecord> classMap = Collections.newMap();
+	private final Map<Integer, Class> classMap = Collections.newMap();
 
-	private MethodRecord getMethodRecord(int cnum, int mnum) {
-		ClassRecord cr = classMap.get(cnum);
+	private Method getMethodRecord(int cnum, int mnum) {
+		Class cr = classMap.get(cnum);
 		if (cr == null) {
 			return null;
 		}
-		List<? extends MethodRecord> methods = cr.getMethods();
+		List<? extends Method> methods = cr.getMethods();
 		if (mnum - 1 < methods.size() && mnum - 1 >= 0) {
 			return methods.get(mnum - 1);
 		}
@@ -66,7 +66,7 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 		status.progress = 0;
 		status.stage = "Processing classes (1/3)";
 		status.limit = getContext().getClasses().size();
-		for (ClassRecord cr: getContext().getClasses()) {
+		for (Class cr: getContext().getClasses()) {
 			PackageReport pkg = packages.get(cr.getPackage());
 			if (pkg == null) {
 				pkg = WritesReport.create(cr.getPackage());
@@ -76,16 +76,16 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 			ClassReport cls = WritesReport.create(cr);
 			cls.classes = 1;
 			pkg.addChild(cls);
-			classes.put(cr.getId(), cls);
-			classMap.put(cr.getId(), cr);
+			classes.put(cr.getClassId(), cls);
+			classMap.put(cr.getClassId(), cr);
 
 			status.progress++;
 		}
 
 		status.progress = 0;
 		status.stage = "Processing allocations (2/3)";
-		status.limit = getDB().getNumLogs(LogRecord.ALLOCATION);
-		for (LogRecord lr: getDB().getLogs(0, status.limit, LogRecord.ALLOCATION)) {
+		status.limit = getDB().getNumLogs(Event.ALLOCATION);
+		for (Event lr: getDB().getLogs(0, status.limit, Event.ALLOCATION)) {
 			long id = lr.getArguments()[0];
 			if (!instances.containsKey(id)) {
 				InstanceReport ir = WritesReport.create(id);
@@ -101,32 +101,32 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 
 		status.progress = 0;
 		status.stage = "Processing events (3/3)";
-		status.limit = getDB().getNumLogs(LogRecord.METHODS | LogRecord.FIELDS);
-		for (LogRecord lr: getDB().getLogs(0, status.limit, LogRecord.METHODS | LogRecord.FIELDS)) {
+		status.limit = getDB().getNumLogs(Event.METHODS | Event.FIELDS);
+		for (Event lr: getDB().getLogs(0, status.limit, Event.METHODS | Event.FIELDS)) {
 			if (lr.getArguments().length > 0) {
 				InstanceReport ir = instances.get(lr.getArguments()[0]);
-				MethodRecord mr = getMethodRecord(lr.getClassNumber(), lr.getMethodNumber());
+				Method mr = getMethodRecord(lr.getClassNumber(), lr.getMethodNumber());
 				if (ir != null) {
 					switch (lr.getEvent()) {
-					case LogRecord.METHOD_ENTER:
+					case Event.METHOD_ENTER:
 						if (mr != null && (mr.isEquals() || mr.isHashCode())) {
 							ir.equalsCalled = true;
 						}
-					case LogRecord.METHOD_EXCEPTION:
-					case LogRecord.METHOD_RETURN:
+					case Event.METHOD_EXCEPTION:
+					case Event.METHOD_RETURN:
 						if (mr != null && mr.isInit()) {
 							ir.constructor = 0;
 							ir.read = 0;
 							ir.fieldRead = false;
 						}
 						break;
-					case LogRecord.FIELD_WRITE:
+					case Event.FIELD_WRITE:
 						ir.writes++;
 						ir.constructor++;
 						if (ir.fieldRead) ir.read++;
 						if (ir.equalsCalled) ir.equals++;
 						break;
-					case LogRecord.FIELD_READ:
+					case Event.FIELD_READ:
 						ir.fieldRead = true;
 						break;
 					}
@@ -210,7 +210,7 @@ public class WritesReportGenerator extends ReportGenerator implements Report.Ent
 		}
 
 		@Override
-		public ReportGenerator createGenerator(Database db, Context run) {
+		public ReportGenerator createGenerator(Dataset db, Context run) {
 			return new WritesReportGenerator(run, db);
 		}
 	};

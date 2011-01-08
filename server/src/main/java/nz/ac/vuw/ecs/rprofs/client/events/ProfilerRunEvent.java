@@ -3,10 +3,9 @@
  */
 package nz.ac.vuw.ecs.rprofs.client.events;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.client.data.RunData;
+import nz.ac.vuw.ecs.rprofs.client.requests.DatasetProxy;
 
 import com.google.gwt.event.shared.GwtEvent;
 
@@ -17,13 +16,13 @@ import com.google.gwt.event.shared.GwtEvent;
 public class ProfilerRunEvent extends GwtEvent<ProfilerRunHandler> {
 
 	private static final Type<ProfilerRunHandler> TYPE = new Type<ProfilerRunHandler>();
-	
-	private final List<RunData> runs;
-	
-	public ProfilerRunEvent(ArrayList<RunData> runs) {
+
+	private final List<DatasetProxy> runs;
+
+	public ProfilerRunEvent(List<DatasetProxy> runs) {
 		this.runs = runs;
 	}
-	
+
 	@Override
 	protected void dispatch(ProfilerRunHandler handler) {
 		handler.profilerRunsAvailable(runs);
@@ -33,7 +32,7 @@ public class ProfilerRunEvent extends GwtEvent<ProfilerRunHandler> {
 	public com.google.gwt.event.shared.GwtEvent.Type<ProfilerRunHandler> getAssociatedType() {
 		return TYPE;
 	}
-	
+
 	public static Type<ProfilerRunHandler> getType() {
 		return TYPE;
 	}

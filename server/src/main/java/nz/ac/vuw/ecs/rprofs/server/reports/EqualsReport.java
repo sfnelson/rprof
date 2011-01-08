@@ -9,8 +9,8 @@ import nz.ac.vuw.ecs.rprofs.client.Collections;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.ClassEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.InstanceEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -62,30 +62,30 @@ public class EqualsReport<Target, Child extends EqualsReport<?, ?>> extends Abst
 		}
 	}
 
-	public static ClassReport create(ClassRecord target) {
+	public static ClassReport create(Class target) {
 		ClassReport report = new ClassReport();
 		report.setTarget(target);
 		return report;
 	}
 
-	public static class ClassReport extends EqualsReport<ClassRecord, FieldReport> {
-		Map<FieldRecord, FieldReport> fields = Collections.newMap();
+	public static class ClassReport extends EqualsReport<Class, FieldReport> {
+		Map<Field, FieldReport> fields = Collections.newMap();
 		
 		public ClassEntry toEntry() {
-			EqualsReport<ClassRecord, FieldReport> rpc = toRPC();
+			EqualsReport<Class, FieldReport> rpc = toRPC();
 			return new ClassEntry(getTarget().toRPC(), rpc.fields, rpc.getValues());
 		}
 	}
 
-	public static FieldReport create(FieldRecord target) {
+	public static FieldReport create(Field target) {
 		FieldReport report = new FieldReport();
 		report.setTarget(target);
 		return report;
 	}
 
-	public static class FieldReport extends EqualsReport<FieldRecord, EqualsReport<?, ?>> {
+	public static class FieldReport extends EqualsReport<Field, EqualsReport<?, ?>> {
 		public InstanceEntry toEntry() {
-			EqualsReport<FieldRecord, EqualsReport<?, ?>> rpc = toRPC();
+			EqualsReport<Field, EqualsReport<?, ?>> rpc = toRPC();
 			return new InstanceEntry(getTarget().toString(), rpc.getValues());
 		}
 	}

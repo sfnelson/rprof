@@ -5,9 +5,6 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import java.util.Collection;
 
-import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
-
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -23,10 +20,10 @@ public class CLInitMethodWeaver extends MethodWeaver {
 
 	@Override
 	public void visitCode() {
-		visitLdcInsn(Type.getType("L" + record.parent.getName() + ";"));
-		push(record.parent.getId());			// stack: cls, cid
+		visitLdcInsn(Type.getType("L" + record.parent.name + ";"));
+		push(record.parent.id);			// stack: cls, cid
 
-		Collection<FieldRecord> watches = record.parent.getWatches();
+		Collection<FieldRecord> watches = record.parent.watches;
 		if (watches.isEmpty()) {
 			visitInsn(ACONST_NULL);				// stack: cls, cid, null
 			setStack(3);

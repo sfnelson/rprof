@@ -1,0 +1,166 @@
+/**
+ * 
+ */
+package nz.ac.vuw.ecs.rprofs.server.domain;
+
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.Version;
+
+import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.server.domain.Attribute.AttributeVisitor;
+
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+
+/**
+ * @author Stephen Nelson (stephen@sfnelson.org)
+ *
+ */
+@Entity
+@Table( name = "classes" )
+public class Class implements IsSerializable {
+
+	public static final int CLASS_VERSION_UPDATED = 0x1;
+	public static final int CLASS_IGNORED_PACKAGE_FILTER = 0x2;
+	public static final int SPECIAL_CLASS_WEAVER = 0x4;
+
+	@Transient
+	private ClassId id;
+
+	@Id int index;
+
+	private String name;
+
+	protected Integer properties;
+
+	@ManyToOne
+	protected Class parent;
+
+	@OneToMany(mappedBy="owner", cascade=CascadeType.ALL)
+	@OrderColumn(name="index")
+	protected List<Method> methods;
+
+	@OneToMany(mappedBy="owner", cascade=CascadeType.ALL)
+	@OrderColumn(name="index")
+	protected List<Field> fields;
+
+	@Transient
+	private AttributeVisitor attributeStorer;
+
+	@Version
+	private int version;
+
+	protected Class() {}
+
+	public Class(ClassId id, Class parent, int properties) {
+		this.id = id;
+		this.index = id.index;
+		this.name = id.name;
+		this.parent = parent;
+		this.properties = properties;
+		this.methods = Collections.newList();
+		this.fields = Collections.newList();
+	}
+
+	public Class(ClassId id, Class parent, int properties, Iterable<? extends Attribute> attributes) {
+		this(id, parent, properties);
+
+		for (Attribute a : attributes) {
+			addAttribute(a);
+		}
+	}
+
+	public long getId() {
+		return index;
+	}
+
+	public int getVersion() {
+		return version;
+	}
+
+	public ClassId getClassId() {
+		if (id == null) {
+			id = new ClassId(index, name);
+		}
+		return id;
+	}
+
+	public void setParent(Class parent) {
+		this.parent = parent;
+	}
+
+	public Class getParent() {
+		return parent;
+	}
+
+	public ClassId getParentId() {
+		return parent.getClassId();
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getProperties() {
+		return properties;
+	}
+
+	public String getPackage() {
+		int last = getName().lastIndexOf('/');
+		if (last < 0) last = 0;
+		return getName().replace('/', '.').substring(0, last);
+	}
+
+	public String getClassName() {
+		int last = getName().lastIndexOf('/');
+		return getName().substring(last + 1);
+	}
+
+	public List<? extends Attribute> getAttributes() {
+		List<Attribute> attributes = Collections.newList();
+		attributes.addAll(methods);
+		attributes.addAll(fields);
+		return attributes;
+	}
+
+	public List<AttributeId> getAttributeIds() {
+		List<AttributeId> ids = Collections.newList();
+		for (Attribute a: getAttributes()) {
+			ids.add(a.getId());
+		}
+		return ids;
+	}
+
+	public void addAttribute(Attribute a) {
+		if (a.getOwner() != this) throw new RuntimeException("trying to store unmatched attribute");
+		if (attributeStorer == null) {
+			attributeStorer = new AttributeVisitor() {
+				public void visitMethod(Method method) {
+					methods.add(method);
+				}
+				public void visitField(Field field) {
+					fields.add(field);
+				}
+			};
+		}
+
+		a.visit(attributeStorer);
+	}
+
+	public List<? extends Field> getFields() {
+		return fields;
+	}
+
+	public List<? extends Method> getMethods() {
+		return methods;
+	}
+}

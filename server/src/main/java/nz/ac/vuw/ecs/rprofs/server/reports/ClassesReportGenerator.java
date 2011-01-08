@@ -14,10 +14,10 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.EntryVisitor;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.InstanceEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
-import nz.ac.vuw.ecs.rprofs.server.Database;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassesReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassesReport.MethodReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassesReport.PackageReport;
@@ -28,7 +28,7 @@ import nz.ac.vuw.ecs.rprofs.server.reports.ClassesReport.PackageReport;
  */
 public class ClassesReportGenerator extends ReportGenerator implements EntryVisitor<ArrayList<? extends Report.Entry>> {
 
-	public ClassesReportGenerator(Context run, Database db) {
+	public ClassesReportGenerator(Context run, Dataset db) {
 		super(run, db);
 	}
 
@@ -96,7 +96,7 @@ public class ClassesReportGenerator extends ReportGenerator implements EntryVisi
 		status.limit = getContext().getClasses().size();
 		status.progress = 0;
 		status.stage = "Processing Class Records";
-		for (ClassRecord cr: getContext().getClasses()) {
+		for (Class cr: getContext().getClasses()) {
 			PackageReport pkg = packages.get(cr.getPackage());
 
 			if (pkg == null) {
@@ -110,9 +110,9 @@ public class ClassesReportGenerator extends ReportGenerator implements EntryVisi
 			cls.flags = cr.getFlags();
 			pkg.addChild(cls);
 
-			classes.put(cr.getId(), cls);
+			classes.put(cr.getClassId(), cls);
 
-			for (MethodRecord mr: cr.getMethods()) {
+			for (Method mr: cr.getMethods()) {
 				MethodReport method = ClassesReport.create(mr);
 				method.classes = 0;
 				method.methods = 1;
@@ -155,7 +155,7 @@ public class ClassesReportGenerator extends ReportGenerator implements EntryVisi
 		}
 
 		@Override
-		public ReportGenerator createGenerator(Database db, Context run) {
+		public ReportGenerator createGenerator(Dataset db, Context run) {
 			return new ClassesReportGenerator(run, db);
 		}
 

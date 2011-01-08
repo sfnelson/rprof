@@ -3,10 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ActiveContext;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
-
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
@@ -16,14 +12,8 @@ import org.objectweb.asm.MethodVisitor;
  */
 public class ObjectClassWeaver extends GenericClassWeaver {
 
-	private final ActiveContext context;
-	private final ClassRecord cr;
-
-	public ObjectClassWeaver(ActiveContext context, ClassVisitor cv, ClassRecord cr) {
-		super(context, cv, cr);
-
-		this.context = context;
-		this.cr = cr;
+	public ObjectClassWeaver(ClassVisitor cv, ClassRecord cr) {
+		super(cv, cr);
 	}
 
 	@Override
@@ -36,8 +26,8 @@ public class ObjectClassWeaver extends GenericClassWeaver {
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethodRaw(access, name, desc, signature, exceptions);
-		MethodRecord mr = context.createMethodRecord(cr);
-		context.initMethodRecord(mr, access, name, desc, signature, exceptions);
+		MethodRecord mr = cr.weaver.createMethodRecord(name);
+		mr.init(access, desc, signature, exceptions);
 
 		// check for <init>(..)
 		if (mr.isInit()) {

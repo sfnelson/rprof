@@ -2,9 +2,9 @@ package nz.ac.vuw.ecs.rprofs.client;
 
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.client.data.RunData;
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
+import nz.ac.vuw.ecs.rprofs.client.data.RunData;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.NativeEvent;
@@ -37,7 +37,7 @@ public class ReportPanel extends Composite implements ReportListener<Entry>, Mou
 
 	private final RunData run;
 	private final Report report;
-	
+
 	private int numEntries;
 
 	@UiField Style style;
@@ -50,28 +50,28 @@ public class ReportPanel extends Composite implements ReportListener<Entry>, Mou
 		this.run = run;
 		this.report = report;
 		initWidget(uiBinder.createAndBindUi(this));
-		
+
 		Anchor refresh = new Anchor("&#x021BB;", true);
 		refresh.setStyleName(style.refresh());
 		this.heading.entries.add(refresh);
 		refresh.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				Inspector.getInstance().generateReport(run, report, ReportPanel.this);
+				//Inspector.getInstance().generateReport(run, report, ReportPanel.this);
 				refresh();
 			}
 		});
-		
+
 		refresh();
-		
+
 		addDomHandler(this, MouseDownEvent.getType());
 	}
 
 	public void refresh() {
 		container.clear();
-		Inspector.getInstance().getReportStatus(run, report, this);
+		//Inspector.getInstance().getReportStatus(run, report, this);
 	}
-	
+
 	@Override
 	public void onMouseDown(MouseDownEvent event) {
 		if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
@@ -87,7 +87,7 @@ public class ReportPanel extends Composite implements ReportListener<Entry>, Mou
 		}
 		else {
 			if (!entry.isPopulated()) {
-				Inspector.getInstance().getReportData(run, report, entry.getTarget(), entry, this);
+				//Inspector.getInstance().getReportData(run, report, entry.getTarget(), entry, this);
 			}
 			entry.open();
 		}
@@ -96,16 +96,16 @@ public class ReportPanel extends Composite implements ReportListener<Entry>, Mou
 	@Override
 	public void statusUpdate(Status status) {
 		progress.update(status);
-		
+
 		switch (status.state) {
 		case UNINITIALIZED:
-			Inspector.getInstance().generateReport(run, report, this);
+			//Inspector.getInstance().generateReport(run, report, this);
 			break;
 		case GENERATING:
 			timer.schedule(500);
 			break;
 		case READY:
-			Inspector.getInstance().getReportData(run, report, null, null, this);
+			//Inspector.getInstance().getReportData(run, report, null, null, this);
 			break;
 		}
 	}
@@ -125,7 +125,7 @@ public class ReportPanel extends Composite implements ReportListener<Entry>, Mou
 	public void handleData(final Report.Entry key, final Entry target, final int offset, final int limit,
 			int available, List<? extends Report.Entry> result, final ReportCallback<Entry> callback) {
 		if (!isAttached() && isOrWasAttached()) return;
-		
+
 		HasEntries container;
 		if (target == null) {
 			container = this;
@@ -139,9 +139,10 @@ public class ReportPanel extends Composite implements ReportListener<Entry>, Mou
 			e.addClickHandler(this);
 			container.add(e);
 		}
-		
+
 		if (offset + limit < available) {
 			new Timer() {
+				@Override
 				public void run() {
 					callback.getData(key, target, offset + limit, limit);
 				}
@@ -157,15 +158,16 @@ public class ReportPanel extends Composite implements ReportListener<Entry>, Mou
 			entry.addStyleName(style.even());
 		}
 	}
-	
+
 	@UiFactory
 	Entry createHeading() {
 		return new Entry(report);
 	}
-	
+
 	private Timer timer = new Timer() {
+		@Override
 		public void run() {
-			Inspector.getInstance().getReportStatus(run, report, ReportPanel.this);
+			//Inspector.getInstance().getReportStatus(run, report, ReportPanel.this);
 		}
 	};
 }

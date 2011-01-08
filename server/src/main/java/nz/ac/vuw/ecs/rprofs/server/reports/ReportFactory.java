@@ -4,8 +4,8 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import nz.ac.vuw.ecs.rprofs.client.data.Report;
-import nz.ac.vuw.ecs.rprofs.server.Database;
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -14,6 +14,6 @@ import nz.ac.vuw.ecs.rprofs.server.data.Context;
 public interface ReportFactory {
 
 	public Report getReport();
-	public ReportGenerator createGenerator(Database db, Context context);
+	public ReportGenerator createGenerator(Dataset db, Context context);
 	
 }

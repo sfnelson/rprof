@@ -3,8 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
-
 import org.objectweb.asm.MethodVisitor;
 
 class MainMethodWeaver extends ExceptionHandlingMethodWeaver {
@@ -17,8 +15,8 @@ class MainMethodWeaver extends ExceptionHandlingMethodWeaver {
 	public void visitCode() {
 		super.visitCode();
 
-		push(record.parent.getId());
-		push(record.getId());
+		push(record.parent.id);
+		push(record.id);
 		visitTrackerMethod(Tracker.main);
 		setStack(2);
 	}
@@ -34,8 +32,8 @@ class MainMethodWeaver extends ExceptionHandlingMethodWeaver {
 		case ARETURN:
 			setStack(4);
 		case RETURN:
-			push(record.getParent().getId());
-			push(record.getId());
+			push(record.parent.id);
+			push(record.id);
 			visitInsn(ACONST_NULL);
 			visitTrackerMethod(Tracker.exit);
 			setStack(3);

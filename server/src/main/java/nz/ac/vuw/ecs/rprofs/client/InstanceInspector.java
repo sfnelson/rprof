@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
-import nz.ac.vuw.ecs.rprofs.client.data.FieldData;
 import nz.ac.vuw.ecs.rprofs.client.data.ExtendedInstanceData;
+import nz.ac.vuw.ecs.rprofs.client.data.FieldData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.events.InstanceEvent;
 import nz.ac.vuw.ecs.rprofs.client.events.InstanceHandler;
@@ -35,40 +35,41 @@ import com.google.gwt.user.client.ui.Widget;
 public class InstanceInspector extends Composite implements ValueChangeHandler<History>, InstanceHandler {
 
 	private static InstanceInspectorUiBinder uiBinder = GWT
-			.create(InstanceInspectorUiBinder.class);
+	.create(InstanceInspectorUiBinder.class);
 
 	interface InstanceInspectorUiBinder extends
-			UiBinder<Widget, InstanceInspector> {
+	UiBinder<Widget, InstanceInspector> {
 	}
 
 	private FrameLayout parent;
-	
+
 	@UiField UIButton close;
 	@UiField HTML title;
 	@UiField HTML content;
-	
+
 	public InstanceInspector(FrameLayout parent) {
 		this.parent = parent;
-		
+
 		initWidget(uiBinder.createAndBindUi(this));
-		
+
 		HistoryManager.getInstance().addValueChangeHandler(this);
-		Inspector.getInstance().addInstanceHandler(this);
+		//Inspector.getInstance().addInstanceHandler(this);
 	}
 
 	@Override
 	public void onValueChange(ValueChangeEvent<History> event) {
 		History history = event.getValue();
-		
+
 		if (history.id != null && history.run != null) {
 			parent.showBottom(true);
-			Inspector.getInstance().getInstanceInformation(history.run, history.id);
+			//Inspector.getInstance().getInstanceInformation(history.run, history.id);
+			//TODO this
 		}
 		else {
 			parent.showBottom(false);
 		}
 	}
-	
+
 	@UiHandler("close")
 	public void onClickClose(ClickEvent event) {
 		HistoryManager m = HistoryManager.getInstance();
@@ -80,13 +81,13 @@ public class InstanceInspector extends Composite implements ValueChangeHandler<H
 	@Override
 	public void onInstanceEvent(InstanceEvent event) {
 		ExtendedInstanceData info = event.getValue();
-		
+
 		if (info == null) {
 			ErrorPanel.showMessage("unable to retrieve the requested object id", new Exception("instance info was null"));
 			parent.showBottom(false);
 			return;
 		}
-		
+
 		StringBuilder title = new StringBuilder();
 		title.append(info.getType().name);
 		title.append(": ");
@@ -99,14 +100,14 @@ public class InstanceInspector extends Composite implements ValueChangeHandler<H
 			title.append(" &rarr; ");
 			title.append(c.name);
 		}
-		
+
 		this.title.setHTML(title.toString());
-		
+
 		String content = "";
-		
+
 		HashMap<Integer, HashMap<Integer, FieldStats>> stats = Collections.newMap();
 		ArrayList<FieldStats> statList = Collections.newList();
-		
+
 		for (ClassData c = info.getType(); c != null; c = c.parent) {
 			HashMap<Integer, FieldStats> map = Collections.newMap();
 			stats.put(c.id, map);
@@ -119,7 +120,7 @@ public class InstanceInspector extends Composite implements ValueChangeHandler<H
 				map.put(f.id, s);
 			}
 		}
-		
+
 		for (LogData lr: info.getEvents()) {
 			switch (lr.event) {
 			case LogData.FIELD_READ:
@@ -134,14 +135,14 @@ public class InstanceInspector extends Composite implements ValueChangeHandler<H
 				break;
 			}
 		}
-		
+
 		for (FieldStats s : statList) {
 			content += s.owner + "." + s.name + ":" + s.type + "\t" + s.reads + "\t" + s.writes + "\n";
 		}
-		
+
 		this.content.setHTML("<pre>" + content + "</pre>");
 	}
-	
+
 	private class FieldStats {
 		String owner;
 		String name;

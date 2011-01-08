@@ -3,37 +3,68 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import javax.persistence.Id;
+import javax.persistence.Version;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-public interface Report<Target, Children> {
-	public Target getTarget();
-	public Iterable<Children> getChildren();
-}
+public class Report {
 
-abstract class AbstractReport<T, C extends AbstractReport<?, ?>> implements Report<T, C> {
-	
-	private final Set<C> children = Collections.newSet();
-	private T target;
-	
-	public void setTarget(T target) {
-		this.target = target;
+	public static List<Report> findAllReports() {
+		return Arrays.asList(
+				new Report("Classes", "classes", "Classes"),
+				new Report("Instances", "instance", "instances")
+		);
 	}
-	
-	public T getTarget() {
-		return target;
+
+	public Report generateReport() {
+		return this;
 	}
-	
-	public void addChild(C child) {
-		children.add(child);
+
+	public Report updateReport() {
+		return this;
 	}
-	
-	public Iterable<C> getChildren() {
-		return children;
+
+	@Id
+	private String reference;
+
+	private String title;
+
+	private String description;
+
+	@Version
+	private int version;
+
+	public Report() {}
+
+	public Report(String title, String reference, String description) {
+		this.title = title;
+		this.reference = reference;
+		this.description = description;
+	}
+
+	public String getId() {
+		return reference;
+	}
+
+	public String getReference() {
+		return reference;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public int getVersion() {
+		return version;
 	}
 }

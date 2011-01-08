@@ -29,14 +29,15 @@
 			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
 				<property name="databasePlatform" value="nz.ac.vuw.ecs.rprofs.server.db.PostgreSQLDialect" />
 				<property name="generateDdl" value="true" />
-				<property name="showSql" value="true" />
+				<property name="showSql" value="false" />
 			</bean>
 		</property>
 		<property name="dataSource" ref="dataSource" />
-		<property name="jpaPropertyMap">
-			<map>
-				<entry key="hibernate.ejb.naming_strategy" value="nz.ac.vuw.ecs.rprofs.server.db.NamingStrategy" />
-			</map>
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.ejb.naming_strategy">nz.ac.vuw.ecs.rprofs.server.db.NamingStrategy</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
 		</property>
 	</bean>
 
@@ -44,11 +45,11 @@
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
 	</bean>
 
-	<bean id="database" class="nz.ac.vuw.ecs.rprofs.server.Database" />
+	<bean id="database" class="nz.ac.vuw.ecs.rprofs.server.db.Datastore" />
 
 	<aop:config>
 		<aop:pointcut id="dbMethods"
-			expression="execution(* nz.ac.vuw.ecs.rprofs.server.Database.*(..))" />
+			expression="execution(* nz.ac.vuw.ecs.rprofs.server.db.Datastore.*(..))" />
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="dbMethods" />
 	</aop:config>
 
@@ -56,7 +57,7 @@
 		<tx:attributes>
 			<tx:method name="create*" propagation="REQUIRED" />
 			<tx:method name="update*" propagation="REQUIRED" />
-			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="store*" propagation="REQUIRED" />
 			<tx:method name="delete*" propagation="REQUIRED" />
 			<tx:method name="*" propagation="SUPPORTS" read-only="true" />
 		</tx:attributes>

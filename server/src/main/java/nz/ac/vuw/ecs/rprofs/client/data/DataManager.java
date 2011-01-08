@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.Collections;
-import nz.ac.vuw.ecs.rprofs.client.Inspector;
 import nz.ac.vuw.ecs.rprofs.client.events.ClassListHandler;
 
 import com.google.gwt.core.client.GWT;
@@ -21,7 +20,7 @@ public class DataManager implements ClassListHandler {
 
 	private static final DataManager instance = GWT.create(DataManager.class);
 	static {
-		Inspector.getInstance().addClassListHandler(instance);
+		//Inspector.getInstance().addClassListHandler(instance);
 	}
 
 	public static DataManager getInstance() {

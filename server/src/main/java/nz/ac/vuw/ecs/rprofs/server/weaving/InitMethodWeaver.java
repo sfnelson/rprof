@@ -5,8 +5,6 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
-
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -22,8 +20,8 @@ class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 		List<Integer> args = getArgs();
 
-		push(record.parent.getId());									// stack: cnum
-		push(record.getId());											// stack: cnum, mnum
+		push(record.parent.id);									// stack: cnum
+		push(record.id);											// stack: cnum, mnum
 
 		if (args.size() > 1) {
 			push(args.size() - 1);										// stack: cnum, mnum, numArgs
@@ -50,8 +48,8 @@ class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == RETURN) {
-			push(record.parent.getId());								// stack: cnum
-			push(record.getId());										// stack: cnum, mnum
+			push(record.parent.id);										// stack: cnum
+			push(record.id);											// stack: cnum, mnum
 			visitIntInsn(ALOAD, 0);										// stack: cnum, mnum, this
 			visitTrackerMethod(Tracker.exit);
 			setStack(3);

@@ -3,9 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ActiveContext;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
-
 import org.objectweb.asm.ClassVisitor;
 
 /**
@@ -14,10 +11,15 @@ import org.objectweb.asm.ClassVisitor;
  */
 public class ThrowableClassWeaver extends GenericClassWeaver {
 
-	public ThrowableClassWeaver(ActiveContext context, ClassVisitor cv, ClassRecord cr) {
-		super(context, cv, cr);
+	public ThrowableClassWeaver(ClassVisitor cv, ClassRecord cr) {
+		super(cv, cr);
 
-		cr.removeWatch(cr.getField(cr.getName(), "stackTrace", "[Ljava/lang/StackTraceElement;"));
+		for (FieldRecord fr: cr.watches) {
+			if (fr.name.equals("stackTrace")
+					&& fr.description.equals("[Ljava/lang/StackTraceElement;")) {
+				cr.watches.remove(fr);
+				break;
+			}
+		}
 	}
-
 }

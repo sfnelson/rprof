@@ -5,7 +5,7 @@ package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import nz.ac.vuw.ecs.rprofs.client.data.Report.ClassEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -59,15 +59,15 @@ public class ProblemReport<T, C extends ProblemReport<?, ?>> extends AbstractRep
 		}
 	}
 	
-	public static ClassReport create(ClassRecord cr) {
+	public static ClassReport create(Class cr) {
 		ClassReport report = new ClassReport();
 		report.setTarget(cr);
 		return report;
 	}
 	
-	public static class ClassReport extends ProblemReport<ClassRecord, ProblemReport<Void, ?>> {
+	public static class ClassReport extends ProblemReport<Class, ProblemReport<Void, ?>> {
 		public ClassEntry toEntry() {
-			ProblemReport<ClassRecord, ProblemReport<Void, ?>> rpc = toRPC();
+			ProblemReport<Class, ProblemReport<Void, ?>> rpc = toRPC();
 			return new ClassEntry(getTarget().toRPC(), 0, rpc.getValues());
 		}
 	}

@@ -1,0 +1,11 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client.views.impl">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.views.impl.ReportWidget.Style">
+	</ui:style>
+	<g:FlowPanel>
+		<g:Label ui:field="name" />
+		<g:FlowPanel ui:field="children" />
+	</g:FlowPanel>
+</ui:UiBinder> 

@@ -14,12 +14,12 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.Entry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.InstanceEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
-import nz.ac.vuw.ecs.rprofs.server.Database;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Field;
+import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.reports.EqualsReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.EqualsReport.FieldReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.EqualsReport.PackageReport;
@@ -30,7 +30,7 @@ import nz.ac.vuw.ecs.rprofs.server.reports.EqualsReport.PackageReport;
  */
 public class EqualsReportGenerator extends ReportGenerator implements Report.EntryVisitor<ArrayList<? extends Report.Entry>> {
 
-	protected EqualsReportGenerator(Context run, Database database) {
+	protected EqualsReportGenerator(Context run, Dataset database) {
 		super(run, database);
 	}
 
@@ -84,7 +84,7 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 	private final Map<String, PackageReport> packages = Collections.newMap();
 	private final Map<Integer, ClassReport> classes = Collections.newMap();
 
-	private final Map<Integer, ClassRecord> classMap = Collections.newMap();
+	private final Map<Integer, Class> classMap = Collections.newMap();
 
 	@Override
 	protected void reset() {
@@ -103,7 +103,7 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 		status.limit = getContext().getClasses().size();
 		status.progress = 0;
 		status.stage = "Processing Class Records (1/2)";
-		for (ClassRecord cr: getContext().getClasses()) {
+		for (Class cr: getContext().getClasses()) {
 			PackageReport pkg = packages.get(cr.getPackage());
 
 			if (pkg == null) {
@@ -114,28 +114,28 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 			ClassReport cls = EqualsReport.create(cr);
 			cls.classes = 1;
 
-			classes.put(cr.getId(), cls);
-			classMap.put(cr.getId(), cr);
+			classes.put(cr.getClassId(), cls);
+			classMap.put(cr.getClassId(), cr);
 
 			status.progress++;
 		}
 
-		int flags = LogRecord.METHODS | LogRecord.FIELD_READ;
+		int flags = Event.METHODS | Event.FIELD_READ;
 		status.limit = getDB().getNumLogs(flags);
 		status.progress = 0;
 		status.stage = "Processing Logs (2/2)";
 
-		Map<Long, Stack<MethodRecord>> stacks = Collections.newMap();
-		for (LogRecord lr: getDB().getLogs(0, status.limit, flags)) {
-			Stack<MethodRecord> stack = stacks.get(lr.getThread());
+		Map<Long, Stack<Method>> stacks = Collections.newMap();
+		for (Event lr: getDB().getLogs(0, status.limit, flags)) {
+			Stack<Method> stack = stacks.get(lr.getThread());
 			if (stack == null) {
 				stack = Collections.newStack();
 				stacks.put(lr.getThread(), stack);
 			}
 
-			ClassRecord cr = null;
-			MethodRecord mr = null;
-			FieldRecord fr = null;
+			Class cr = null;
+			Method mr = null;
+			Field fr = null;
 
 			cr = classMap.get(lr.getClassNumber());
 			if (cr != null && lr.getMethodNumber() > 0 && cr.getMethods().size() >= lr.getMethodNumber()) {
@@ -143,21 +143,21 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 			}
 
 			switch (lr.getEvent()) {
-			case LogRecord.METHOD_ENTER:
+			case Event.METHOD_ENTER:
 				if (mr != null && (mr.isEquals() || mr.isHashCode())) {
 					if (lr.getArguments()[0] == 0) {
 						System.out.println("null <this>: ->" + mr); break;
 					}
 					stack.push(mr);
-					this.classes.put(cr.getId(), classes.get(cr.getId()));
+					this.classes.put(cr.getClassId(), classes.get(cr.getClassId()));
 					PackageReport pr = packages.get(cr.getPackage());
-					pr.addChild(classes.get(cr.getId()));
+					pr.addChild(classes.get(cr.getClassId()));
 					this.packages.put(cr.getPackage(), pr);
 				}
 				break;
-			case LogRecord.METHOD_EXCEPTION:
-			case LogRecord.METHOD_RETURN:
-				String type = (lr.getEvent() == LogRecord.METHOD_EXCEPTION) ? "</" : "<-";
+			case Event.METHOD_EXCEPTION:
+			case Event.METHOD_RETURN:
+				String type = (lr.getEvent() == Event.METHOD_EXCEPTION) ? "</" : "<-";
 				if (mr != null && (mr.isEquals() || mr.isHashCode())) {
 					if (lr.getArguments()[0] == 0) {
 						System.out.println("null <this>: " + type + mr); break;
@@ -171,14 +171,14 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 					}
 				}
 				break;
-			case LogRecord.FIELD_READ:
+			case Event.FIELD_READ:
 				if (stack.isEmpty()) break;
 				if (cr != null && lr.getMethodNumber() > 0 && cr.getFields().size() >= lr.getMethodNumber()) {
 					fr = cr.getFields().get(lr.getMethodNumber() - 1);
 				}
 				if (fr != null) {
-					for (MethodRecord m: stack) {
-						ClassReport c = classes.get(m.parent.getId());
+					for (Method m: stack) {
+						ClassReport c = classes.get(m.parent.getClassId());
 						FieldReport f = c.fields.get(fr);
 						if (f == null) {
 							f = EqualsReport.create(fr);
@@ -201,7 +201,7 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 			status.progress++;
 		}
 
-		for (Stack<MethodRecord> stack: stacks.values()) {
+		for (Stack<Method> stack: stacks.values()) {
 			if (!stack.isEmpty()) {
 				System.err.println("error: stack was not empty when we finished");
 				System.err.println(stack);
@@ -228,7 +228,7 @@ public class EqualsReportGenerator extends ReportGenerator implements Report.Ent
 		}
 
 		@Override
-		public ReportGenerator createGenerator(Database db, Context run) {
+		public ReportGenerator createGenerator(Dataset db, Context run) {
 			return new EqualsReportGenerator(run, db);
 		}
 

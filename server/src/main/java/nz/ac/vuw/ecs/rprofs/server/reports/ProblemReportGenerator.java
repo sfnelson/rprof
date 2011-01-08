@@ -13,10 +13,10 @@ import nz.ac.vuw.ecs.rprofs.client.data.Report.Entry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.InstanceEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.PackageEntry;
 import nz.ac.vuw.ecs.rprofs.client.data.Report.Status;
-import nz.ac.vuw.ecs.rprofs.server.Database;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.LogRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.reports.ProblemReport.ClassReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.ProblemReport.PackageReport;
 
@@ -26,7 +26,7 @@ import nz.ac.vuw.ecs.rprofs.server.reports.ProblemReport.PackageReport;
  */
 public class ProblemReportGenerator extends ReportGenerator implements Report.EntryVisitor<ArrayList<? extends Report.Entry>> {
 
-	protected ProblemReportGenerator(Context context, Database database) {
+	protected ProblemReportGenerator(Context context, Dataset database) {
 		super(context, database);
 	}
 
@@ -58,7 +58,7 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 		status.limit = getContext().getClasses().size();
 		status.progress = 0;
 
-		for (ClassRecord cr: getContext().getClasses()) {
+		for (Class cr: getContext().getClasses()) {
 			PackageReport pr = packages.get(cr.getPackage());
 			if (pr == null) {
 				pr = ProblemReport.create(cr.getPackage());
@@ -67,16 +67,16 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 			ClassReport report = ProblemReport.create(cr);
 			report.classes = 1;
 			report.flags = cr.getFlags();
-			classes.put(cr.getId(), report);
+			classes.put(cr.getClassId(), report);
 			pr.addChild(report);
 			status.progress++;
 		}
 
 		status.stage = "Processing Class Events (2/3)";
 		status.progress = 0;
-		status.limit = getDB().getNumLogs(LogRecord.CLASS_WEAVE | LogRecord.CLASS_INITIALIZED);
-		for (LogRecord lr: getDB().getLogs(0, status.limit,
-				LogRecord.CLASS_WEAVE | LogRecord.CLASS_INITIALIZED)) {
+		status.limit = getDB().getNumLogs(Event.CLASS_WEAVE | Event.CLASS_INITIALIZED);
+		for (Event lr: getDB().getLogs(0, status.limit,
+				Event.CLASS_WEAVE | Event.CLASS_INITIALIZED)) {
 
 			ClassReport cr = classes.get(lr.getClassNumber());
 			if (cr == null) {
@@ -84,10 +84,10 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 			}
 
 			switch (lr.getEvent()) {
-			case LogRecord.CLASS_WEAVE:
+			case Event.CLASS_WEAVE:
 				cr.weave = 1;
 				break;
-			case LogRecord.CLASS_INITIALIZED:
+			case Event.CLASS_INITIALIZED:
 				cr.init = 1;
 				break;
 			}
@@ -97,9 +97,9 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 
 		status.stage = "Processing Instances Events (3/3)";
 		status.progress = 0;
-		status.limit = getDB().getNumLogs(LogRecord.OBJECT_ALLOCATED | LogRecord.OBJECT_TAGGED);
-		for (LogRecord lr: getDB().getLogs(0, status.limit,
-				LogRecord.OBJECT_ALLOCATED | LogRecord.OBJECT_TAGGED)) {
+		status.limit = getDB().getNumLogs(Event.OBJECT_ALLOCATED | Event.OBJECT_TAGGED);
+		for (Event lr: getDB().getLogs(0, status.limit,
+				Event.OBJECT_ALLOCATED | Event.OBJECT_TAGGED)) {
 
 			ClassReport cr = classes.get(lr.getClassNumber());
 			if (cr == null) {
@@ -166,7 +166,7 @@ public class ProblemReportGenerator extends ReportGenerator implements Report.En
 			report.types[5] = Report.Type.FLAG;
 		}
 		@Override
-		public ReportGenerator createGenerator(Database db, Context context) {
+		public ReportGenerator createGenerator(Dataset db, Context context) {
 			return new ProblemReportGenerator(context, db);
 		}
 		@Override

@@ -3,10 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ActiveContext;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassRecord;
-import nz.ac.vuw.ecs.rprofs.server.data.FieldRecord;
-
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
 import org.objectweb.asm.ClassVisitor;
@@ -20,17 +16,15 @@ import org.objectweb.asm.MethodVisitor;
 public class FieldReader implements ClassVisitor {
 
 	private final ClassRecord record;
-	private final ActiveContext context;
 
-	public FieldReader(ActiveContext context, ClassRecord cr) {
+	public FieldReader(ClassRecord cr) {
 		this.record = cr;
-		this.context = context;
 	}
 
 	@Override
 	public void visit(int version, int access, String name, String signature,
 			String superName, String[] interfaces) {
-		context.initClassRecord(record, version, access, name, signature, superName, interfaces);
+		record.init(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
@@ -51,8 +45,8 @@ public class FieldReader implements ClassVisitor {
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc,
 			String signature, Object value) {
-		FieldRecord fr = context.createFieldRecord(record);
-		context.initFieldRecord(fr, access, name, desc);
+		FieldRecord fr = record.weaver.createFieldRecord(name);
+		fr.init(access, desc);
 		return null;
 	}
 

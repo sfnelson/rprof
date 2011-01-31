@@ -9,6 +9,10 @@ import com.google.gwt.requestfactory.shared.ProxyFor;
 @ProxyFor(Instance.class)
 public interface InstanceProxy extends EntityProxy {
 
+	public long getIndex();
+	public int getThreadIndex();
+	public int getInstanceIndex();
+
 	public ClassProxy getType();
 	public MethodProxy getConstructor();
 

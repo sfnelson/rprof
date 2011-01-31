@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
 import nz.ac.vuw.ecs.rprofs.client.events.ClassListHandler;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 import com.google.gwt.core.client.GWT;
 

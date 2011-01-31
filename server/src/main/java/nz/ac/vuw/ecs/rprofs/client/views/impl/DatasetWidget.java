@@ -59,10 +59,15 @@ public class DatasetWidget extends Composite implements DatasetView, MouseOverHa
 			stop.setVisible(false);
 		}
 		else {
+			stopped.setText("");
 			stop.setVisible(true);
 		}
+
 		if (run.getProgram() != null) {
 			program.setText(run.getProgram());
+		}
+		else {
+			program.setText("");
 		}
 	}
 

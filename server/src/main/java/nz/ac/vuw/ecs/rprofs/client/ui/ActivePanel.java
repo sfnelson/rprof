@@ -3,6 +3,9 @@
  */
 package nz.ac.vuw.ecs.rprofs.client.ui;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.dom.client.HasMouseDownHandlers;
 import com.google.gwt.event.dom.client.HasMouseMoveHandlers;
 import com.google.gwt.event.dom.client.HasMouseOutHandlers;
@@ -26,7 +29,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
  *
  */
 public class ActivePanel extends FlowPanel implements HasMouseDownHandlers, HasMouseOutHandlers,
-		HasMouseMoveHandlers, HasMouseUpHandlers, HasMouseOverHandlers {
+HasMouseMoveHandlers, HasMouseUpHandlers, HasMouseOverHandlers, HasClickHandlers {
 
 	@Override
 	public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
@@ -51,6 +54,11 @@ public class ActivePanel extends FlowPanel implements HasMouseDownHandlers, HasM
 	@Override
 	public HandlerRegistration addMouseOverHandler(MouseOverHandler handler) {
 		return addDomHandler(handler, MouseOverEvent.getType());
+	}
+
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
 	}
 
 }

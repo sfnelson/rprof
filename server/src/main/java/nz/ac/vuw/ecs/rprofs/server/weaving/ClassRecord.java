@@ -3,9 +3,9 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import java.util.Map;
 import java.util.Set;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
 
 class ClassRecord {
 
@@ -52,7 +52,7 @@ class ClassRecord {
 	}
 
 	Class toClass() {
-		Class cls = new Class(new ClassId(id, name), null, properties);
+		Class cls = new Class(new ClassId(id), name, null, properties);
 		for (MethodRecord m: methods.values()) {
 			cls.addAttribute(m.toAttribute(cls));
 		}

@@ -37,16 +37,6 @@
   </servlet-mapping>
   
   <servlet-mapping>
-    <servlet-name>inspector</servlet-name>
-    <url-pattern>/inspector</url-pattern>
-  </servlet-mapping>
-  
-  <servlet-mapping>
-    <servlet-name>inspector</servlet-name>
-    <url-pattern>/inspector/inspector</url-pattern>
-  </servlet-mapping>
-  
-  <servlet-mapping>
     <servlet-name>logger</servlet-name>
     <url-pattern>/logger</url-pattern>
   </servlet-mapping>

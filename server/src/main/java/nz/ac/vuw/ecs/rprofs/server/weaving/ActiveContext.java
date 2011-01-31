@@ -5,23 +5,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.domain.Attribute;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
-import nz.ac.vuw.ecs.rprofs.server.domain.EventId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Event.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.domain.InstanceId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance.InstanceId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 
 public class ActiveContext extends Context {
 
 	private long eventId = 0;
 	private final Map<Integer, ClassRecord> classRecords;
-	private final Map<InstanceId, Instance> objects;
+	private final Map<Long, Instance> objects;
 
 	private final Map<InstanceId, Event> pendingAllocations;
 	private final Map<String, List<Class>> pendingSupers;
@@ -49,7 +49,7 @@ public class ActiveContext extends Context {
 		for (Event r : records) {
 			Class cls = r.getType();
 			Attribute attr = r.getAttribute();
-			InstanceId first = r.getArguments().isEmpty() ? null : r.getArguments().get(0);
+			Instance first = r.getArguments().isEmpty() ? null : r.getArguments().get(0);
 
 			switch (r.getEvent()) {
 			case Event.METHOD_ENTER:
@@ -62,18 +62,24 @@ public class ActiveContext extends Context {
 				else break;
 			case Event.OBJECT_TAGGED:
 				Event alloc = pendingAllocations.get(first);
-				if (alloc == null) break;
-				alloc.setType(r.getType());
-				alloc.setAttribute(r.getAttribute());
-				updates.add(alloc);
+				if (alloc != null) {
+					alloc.setType(cls);
+					alloc.setAttribute(attr);
+					updates.add(alloc);
+				}
+				if (first != null) {
+					first = db.getInstance(first.getInstanceId());
+					first.setType(cls);
+					first.setConstructor((Method) r.getAttribute());
+					db.updateInstance(first);
+				}
 				break;
 			case Event.OBJECT_ALLOCATED:
-				pendingAllocations.put(first, r);
+				pendingAllocations.put(first.getInstanceId(), r);
 				remove.add(r);
 				break;
 			case Event.OBJECT_FREED:
 				pendingAllocations.remove(first);
-				objects.remove(first);
 				break;
 			}
 		}
@@ -104,7 +110,7 @@ public class ActiveContext extends Context {
 		Class cls = db.storeClass(cr.toClass());
 
 		EventId id = nextEvent();
-		Event record = new Event(id, null, Event.CLASS_WEAVE, cls, null, new ArrayList<InstanceId>());
+		Event record = new Event(id, null, Event.CLASS_WEAVE, cls, null, new ArrayList<Instance>());
 		storeLogs(Arrays.asList(record));
 
 		classRecords.put(cr.id, cr);
@@ -139,7 +145,7 @@ public class ActiveContext extends Context {
 	public Event createEvent(long threadId, int event, int cnum, int mnum,
 			long[] args) {
 		EventId id = nextEvent();
-		InstanceId thread = getInstanceId(threadId);
+		Instance thread = getInstance(threadId);
 		Class type = getClass(cnum);
 		Attribute attr = null;
 		if ((event & Event.FIELDS) != 0) {
@@ -149,9 +155,9 @@ public class ActiveContext extends Context {
 			attr = getMethod(type, mnum);
 		}
 
-		ArrayList<InstanceId> argList = Collections.newList();
+		ArrayList<Instance> argList = Collections.newList();
 		for (long arg: args) {
-			argList.add(getInstanceId(arg));
+			argList.add(getInstance(arg));
 		}
 
 		return new Event(id, thread, event, type, attr, argList);
@@ -185,32 +191,20 @@ public class ActiveContext extends Context {
 		return null;
 	}
 
-	InstanceId getInstanceId(long id) {
-		InstanceId i;
-		if (id == 0) {
-			i = null;
-		}
-		else {
-			i = new InstanceId(id);
-		}
-
-		return i;
-	}
-
 	Instance getInstance(long id) {
-		Instance i;
 		if (id == 0) {
-			i = null;
-		}
-		else if (objects.containsKey(new InstanceId(id))) {
-			i = objects.get(id);
-		}
-		else {
-			i = new Instance(new InstanceId(id), null, null, null);
-			objects.put(i.getInstanceId(), i);
+			return null;
 		}
 
-		return i;
+		if (objects.containsKey(id)) {
+			return objects.get(id);
+		}
+		else {
+			Instance i = new Instance(new InstanceId(id), null, null, null);
+			i = db.storeInstance(i);
+			objects.put(id, i);
+			return i;
+		}
 	}
 
 

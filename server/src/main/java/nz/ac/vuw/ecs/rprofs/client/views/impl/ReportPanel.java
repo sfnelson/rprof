@@ -3,11 +3,12 @@ package nz.ac.vuw.ecs.rprofs.client.views.impl;
 import java.util.List;
 import java.util.Map;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
 import nz.ac.vuw.ecs.rprofs.client.requests.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.requests.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.requests.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.requests.MethodProxy;
+import nz.ac.vuw.ecs.rprofs.client.requests.PackageProxy;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
 import com.google.gwt.core.client.GWT;
@@ -48,49 +49,120 @@ public class ReportPanel extends Composite implements ReportView {
 	@Override
 	public void setPresenter(Presenter presenter) {
 		this.presenter = presenter;
+
+		clearAll();
 	}
 
 	@Override
-	public void showPackages(List<String> packages) {
-		clear();
-
-		for (String pkg: packages) {
+	public void showPackages(List<PackageProxy> packages) {
+		int index = 0;
+		boolean even = false;
+		for (PackageProxy pkg: packages) {
 			ReportWidget w = createWidget(pkg);
+			w.init(even, index);
+			w.setText(index, pkg);
+			w.setCount(index + 1, pkg.getNumClasses(), "Classes");
 			children.add(w);
 			this.packages.add(w);
+			even = !even;
 		}
 	}
 
 	@Override
-	public void showClasses(List<ClassProxy> classes) {
-		// TODO Auto-generated method stub
+	public void showClasses(Object parent, List<ClassProxy> classes) {
+		ReportWidget p = objectMap.get(parent);
+		if (p == null || classes == null) return;
 
-	}
-
-	@Override
-	public void showMethods(List<MethodProxy> methods) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void showFields(List<FieldProxy> fields) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void clear() {
-		for (ReportWidget w: packages) {
-			remove(w);
+		int index = p.getIndex() + 1;
+		boolean even = !p.isEven();
+		for (ClassProxy c: classes) {
+			ReportWidget w = createWidget(c);
+			w.init(even, index);
+			w.setText(index, c);
+			w.setCount(index + 1, c.getNumMethods(), "Methods");
+			w.setCount(index + 2, c.getNumFields(), "Fields");
+			p.addChild(w);
+			even = !even;
 		}
+	}
 
+	@Override
+	public void showMethods(Object parent, List<MethodProxy> methods) {
+		ReportWidget p = objectMap.get(parent);
+		if (p == null || methods == null) return;
+
+		int index = p.getIndex() + 1;
+		boolean even = !p.isEven();
+		for (MethodProxy m: methods) {
+			if (m == null) {
+				System.out.println("null method");
+				continue;
+			}
+			ReportWidget w = createWidget(m);
+			w.init(even, index);
+			w.setText(index, m);
+			p.addChild(w);
+			even = !even;
+		}
+	}
+
+	@Override
+	public void showFields(Object parent, List<FieldProxy> fields) {
+		ReportWidget p = objectMap.get(parent);
+		if (p == null || fields == null) return;
+
+		int index = p.getIndex() + 1;
+		boolean even = !p.isEven();
+		for (FieldProxy f: fields) {
+			if (f == null) {
+				System.out.println("null field");
+				continue;
+			}
+			ReportWidget w = createWidget(f);
+			w.init(even, index);
+			w.setText(index, f);
+			p.addChild(w);
+			even = !even;
+		}
+	}
+
+	@Override
+	public void showInstances(Object parent, List<InstanceProxy> instances) {
+		ReportWidget p = objectMap.get(parent);
+		if (p == null || instances == null) return;
+
+		int index = p.getIndex() + 1;
+		boolean even = !p.isEven();
+		for (InstanceProxy i: instances) {
+			ReportWidget w = createWidget(i);
+			w.init(even, index);
+			w.setText(index, i);
+			p.addChild(w);
+			even = !even;
+		}
+	}
+
+	public void clearAll() {
+		remove(packages);
 		packages.clear();
 	}
 
+	public void clear(Object parent) {
+		ReportWidget p = objectMap.get(parent);
+		if (p == null) return;
+
+		remove(p.clear());
+	}
+
 	void select(ReportWidget w) {
+		if (w.hasChildren()) {
+			remove(w.clear());
+			return;
+		}
+
 		Object o = widgetMap.get(w);
-		if (o instanceof String) {
-			presenter.selectPackage((String) o);
+		if (o instanceof PackageProxy) {
+			presenter.selectPackage((PackageProxy) o);
 		}
 		else if (o instanceof ClassProxy) {
 			presenter.selectClass((ClassProxy) o);
@@ -122,12 +194,17 @@ public class ReportPanel extends Composite implements ReportView {
 	}
 
 	private void remove(ReportWidget w) {
-		for (ReportWidget c: w.remove()) {
-			remove(c);
-		}
+		remove(w.clear());
 
 		Object o = widgetMap.remove(w);
 		objectMap.remove(o);
+		w.removeFromParent();
 		available.add(w);
+	}
+
+	private void remove(List<ReportWidget> widgets) {
+		for (ReportWidget c: widgets) {
+			remove(c);
+		}
 	}
 }

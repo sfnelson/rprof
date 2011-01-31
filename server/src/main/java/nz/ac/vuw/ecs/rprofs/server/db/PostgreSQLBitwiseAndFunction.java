@@ -20,9 +20,8 @@ public class PostgreSQLBitwiseAndFunction extends StandardSQLFunction implements
 		super(name, type);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public String render(Type firstArgumentType, List args,
+	public String render(Type firstArgumentType, @SuppressWarnings("rawtypes") List args,
 			SessionFactoryImplementor sessionFactory) {
 		if (args.size() != 2) {
 			throw new IllegalArgumentException("bitwise AND is binary");

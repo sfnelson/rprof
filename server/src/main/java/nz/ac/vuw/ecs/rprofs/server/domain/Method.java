@@ -3,59 +3,43 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import java.io.Serializable;
-
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.Version;
+
+import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-@SuppressWarnings("serial")
 @Entity
 @Table(name = "methods")
-public class Method implements Attribute, Serializable {
+public class Method implements Attribute {
 
-	@Transient
-	protected MethodId id;
-
+	@SuppressWarnings("serial")
 	@Embeddable
-	static class PK implements Serializable {
-		int owner_index;
-		int index;
-
-		@Override
-		public boolean equals(Object o) {
-			if (o == this) return true;
-			if (o == null) return false;
-			if (o.getClass() != this.getClass()) return false;
-			PK k = (PK) o;
-			return owner_index == k.owner_index && index == k.index;
-		}
-
-		@Override
-		public int hashCode() {
-			return owner_index ^ index;
-		}
-
-		@Override
-		public String toString() {
-			return String.format("%d.%d", owner_index, index);
+	public static class MethodId extends AttributeId {
+		public MethodId() {}
+		public MethodId(int fst, int snd) {
+			super(fst, snd);
 		}
 	}
 
 	@EmbeddedId
-	PK key;
+	protected MethodId id;
+
+	@Version
+	private int version;
 
 	String name;
 
-	@ManyToOne
+	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name = "owner_id", nullable = false)
 	private Class owner;
 
@@ -65,24 +49,28 @@ public class Method implements Attribute, Serializable {
 
 	public Method() {}
 
-	public Method(MethodId id, Class owner, String description, int access) {
+	public Method(MethodId id, String name, Class owner, String description, int access) {
 		this.id = id;
-		this.key = id.key;
-		this.name = id.name;
+		this.name = name;
 		this.owner = owner;
 		this.description = description;
 		this.access = access;
 	}
 
-	public MethodId getId() {
-		if (id == null) {
-			id = new MethodId(owner.getClassId(), key.index, name);
-		}
+	public long getId() {
+		return id.getId();
+	}
+
+	public MethodId getAttributeId() {
 		return id;
 	}
 
+	public int getVersion() {
+		return version;
+	}
+
 	public int getIndex() {
-		return key.index;
+		return id.getIndex();
 	}
 
 	public String getName() {

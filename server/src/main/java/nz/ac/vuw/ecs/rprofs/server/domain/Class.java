@@ -3,22 +3,27 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.server.domain.Attribute.AttributeId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Attribute.AttributeVisitor;
-
-import com.google.gwt.user.client.rpc.IsSerializable;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.IntegerId;
 
 
 /**
@@ -27,31 +32,39 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 @Entity
 @Table( name = "classes" )
-public class Class implements IsSerializable {
+public class Class {
+
+	@SuppressWarnings("serial")
+	@Embeddable
+	public static class ClassId extends IntegerId {
+		public ClassId() {}
+		public ClassId(int id) {
+			super(id);
+		}
+	}
 
 	public static final int CLASS_VERSION_UPDATED = 0x1;
 	public static final int CLASS_IGNORED_PACKAGE_FILTER = 0x2;
 	public static final int SPECIAL_CLASS_WEAVER = 0x4;
 
-	@Transient
+	@EmbeddedId
 	private ClassId id;
-
-	@Id int index;
 
 	private String name;
 
-	protected Integer properties;
+	private Integer properties;
 
 	@ManyToOne
-	protected Class parent;
+	@JoinColumns({
+		@JoinColumn(name = "parent_index", referencedColumnName = "index")
+	})
+	private Class parent;
 
-	@OneToMany(mappedBy="owner", cascade=CascadeType.ALL)
-	@OrderColumn(name="index")
-	protected List<Method> methods;
+	@OneToMany(mappedBy="owner", cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+	private Set<Method> methods;
 
-	@OneToMany(mappedBy="owner", cascade=CascadeType.ALL)
-	@OrderColumn(name="index")
-	protected List<Field> fields;
+	@OneToMany(mappedBy="owner", cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+	private Set<Field> fields;
 
 	@Transient
 	private AttributeVisitor attributeStorer;
@@ -59,20 +72,19 @@ public class Class implements IsSerializable {
 	@Version
 	private int version;
 
-	protected Class() {}
+	public Class() {}
 
-	public Class(ClassId id, Class parent, int properties) {
+	public Class(ClassId id, String name, Class parent, int properties) {
 		this.id = id;
-		this.index = id.index;
-		this.name = id.name;
+		this.name = name;
 		this.parent = parent;
 		this.properties = properties;
-		this.methods = Collections.newList();
-		this.fields = Collections.newList();
+		this.methods = Collections.newSet();
+		this.fields = Collections.newSet();
 	}
 
-	public Class(ClassId id, Class parent, int properties, Iterable<? extends Attribute> attributes) {
-		this(id, parent, properties);
+	public Class(ClassId id, String name, Class parent, int properties, Iterable<? extends Attribute> attributes) {
+		this(id, name, parent, properties);
 
 		for (Attribute a : attributes) {
 			addAttribute(a);
@@ -80,7 +92,11 @@ public class Class implements IsSerializable {
 	}
 
 	public long getId() {
-		return index;
+		return id.getIndex();
+	}
+
+	public int getIndex() {
+		return id.getIndex();
 	}
 
 	public int getVersion() {
@@ -88,9 +104,6 @@ public class Class implements IsSerializable {
 	}
 
 	public ClassId getClassId() {
-		if (id == null) {
-			id = new ClassId(index, name);
-		}
 		return id;
 	}
 
@@ -135,7 +148,7 @@ public class Class implements IsSerializable {
 	public List<AttributeId> getAttributeIds() {
 		List<AttributeId> ids = Collections.newList();
 		for (Attribute a: getAttributes()) {
-			ids.add(a.getId());
+			ids.add(a.getAttributeId());
 		}
 		return ids;
 	}
@@ -156,11 +169,19 @@ public class Class implements IsSerializable {
 		a.visit(attributeStorer);
 	}
 
-	public List<? extends Field> getFields() {
-		return fields;
+	public List<Field> getFields() {
+		return new ArrayList<Field>(fields);
 	}
 
-	public List<? extends Method> getMethods() {
-		return methods;
+	public int getNumFields() {
+		return fields.size();
+	}
+
+	public List<Method> getMethods() {
+		return new ArrayList<Method>(methods);
+	}
+
+	public int getNumMethods() {
+		return methods.size();
 	}
 }

@@ -1,11 +1,44 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
-	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client.views.impl">
+	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client.ui">
 	<ui:style type="nz.ac.vuw.ecs.rprofs.client.views.impl.ReportWidget.Style">
+	.data {
+		padding: 2px 4px;
+		height: 2.5ex;
+		overflow: hidden;
+	}
+	.children {
+	}
+	.even {
+		background-color: #fff;
+	}
+	.odd {
+		background-color: #f3f6fa;
+	}
+	.data span {
+		display: inline-block;
+		margin: 0 0.25em;
+		width: 7.5em;
+		overflow: hidden;
+	}
+	.data .text {
+		text-align: left;
+		width: 7.5em;
+	}
+	.data .longer {
+		text-align: left;
+		width: 15.5em;
+	}
+	.data .count {
+		text-align: right;
+		color: #777;
+		width: 2em;
+		padding-right: 1.75em;
+	}
 	</ui:style>
 	<g:FlowPanel>
-		<g:Label ui:field="name" />
-		<g:FlowPanel ui:field="children" />
+		<p:ActivePanel ui:field="data" styleName="{style.data}"/>
+		<g:FlowPanel ui:field="children" styleName="{style.children}"/>
 	</g:FlowPanel>
 </ui:UiBinder> 

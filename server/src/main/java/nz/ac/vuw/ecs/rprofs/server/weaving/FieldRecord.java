@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
-import nz.ac.vuw.ecs.rprofs.server.domain.FieldId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Field.FieldId;
 
 import org.objectweb.asm.Opcodes;
 
@@ -41,6 +41,6 @@ class FieldRecord implements AttributeRecord {
 	}
 
 	public Field toAttribute(Class cls) {
-		return new Field(new FieldId(cls.getClassId(), id, name), cls, description, access, equals, hash);
+		return new Field(new FieldId(cls.getClassId().getIndex(), id), name, cls, description, access, equals, hash);
 	}
 }

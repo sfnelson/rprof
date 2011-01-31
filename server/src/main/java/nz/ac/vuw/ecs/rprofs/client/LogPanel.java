@@ -9,6 +9,7 @@ import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
 import nz.ac.vuw.ecs.rprofs.client.data.LogData;
 import nz.ac.vuw.ecs.rprofs.client.data.MethodData;
 import nz.ac.vuw.ecs.rprofs.client.events.ClassListHandler;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;

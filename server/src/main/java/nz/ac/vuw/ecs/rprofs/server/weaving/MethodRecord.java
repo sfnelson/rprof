@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import nz.ac.vuw.ecs.rprofs.server.domain.MethodId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method.MethodId;
 
 class MethodRecord implements AttributeRecord {
 
@@ -30,7 +30,7 @@ class MethodRecord implements AttributeRecord {
 	}
 
 	public Method toAttribute(Class cls) {
-		return new Method(new MethodId(cls.getClassId(), id, name), cls, description, access);
+		return new Method(new MethodId(cls.getClassId().getIndex(), id), name, cls, description, access);
 	}
 
 	public boolean isNative() {

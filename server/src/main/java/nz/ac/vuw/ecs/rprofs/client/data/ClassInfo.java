@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.client.data;
 
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 public abstract class ClassInfo implements Comparable<ClassInfo> {
 

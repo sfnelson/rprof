@@ -4,9 +4,11 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 
 public class Datastore {
 
@@ -24,19 +26,20 @@ public class Datastore {
 	}
 
 	public void deleteDataset(Dataset dataset) {
-		dataset = em.find(Dataset.class, dataset.getId());
+		dataset = em.find(Dataset.class, dataset.getDatasetId());
 		em.remove(dataset);
 	}
 
 	public void deleteDatastore(Dataset dataset) {
-		String handle = dataset.getDatasetId().getId();
-		em.createNativeQuery("drop table if exists run_" + handle + "_args cascade;").executeUpdate();
+		String handle = dataset.getDatasetId().getHandle();
 		em.createNativeQuery("drop table if exists run_" + handle + "_classes cascade;").executeUpdate();
 		em.createNativeQuery("drop table if exists run_" + handle + "_events cascade;").executeUpdate();
+		em.createNativeQuery("drop table if exists run_" + handle + "_events_args cascade;").executeUpdate();
 		em.createNativeQuery("drop table if exists run_" + handle + "_fields cascade;").executeUpdate();
 		em.createNativeQuery("drop table if exists run_" + handle + "_instances cascade;").executeUpdate();
 		em.createNativeQuery("drop table if exists run_" + handle + "_methods cascade;").executeUpdate();
 		em.createNativeQuery("drop table if exists run_" + handle + "_profiler_runs cascade;").executeUpdate();
+		em.createNativeQuery("drop table if exists run_" + handle + "_field_writes cascade;").executeUpdate();
 		em.flush();
 	}
 
@@ -72,5 +75,11 @@ public class Datastore {
 		for (T record: records) {
 			em.merge(record);
 		}
+	}
+
+	public List<Instance> findInstancesByType(nz.ac.vuw.ecs.rprofs.server.domain.Class cls) {
+		TypedQuery<Instance> q = em.createQuery("select I from Instance I where I.type = :cls", Instance.class);
+		q.setParameter("cls", cls);
+		return q.getResultList();
 	}
 }

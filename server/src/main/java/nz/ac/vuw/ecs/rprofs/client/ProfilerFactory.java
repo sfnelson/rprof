@@ -1,18 +1,26 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
+import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceController;
 import nz.ac.vuw.ecs.rprofs.client.requests.RequestFactory;
+import nz.ac.vuw.ecs.rprofs.client.views.DatasetSelectorView;
+import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 import nz.ac.vuw.ecs.rprofs.client.views.InspectorView;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
+import com.google.gwt.activity.shared.ActivityMapper;
 import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.place.shared.PlaceController;
 
 public interface ProfilerFactory {
 
-	EventBus getEventBus();
 	RequestFactory getRequestFactory();
-	InspectorView getInspectorView();
+
+	EventBus getEventBus();
 	PlaceController getPlaceController();
-	ReportView getClassBrowser();
+	ActivityMapper getActivityMapper();
+
+	InspectorView getInspectorView();
+	DatasetSelectorView getDatasetView();
+	ReportView getReportView();
+	EventView getEventView();
 
 }

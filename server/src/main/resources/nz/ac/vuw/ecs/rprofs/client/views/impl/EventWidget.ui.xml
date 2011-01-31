@@ -1,0 +1,51 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:p="urn:import:nz.ac.vuw.ecs.rprofs.client.ui">
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.views.impl.EventWidget.Style">
+	
+	.objectAllocated {}
+	.arrayAllocated {}
+	.methodEnter {}
+	.methodExit {}
+	.methodException {}
+	.fieldRead {}
+	.fieldWrite {}
+	.classWeave {}
+	.classInit {}
+	.objectTagged {}
+	.objectFreed {}
+	
+	.fieldRead .method, .fieldWrite .method { display: none; }
+	
+	.thread {
+		display: inline-block;
+		width: 3em;
+	}
+	.event {
+		display: inline-block;
+		width: 3em;
+		text-align: right;
+		padding-right: 0.5em;
+	}
+	.type {}
+	.deref {}
+	.method {}
+	.field {}
+	.args {
+		display: inline-block;
+	}
+	.hidden {}
+	</ui:style>
+	<g:FlowPanel>
+		<p:InstanceLabel ui:field="thread" styleName="{style.thread}"></p:InstanceLabel>
+		<g:InlineHTML ui:field="event" styleName="{style.event}"></g:InlineHTML>
+		<g:InlineLabel ui:field="type" styleName="{style.type}"></g:InlineLabel>
+		<g:InlineLabel styleName="{style.deref}">.</g:InlineLabel>
+		<g:InlineLabel ui:field="method" styleName="{style.method}"></g:InlineLabel>
+		<g:InlineLabel ui:field="field" styleName="{style.field}"></g:InlineLabel>
+		<g:InlineLabel styleName="{style.method}">(</g:InlineLabel>
+		<g:FlowPanel ui:field="args" styleName="{style.args}"></g:FlowPanel>
+		<g:InlineLabel styleName="{style.method}">)</g:InlineLabel>
+	</g:FlowPanel>
+</ui:UiBinder> 

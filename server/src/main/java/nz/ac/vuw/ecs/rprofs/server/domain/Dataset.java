@@ -5,10 +5,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Query;
@@ -17,9 +17,14 @@ import javax.persistence.Transient;
 import javax.persistence.TypedQuery;
 import javax.persistence.Version;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.db.Datastore;
 import nz.ac.vuw.ecs.rprofs.server.db.NamingStrategy;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Field.FieldId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance.InstanceId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method.MethodId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.StringId;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 import org.springframework.context.ApplicationContext;
@@ -92,15 +97,15 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 	}
 
 	public static Dataset findDataset(String handle) {
-		Dataset dataset = database.findRecord(Dataset.class, handle);
+		return getDataset(new DatasetId(handle));
+	}
+
+	public static Dataset getDataset(DatasetId id) {
+		Dataset dataset = database.findRecord(Dataset.class, id);
 		if (dataset != null) {
 			dataset.init();
 		}
 		return dataset;
-	}
-
-	public static Dataset getDataset(DatasetId id) {
-		return findDataset(id.handle);
 	}
 
 	public static List<Dataset> findAllDatasets() {
@@ -128,16 +133,22 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 	}
 
 
-	public List<String> findPackages() {
+	public List<Package> findPackages() {
 		List<? extends Class> classes = getClasses();
-		Set<String> packages = Collections.newSet();
+		Map<String, Package> packages = Collections.newMap();
 
 		for (Class cls: classes) {
-			packages.add(cls.getPackage());
+			String pkg = cls.getPackage();
+			if (!packages.containsKey(pkg)) {
+				packages.put(pkg, new Package(pkg, 1));
+			}
+			else {
+				packages.get(pkg).incrementClasses();
+			}
 		}
 
-		List<String> result = Collections.newList();
-		result.addAll(packages);
+		List<Package> result = Collections.newList();
+		result.addAll(packages.values());
 		return result;
 	}
 
@@ -154,14 +165,51 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 		return result;
 	}
 
-	public List<Instance> findInstances(Class cls) {
-		return new ArrayList<Instance>();
+	public List<Field> findFields(int classId) {
+		Class cls = db.findRecord(Class.class, new ClassId(classId));
+		if (cls == null) return new ArrayList<Field>();
+
+		return cls.getFields();
 	}
 
-	@Transient
-	private DatasetId id;
+	public List<Method> findMethods(int classId) {
+		Class cls = db.findRecord(Class.class, new ClassId(classId));
+		if (cls == null) return new ArrayList<Method>();
 
-	@Id String handle;
+		return cls.getMethods();
+	}
+
+	public List<Instance> findInstances(int classId) {
+		Class cls = db.findRecord(Class.class, new ClassId(classId));
+		if (cls == null) return new ArrayList<Instance>();
+
+		return db.findInstancesByType(cls);
+	}
+
+	public Instance findInstance(long id) {
+		return db.findRecord(Instance.class, new InstanceId(id));
+	}
+
+	public List<Event> findEventsByInstance(long id) {
+		Instance i = findInstance(id);
+		if (i == null) {
+			return Collections.newList();
+		}
+
+		return i.getEvents();
+	}
+
+	@SuppressWarnings("serial")
+	@Embeddable
+	public static class DatasetId extends StringId {
+		public DatasetId() {}
+		public DatasetId(String id) {
+			super(id);
+		}
+	}
+
+	@EmbeddedId
+	DatasetId id;
 
 	@Version
 	int version;
@@ -179,7 +227,6 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 
 	public Dataset(DatasetId id, Date started, Date stopped, String program) {
 		this.id = id;
-		this.handle = id.handle;
 		this.started = started;
 		this.stopped = stopped;
 		this.program = program;
@@ -204,7 +251,7 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 	}
 
 	public String getId() {
-		return getDatasetId().handle;
+		return id.getHandle();
 	}
 
 	public int getVersion() {
@@ -212,13 +259,10 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 	}
 
 	public String getHandle() {
-		return handle;
+		return id.getHandle();
 	}
 
 	public DatasetId getDatasetId() {
-		if (id == null) {
-			id = new DatasetId(handle);
-		}
 		return id;
 	}
 
@@ -240,7 +284,7 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 	}
 
 	public Class getClass(ClassId id) {
-		return db.findRecord(Class.class, id.index);
+		return db.findRecord(Class.class, id);
 	}
 
 	public List<? extends Class> getClasses() {
@@ -248,7 +292,7 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 	}
 
 	public Method getMethod(MethodId id) {
-		return db.findRecord(Method.class, id.key);
+		return db.findRecord(Method.class, id);
 	}
 
 	public List<? extends Method> getMethods() {
@@ -256,7 +300,7 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 	}
 
 	public Field getField(FieldId id) {
-		return db.findRecord(Field.class, id.key);
+		return db.findRecord(Field.class, id);
 	}
 
 	public List<? extends Field> getFields() {
@@ -345,5 +389,21 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 
 	public void updateField(Field f) {
 		db.updateRecord(f);
+	}
+
+	public Instance storeInstance(Instance i) {
+		return db.storeRecord(i);
+	}
+
+	public void updateInstance(Instance i) {
+		db.updateRecord(i);
+	}
+
+	public Instance getInstance(InstanceId id) {
+		return db.findRecord(Instance.class, id);
+	}
+
+	public List<? extends FieldWriteRecord> storeReports(Iterable<? extends FieldWriteRecord> records) {
+		return db.storeRecords(records);
 	}
 }

@@ -6,19 +6,22 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embedded;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.Version;
+
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.server.domain.Attribute.AttributeId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance.InstanceId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.LongId;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -27,6 +30,34 @@ import javax.persistence.Transient;
 @Entity
 @Table( name = "events" )
 public class Event {
+
+	public interface EventVisitor {
+		public void visitArrayAllocated(Event e);
+		public void visitClassInitialized(Event e);
+		public void visitClassWeave(Event e);
+		public void visitFieldRead(Event e);
+		public void visitFieldWrite(Event e);
+		public void visitObjectAllocated(Event e);
+		public void visitObjectFreed(Event e);
+		public void visitObjectTagged(Event e);
+		public void visitMethodEnter(Event e);
+		public void visitMethodException(Event e);
+		public void visitMethodReturn(Event e);
+	}
+
+	public static abstract class AbstractVisitor implements EventVisitor {
+		public void visitArrayAllocated(Event e) {}
+		public void visitClassInitialized(Event e) {}
+		public void visitClassWeave(Event e) {}
+		public void visitFieldRead(Event e) {}
+		public void visitFieldWrite(Event e) {}
+		public void visitObjectAllocated(Event e) {}
+		public void visitObjectFreed(Event e) {}
+		public void visitObjectTagged(Event e) {}
+		public void visitMethodEnter(Event e) {}
+		public void visitMethodException(Event e) {}
+		public void visitMethodReturn(Event e) {}
+	}
 
 	public static final int OBJECT_ALLOCATED = 0x1;
 	public static final int ARRAY_ALLOCATED = 0x2;
@@ -46,21 +77,33 @@ public class Event {
 	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
 	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
 
-	@Transient
+	@SuppressWarnings("serial")
+	@Embeddable
+	public static class EventId extends LongId {
+		public EventId() {}
+		public EventId(long id) {
+			super(id);
+		}
+	}
+
+	@EmbeddedId
 	EventId id;
 
-	@Id
-	long index;
+	@Version
+	int version;
 
-	@Embedded
-	@AttributeOverrides({
-		@AttributeOverride(name="index", column=@Column(name="thread_index"))
+	@ManyToOne
+	@JoinColumns({
+		@JoinColumn(name = "thread_index", referencedColumnName = "index")
 	})
-	InstanceId thread;
+	Instance thread;
 
 	Integer event;
 
 	@ManyToOne
+	@JoinColumns({
+		@JoinColumn(name = "class_index", referencedColumnName = "index")
+	})
 	Class type;
 
 	@ManyToOne
@@ -77,18 +120,17 @@ public class Event {
 	})
 	Field field;
 
-
-	@ElementCollection
-	@CollectionTable(name = "args",
-			joinColumns=@JoinColumn(name="event_id")
+	@ManyToMany
+	@JoinTable(
+			joinColumns = { @JoinColumn(name = "instance_index", referencedColumnName = "index") },
+			inverseJoinColumns = { @JoinColumn(name = "event_index", referencedColumnName = "index") }
 	)
-	List<InstanceId> args;
+	List<Instance> args;
 
 	public Event() {}
 
-	public Event(EventId id, InstanceId thread, int event, Class type, Attribute attr, ArrayList<InstanceId> args) {
+	public Event(EventId id, Instance thread, int event, Class type, Attribute attr, ArrayList<Instance> args) {
 		this.id = id;
-		this.index = id.index;
 		this.thread = thread;
 		this.event = event;
 		this.type = type;
@@ -97,17 +139,16 @@ public class Event {
 		setAttribute(attr);
 	}
 
-	public List<? extends InstanceId> getArguments() {
+	public List<? extends Instance> getArguments() {
 		return args;
 	}
 
 	public List<InstanceId> getArgumentIds() {
-		return args;
-		/*List<InstanceId> ids = Collections.newList();
+		List<InstanceId> ids = Collections.newList();
 		for (Instance i: args) {
-			ids.add(i.getId());
+			ids.add(i.getInstanceId());
 		}
-		return ids;*/
+		return ids;
 	}
 
 	public Class getType() {
@@ -122,11 +163,24 @@ public class Event {
 		return event;
 	}
 
-	public EventId getId() {
-		if (id == null) {
-			id = new EventId(index);
-		}
+	public long getId() {
+		return id.getIndex();
+	}
+
+	public EventId getEventId() {
 		return id;
+	}
+
+	public int getVersion() {
+		return version;
+	}
+
+	public Field getField() {
+		return field;
+	}
+
+	public Method getMethod() {
+		return method;
 	}
 
 	public Attribute getAttribute() {
@@ -134,15 +188,15 @@ public class Event {
 	}
 
 	public AttributeId getAttributeId() {
-		return getAttribute().getId();
+		return getAttribute().getAttributeId();
 	}
 
-	public InstanceId getThread() {
+	public Instance getThread() {
 		return thread;
 	}
 
 	public InstanceId getThreadId() {
-		return thread;
+		return thread.getInstanceId();
 	}
 
 	public void setAttribute(Attribute attribute) {
@@ -156,5 +210,32 @@ public class Event {
 
 	public void setType(Class type) {
 		this.type = type;
+	}
+
+	public void visit(EventVisitor visitor) {
+		switch (getEvent()) {
+		case OBJECT_ALLOCATED:
+			visitor.visitObjectAllocated(this); break;
+		case ARRAY_ALLOCATED:
+			visitor.visitArrayAllocated(this); break;
+		case METHOD_ENTER:
+			visitor.visitMethodEnter(this); break;
+		case METHOD_RETURN:
+			visitor.visitMethodReturn(this); break;
+		case FIELD_READ:
+			visitor.visitFieldRead(this); break;
+		case FIELD_WRITE:
+			visitor.visitFieldWrite(this); break;
+		case CLASS_WEAVE:
+			visitor.visitClassWeave(this); break;
+		case CLASS_INITIALIZED:
+			visitor.visitClassInitialized(this); break;
+		case OBJECT_TAGGED:
+			visitor.visitObjectTagged(this); break;
+		case OBJECT_FREED:
+			visitor.visitObjectFreed(this); break;
+		case METHOD_EXCEPTION:
+			visitor.visitMethodException(this); break;
+		}
 	}
 }

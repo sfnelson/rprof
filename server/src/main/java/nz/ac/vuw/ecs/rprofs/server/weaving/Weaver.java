@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 

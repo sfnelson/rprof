@@ -6,8 +6,8 @@ package nz.ac.vuw.ecs.rprofs.client.events;
 import java.util.ArrayList;
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
 import nz.ac.vuw.ecs.rprofs.client.data.ClassData;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 import com.google.gwt.event.shared.GwtEvent;
 

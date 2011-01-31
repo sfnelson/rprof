@@ -1,56 +1,86 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
+import nz.ac.vuw.ecs.rprofs.client.activity.shared.ActivityMapper;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceController;
 import nz.ac.vuw.ecs.rprofs.client.requests.RequestFactory;
+import nz.ac.vuw.ecs.rprofs.client.views.DatasetSelectorView;
+import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
+import nz.ac.vuw.ecs.rprofs.client.views.impl.DatasetPanel;
+import nz.ac.vuw.ecs.rprofs.client.views.impl.EventPanel;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.InspectorWidget;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.ReportPanel;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
-import com.google.gwt.place.shared.PlaceController;
 
 public class ProfilerFactoryImpl implements ProfilerFactory {
 
-	private final EventBus bus;
-	private final RequestFactory rf;
-	private final InspectorWidget widget;
-	private final PlaceController pc;
-	private final ReportView cb;
+	private final EventBus eventBus;
+	private final RequestFactory requestFactory;
+	private final InspectorWidget inspector;
+
+	private final PlaceController placeController;
+	private final ActivityMapper activityMapper;
+
+	private final DatasetSelectorView datasetView;
+	private final ReportView reportView;
+	private final EventView eventView;
 
 	public ProfilerFactoryImpl() {
-		bus = new SimpleEventBus();
-		rf = GWT.create(RequestFactory.class);
-		rf.initialize(bus);
+		eventBus = new SimpleEventBus();
+		requestFactory = GWT.create(RequestFactory.class);
+		requestFactory.initialize(eventBus);
 
-		widget = new InspectorWidget();
-		pc = new PlaceController(bus);
-		cb = new ReportPanel();
-	}
+		placeController = new PlaceController(eventBus);
+		activityMapper = new ActivityMapper(this);
 
-	@Override
-	public EventBus getEventBus() {
-		return bus;
+		inspector = new InspectorWidget(this);
+
+		datasetView = new DatasetPanel();
+		reportView = new ReportPanel();
+		eventView = new EventPanel();
 	}
 
 	@Override
 	public RequestFactory getRequestFactory() {
-		return rf;
+		return requestFactory;
 	}
 
 	@Override
 	public InspectorWidget getInspectorView() {
-		return widget;
+		return inspector;
 	}
 
 	@Override
 	public PlaceController getPlaceController() {
-		return pc;
+		return placeController;
 	}
 
 	@Override
-	public ReportView getClassBrowser() {
-		return cb;
+	public EventBus getEventBus() {
+		return eventBus;
+	}
+
+	@Override
+	public ActivityMapper getActivityMapper() {
+		return activityMapper;
+	}
+
+	@Override
+	public DatasetSelectorView getDatasetView() {
+		return datasetView;
+	}
+
+	@Override
+	public EventView getEventView() {
+		return eventView;
+	}
+
+	@Override
+	public ReportView getReportView() {
+		return reportView;
 	}
 
 }

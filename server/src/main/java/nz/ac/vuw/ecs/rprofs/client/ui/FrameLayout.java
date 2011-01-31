@@ -16,6 +16,7 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
+import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.IsWidget;
@@ -90,31 +91,48 @@ public class FrameLayout extends Composite {
 		});
 	}
 
-	public void setTop(IsWidget top) {
-		this.top.clear();
-		if (top == null) {
-			showTop(false);
-		}
-		else {
-			this.top.add(top);
-			showTop(true);
-		}
+	public AcceptsOneWidget getTop() {
+		return new AcceptsOneWidget() {
+			@Override
+			public void setWidget(IsWidget w) {
+				top.clear();
+				if (w == null) {
+					showTop(false);
+				}
+				else {
+					top.add(w);
+					showTop(true);
+				}
+			}
+		};
 	}
 
-	public void setCenter(IsWidget center) {
-		this.center.clear();
-		this.center.add(center);
+	public AcceptsOneWidget getCenter() {
+		return new AcceptsOneWidget() {
+			@Override
+			public void setWidget(IsWidget w) {
+				center.clear();
+				if (w != null) {
+					center.add(w);
+				}
+			}
+		};
 	}
 
-	public void setBottom(IsWidget bottom) {
-		this.bottom.clear();
-		if (bottom == null) {
-			showBottom(false);
-		}
-		else {
-			this.bottom.add(bottom);
-			showBottom(true);
-		}
+	public AcceptsOneWidget getBottom() {
+		return new AcceptsOneWidget() {
+			@Override
+			public void setWidget(IsWidget w) {
+				bottom.clear();
+				if (w == null) {
+					showBottom(false);
+				}
+				else {
+					bottom.add(w);
+					showBottom(true);
+				}
+			}
+		};
 	}
 
 	public void showTop(boolean show) {

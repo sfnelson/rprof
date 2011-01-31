@@ -1,70 +1,43 @@
-/**
- * 
- */
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.StringTokenizer;
 
-import javax.persistence.Id;
-import javax.persistence.Version;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 
-/**
- * @author Stephen Nelson (stephen@sfnelson.org)
- *
- */
 public class Report {
 
-	public static List<Report> findAllReports() {
-		return Arrays.asList(
-				new Report("Classes", "classes", "Classes"),
-				new Report("Instances", "instance", "instances")
-		);
+	public static Report findReport(String id) {
+		StringTokenizer tok = new StringTokenizer(id, "_");
+
+		assert(tok.countTokens() == 2);
+
+		Dataset dataset = Dataset.findDataset(tok.nextToken());
+		return ReportFactory.getInstance().createReport(dataset, tok.nextToken());
 	}
 
-	public Report generateReport() {
-		return this;
-	}
-
-	public Report updateReport() {
-		return this;
-	}
-
-	@Id
-	private String reference;
-
-	private String title;
-
-	private String description;
-
-	@Version
-	private int version;
+	Dataset dataset;
+	String name;
 
 	public Report() {}
 
-	public Report(String title, String reference, String description) {
-		this.title = title;
-		this.reference = reference;
-		this.description = description;
+	public Report(Dataset dataset, String name) {
+		this.dataset = dataset;
+		this.name = name;
 	}
 
 	public String getId() {
-		return reference;
-	}
-
-	public String getReference() {
-		return reference;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public String getDescription() {
-		return description;
+		return dataset.getHandle() + "_" + name;
 	}
 
 	public int getVersion() {
-		return version;
+		return 0;
+	}
+
+	public Dataset getDataset() {
+		return dataset;
+	}
+
+	public String getReport() {
+		return name;
 	}
 }

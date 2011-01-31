@@ -1,5 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-public class InstanceReport {
+public interface InstanceReport extends Runnable {
 
 }

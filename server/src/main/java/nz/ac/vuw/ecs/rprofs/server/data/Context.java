@@ -7,15 +7,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.DatasetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset.DatasetId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.domain.InstanceId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance.InstanceId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
+import nz.ac.vuw.ecs.rprofs.server.reports.FinalFieldReport;
+import nz.ac.vuw.ecs.rprofs.server.reports.InstanceReportFactory;
+import nz.ac.vuw.ecs.rprofs.server.reports.InstanceReportGenerator;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 public class Context {
@@ -71,6 +74,20 @@ public class Context {
 		c.db = Dataset.setStopped(c.db, Calendar.getInstance().getTime());
 
 		System.out.println("profiler run stopped at " + c.db.getStopped());
+
+		final Dataset dataset = c.db;
+		new Thread() {
+			@Override
+			public void run() {
+				System.out.println("generating reports started at " + Calendar.getInstance().getTime());
+
+				InstanceReportFactory<?> factory = new FinalFieldReport.ReportFactory(dataset);
+				InstanceReportGenerator reportGenerator = new InstanceReportGenerator(dataset, factory);
+				reportGenerator.run();
+
+				System.out.println("generating reports stopped at " + Calendar.getInstance().getTime());
+			}
+		}.start();
 	}
 
 	protected Dataset db;

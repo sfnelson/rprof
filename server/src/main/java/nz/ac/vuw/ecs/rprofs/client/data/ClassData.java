@@ -6,7 +6,7 @@ package nz.ac.vuw.ecs.rprofs.client.data;
 import java.util.ArrayList;
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.client.Collections;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 

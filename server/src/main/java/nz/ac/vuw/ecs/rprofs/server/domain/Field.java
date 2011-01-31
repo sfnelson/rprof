@@ -8,47 +8,38 @@ import java.io.Serializable;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.Version;
+
+import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  *
  */
-@SuppressWarnings("serial")
 @Entity
 @Table(name = "fields")
-public class Field implements Serializable, Attribute {
+public class Field implements Attribute {
 
+	@SuppressWarnings("serial")
 	@Embeddable
-	static class PK implements Serializable {
-		int owner_index;
-		int index;
-
-		@Override
-		public boolean equals(Object o) {
-			if (o == this) return true;
-			if (o == null) return false;
-			if (o.getClass() != this.getClass()) return false;
-			PK k = (PK) o;
-			return owner_index == k.owner_index && index == k.index;
-		}
-
-		@Override
-		public int hashCode() {
-			return owner_index ^ index;
+	public static class FieldId extends AttributeId implements Serializable {
+		public FieldId() {}
+		public FieldId(int owner_index, int index) {
+			super(owner_index, index);
 		}
 	}
 
-	@Transient
-	private FieldId id;
-
 	@EmbeddedId
-	PK key;
+	FieldId id;
 
-	@ManyToOne
+	@Version
+	int version;
+
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "owner_id", nullable = false)
 	private Class owner;
 
@@ -64,25 +55,29 @@ public class Field implements Serializable, Attribute {
 
 	Field() {}
 
-	public Field(FieldId id, Class owner, String desc, int access, boolean equals, boolean hash) {
+	public Field(FieldId id, String name, Class owner, String desc, int access, boolean equals, boolean hash) {
 		this.id = id;
-		this.key = id.key;
 		this.owner = owner;
-		this.name = id.name;
+		this.name = name;
 		this.description = desc;
 		this.equals = equals;
 		this.hash = hash;
 	}
 
-	public FieldId getId() {
-		if (id == null) {
-			id = new FieldId(owner.getClassId(), key.index, name);
-		}
+	public long getId() {
+		return id.getId();
+	}
+
+	public FieldId getAttributeId() {
 		return id;
 	}
 
+	public int getVersion() {
+		return version;
+	}
+
 	public int getIndex() {
-		return key.index;
+		return id.getIndex();
 	}
 
 	@Override
@@ -108,11 +103,11 @@ public class Field implements Serializable, Attribute {
 		return access;
 	}
 
-	public boolean isEquals() {
+	public boolean getEquals() {
 		return equals;
 	}
 
-	public boolean isHash() {
+	public boolean getHash() {
 		return hash;
 	}
 
@@ -127,7 +122,7 @@ public class Field implements Serializable, Attribute {
 	}
 
 	public static Field clone(Field f, Class owner) {
-		return new Field(f.id, owner, f.description, f.access, f.equals, f.hash);
+		return new Field(f.id, f.name, owner, f.description, f.access, f.equals, f.hash);
 	}
 
 	public void setEquals(boolean b) {

@@ -782,6 +782,7 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 					}
 				}
 
+#ifdef DEBUG
 				char buffer[255];
 				FILE *pre, *post;
 				int written, err;
@@ -809,6 +810,7 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 					fatal_error("error %d writing file: %s (%s)\n", err, strerror(err), buffer);
 				}
 				fclose(post);
+#endif
 
 				jvmti_space = (unsigned char *)allocate(jvmti, (jint)newLength);
 				(void)memcpy((void*)jvmti_space, (void*)newImage, (int)newLength);

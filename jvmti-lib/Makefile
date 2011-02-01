@@ -16,7 +16,7 @@ OS=$(shell uname)
 ifeq ($(OS),Darwin)
 	JDK=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home
 	CC=cc
-	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -arch i386 -I/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Headers/
+	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -arch i386 -I/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Headers/ -D DEBUG
 	LIBRARY=bin/lib$(LIBNAME).jnilib
 	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
 	LD_LIBRARY_PATH=

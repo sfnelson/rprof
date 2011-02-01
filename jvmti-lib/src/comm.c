@@ -15,6 +15,7 @@
 #include "rprof.h"
 
 #define EVENT_BUFFER_SIZE 1024
+#define HOST_MAX_LENGTH 256
 
 struct response {
 	jint* length;
@@ -37,9 +38,11 @@ typedef struct {
 	jrawMonitorID  lock;
 	EventRecord    records[EVENT_BUFFER_SIZE];
 	unsigned int   event_index;
+	char		   host[HOST_MAX_LENGTH];
 } GlobalCommData;
 
 static GlobalCommData *cdata;
+static char *host;
 
 /* Enter a critical section by doing a JVMTI Raw Monitor Enter */
 static void
@@ -63,13 +66,21 @@ exitCriticalSection()
 	check_jvmti_error(jvmti, error, "Cannot exit with raw monitor");
 }
 
-JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti)
+JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti, char *options)
 {
 	static GlobalCommData data;
 	jvmtiError error;
 
 	(void)memset((void*)&data, 0, sizeof(data));
 	cdata = &data;
+	
+	if (0 == options || 0 == strlen(options))
+	{
+		strcpy(cdata->host, "localhost:8888");
+	}
+	else {
+		strcpy(cdata->host, options);
+	}
 
 	cdata->jvmti = jvmti;
 
@@ -112,8 +123,10 @@ size_t read_response(void *buffer, size_t size, size_t nmemb, struct response* r
 JNIEXPORT void JNICALL log_profiler_started()
 {
 	CURL* handle = curl_easy_init();
-	char* host = "http://localhost:8888/start";
+	char host [HOST_MAX_LENGTH];
 	long status;
+	
+	sprintf(host, "http://%s/start", cdata->host);
 
 	curl_easy_setopt(handle, CURLOPT_URL, host);
 
@@ -127,12 +140,12 @@ JNIEXPORT void JNICALL log_profiler_started()
 	CURLcode err = curl_easy_perform(handle); /* post away! */
 
 	if (err != 0) {
-		fatal_error("error sending message! %d: %s\n", err, curl_easy_strerror(err));
+		fatal_error("error sending message! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
 	}
 
 	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
 	if (status/100 != 2) {
-		fatal_error("error sending message! HTTP %ld\n", status);
+		fatal_error("error sending message! HTTP %ld (%s)\n", status, host);
 	}
 
 	curl_slist_free_all(headers); /* free the header list */
@@ -142,8 +155,10 @@ JNIEXPORT void JNICALL log_profiler_started()
 JNIEXPORT void JNICALL log_profiler_stopped()
 {
 	CURL* handle = curl_easy_init();
-	char* host = "http://localhost:8888/stop";
+	char host [HOST_MAX_LENGTH];
 	long status;
+	
+	sprintf(host, "http://%s/stop", cdata->host);
 
 	curl_easy_setopt(handle, CURLOPT_URL, host);
 
@@ -157,12 +172,12 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 	CURLcode err = curl_easy_perform(handle); /* post away! */
 
 	if (err != 0) {
-		fatal_error("error sending message! %d: %s\n", err, curl_easy_strerror(err));
+		fatal_error("error sending message! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
 	}
 
 	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
 	if (status/100 != 2) {
-		fatal_error("error sending message! HTTP %ld\n", status);
+		fatal_error("error sending message! HTTP %ld (%s)\n", status, host);
 	}
 
 	curl_slist_free_all(headers); /* free the header list */
@@ -203,9 +218,11 @@ JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
 JNIEXPORT void JNICALL flush_method_event_buffer()
 {
 	CURL* handle = curl_easy_init();
-	char* host = "http://localhost:8888/logger";
+	char host [HOST_MAX_LENGTH];
 	long status;
 	CURLcode err;
+	
+	sprintf(host, "http://%s/logger", cdata->host);
 
 	curl_easy_setopt(handle, CURLOPT_URL, host);
 
@@ -227,12 +244,12 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 	}; exitCriticalSection();
 
 	if (err != 0) {
-		fatal_error("error sending log! %d: %s\n", err, curl_easy_strerror(err));
+		fatal_error("error sending log! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
 	}
 
 	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
 	if (status/100 != 2) {
-		fatal_error("error sending log! HTTP %ld\n", status);
+		fatal_error("error sending log! HTTP %ld (%s)\n", status, host);
 	}
 
 	curl_slist_free_all(headers); /* free the header list */
@@ -251,10 +268,12 @@ JNIEXPORT void JNICALL weave_classfile(
 	r.length = newLength;
 	r.image = newImage;
 	r.offset = 0;
-
+	
 	CURL* handle = curl_easy_init();
-	char* host = "http://localhost:8888/weaver?";
+	char host [HOST_MAX_LENGTH];
 	long status;
+	
+	sprintf(host, "http://%s/weaver?", cdata->host);
 
 	char name[strlen(classname) + strlen(host) + 1];
 	sprintf(name, "%s%s", host, classname);
@@ -281,12 +300,12 @@ JNIEXPORT void JNICALL weave_classfile(
 	CURLcode err = curl_easy_perform(handle); /* post away! */
 
 	if (err != 0) {
-		fatal_error("error weaving file! %d: %s\n", err, curl_easy_strerror(err));
+		fatal_error("error weaving file! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
 	}
 
 	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
 	if (status/100 != 2) {
-		fatal_error("error weaving file! HTTP %ld\n", status);
+		fatal_error("error weaving file! HTTP %ld (%s)\n", status, host);
 	}
 
 	curl_slist_free_all(headers); /* free the header list */

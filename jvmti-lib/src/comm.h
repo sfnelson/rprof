@@ -2,7 +2,7 @@
 #include <jni.h>
 #include <jvmti.h>
 
-JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti);
+JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti, char *options);
 
 JNIEXPORT void JNICALL weave_classfile(
 		const char* classname, int systemClass,

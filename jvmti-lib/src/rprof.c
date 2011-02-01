@@ -968,7 +968,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	gdata->jvmti = jvmti;
 
 	/* initialize comm utilities */
-	init_comm(jvmti);
+	init_comm(jvmti, options);
 
 	log_profiler_started();
 

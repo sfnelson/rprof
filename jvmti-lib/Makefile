@@ -20,6 +20,7 @@ ifeq ($(OS),Darwin)
 	LIBRARY=bin/lib$(LIBNAME).jnilib
 	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
 	LD_LIBRARY_PATH=
+	HOST=127.0.0.1:8888
 endif
 
 ifeq ($(OS),NetBSD)
@@ -29,6 +30,7 @@ ifeq ($(OS),NetBSD)
 	LIBRARY=bin/lib$(LIBNAME).so
 	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
 	LD_LIBRARY_PATH=.:/usr/pkg/lib
+	HOST=stephen.pvt.ecs.vuw.ac.nz:8888
 endif
 
 LIBRARIES=-lc -lcurl
@@ -55,7 +57,7 @@ clean:
 	rm -f -r bin classes objects tmp/pre/* tmp/post/*
 
 test: all
-	(cd bin; LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME) -classpath ../classes Test)
+	(cd bin; LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes Test)
 
 server: all
 	(cd classes; $(JDK)/bin/java nz.ac.vuw.ecs.rprof.Logger)

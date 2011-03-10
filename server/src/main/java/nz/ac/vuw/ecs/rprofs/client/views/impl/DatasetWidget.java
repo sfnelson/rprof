@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import nz.ac.vuw.ecs.rprofs.client.requests.DatasetProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetView;
 
 import com.google.gwt.core.client.GWT;

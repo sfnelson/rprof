@@ -3,9 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import java.io.Serializable;
-
-import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -14,7 +11,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -22,25 +20,18 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
  */
 @Entity
 @Table(name = "fields")
-public class Field implements Attribute {
+public class Field implements Attribute<Field> {
 
-	@SuppressWarnings("serial")
-	@Embeddable
-	public static class FieldId extends AttributeId implements Serializable {
-		public FieldId() {}
-		public FieldId(int owner_index, int index) {
-			super(owner_index, index);
-		}
-	}
+	public static final java.lang.Class<Field> TYPE = Field.class;
 
 	@EmbeddedId
 	FieldId id;
 
 	@Version
-	int version;
+	Integer version;
 
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "owner_id", nullable = false)
+	@ManyToOne(fetch=FetchType.EAGER)
+	@JoinColumn(name="owner_id", nullable=false)
 	private Class owner;
 
 	private String name;
@@ -64,20 +55,12 @@ public class Field implements Attribute {
 		this.hash = hash;
 	}
 
-	public long getId() {
-		return id.getId();
-	}
-
-	public FieldId getAttributeId() {
+	public FieldId getId() {
 		return id;
 	}
 
-	public int getVersion() {
+	public Integer getVersion() {
 		return version;
-	}
-
-	public int getIndex() {
-		return id.getIndex();
 	}
 
 	@Override
@@ -87,7 +70,7 @@ public class Field implements Attribute {
 
 	@Override
 	public ClassId getOwnerId() {
-		return owner.getClassId();
+		return owner.getId();
 	}
 
 	@Override

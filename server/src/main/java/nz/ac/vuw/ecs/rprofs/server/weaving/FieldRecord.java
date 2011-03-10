@@ -2,7 +2,8 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
-import nz.ac.vuw.ecs.rprofs.server.domain.Field.FieldId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 
 import org.objectweb.asm.Opcodes;
 
@@ -10,14 +11,14 @@ class FieldRecord implements AttributeRecord {
 
 	final Weaver weaver;
 	final ClassRecord parent;
-	final int id;
+	final short id;
 	final String name;
 	String description;
 	int access;
 	boolean equals;
 	boolean hash;
 
-	FieldRecord(ClassRecord parent, int id, String name) {
+	FieldRecord(ClassRecord parent, short id, String name) {
 		this.weaver = parent.weaver;
 		this.parent = parent;
 		this.id = id;
@@ -41,6 +42,8 @@ class FieldRecord implements AttributeRecord {
 	}
 
 	public Field toAttribute(Class cls) {
-		return new Field(new FieldId(cls.getClassId().getIndex(), id), name, cls, description, access, equals, hash);
+		ClassId cid = cls.getId();
+		FieldId fid = new FieldId(cid.getDataset(), cid.getIndex(), id);
+		return new Field(fid, name, cls, description, access, equals, hash);
 	}
 }

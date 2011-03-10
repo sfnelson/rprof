@@ -5,7 +5,8 @@ import java.util.Set;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 
 class ClassRecord {
 
@@ -21,8 +22,8 @@ class ClassRecord {
 	String[] interfaces;
 	Set<FieldRecord> watches = Collections.newSet();
 
-	Map<Integer, MethodRecord> methods = Collections.newMap();
-	Map<Integer, FieldRecord> fields = Collections.newMap();
+	Map<Short, MethodRecord> methods = Collections.newMap();
+	Map<Short, FieldRecord> fields = Collections.newMap();
 
 	ClassRecord(Weaver weaver, int id) {
 		this.weaver = weaver;
@@ -51,8 +52,9 @@ class ClassRecord {
 		this.properties = properties;
 	}
 
-	Class toClass() {
-		Class cls = new Class(new ClassId(id), name, null, properties);
+	Class toClass(Dataset dataset) {
+		ClassId cid = new ClassId(dataset.getId(), id);
+		Class cls = new Class(cid, name, null, properties);
 		for (MethodRecord m: methods.values()) {
 			cls.addAttribute(m.toAttribute(cls));
 		}

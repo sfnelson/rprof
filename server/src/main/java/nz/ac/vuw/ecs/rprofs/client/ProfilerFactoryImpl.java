@@ -2,12 +2,14 @@ package nz.ac.vuw.ecs.rprofs.client;
 
 import nz.ac.vuw.ecs.rprofs.client.activity.shared.ActivityMapper;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceController;
-import nz.ac.vuw.ecs.rprofs.client.requests.RequestFactory;
+import nz.ac.vuw.ecs.rprofs.client.request.RequestFactory;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetSelectorView;
+import nz.ac.vuw.ecs.rprofs.client.views.EventReportView;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.DatasetPanel;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.EventPanel;
+import nz.ac.vuw.ecs.rprofs.client.views.impl.EventReportPanel;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.InspectorWidget;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.ReportPanel;
 
@@ -27,6 +29,7 @@ public class ProfilerFactoryImpl implements ProfilerFactory {
 	private final DatasetSelectorView datasetView;
 	private final ReportView reportView;
 	private final EventView eventView;
+	private final EventReportView eventReportView;
 
 	public ProfilerFactoryImpl() {
 		eventBus = new SimpleEventBus();
@@ -41,6 +44,7 @@ public class ProfilerFactoryImpl implements ProfilerFactory {
 		datasetView = new DatasetPanel();
 		reportView = new ReportPanel();
 		eventView = new EventPanel();
+		eventReportView = new EventReportPanel();
 	}
 
 	@Override
@@ -81,6 +85,11 @@ public class ProfilerFactoryImpl implements ProfilerFactory {
 	@Override
 	public ReportView getReportView() {
 		return reportView;
+	}
+
+	@Override
+	public EventReportView getEventReportView() {
+		return eventReportView;
 	}
 
 }

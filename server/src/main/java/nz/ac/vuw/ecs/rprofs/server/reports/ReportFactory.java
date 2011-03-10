@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 
 public class ReportFactory {
 
@@ -10,7 +10,7 @@ public class ReportFactory {
 		return instance;
 	}
 
-	public Report createReport(Dataset dataset, String report) {
-		return new Report(dataset, report);
+	public Report createReport(Context context, String report) {
+		return new Report(context, report);
 	}
 }

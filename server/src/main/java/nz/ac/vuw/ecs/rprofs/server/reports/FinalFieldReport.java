@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.FieldWriteRecord;
@@ -16,10 +16,10 @@ public class FinalFieldReport extends Event.AbstractVisitor implements InstanceR
 
 	public static final class ReportFactory implements InstanceReportFactory<FinalFieldReport> {
 
-		private final Dataset dataset;
+		private final Context context;
 
-		public ReportFactory(Dataset dataset) {
-			this.dataset = dataset;
+		public ReportFactory(Context context) {
+			this.context = context;
 		}
 
 		@Override
@@ -29,7 +29,7 @@ public class FinalFieldReport extends Event.AbstractVisitor implements InstanceR
 
 		@Override
 		public void processResults(FinalFieldReport report) {
-			dataset.storeReports(report.getResults());
+			context.storeReports(report.getResults());
 		}
 
 	}

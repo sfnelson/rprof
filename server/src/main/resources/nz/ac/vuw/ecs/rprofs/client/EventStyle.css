@@ -1,0 +1,32 @@
+	.objectAllocated {}
+	.arrayAllocated {}
+	.methodEnter {}
+	.methodExit {}
+	.methodException {}
+	.fieldRead {}
+	.fieldWrite {}
+	.classWeave {}
+	.classInit {}
+	.objectTagged {}
+	.objectFreed {}
+	
+	.fieldRead .method, .fieldWrite .method { display: none; }
+	
+	.thread {
+		display: inline-block;
+		width: 3em;
+	}
+	.event {
+		display: inline-block;
+		width: 3em;
+		text-align: right;
+		padding-right: 0.5em;
+	}
+	.type {}
+	.deref {}
+	.method {}
+	.field {}
+	.args {
+		display: inline-block;
+	}
+	.hidden {}

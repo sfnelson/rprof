@@ -2,12 +2,13 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import nz.ac.vuw.ecs.rprofs.server.domain.Method.MethodId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 
 class MethodRecord implements AttributeRecord {
 
 	final Weaver weaver;
-	final int id;
+	final short id;
 	final ClassRecord parent;
 	final String name;
 	String signature;
@@ -15,7 +16,7 @@ class MethodRecord implements AttributeRecord {
 	int access;
 	String description;
 
-	MethodRecord(ClassRecord parent, int id, String name) {
+	MethodRecord(ClassRecord parent, short id, String name) {
 		this.weaver = parent.weaver;
 		this.id = id;
 		this.parent = parent;
@@ -30,7 +31,9 @@ class MethodRecord implements AttributeRecord {
 	}
 
 	public Method toAttribute(Class cls) {
-		return new Method(new MethodId(cls.getClassId().getIndex(), id), name, cls, description, access);
+		ClassId cid = cls.getId();
+		MethodId mid = new MethodId(cid.getDataset(), cid.getIndex(), id);
+		return new Method(mid, name, cls, description, access);
 	}
 
 	public boolean isNative() {

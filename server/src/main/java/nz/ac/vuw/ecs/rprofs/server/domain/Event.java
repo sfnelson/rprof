@@ -6,11 +6,9 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -18,10 +16,10 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.domain.Attribute.AttributeId;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.Instance.InstanceId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.LongId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.Id;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -29,7 +27,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.LongId;
  */
 @Entity
 @Table( name = "events" )
-public class Event {
+public class Event implements DataObject<Event> {
+
+	public static final java.lang.Class<Event> TYPE = Event.class;
 
 	public interface EventVisitor {
 		public void visitArrayAllocated(Event e);
@@ -77,59 +77,36 @@ public class Event {
 	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
 	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
 
-	@SuppressWarnings("serial")
-	@Embeddable
-	public static class EventId extends LongId {
-		public EventId() {}
-		public EventId(long id) {
-			super(id);
-		}
-	}
-
 	@EmbeddedId
 	EventId id;
 
 	@Version
-	int version;
+	Integer version;
 
 	@ManyToOne
-	@JoinColumns({
-		@JoinColumn(name = "thread_index", referencedColumnName = "index")
-	})
 	Instance thread;
 
 	Integer event;
 
 	@ManyToOne
-	@JoinColumns({
-		@JoinColumn(name = "class_index", referencedColumnName = "index")
-	})
 	Class type;
 
 	@ManyToOne
-	@JoinColumns({
-		@JoinColumn(name = "method_index", referencedColumnName = "index"),
-		@JoinColumn(name = "method_owner_index", referencedColumnName = "owner_index")
-	})
 	Method method;
 
 	@ManyToOne
-	@JoinColumns({
-		@JoinColumn(name = "field_index", referencedColumnName = "index"),
-		@JoinColumn(name = "field_owner_index", referencedColumnName = "owner_index")
-	})
 	Field field;
 
 	@ManyToMany
 	@JoinTable(
-			joinColumns = { @JoinColumn(name = "instance_index", referencedColumnName = "index") },
-			inverseJoinColumns = { @JoinColumn(name = "event_index", referencedColumnName = "index") }
+			joinColumns = { @JoinColumn(name = "instance_id") },
+			inverseJoinColumns = { @JoinColumn(name = "event_id") }
 	)
 	List<Instance> args;
 
 	public Event() {}
 
-	public Event(EventId id, Instance thread, int event, Class type, Attribute attr, ArrayList<Instance> args) {
+	public Event(EventId id, Instance thread, int event, Class type, Attribute<?> attr, ArrayList<Instance> args) {
 		this.id = id;
 		this.thread = thread;
 		this.event = event;
@@ -143,10 +120,10 @@ public class Event {
 		return args;
 	}
 
-	public List<InstanceId> getArgumentIds() {
-		List<InstanceId> ids = Collections.newList();
+	public List<ObjectId> getArgumentIds() {
+		List<ObjectId> ids = Collections.newList();
 		for (Instance i: args) {
-			ids.add(i.getInstanceId());
+			ids.add(i.getId());
 		}
 		return ids;
 	}
@@ -155,23 +132,19 @@ public class Event {
 		return type;
 	}
 
-	public ClassId getTypeId() {
-		return type.getClassId();
+	public Id<Class> getTypeId() {
+		return type.getId();
 	}
 
 	public int getEvent() {
 		return event;
 	}
 
-	public long getId() {
-		return id.getIndex();
-	}
-
-	public EventId getEventId() {
+	public EventId getId() {
 		return id;
 	}
 
-	public int getVersion() {
+	public Integer getVersion() {
 		return version;
 	}
 
@@ -183,23 +156,23 @@ public class Event {
 		return method;
 	}
 
-	public Attribute getAttribute() {
+	public Attribute<?> getAttribute() {
 		return (method == null) ? field : method;
 	}
 
-	public AttributeId getAttributeId() {
-		return getAttribute().getAttributeId();
+	public AttributeId<?> getAttributeId() {
+		return getAttribute().getId();
 	}
 
 	public Instance getThread() {
 		return thread;
 	}
 
-	public InstanceId getThreadId() {
-		return thread.getInstanceId();
+	public ObjectId getThreadId() {
+		return thread.getId();
 	}
 
-	public void setAttribute(Attribute attribute) {
+	public void setAttribute(Attribute<?> attribute) {
 		if (attribute instanceof Method) {
 			method = (Method) attribute;
 		}

@@ -8,12 +8,10 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -21,9 +19,9 @@ import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.domain.Attribute.AttributeId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Attribute.AttributeVisitor;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.IntegerId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 
 
 /**
@@ -32,16 +30,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.IntegerId;
  */
 @Entity
 @Table( name = "classes" )
-public class Class {
+public class Class implements DataObject<Class> {
 
-	@SuppressWarnings("serial")
-	@Embeddable
-	public static class ClassId extends IntegerId {
-		public ClassId() {}
-		public ClassId(int id) {
-			super(id);
-		}
-	}
+	public static final java.lang.Class<Class> TYPE = Class.class;
 
 	public static final int CLASS_VERSION_UPDATED = 0x1;
 	public static final int CLASS_IGNORED_PACKAGE_FILTER = 0x2;
@@ -54,10 +45,8 @@ public class Class {
 
 	private Integer properties;
 
-	@ManyToOne
-	@JoinColumns({
-		@JoinColumn(name = "parent_index", referencedColumnName = "index")
-	})
+	@ManyToOne(fetch=FetchType.EAGER)
+	@JoinColumn(name = "parent_id")
 	private Class parent;
 
 	@OneToMany(mappedBy="owner", cascade=CascadeType.ALL, fetch=FetchType.EAGER)
@@ -83,28 +72,20 @@ public class Class {
 		this.fields = Collections.newSet();
 	}
 
-	public Class(ClassId id, String name, Class parent, int properties, Iterable<? extends Attribute> attributes) {
+	public Class(ClassId id, String name, Class parent, int properties, Iterable<? extends Attribute<?>> attributes) {
 		this(id, name, parent, properties);
 
-		for (Attribute a : attributes) {
+		for (Attribute<?> a : attributes) {
 			addAttribute(a);
 		}
 	}
 
-	public long getId() {
-		return id.getIndex();
-	}
-
-	public int getIndex() {
-		return id.getIndex();
-	}
-
-	public int getVersion() {
-		return version;
-	}
-
-	public ClassId getClassId() {
+	public ClassId getId() {
 		return id;
+	}
+
+	public Integer getVersion() {
+		return version;
 	}
 
 	public void setParent(Class parent) {
@@ -116,7 +97,7 @@ public class Class {
 	}
 
 	public ClassId getParentId() {
-		return parent.getClassId();
+		return parent.getId();
 	}
 
 	public String getName() {
@@ -138,22 +119,22 @@ public class Class {
 		return getName().substring(last + 1);
 	}
 
-	public List<? extends Attribute> getAttributes() {
-		List<Attribute> attributes = Collections.newList();
+	public List<? extends Attribute<?>> getAttributes() {
+		List<Attribute<?>> attributes = Collections.newList();
 		attributes.addAll(methods);
 		attributes.addAll(fields);
 		return attributes;
 	}
 
-	public List<AttributeId> getAttributeIds() {
-		List<AttributeId> ids = Collections.newList();
-		for (Attribute a: getAttributes()) {
-			ids.add(a.getAttributeId());
+	public List<AttributeId<?>> getAttributeIds() {
+		List<AttributeId<?>> ids = Collections.newList();
+		for (Attribute<?> a: getAttributes()) {
+			ids.add(a.getId());
 		}
 		return ids;
 	}
 
-	public void addAttribute(Attribute a) {
+	public void addAttribute(Attribute<?> a) {
 		if (a.getOwner() != this) throw new RuntimeException("trying to store unmatched attribute");
 		if (attributeStorer == null) {
 			attributeStorer = new AttributeVisitor() {

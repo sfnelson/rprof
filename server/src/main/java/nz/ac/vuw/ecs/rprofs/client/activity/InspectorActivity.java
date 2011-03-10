@@ -6,9 +6,10 @@ import nz.ac.vuw.ecs.rprofs.client.place.InspectorPlace;
 import nz.ac.vuw.ecs.rprofs.client.place.InstancePlace;
 import nz.ac.vuw.ecs.rprofs.client.place.ReportPlace;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlaceHistoryMapper;
-import nz.ac.vuw.ecs.rprofs.client.requests.DatasetProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.DatasetRequest;
-import nz.ac.vuw.ecs.rprofs.client.requests.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.DatasetRequest;
+import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.InstanceRequest;
 
 import com.google.gwt.activity.shared.AbstractActivity;
 import com.google.gwt.event.shared.EventBus;
@@ -55,11 +56,10 @@ public class InspectorActivity extends AbstractActivity {
 		datasetPlace = dataset;
 
 		if (place.getInstance() != 0 && dataset.getDataset() != null) {
-			DatasetRequest rq = factory.getRequestFactory().datasetRequest();
-			rq.findInstance(place.getInstance()).using(dataset.getDataset())
+			InstanceRequest rq = factory.getRequestFactory().instanceRequest();
+			rq.findInstance(place.getInstance())
 			.with("type", "constructor", "events")
 			.fire(new Receiver<InstanceProxy>() {
-
 				@Override
 				public void onSuccess(InstanceProxy response) {
 					InstancePlace place;
@@ -72,7 +72,6 @@ public class InspectorActivity extends AbstractActivity {
 
 					setInstance(place);
 				}
-
 			});
 		}
 

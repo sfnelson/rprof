@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.ui;
 
-import nz.ac.vuw.ecs.rprofs.client.requests.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 
 import com.google.gwt.user.client.ui.InlineLabel;
 

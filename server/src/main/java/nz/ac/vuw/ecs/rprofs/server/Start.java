@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
 
 
 /**
@@ -15,12 +15,12 @@ import nz.ac.vuw.ecs.rprofs.server.data.Context;
  */
 @SuppressWarnings("serial")
 public class Start extends HttpServlet {
-    
+
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
-		
-		Context.start();
+
+		ContextManager.getInstance().start();
 	}
 
 }

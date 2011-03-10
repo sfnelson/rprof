@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 
@@ -26,7 +26,7 @@ public class Weave extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
 
-		ActiveContext context = Context.getCurrent();
+		ActiveContext context = ContextManager.getInstance().getCurrent();
 
 		Map<String, String> headers = new HashMap<String, String>();
 		for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements();) {

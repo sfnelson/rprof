@@ -1,15 +1,15 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset.DatasetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 
 import org.hibernate.cfg.ImprovedNamingStrategy;
 
 @SuppressWarnings("serial")
 public class NamingStrategy extends ImprovedNamingStrategy {
 
-	public static ThreadLocal<DatasetId> currentRun = new ThreadLocal<DatasetId>();
+	public static ThreadLocal<Dataset> currentRun = new ThreadLocal<Dataset>();
 
-	private DatasetId run;
+	private Dataset run;
 
 	public NamingStrategy() {
 		run = currentRun.get();
@@ -18,8 +18,8 @@ public class NamingStrategy extends ImprovedNamingStrategy {
 
 	@Override
 	public String tableName(String tableName) {
-		if (currentRun.get() != null) {
-			return "run_" + currentRun.get().getHandle() + "_" + tableName;
+		if (run != null) {
+			return "run_" + run.getHandle() + "_" + tableName;
 		}
 		else {
 			return tableName;

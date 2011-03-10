@@ -2,8 +2,8 @@ package nz.ac.vuw.ecs.rprofs.client.activity;
 
 import nz.ac.vuw.ecs.rprofs.client.ProfilerFactory;
 import nz.ac.vuw.ecs.rprofs.client.place.DatasetPlace;
-import nz.ac.vuw.ecs.rprofs.client.requests.DatasetProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.DatasetRequest;
+import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.DatasetRequest;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetSelectorView;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetView;
 
@@ -51,7 +51,7 @@ public class DatasetActivity extends ListActivity<DatasetProxy> implements Datas
 		panel.setWidget(view);
 
 		refresh();
-		timer.scheduleRepeating(10000);
+		//timer.scheduleRepeating(10000); TODO reenable
 	}
 
 	@Override

@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.client.views.impl;
 import java.util.List;
 import java.util.Map;
 
-import nz.ac.vuw.ecs.rprofs.client.requests.DatasetProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetSelectorView;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetView;

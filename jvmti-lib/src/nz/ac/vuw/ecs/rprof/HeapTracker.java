@@ -9,24 +9,24 @@
  * -Redistribution of source code must retain the above copyright notice, this
  *  list of conditions and the following disclaimer.
  * 
- * -Redistribution in binary form must reproduce the above copyright notice, 
+ * -Redistribution in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation
  *  and/or other materials provided with the distribution.
  * 
- * Neither the name of Sun Microsystems, Inc. or the names of contributors may 
- * be used to endorse or promote products derived from this software without 
+ * Neither the name of Sun Microsystems, Inc. or the names of contributors may
+ * be used to endorse or promote products derived from this software without
  * specific prior written permission.
  * 
- * This software is provided "AS IS," without a warranty of any kind. ALL 
+ * This software is provided "AS IS," without a warranty of any kind. ALL
  * EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING
  * ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
  * OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN MIDROSYSTEMS, INC. ("SUN")
  * AND ITS LICENSORS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY LICENSEE
  * AS A RESULT OF USING, MODIFYING OR DISTRIBUTING THIS SOFTWARE OR ITS
- * DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR ANY LOST 
- * REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL, CONSEQUENTIAL, 
- * INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY 
- * OF LIABILITY, ARISING OUT OF THE USE OF OR INABILITY TO USE THIS SOFTWARE, 
+ * DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR ANY LOST
+ * REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL, CONSEQUENTIAL,
+ * INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY
+ * OF LIABILITY, ARISING OUT OF THE USE OF OR INABILITY TO USE THIS SOFTWARE,
  * EVEN IF SUN HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
  * 
  * You acknowledge that this software is not designed, licensed or intended
@@ -40,17 +40,28 @@ package nz.ac.vuw.ecs.rprof;
  *    injections of all class files.
  */
 
+/**
+ * Provides static methods which are called from the byte code injected by the
+ * static weaver. Provides facility for generating unique ids for objects.
+ * 
+ * Object ids are 64 bits:
+ * <dl>
+ * <dt>0-15</dt><dd>These bits are reserved for the database.</dd>
+ * <dt>16-31</dt><dd>These bits identify the thread that created the object.</dd>
+ * <dt>32-63</dt><dd>These bits identify the object - unique within a thread.</dd>
+ * </dl>
+ */
 public class HeapTracker {
 
 	private static int engaged;
 	private static int cnum;
 	private static HeapTracker nullCounter;
-	private static volatile long nextThreadId;
-	
+	private static volatile short nextThreadId;
+
 	public static HeapTracker create() {
 		return new HeapTracker();
 	}
-	
+
 	private static native void _newcls(Object cls, int cnum, int[] fieldsToWatch);
 	public static void newcls(Object cls, int cnum, int[] fieldsToWatch) {
 		if ( engaged != 0 ) {
@@ -85,7 +96,7 @@ public class HeapTracker {
 			_mexit(Thread.currentThread(), cnum, mnum, arg);
 		}
 	}
-	
+
 	private static native void _mexcept(Object thread, int cnum, int mnum, Object arg);
 	public static void except(int cnum, int mnum, Object arg) {
 		if ( engaged != 0 ) {
@@ -107,18 +118,18 @@ public class HeapTracker {
 	private static HeapTracker getTracker() {
 		HeapTracker c = null;
 		Thread current = Thread.currentThread();
-		
+
 		if (current != null) {
 			c = _getTracker(current);
 		}
-		
+
 		if (c == null) {
 			c = nullCounter;
 		}
 
 		return c;
 	}
-	
+
 	public static HeapTracker _getTracker(Thread current) {
 		return null; // return current._rprof;
 	}
@@ -127,49 +138,49 @@ public class HeapTracker {
 		// current._rprof = tracker;
 	}
 
-	private static synchronized long nextThreadId() {
-		long id = nextThreadId;
-		nextThreadId = id + (1l << 32);
+	private static synchronized short nextThreadId() {
+		short id = nextThreadId;
+		nextThreadId = id++;
 		return id;
 	}
-	
+
 	static {
 		engaged = 0;
-		nextThreadId = (1l << 32);
-		nullCounter = new HeapTracker(0l);
+		nextThreadId = 1;
+		nullCounter = new HeapTracker((short) 0);
 	}
 
-	private final long threadId;
+	private final long thread;
 	private long counter = 0;
 
 	{
 		// If this is called from <clinit> we never see it
 		newcls(HeapTracker.class, cnum, null);
 	}
-	
+
 	private HeapTracker() {
-		threadId = nextThreadId();
+		this(nextThreadId());
 	}
-	
-	private HeapTracker(long threadId) {
-		this.threadId = threadId;
+
+	private HeapTracker(short threadId) {
+		this.thread = ((long) threadId) << 32;
 	}
 
 	public long newId() {
-		return (threadId == 0) ? 0 : (threadId | ++counter);
+		return (thread == 0) ? 0 : (thread | ++counter);
 	}
 }
 
 /* Empty version for testing */
 
 /*public class HeapTracker {
-	
+
 	private static int engaged = 0;
 
 	public static HeapTracker create() {
 		return new HeapTracker();
 	}
-	
+
 	private static native void _newcls(Object cls, int cnum, int[] fieldsToWatch);
 	public static void newcls(Object cls, int cnum, int[] fieldsToWatch) {}
 
@@ -187,7 +198,7 @@ public class HeapTracker {
 
 	private static native void _main(Object thread, int cnum, int mnum);
 	public static void main(int cnum, int mnum) {}
-	
+
 	public static HeapTracker _getTracker(Thread current) {
 		return null; // return current._rprof;
 	}

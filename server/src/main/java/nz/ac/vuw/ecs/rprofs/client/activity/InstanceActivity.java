@@ -4,8 +4,8 @@ import java.util.List;
 
 import nz.ac.vuw.ecs.rprofs.client.ProfilerFactory;
 import nz.ac.vuw.ecs.rprofs.client.place.InstancePlace;
-import nz.ac.vuw.ecs.rprofs.client.requests.DatasetRequest;
-import nz.ac.vuw.ecs.rprofs.client.requests.EventProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.EventRequest;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 
 import com.google.gwt.activity.shared.AbstractActivity;
@@ -30,8 +30,8 @@ public class InstanceActivity extends AbstractActivity implements EventView.Pres
 			return;
 		}
 
-		DatasetRequest rq = factory.getRequestFactory().datasetRequest();
-		rq.findEventsByInstance(place.getInstance().getIndex()).using(place.getDataset().getDataset())
+		EventRequest rq = factory.getRequestFactory().eventRequest();
+		rq.findEventsByInstance(place.getInstance())
 		.with("thread", "type", "method", "field", "args")
 		.fire(new Receiver<List<EventProxy>>() {
 			@Override

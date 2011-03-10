@@ -17,8 +17,8 @@ class Weaver {
 
 	private ActiveContext context;
 	private ClassRecord cr;
-	private int lastMethodId = 0;
-	private int lastFieldId = 0;
+	private short lastMethodId = 0;
+	private short lastFieldId = 0;
 
 	private Map<Field, FieldRecord> fieldMap = Collections.newMap();
 
@@ -76,7 +76,7 @@ class Weaver {
 		if (cr.name.equals(owner)) {
 			FieldRecord fr = cr.getField(name, desc);
 			if (fr != null) {
-				Field f = fr.toAttribute(cr.toClass());
+				Field f = fr.toAttribute(cr.toClass(context.getDataset()));
 				fieldMap.put(f, fr);
 				return f;
 			}

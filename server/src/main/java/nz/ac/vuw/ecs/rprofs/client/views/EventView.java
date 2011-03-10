@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.views;
 
-import nz.ac.vuw.ecs.rprofs.client.requests.EventProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 
 import com.google.gwt.user.client.ui.IsWidget;
 

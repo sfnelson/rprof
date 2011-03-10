@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.place;
 
-import nz.ac.vuw.ecs.rprofs.client.requests.DatasetProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 
 import com.google.gwt.place.shared.Place;
 

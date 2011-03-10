@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.client.activity.shared;
 import nz.ac.vuw.ecs.rprofs.client.ProfilerFactory;
 import nz.ac.vuw.ecs.rprofs.client.activity.ClassReportActivity;
 import nz.ac.vuw.ecs.rprofs.client.activity.DatasetActivity;
+import nz.ac.vuw.ecs.rprofs.client.activity.EventBrowserActivity;
 import nz.ac.vuw.ecs.rprofs.client.activity.FieldBrowserActivity;
 import nz.ac.vuw.ecs.rprofs.client.activity.InspectorActivity;
 import nz.ac.vuw.ecs.rprofs.client.activity.InstanceActivity;
@@ -10,6 +11,7 @@ import nz.ac.vuw.ecs.rprofs.client.activity.InstanceReportActivity;
 import nz.ac.vuw.ecs.rprofs.client.activity.ReportActivity;
 import nz.ac.vuw.ecs.rprofs.client.place.ClassBrowserPlace;
 import nz.ac.vuw.ecs.rprofs.client.place.DatasetPlace;
+import nz.ac.vuw.ecs.rprofs.client.place.EventBrowserPlace;
 import nz.ac.vuw.ecs.rprofs.client.place.FieldBrowserPlace;
 import nz.ac.vuw.ecs.rprofs.client.place.InspectorPlace;
 import nz.ac.vuw.ecs.rprofs.client.place.InstanceBrowserPlace;
@@ -58,6 +60,9 @@ public class ActivityMapper implements com.google.gwt.activity.shared.ActivityMa
 		}
 		else if (place instanceof FieldBrowserPlace) {
 			result = new FieldBrowserActivity(factory, (FieldBrowserPlace) place);
+		}
+		else if (place instanceof EventBrowserPlace) {
+			result = new EventBrowserActivity(factory, (EventBrowserPlace) place);
 		}
 
 		return result;

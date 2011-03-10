@@ -1,6 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -8,81 +7,49 @@ import java.util.List;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.server.db.Datastore;
+import nz.ac.vuw.ecs.rprofs.server.db.NamingStrategy;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset.DatasetId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+import nz.ac.vuw.ecs.rprofs.server.domain.FieldWriteRecord;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.domain.Instance.InstanceId;
-import nz.ac.vuw.ecs.rprofs.server.domain.Method;
+import nz.ac.vuw.ecs.rprofs.server.domain.Package;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.reports.FinalFieldReport;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstanceReportFactory;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstanceReportGenerator;
-import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+
 
 public class Context {
 
-	private static Map<DatasetId, Context> contexts = Collections.newMap();
-	private static ActiveContext current;
+	protected final Dataset dataset;
+	protected final Datastore db;
 
-	public static ActiveContext getCurrent() {
-		return current;
+	protected Context(Dataset dataset) {
+		this.dataset = dataset;
+
+		NamingStrategy.currentRun.set(dataset);
+		ApplicationContext c =
+			new ClassPathXmlApplicationContext("nz/ac/vuw/ecs/rprofs/server/context.xml");
+		db = c.getBean(Datastore.class);
+		NamingStrategy.currentRun.set(null);
 	}
 
-	public static Collection<? extends DatasetId> getDatasets() {
-		ArrayList<DatasetId> ids = Collections.newList();
-		for (Dataset d: Dataset.findAllDatasets()) {
-			ids.add(d.getDatasetId());
-		}
-		return ids;
-	}
+	public void stop() {
+		setStopped();
 
-	public static void dropDataset(DatasetId id) {
-		if (contexts.containsKey(id)) {
-			Context c = contexts.get(id);
-			c.dispose();
-			Dataset.deleteDataset(c.db);
-		}
-	}
-
-	public static Context getInstance(DatasetId id) {
-		if (!contexts.containsKey(id)) {
-			contexts.put(id, new Context(Dataset.getDataset(id)));
-		}
-
-		return contexts.get(id);
-	}
-
-	public static void start() {
-		if (current != null) {
-			stop();
-		}
-
-		Dataset record = Dataset.createDataset();
-		current = new ActiveContext(record);
-		contexts.put(current.db.getDatasetId(), current);
-
-		System.out.println("profiler run started at " + record.getStarted());
-	}
-
-	public static void stop() {
-		ActiveContext c = current;
-		if (c == null) return;
-		current = null;
-
-		c.db = Dataset.setStopped(c.db, Calendar.getInstance().getTime());
-
-		System.out.println("profiler run stopped at " + c.db.getStopped());
-
-		final Dataset dataset = c.db;
 		new Thread() {
 			@Override
 			public void run() {
 				System.out.println("generating reports started at " + Calendar.getInstance().getTime());
 
-				InstanceReportFactory<?> factory = new FinalFieldReport.ReportFactory(dataset);
-				InstanceReportGenerator reportGenerator = new InstanceReportGenerator(dataset, factory);
+				InstanceReportFactory<?> factory = new FinalFieldReport.ReportFactory(Context.this);
+				InstanceReportGenerator reportGenerator = new InstanceReportGenerator(Context.this, factory);
 				reportGenerator.run();
 
 				System.out.println("generating reports stopped at " + Calendar.getInstance().getTime());
@@ -90,55 +57,71 @@ public class Context {
 		}.start();
 	}
 
-	protected Dataset db;
+	protected void setStopped() {
+		Datastore database = ContextManager.getInstance().database;
 
-	public Context(Dataset data) {
-		db = data;
+		Dataset dataset = database.findRecord(Dataset.class, this.dataset.getId());
+		dataset.setStopped(Calendar.getInstance().getTime());
+		database.updateDataset(dataset);
+
+		System.out.println("profiler run stopped at " + dataset.getStopped());
 	}
 
-	public DatasetId getDataset() {
-		return db.getDatasetId();
+	protected void setProgram(String program) {
+		Datastore database = ContextManager.getInstance().database;
+
+		final Dataset dataset = database.findRecord(Dataset.class, this.dataset.getId());
+		dataset.setProgram(program);
+		database.updateDataset(dataset);
 	}
 
-	private void dispose() {
-		contexts.remove(db.getDatasetId());
-
-		/*for (ReportGenerator r: reports.values()) {
-			r.dispose();
-		}*/
+	protected void close() {
+		db.close();
 	}
 
-	public Collection<? extends Class> getClasses() {
-		return db.getClasses();
-	}
-
-	public int getNumLogs(int type, ClassId cls) {
-		return db.getNumLogs(type, cls);
-	}
-
-	public List<? extends Event> getLogs(int offset, int limit, int type, ClassId cls) {
-		return db.getLogs(offset, limit, type, cls);
-	}
-
-	//	private Map<Report, ReportGenerator> reports = Collections.newMap();
-	//	public ReportGenerator getReport(Report report) {
-	//		if (!reports.containsKey(report)) {
-	//			reports.put(report, ReportGenerator.create(report, db, this));
-	//		}
-	//		return reports.get(report);
-	//	}
-
-	public Instance getInstanceInformation(InstanceId instance) {
-		int count = db.getNumLogs(Event.OBJECT_ALLOCATED, instance);
-		if (count != 0) {
-			Event alloc = db.getLogs(count - 1, 1, Event.OBJECT_ALLOCATED, instance).get(0);
-			Class type = alloc.getType();
-			Method method = (Method) alloc.getAttribute();
-			List<? extends Event> events = db.getLogs(Event.FIELDS, instance);
-			return new Instance(instance, type, method, events);
+	public List<? extends Package> findPackages() {
+		Map<String, Package> packages = Collections.newMap();
+		for (Class c: db.findRecords(Class.class)) {
+			String name = c.getPackage();
+			Package p = packages.get(name);
+			if (p == null) {
+				p = new Package(dataset.getHandle(), name, 1);
+				packages.put(name, p);
+			}
+			else {
+				p.incrementClasses();
+			}
 		}
-		else {
-			return null;
+		return new ArrayList<Package>(packages.values());
+	}
+
+	public List<? extends Class> findClasses(String name) {
+		List<Class> classes = Collections.newList();
+		for (Class c: db.findRecords(Class.class)) {
+			if (c.getPackage().equals(name)) {
+				classes.add(c);
+			}
 		}
+		return classes;
+	}
+
+	public List<? extends Instance> findInstances(ClassId id) {
+		Class cls = db.findRecord(Class.class, id);
+		if (cls != null) {
+			return db.findInstancesByType(cls);
+		}
+		return Collections.newList();
+	}
+
+	public Dataset getDataset() {
+		return dataset;
+	}
+
+	public void storeReports(Collection<FieldWriteRecord> results) {
+		db.storeRecords(results);
+	}
+
+	public List<? extends Event> findEvents(int start, int limit) {
+		return db.findEvents(start, limit);
 	}
 }

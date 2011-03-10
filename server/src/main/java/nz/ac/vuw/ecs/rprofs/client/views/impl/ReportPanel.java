@@ -3,11 +3,11 @@ package nz.ac.vuw.ecs.rprofs.client.views.impl;
 import java.util.List;
 import java.util.Map;
 
-import nz.ac.vuw.ecs.rprofs.client.requests.ClassProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.FieldProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.InstanceProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.PackageProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.PackageProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 

@@ -77,6 +77,9 @@
 				<r:PlaceAnchor reference="fields" title="Fields"
 					description="Browse fields encountered by the profile, examining their observed behaviour."
 					styleName="{style.button}" />
+				<r:PlaceAnchor reference="events" title="Events"
+					description="Browse Events."
+					styleName="{style.button}" />
 			</g:FlowPanel>
 			<r:UIButton addStyleNames='{style.closeButton}' ui:field='close'>
 				<span>&laquo;</span>

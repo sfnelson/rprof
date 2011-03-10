@@ -5,7 +5,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
@@ -25,16 +24,11 @@ public class FieldWriteRecord {
 	int version;
 
 	@ManyToOne
-	@JoinColumns({
-		@JoinColumn(name = "instance_index", referencedColumnName = "index")
-	})
+	@JoinColumn(name = "instance_id")
 	Instance instance;
 
 	@ManyToOne
-	@JoinColumns({
-		@JoinColumn(name = "field_index", referencedColumnName = "index"),
-		@JoinColumn(name = "field_owner_index", referencedColumnName = "owner_index")
-	})
+	@JoinColumn(name = "field_id")
 	Field field;
 
 	int phase;

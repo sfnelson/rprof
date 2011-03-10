@@ -2,20 +2,20 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 public class Package {
 
+	private String dataset;
 	private String name;
 	private int numClasses;
 
-	public Package(String name, int numClasses) {
+	public Package() {}
+
+	public Package(String dataset, String name, int numClasses) {
+		this.dataset = dataset;
 		this.name = name;
 		this.numClasses = numClasses;
 	}
 
-	public String getId() {
-		return name;
-	}
-
-	public int getVersion() {
-		return 1;
+	public String getDataset() {
+		return dataset;
 	}
 
 	public String getName() {

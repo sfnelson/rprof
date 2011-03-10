@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.client.requests.EventProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 

@@ -2,11 +2,11 @@ package nz.ac.vuw.ecs.rprofs.client.views;
 
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.client.requests.ClassProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.FieldProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.InstanceProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.requests.PackageProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.PackageProxy;
 
 import com.google.gwt.user.client.ui.IsWidget;
 

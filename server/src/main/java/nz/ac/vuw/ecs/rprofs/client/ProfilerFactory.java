@@ -1,8 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
 import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceController;
-import nz.ac.vuw.ecs.rprofs.client.requests.RequestFactory;
+import nz.ac.vuw.ecs.rprofs.client.request.RequestFactory;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetSelectorView;
+import nz.ac.vuw.ecs.rprofs.client.views.EventReportView;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 import nz.ac.vuw.ecs.rprofs.client.views.InspectorView;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
@@ -22,5 +23,7 @@ public interface ProfilerFactory {
 	DatasetSelectorView getDatasetView();
 	ReportView getReportView();
 	EventView getEventView();
+
+	EventReportView getEventReportView();
 
 }

@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
 
 
 
@@ -20,7 +20,8 @@ public class Stop extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
-		Context.stop();
+		ContextManager cm = ContextManager.getInstance();
+		cm.stop(cm.getCurrent().getDataset());
 	}
 
 }

@@ -11,11 +11,11 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Attribute;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
-import nz.ac.vuw.ecs.rprofs.server.domain.Event.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.domain.Instance.InstanceId;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 
 public class ActiveContext extends Context {
 
@@ -23,14 +23,14 @@ public class ActiveContext extends Context {
 	private final Map<Integer, ClassRecord> classRecords;
 	private final Map<Long, Instance> objects;
 
-	private final Map<InstanceId, Event> pendingAllocations;
+	private final Map<ObjectId, Event> pendingAllocations;
 	private final Map<String, List<Class>> pendingSupers;
 
 	private final Map<Integer, Class> classMap;
 	private final Map<String, Class> classNameMap;
 
-	public ActiveContext(Dataset data) {
-		super(data);
+	public ActiveContext(Dataset dataset) {
+		super(dataset);
 
 		classRecords = Collections.newMap();
 		objects = Collections.newMap();
@@ -48,7 +48,7 @@ public class ActiveContext extends Context {
 
 		for (Event r : records) {
 			Class cls = r.getType();
-			Attribute attr = r.getAttribute();
+			Attribute<?> attr = r.getAttribute();
 			Instance first = r.getArguments().isEmpty() ? null : r.getArguments().get(0);
 
 			switch (r.getEvent()) {
@@ -68,14 +68,14 @@ public class ActiveContext extends Context {
 					updates.add(alloc);
 				}
 				if (first != null) {
-					first = db.getInstance(first.getInstanceId());
+					first = db.findRecord(Instance.class, first.getId());
 					first.setType(cls);
 					first.setConstructor((Method) r.getAttribute());
-					db.updateInstance(first);
+					db.updateRecord(first);
 				}
 				break;
 			case Event.OBJECT_ALLOCATED:
-				pendingAllocations.put(first.getInstanceId(), r);
+				pendingAllocations.put(first.getId(), r);
 				remove.add(r);
 				break;
 			case Event.OBJECT_FREED:
@@ -86,18 +86,16 @@ public class ActiveContext extends Context {
 
 		records.removeAll(remove);
 
-		db.storeLogs(records);
-		db.storeLogs(updates);
+		db.storeRecords(records);
+		db.storeRecords(updates);
 	}
 
 	public void setMainMethod(String name) {
-		if (db.getProgram() == null) {
-			db = Dataset.setProgram(db, name);
-		}
+		setProgram(name);
 	}
 
 	public EventId nextEvent() {
-		return new EventId(++eventId);
+		return new EventId(dataset.getId(), ++eventId);
 	}
 
 	public byte[] weaveClass(byte[] buffer) {
@@ -107,7 +105,7 @@ public class ActiveContext extends Context {
 		byte[] result = weaver.weave(buffer);
 
 		ClassRecord cr = weaver.getClassRecord();
-		Class cls = db.storeClass(cr.toClass());
+		Class cls = db.storeRecord(cr.toClass(dataset));
 
 		EventId id = nextEvent();
 		Event record = new Event(id, null, Event.CLASS_WEAVE, cls, null, new ArrayList<Instance>());
@@ -120,7 +118,7 @@ public class ActiveContext extends Context {
 		if (cr.superName == null);
 		else if (classNameMap.containsKey(cr.superName)) {
 			cls.setParent(classNameMap.get(cr.superName));
-			db.updateClass(cls);
+			db.updateRecord(cls);
 		}
 		else {
 			List<Class> list = pendingSupers.get(cr.superName);
@@ -136,7 +134,7 @@ public class ActiveContext extends Context {
 			for (Class c: records) {
 				c.setParent(cls);
 			}
-			db.updateClasses(records);
+			db.updateRecords(records);
 		}
 
 		return result;
@@ -147,7 +145,7 @@ public class ActiveContext extends Context {
 		EventId id = nextEvent();
 		Instance thread = getInstance(threadId);
 		Class type = getClass(cnum);
-		Attribute attr = null;
+		Attribute<?> attr = null;
 		if ((event & Event.FIELDS) != 0) {
 			attr = getField(type, mnum);
 		}
@@ -175,7 +173,7 @@ public class ActiveContext extends Context {
 		if (mnum == 0) return null;
 
 		for (Method m: cls.getMethods()) {
-			if (m.getIndex() == mnum) return m;
+			if (m.getId().getAttribute() == mnum) return m;
 		}
 
 		return null;
@@ -185,7 +183,7 @@ public class ActiveContext extends Context {
 		if (mnum == 0) return null;
 
 		for (Field f: cls.getFields()) {
-			if (f.getIndex() == mnum) return f;
+			if (f.getId().getAttribute() == mnum) return f;
 		}
 
 		return null;
@@ -200,8 +198,8 @@ public class ActiveContext extends Context {
 			return objects.get(id);
 		}
 		else {
-			Instance i = new Instance(new InstanceId(id), null, null, null);
-			i = db.storeInstance(i);
+			Instance i = new Instance(new ObjectId(dataset.getId(), id), null, null, null);
+			i = db.storeRecord(i);
 			objects.put(id, i);
 			return i;
 		}
@@ -233,11 +231,15 @@ public class ActiveContext extends Context {
 
 	void setEquals(Field f, boolean b) {
 		f.setEquals(b);
-		db.updateField(f);
+		db.updateRecord(f);
 	}
 
 	void setHash(Field f, boolean b) {
 		f.setHash(b);
-		db.updateField(f);
+		db.updateRecord(f);
+	}
+
+	public Dataset getDataset() {
+		return dataset;
 	}
 }

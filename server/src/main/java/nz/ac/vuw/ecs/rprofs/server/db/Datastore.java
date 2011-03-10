@@ -8,30 +8,45 @@ import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
 public class Datastore {
+
+	private static Datastore main;
+
+	static {
+		NamingStrategy.currentRun.set(null);
+
+		ApplicationContext c =
+			new ClassPathXmlApplicationContext("nz/ac/vuw/ecs/rprofs/server/context.xml");
+
+		main = c.getBean(Datastore.class);
+	}
+
+	public static Datastore getInstance() {
+		return main;
+	}
 
 	@PersistenceContext
 	public EntityManager em;
 
 	Datastore() {}
 
-	public List<Dataset> getDatasets() {
-		return em.createNamedQuery("findDatasets", Dataset.class).getResultList();
-	}
-
 	public Dataset updateDataset(Dataset dataset) {
 		return em.merge(dataset);
 	}
 
 	public void deleteDataset(Dataset dataset) {
-		dataset = em.find(Dataset.class, dataset.getDatasetId());
+		dataset = em.find(Dataset.class, dataset.getId());
 		em.remove(dataset);
 	}
 
 	public void deleteDatastore(Dataset dataset) {
-		String handle = dataset.getDatasetId().getHandle();
+		String handle = dataset.getHandle();
 		em.createNativeQuery("drop table if exists run_" + handle + "_classes cascade;").executeUpdate();
 		em.createNativeQuery("drop table if exists run_" + handle + "_events cascade;").executeUpdate();
 		em.createNativeQuery("drop table if exists run_" + handle + "_events_args cascade;").executeUpdate();
@@ -52,7 +67,7 @@ public class Datastore {
 	}
 
 	public <T> List<? extends T> findRecords(Class<T> type) {
-		return em.createQuery("select R from " + type.getSimpleName() + " R", type).getResultList();
+		return em.createQuery("select R from " + type.getName() + " R", type).getResultList();
 	}
 
 	public <T> T storeRecord(T record) {
@@ -67,8 +82,12 @@ public class Datastore {
 		return result;
 	}
 
-	public <T> void updateRecord(T record) {
-		em.merge(record);
+	public <T> void refreshRecord(T record) {
+		em.refresh(record);
+	}
+
+	public <T> T updateRecord(T record) {
+		return em.merge(record);
 	}
 
 	public <T> void updateRecords(Iterable<? extends T> records) {
@@ -81,5 +100,22 @@ public class Datastore {
 		TypedQuery<Instance> q = em.createQuery("select I from Instance I where I.type = :cls", Instance.class);
 		q.setParameter("cls", cls);
 		return q.getResultList();
+	}
+
+	public Integer findNumEvents() {
+		return em.createQuery("select count(E) from Event E", Number.class).getSingleResult().intValue();
+	}
+
+	public List<Event> findEvents(int start, int limit) {
+		TypedQuery<Event> q = em.createQuery("select E from Event E", Event.class);
+		q.setFirstResult(start);
+		q.setMaxResults(limit);
+		return q.getResultList();
+	}
+
+	public Dataset findDatasetByHandle(String handle) {
+		TypedQuery<Dataset> q = em.createQuery("select D from Dataset D where D.handle = :handle", Dataset.class);
+		q.setParameter("handle", handle);
+		return q.getSingleResult();
 	}
 }

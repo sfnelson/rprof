@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
@@ -24,7 +24,7 @@ public class Logger extends HttpServlet {
 
 		int length = req.getContentLength();
 
-		ActiveContext context = Context.getCurrent();
+		ActiveContext context = ContextManager.getInstance().getCurrent();
 
 		List<Event> records = parse(context, length, req.getInputStream());
 		context.storeLogs(records);

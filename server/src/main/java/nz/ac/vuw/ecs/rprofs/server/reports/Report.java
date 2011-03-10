@@ -2,6 +2,8 @@ package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import java.util.StringTokenizer;
 
+import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 
 public class Report {
@@ -11,22 +13,22 @@ public class Report {
 
 		assert(tok.countTokens() == 2);
 
-		Dataset dataset = Dataset.findDataset(tok.nextToken());
-		return ReportFactory.getInstance().createReport(dataset, tok.nextToken());
+		Context context = ContextManager.getInstance().getContext(tok.nextToken());
+		return ReportFactory.getInstance().createReport(context, tok.nextToken());
 	}
 
-	Dataset dataset;
+	Context context;
 	String name;
 
 	public Report() {}
 
-	public Report(Dataset dataset, String name) {
-		this.dataset = dataset;
+	public Report(Context context, String name) {
+		this.context = context;
 		this.name = name;
 	}
 
 	public String getId() {
-		return dataset.getHandle() + "_" + name;
+		return context.getDataset().getHandle() + "_" + name;
 	}
 
 	public int getVersion() {
@@ -34,7 +36,7 @@ public class Report {
 	}
 
 	public Dataset getDataset() {
-		return dataset;
+		return context.getDataset();
 	}
 
 	public String getReport() {

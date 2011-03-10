@@ -3,7 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -12,7 +11,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -20,57 +20,42 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Class.ClassId;
  */
 @Entity
 @Table(name = "methods")
-public class Method implements Attribute {
+public class Method implements Attribute<Method> {
 
-	@SuppressWarnings("serial")
-	@Embeddable
-	public static class MethodId extends AttributeId {
-		public MethodId() {}
-		public MethodId(int fst, int snd) {
-			super(fst, snd);
-		}
-	}
+	public static final java.lang.Class<Method> TYPE = Method.class;
 
 	@EmbeddedId
-	protected MethodId id;
+	private MethodId mid;
 
 	@Version
-	private int version;
+	private Integer version;
 
-	String name;
+	private String name;
 
 	@ManyToOne(fetch=FetchType.EAGER)
-	@JoinColumn(name = "owner_id", nullable = false)
+	@JoinColumn(name="owner_id", nullable=false)
 	private Class owner;
 
-	protected String description;
+	private String description;
 
-	protected Integer access;
+	private Integer access;
 
 	public Method() {}
 
 	public Method(MethodId id, String name, Class owner, String description, int access) {
-		this.id = id;
+		this.mid = id;
 		this.name = name;
 		this.owner = owner;
 		this.description = description;
 		this.access = access;
 	}
 
-	public long getId() {
-		return id.getId();
+	public MethodId getId() {
+		return mid;
 	}
 
-	public MethodId getAttributeId() {
-		return id;
-	}
-
-	public int getVersion() {
+	public Integer getVersion() {
 		return version;
-	}
-
-	public int getIndex() {
-		return id.getIndex();
 	}
 
 	public String getName() {
@@ -82,7 +67,7 @@ public class Method implements Attribute {
 	}
 
 	public ClassId getOwnerId() {
-		return owner.getClassId();
+		return owner.getId();
 	}
 
 	public String getDescription() {

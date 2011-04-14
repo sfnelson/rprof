@@ -1,0 +1,40 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	<ui:style>
+	</ui:style>
+	<g:HTMLPanel>
+		<table>
+			<tr>
+				<th></th>
+				<th colSpan="2">Classes</th>
+				<th colSpan="2">Objects</th>
+			</tr>
+			<tr>
+				<td>Total</td>
+				<td colSpan="2"><g:InlineLabel ui:field="numClasses"></g:InlineLabel></td>
+				<td colSpan="2"><g:InlineLabel ui:field="numObjects"></g:InlineLabel></td>
+			</tr>
+			<tr>
+				<td>Per Class</td>
+				<td colSpan="2"></td>
+				<td><g:InlineLabel ui:field="meanObjectsPerClass"></g:InlineLabel></td>
+				<td><g:InlineLabel ui:field="sdObjectsPerClass"></g:InlineLabel></td>
+			</tr>
+			<tr>
+				<td>Writes</td>
+				<td><g:InlineLabel ui:field="meanWritesPerClass"></g:InlineLabel></td>
+				<td><g:InlineLabel ui:field="sdWritesPerClass"></g:InlineLabel></td>
+				<td><g:InlineLabel ui:field="meanWritesPerObject"></g:InlineLabel></td>
+				<td><g:InlineLabel ui:field="sdWritesPerObject"></g:InlineLabel></td>
+			</tr>
+			<tr>
+				<td>Reads</td>
+				<td><g:InlineLabel ui:field="meanReadsPerClass"></g:InlineLabel></td>
+				<td><g:InlineLabel ui:field="sdReadsPerClass"></g:InlineLabel></td>
+				<td><g:InlineLabel ui:field="meanReadsPerObject"></g:InlineLabel></td>
+				<td><g:InlineLabel ui:field="sdReadsPerObject"></g:InlineLabel></td>
+			</tr>
+		</table>
+	</g:HTMLPanel>
+</ui:UiBinder> 

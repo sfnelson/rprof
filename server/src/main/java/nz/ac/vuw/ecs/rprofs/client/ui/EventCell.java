@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.ui;
 
+import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 
 import com.google.gwt.cell.client.AbstractCell;
@@ -27,7 +28,7 @@ public class EventCell extends AbstractCell<EventProxy> {
 	void renderThread(Context c, EventProxy e, SafeHtmlBuilder o) {
 		o.appendHtmlConstant("<span class='" + style.thread() + "'>");
 
-		o.appendEscaped(e.getThread().toString());
+		o.appendEscaped(String.valueOf(e.getThread()));
 
 		o.appendHtmlConstant("</span>");
 	}
@@ -43,7 +44,16 @@ public class EventCell extends AbstractCell<EventProxy> {
 	void renderType(Context c, EventProxy e, SafeHtmlBuilder o) {
 		o.appendHtmlConstant("<span class='" + style.type() + "'>");
 
-		o.appendEscaped(e.getType().toString());
+		ClassProxy type = e.getType();
+
+		if (type == null) {
+			o.appendHtmlConstant("<em>null</em>");
+		}
+		else {
+			o.appendHtmlConstant("<span title=\"" + type.getName() + "\">");
+			o.appendEscaped(type.getClassName());
+			o.appendHtmlConstant("</span>");
+		}
 
 		o.appendHtmlConstant("</span>");
 	}

@@ -5,7 +5,7 @@ import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.client.views.DatasetSelectorView;
+import nz.ac.vuw.ecs.rprofs.client.views.DatasetListView;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetView;
 
 import com.google.gwt.core.client.GWT;
@@ -16,7 +16,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-public class DatasetPanel extends Composite implements DatasetSelectorView {
+public class DatasetPanel extends Composite implements DatasetListView {
 
 	private static DatasetPanelUiBinder uiBinder = GWT.create(DatasetPanelUiBinder.class);
 

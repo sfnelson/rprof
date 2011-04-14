@@ -12,6 +12,10 @@ public class EventId extends Id<Event> {
 
 	public EventId() {}
 
+	public EventId(long eventId) {
+		super(eventId);
+	}
+
 	public EventId(short dataset, long event) {
 		super((((long) dataset) << 48) | (event & mask));
 	}

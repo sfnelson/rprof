@@ -5,13 +5,14 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -97,12 +98,8 @@ public class Event implements DataObject<Event> {
 	@ManyToOne
 	Field field;
 
-	@ManyToMany
-	@JoinTable(
-			joinColumns = { @JoinColumn(name = "instance_id") },
-			inverseJoinColumns = { @JoinColumn(name = "event_id") }
-	)
-	List<Instance> args;
+	@OneToMany(fetch=FetchType.EAGER)
+	Set<Argument> args;
 
 	public Event() {}
 
@@ -111,19 +108,24 @@ public class Event implements DataObject<Event> {
 		this.thread = thread;
 		this.event = event;
 		this.type = type;
-		this.args = args;
+
+		this.args = new TreeSet<Argument>();
+		for (int i = 0; i < args.size(); i++) {
+			Argument a = new Argument(i, args.get(i));
+			this.args.add(a);
+		}
 
 		setAttribute(attr);
 	}
 
-	public List<? extends Instance> getArguments() {
+	public Set<? extends Argument> getArguments() {
 		return args;
 	}
 
 	public List<ObjectId> getArgumentIds() {
 		List<ObjectId> ids = Collections.newList();
-		for (Instance i: args) {
-			ids.add(i.getId());
+		for (Argument a: args) {
+			ids.add(a.getParameter().getId());
 		}
 		return ids;
 	}
@@ -142,6 +144,10 @@ public class Event implements DataObject<Event> {
 
 	public EventId getId() {
 		return id;
+	}
+
+	public long getEventId() {
+		return id.getId();
 	}
 
 	public Integer getVersion() {
@@ -210,5 +216,15 @@ public class Event implements DataObject<Event> {
 		case METHOD_EXCEPTION:
 			visitor.visitMethodException(this); break;
 		}
+	}
+
+	public Instance getFirstArg() {
+		for (Argument a: args) {
+			if (a.position == 0) {
+				return a.parameter;
+			}
+		}
+
+		return null;
 	}
 }

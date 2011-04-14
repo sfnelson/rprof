@@ -2,9 +2,9 @@ package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
 import java.util.Map;
 
-import nz.ac.vuw.ecs.rprofs.client.ProfilerFactory;
-import nz.ac.vuw.ecs.rprofs.client.place.ReportPlace;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlaceHistoryMapper;
+import nz.ac.vuw.ecs.rprofs.client.Factory;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceBuilder;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout;
 import nz.ac.vuw.ecs.rprofs.client.ui.PlaceAnchor;
@@ -14,6 +14,7 @@ import nz.ac.vuw.ecs.rprofs.client.views.ReportSelectorView;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.place.shared.PlaceChangeEvent;
+import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
@@ -46,16 +47,16 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 
 	@UiField UIButton close;
 
-	private final ProfilerFactory factory;
+	private final Factory factory;
 	private final FrameLayout parent;
 
-	private final Map<String, PlaceAnchor<ReportPlace<?>>> buttons = Collections.newMap();
+	private final Map<String, PlaceAnchor<ReportPlace>> buttons = Collections.newMap();
 
-	private PlaceAnchor<ReportPlace<?>> selected;
+	private PlaceAnchor<ReportPlace> selected;
 
 	private boolean closed = false;
 
-	public ReportSelectionPanel(ProfilerFactory factory, FrameLayout parent) {
+	public ReportSelectionPanel(Factory factory, FrameLayout parent) {
 		this.factory = factory;
 		this.parent = parent;
 
@@ -65,19 +66,19 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 			@Override
 			public void onPlaceChange(PlaceChangeEvent event) {
 				if (event.getNewPlace() instanceof ReportPlace) {
-					setSelected((ReportPlace<?>) event.getNewPlace());
+					setSelected(((ReportPlace) event.getNewPlace()).getType());
 				}
 			}
 		});
 	}
 
 	@Override
-	public void setSelected(ReportPlace<?> report) {
+	public void setSelected(String report) {
 		if (selected != null) {
 			selected.removeStyleName(style.selected());
 		}
 
-		selected = buttons.get(report.getHandle());
+		selected = buttons.get(report);
 
 		if (selected != null) {
 			selected.addStyleName(style.selected());
@@ -96,10 +97,18 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 		closed = !closed;
 	}
 
-	@UiFactory PlaceAnchor<ReportPlace<?>> createAnchor(String reference, String title, String description) {
-		PlaceAnchor<ReportPlace<?>> anchor = new PlaceAnchor<ReportPlace<?>>(factory);
+	@UiFactory PlaceAnchor<ReportPlace> createAnchor(String reference, String title, String description) {
+		PlaceAnchor<ReportPlace> anchor = new PlaceAnchor<ReportPlace>(factory.getPlaceController());
 
-		anchor.setTarget(ReportPlaceHistoryMapper.instance().getPlace(reference));
+		final String report = reference;
+		final PlaceController pc = factory.getPlaceController();
+		anchor.setTarget(new PlaceBuilder<ReportPlace>() {
+			@Override
+			public ReportPlace getPlace() {
+				return ReportPlace.create(report, pc.getWhere());
+			}
+		});
+
 		anchor.setText(title);
 		anchor.setTitle(description);
 

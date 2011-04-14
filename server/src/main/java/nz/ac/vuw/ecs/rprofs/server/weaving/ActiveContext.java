@@ -49,7 +49,7 @@ public class ActiveContext extends Context {
 		for (Event r : records) {
 			Class cls = r.getType();
 			Attribute<?> attr = r.getAttribute();
-			Instance first = r.getArguments().isEmpty() ? null : r.getArguments().get(0);
+			Instance first = r.getFirstArg();
 
 			switch (r.getEvent()) {
 			case Event.METHOD_ENTER:
@@ -198,7 +198,7 @@ public class ActiveContext extends Context {
 			return objects.get(id);
 		}
 		else {
-			Instance i = new Instance(new ObjectId(dataset.getId(), id), null, null, null);
+			Instance i = new Instance(new ObjectId(dataset.getId(), id), null, null);
 			i = db.storeRecord(i);
 			objects.put(id, i);
 			return i;
@@ -239,6 +239,7 @@ public class ActiveContext extends Context {
 		db.updateRecord(f);
 	}
 
+	@Override
 	public Dataset getDataset() {
 		return dataset;
 	}

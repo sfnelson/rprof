@@ -50,12 +50,12 @@ public class DatasetService extends Locator<Dataset, Long> {
 		return dataset.getVersion();
 	}
 
-	public void stopDataset(Dataset dataset) {
-		ContextManager.getInstance().stop(dataset);
+	public void stopDataset(String dataset) {
+		ContextManager.getInstance().stop(findDataset(dataset));
 	}
 
-	public void deleteDataset(Dataset dataset) {
-		ContextManager.getInstance().delete(dataset);
+	public void deleteDataset(String dataset) {
+		ContextManager.getInstance().delete(findDataset(dataset));
 	}
 
 	public List<? extends Dataset> findAllDatasets() {
@@ -72,8 +72,8 @@ public class DatasetService extends Locator<Dataset, Long> {
 		return c.getDataset();
 	}
 
-	public List<? extends Package> findPackages(Dataset dataset) {
-		Context c = getDomainStore(dataset);
+	public List<? extends Package> findPackages(String dataset) {
+		Context c = getDomainStore(findDataset(dataset));
 		return c.findPackages();
 	}
 }

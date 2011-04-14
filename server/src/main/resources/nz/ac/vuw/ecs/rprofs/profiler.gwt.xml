@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to='profiler'>
+  <inherits name='com.google.gwt.user.User' />
+  <inherits name='com.google.gwt.requestfactory.RequestFactory' />
+  <inherits name='com.google.gwt.activity.Activity' />
+  <entry-point class='nz.ac.vuw.ecs.rprofs.client.AppEntryPoint'/>
+  <source path='client'/>
+  
+  <replace-with class="nz.ac.vuw.ecs.rprofs.client.FactoryImpl">
+    <when-type-is class="nz.ac.vuw.ecs.rprofs.client.Factory" />
+  </replace-with>
+  
+  <extend-configuration-property name="rpc.blacklist" 
+value="com.google.gwt.user.client.ui.*Collection"/>
+</module>

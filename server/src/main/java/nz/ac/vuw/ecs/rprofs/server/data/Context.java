@@ -16,9 +16,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.FieldWriteRecord;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.Package;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.reports.FinalFieldReport;
-import nz.ac.vuw.ecs.rprofs.server.reports.InstanceReportFactory;
-import nz.ac.vuw.ecs.rprofs.server.reports.InstanceReportGenerator;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -48,9 +46,7 @@ public class Context {
 			public void run() {
 				System.out.println("generating reports started at " + Calendar.getInstance().getTime());
 
-				InstanceReportFactory<?> factory = new FinalFieldReport.ReportFactory(Context.this);
-				InstanceReportGenerator reportGenerator = new InstanceReportGenerator(Context.this, factory);
-				reportGenerator.run();
+				//TODO generate reports here
 
 				System.out.println("generating reports stopped at " + Calendar.getInstance().getTime());
 			}
@@ -95,10 +91,18 @@ public class Context {
 		return new ArrayList<Package>(packages.values());
 	}
 
-	public List<? extends Class> findClasses(String name) {
+	public int findNumClasses() {
+		return db.findNumRecords(Class.class);
+	}
+
+	public int findNumObjects() {
+		return db.findNumRecords(Instance.class);
+	}
+
+	public List<? extends Class> findClasses(String pkg) {
 		List<Class> classes = Collections.newList();
 		for (Class c: db.findRecords(Class.class)) {
-			if (c.getPackage().equals(name)) {
+			if (c.getPackage().equals(pkg)) {
 				classes.add(c);
 			}
 		}
@@ -121,7 +125,23 @@ public class Context {
 		db.storeRecords(results);
 	}
 
-	public List<? extends Event> findEvents(int start, int limit) {
-		return db.findEvents(start, limit);
+	public Long findNumEvents(int filter) {
+		return db.findNumEvents(filter);
+	}
+
+	public List<? extends Event> findEvents(int start, int limit, int filter) {
+		return db.findEvents(start, limit, filter);
+	}
+
+	public List<Long> findObjectsPerClass() {
+		return db.findObjectsPerClass();
+	}
+
+	public Long findEventIndex(EventId id, int filter) {
+		return db.findEventIndex(id, filter);
+	}
+
+	public List<? extends Event> findEventsWithArgument(Instance i) {
+		return db.findEventsWithArgument(i);
 	}
 }

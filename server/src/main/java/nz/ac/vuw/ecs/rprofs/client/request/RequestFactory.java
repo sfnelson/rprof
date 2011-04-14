@@ -14,4 +14,6 @@ public interface RequestFactory extends com.google.gwt.requestfactory.shared.Req
 
 	MethodRequest methodRequest();
 
+	ReportRequest reportRequest();
+
 }

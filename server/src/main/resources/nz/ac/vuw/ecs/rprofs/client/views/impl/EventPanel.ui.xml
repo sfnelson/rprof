@@ -1,12 +1,126 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui">
-	<ui:style>
-		
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:c="urn:import:com.google.gwt.user.cellview.client">
+	
+	<ui:style type="nz.ac.vuw.ecs.rprofs.client.views.impl.EventPanel.Style">
+		.filter {
+			background: -webkit-gradient(linear, literal("left top"), literal("left bottom"), from(#ECECEC), to(#D9D9D9));
+			border-bottom: solid 1px #a3a3a3;
+			margin-top: 1px;
+			height: 23px;
+			overflow: hidden;
+			padding: 2px 10px 0;
+		}
+		.filter a {
+			background: transparent;
+			color: #2e2e2e;
+			display: inline-block;
+			border-radius: 8px;
+			font-size: 11px;
+			font-weight: bold;
+			line-height: 12px;
+			margin: 1px 5px 0 0;
+			padding: 1px 7px 3px;
+			text-shadow: rgba(255, 255, 255, 0.5) 0 1px 1;
+			vertical-align: middle;
+			cursor: pointer;
+		}
+		.filter a:hover {
+			text-decoration: none;
+		}
+		.filter .active {
+			\-webkit-box-shadow: rgba(0, 0, 0, 0.5) 0 1px 1px inset, rgba(255, 255, 255, 0.5) 0 1px 0;
+			background: rgba(0, 0, 0, 0.3);
+			color: white;
+			text-shadow: rgba(0, 0, 0, 0.4) 0 1px 0;
+		}
+		.filter .divider {
+			background-color: rgba(0, 0, 0, 0.4);
+			display: inline-block;
+			height: 16px;
+			margin: 1px 9px 0 8px;
+			vertical-align: middle;
+			width: 1px;
+		}
+		.eventsPane {
+			position: absolute;
+			top: 27px;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			overflow: auto;
+		}
+		.pager {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			right: 0;
+			width: 15px;
+			border-left: solid 1px #c3c3c3;
+		}
+		.pager * {
+			display: block;
+			font-size: 9px;
+			line-height: 6px;
+			margin-top: 3px;
+			width: 100%;
+			text-align: center;
+			color: #c3c3c3;
+			padding: 2px 0;
+			cursor: pointer;
+		}
+		.pager a:hover {
+			text-decoration: none;
+		}
+		.pager .enabled {
+			color: #2e2e2e;
+		}
+		.rewind {
+		}
+		.previous {
+		}
+		.label {
+			margin: 1em 0;
+			\-webkit-transform: rotate(90deg);
+			white-space: nowrap;
+			color: #2e2e2e;
+		}
+		.next {
+			position: absolute;
+			bottom: 18px;
+		}
+		.fastforward {
+			position: absolute;
+			bottom: 0;
+		}
 	</ui:style>
+	
 	<g:FlowPanel>
-		<g:HTML ui:field="title" />
-		<g:FlowPanel ui:field="children">
+		<g:FlowPanel ui:field="filterMenu" styleName="{style.filter}">
+			<g:Anchor ui:field="all">All</g:Anchor>
+			<g:SimplePanel styleName="{style.divider}" />
+			<g:Anchor ui:field="objectAllocated">Object Allocated</g:Anchor>
+			<g:Anchor ui:field="arrayAllocated">Array Allocated</g:Anchor>
+			<g:Anchor ui:field="methodEnter">Method Enter</g:Anchor>
+			<g:Anchor ui:field="methodReturn">Method Return</g:Anchor>
+			<g:Anchor ui:field="methodException">Method Exception</g:Anchor>
+			<g:Anchor ui:field="fieldRead">Field Read</g:Anchor>
+			<g:Anchor ui:field="fieldWrite">Field Write</g:Anchor>
+			<g:Anchor ui:field="classWeave">Class Weave</g:Anchor>
+			<g:Anchor ui:field="classInit">Class Initialized</g:Anchor>
+			<g:Anchor ui:field="objectTagged">Object Tagged</g:Anchor>
+			<g:Anchor ui:field="objectFreed">Object Freed</g:Anchor>
+		</g:FlowPanel>
+		<g:FlowPanel styleName="{style.eventsPane}">
+			<g:FlowPanel styleName="{style.pager}">
+				<g:Anchor ui:field="rewind" styleName="{style.rewind}">&#9650;<br />&#9650;</g:Anchor>
+				<g:Anchor ui:field="previous" styleName="{style.previous}">&#9650;</g:Anchor>
+				<g:HTML ui:field="label" styleName="{style.label}"></g:HTML>
+				<g:Anchor ui:field="next" styleName="{style.next}">&#9660;</g:Anchor>
+				<g:Anchor ui:field="fastforward" styleName="{style.fastforward}">&#9660;<br />&#9660;</g:Anchor>
+			</g:FlowPanel>
+			<c:CellList ui:field="list"/>
 		</g:FlowPanel>
 	</g:FlowPanel>
 </ui:UiBinder> 

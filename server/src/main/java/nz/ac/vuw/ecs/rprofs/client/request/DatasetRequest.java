@@ -14,10 +14,10 @@ public interface DatasetRequest extends RequestContext {
 
 	Request<DatasetProxy> findDataset(String handle);
 	Request<List<DatasetProxy>> findAllDatasets();
-	Request<Void> stopDataset(DatasetProxy dataset);
-	Request<Void> deleteDataset(DatasetProxy dataset);
+	Request<Void> stopDataset(String dataset);
+	Request<Void> deleteDataset(String dataset);
 
-	Request<List<PackageProxy>> findPackages(DatasetProxy dataset);
+	Request<List<PackageProxy>> findPackages(String dataset);
 
 	/*
 	InstanceRequest<DatasetProxy, List<PackageProxy>> findPackages();

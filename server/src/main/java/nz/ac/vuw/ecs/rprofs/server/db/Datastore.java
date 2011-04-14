@@ -5,11 +5,16 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Root;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -66,6 +71,10 @@ public class Datastore {
 		return em.find(type, primaryKey);
 	}
 
+	public int findNumRecords(Class<?> type) {
+		return ((Number) em.createQuery("select count(R) from " + type.getName() + " R").getSingleResult()).intValue();
+	}
+
 	public <T> List<? extends T> findRecords(Class<T> type) {
 		return em.createQuery("select R from " + type.getName() + " R", type).getResultList();
 	}
@@ -102,14 +111,26 @@ public class Datastore {
 		return q.getResultList();
 	}
 
-	public Integer findNumEvents() {
-		return em.createQuery("select count(E) from Event E", Number.class).getSingleResult().intValue();
+	public Long findNumEvents(int filter) {
+		TypedQuery<Number> q = em.createQuery("select count(E) from Event E where band(E.event, :filter) = E.event", Number.class);
+		q.setParameter("filter", filter);
+		return q.getSingleResult().longValue();
 	}
 
-	public List<Event> findEvents(int start, int limit) {
-		TypedQuery<Event> q = em.createQuery("select E from Event E", Event.class);
+	public Long findEventIndex(EventId event, int filter) {
+		TypedQuery<Number> q = em.createQuery("select count(E) from Event E where "
+				+ "band(E.event, :filter) = E.event "
+				+ "and E.id.id <= :id", Number.class);
+		q.setParameter("filter", filter);
+		q.setParameter("id", event.getId());
+		return q.getSingleResult().longValue();
+	}
+
+	public List<Event> findEvents(int start, int limit, int filter) {
+		TypedQuery<Event> q = em.createQuery("select E from Event E where band(E.event, :filter) = E.event", Event.class);
 		q.setFirstResult(start);
 		q.setMaxResults(limit);
+		q.setParameter("filter", filter);
 		return q.getResultList();
 	}
 
@@ -117,5 +138,25 @@ public class Datastore {
 		TypedQuery<Dataset> q = em.createQuery("select D from Dataset D where D.handle = :handle", Dataset.class);
 		q.setParameter("handle", handle);
 		return q.getSingleResult();
+	}
+
+	public List<Long> findObjectsPerClass() {
+		CriteriaBuilder builder = em.getCriteriaBuilder();
+
+		CriteriaQuery<Long> query = builder.createQuery(Long.TYPE);
+		Root<Instance> instance = query.from(Instance.class);
+		Path<nz.ac.vuw.ecs.rprofs.server.domain.Class> type = instance.get("type");
+
+		query.select(builder.count(instance));
+		query.where(builder.isNotNull(type));
+		query.groupBy(type);
+
+		return em.createQuery(query).getResultList();
+	}
+
+	public List<? extends Event> findEventsWithArgument(Instance i) {
+		TypedQuery<Event> q = em.createQuery("select E from Event as E inner join E.args as Args where Args.parameter = :instance", Event.class);
+		q.setParameter("instance", i);
+		return q.getResultList();
 	}
 }

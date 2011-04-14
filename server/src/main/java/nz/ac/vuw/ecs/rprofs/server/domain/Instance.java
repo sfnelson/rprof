@@ -3,22 +3,15 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import java.util.List;
-
-import javax.persistence.CascadeType;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 
 /**
@@ -45,20 +38,12 @@ public class Instance implements DataObject<Instance> {
 	@JoinColumn(name = "constructor_id")
 	protected Method constructor;
 
-	@ManyToMany(mappedBy="args", cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-	protected List<Event> events;
-
 	public Instance() {}
 
-	public Instance(ObjectId id, Class type, Method constructor, List<? extends Event> events) {
+	public Instance(ObjectId id, Class type, Method constructor) {
 		this.id = id;
 		this.type = type;
 		this.constructor = constructor;
-		this.events = Collections.newList();
-		if (events != null) {
-			this.events = Collections.newList();
-			this.events.addAll(events);
-		}
 	}
 
 	public ObjectId getId() {
@@ -103,17 +88,5 @@ public class Instance implements DataObject<Instance> {
 
 	public int getInstanceIndex() {
 		return id.getIndex();
-	}
-
-	public List<Event> getEvents() {
-		return events;
-	}
-
-	public List<EventId> getEventIds() {
-		List<EventId> ids = Collections.newList();
-		for (Event e: events) {
-			ids.add(e.getId());
-		}
-		return ids;
 	}
 }

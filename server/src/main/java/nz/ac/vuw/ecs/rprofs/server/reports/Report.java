@@ -1,45 +1,44 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-import java.util.StringTokenizer;
+import java.util.List;
 
 import nz.ac.vuw.ecs.rprofs.server.data.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 
 public class Report {
 
-	public static Report findReport(String id) {
-		StringTokenizer tok = new StringTokenizer(id, "_");
+	public static DatasetReport getDatasetReport(String handle) {
+		Context c = ContextManager.getInstance().getContext(handle);
 
-		assert(tok.countTokens() == 2);
-
-		Context context = ContextManager.getInstance().getContext(tok.nextToken());
-		return ReportFactory.getInstance().createReport(context, tok.nextToken());
+		try {
+			return new DatasetReport(c);
+		}
+		catch (RuntimeException ex) {
+			ex.printStackTrace();
+			throw ex;
+		}
 	}
 
-	Context context;
-	String name;
+	public static Stat computeStats(List<Long> series) {
+		float mean;
+		float stddev;
 
-	public Report() {}
+		long sum = 0;
+		for (Long v: series) {
+			sum += v;
+		}
 
-	public Report(Context context, String name) {
-		this.context = context;
-		this.name = name;
-	}
+		mean = ((float) sum) / series.size();
 
-	public String getId() {
-		return context.getDataset().getHandle() + "_" + name;
-	}
+		double var = 0;
+		for (Long v: series) {
+			double d = v - mean;
+			var += (d * d);
+		}
+		var = var / series.size();
 
-	public int getVersion() {
-		return 0;
-	}
+		stddev = (float) Math.sqrt(var);
 
-	public Dataset getDataset() {
-		return context.getDataset();
-	}
-
-	public String getReport() {
-		return name;
+		return new Stat(mean, stddev);
 	}
 }

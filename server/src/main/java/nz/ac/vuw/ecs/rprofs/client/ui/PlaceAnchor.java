@@ -1,7 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.ui;
 
-import nz.ac.vuw.ecs.rprofs.client.ProfilerFactory;
-import nz.ac.vuw.ecs.rprofs.client.place.InspectorPlace;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceBuilder;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -11,6 +10,7 @@ import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasHTML;
@@ -18,14 +18,13 @@ import com.google.gwt.user.client.ui.HasText;
 
 public class PlaceAnchor<P extends Place> extends Composite implements HasText, HasHTML {
 
-	private Anchor anchor;
+	private final PlaceController pc;
+	private final Anchor anchor;
 
-	private final ProfilerFactory factory;
-	private P target;
+	private PlaceBuilder<P> target;
 
-	public PlaceAnchor(ProfilerFactory factory) {
-		this.factory = factory;
-
+	public PlaceAnchor(PlaceController pc) {
+		this.pc = pc;
 		anchor = new Anchor();
 		initWidget(anchor);
 
@@ -35,22 +34,20 @@ public class PlaceAnchor<P extends Place> extends Composite implements HasText, 
 		setStyleName("");
 	}
 
-	public void setTarget(P target) {
+	public void setTarget(PlaceBuilder<P> target) {
 		this.target = target;
 	}
 
 	public P getTarget() {
-		return target;
+		return target.getPlace();
 	}
 
 	private void update() {
 		if (target == null) {
-			return;
+			anchor.setHref("#");
 		}
 
-		InspectorPlace current = factory.getPlaceController().getCurrent();
-		current = current.setPlace(target);
-		anchor.setHref("#"+current.toString());
+		anchor.setHref("#" + target.getPlace());
 	}
 
 	@Override
@@ -90,7 +87,7 @@ public class PlaceAnchor<P extends Place> extends Composite implements HasText, 
 			if (event.getNativeEvent().getButton() == NativeEvent.BUTTON_LEFT) {
 				event.preventDefault();
 				event.stopPropagation();
-				factory.getPlaceController().goTo(target);
+				pc.goTo(target.getPlace());
 			}
 			anchor.setFocus(false);
 		}

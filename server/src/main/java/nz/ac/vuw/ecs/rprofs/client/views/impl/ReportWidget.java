@@ -6,7 +6,6 @@ import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.PackageProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.ui.ActivePanel;
 
@@ -107,15 +106,15 @@ public class ReportWidget extends Composite {
 		count.setStyleName(style.count());
 	}
 
-	public void setText(int index, PackageProxy pkg) {
+	public void setText(int index, String pkg) {
 		HTML name = fields.get(index);
-		if ("".equals(pkg.getName())) {
+		if ("".equals(pkg)) {
 			name.setHTML("<em>default</em>");
 		}
 		else {
-			name.setText(pkg.getName());
+			name.setText(pkg);
 		}
-		name.setTitle(pkg.getName());
+		name.setTitle(pkg);
 		name.setStyleName(style.longer());
 	}
 

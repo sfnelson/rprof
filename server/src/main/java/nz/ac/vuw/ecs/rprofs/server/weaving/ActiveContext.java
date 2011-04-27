@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.domain.Attribute;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
@@ -17,7 +17,10 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 
-public class ActiveContext extends Context {
+public class ActiveContext {
+
+	private final Context context;
+	private final Dataset dataset;
 
 	private long eventId = 0;
 	private final Map<Integer, ClassRecord> classRecords;
@@ -29,8 +32,9 @@ public class ActiveContext extends Context {
 	private final Map<Integer, Class> classMap;
 	private final Map<String, Class> classNameMap;
 
-	public ActiveContext(Dataset dataset) {
-		super(dataset);
+	public ActiveContext(Context context, Dataset dataset) {
+		this.context = context;
+		this.dataset = dataset;
 
 		classRecords = Collections.newMap();
 		objects = Collections.newMap();
@@ -40,6 +44,14 @@ public class ActiveContext extends Context {
 
 		classMap = Collections.newMap();
 		classNameMap = Collections.newMap();
+	}
+
+	public Dataset getDataset() {
+		return dataset;
+	}
+
+	public Context getContext() {
+		return context;
 	}
 
 	public void storeLogs(List<Event> records) {
@@ -237,10 +249,5 @@ public class ActiveContext extends Context {
 	void setHash(Field f, boolean b) {
 		f.setHash(b);
 		db.updateRecord(f);
-	}
-
-	@Override
-	public Dataset getDataset() {
-		return dataset;
 	}
 }

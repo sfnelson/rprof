@@ -47,7 +47,7 @@ public class ShowDatasetReportActivity extends AbstractActivity {
 
 		ReportRequest rq = factory.getRequestFactory().reportRequest();
 		System.out.println("requesting report");
-		rq.getDatasetReport(datasetHandle).fire(new Receiver<DatasetReportProxy>() {
+		rq.getDatasetReport().fire(new Receiver<DatasetReportProxy>() {
 			@Override
 			public void onSuccess(DatasetReportProxy response) {
 				System.out.println("report received");

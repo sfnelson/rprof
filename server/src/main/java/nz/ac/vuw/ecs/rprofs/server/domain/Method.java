@@ -5,9 +5,9 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -20,6 +20,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
  */
 @Entity
 @Table(name = "methods")
+@NamedQueries({
+	@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type")
+})
 public class Method implements Attribute<Method> {
 
 	public static final java.lang.Class<Method> TYPE = Method.class;
@@ -32,8 +35,7 @@ public class Method implements Attribute<Method> {
 
 	private String name;
 
-	@ManyToOne(fetch=FetchType.EAGER)
-	@JoinColumn(name="owner_id", nullable=false)
+	@ManyToOne
 	private Class owner;
 
 	private String description;

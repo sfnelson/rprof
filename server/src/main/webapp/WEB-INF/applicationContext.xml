@@ -41,19 +41,19 @@
 		</property>
 	</bean>
 
-	<bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+	<!-- <bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
-	</bean>
+	</bean>-->
 
-	<bean id="database" class="nz.ac.vuw.ecs.rprofs.server.db.Datastore" />
+	<bean id="context" class="nz.ac.vuw.ecs.rprofs.server.context.Context" />
 
-	<aop:config>
+	<!-- <aop:config>
 		<aop:pointcut id="dbMethods"
 			expression="execution(* nz.ac.vuw.ecs.rprofs.server.db.Datastore.*(..))" />
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="dbMethods" />
-	</aop:config>
+	</aop:config>-->
 
-	<tx:advice id="txAdvice" transaction-manager="txManager">
+	<!-- <tx:advice id="txAdvice" transaction-manager="txManager">
 		<tx:attributes>
 			<tx:method name="create*" propagation="REQUIRED" />
 			<tx:method name="update*" propagation="REQUIRED" />
@@ -61,5 +61,5 @@
 			<tx:method name="delete*" propagation="REQUIRED" />
 			<tx:method name="*" propagation="SUPPORTS" read-only="true" />
 		</tx:attributes>
-	</tx:advice>
+	</tx:advice>-->
 </beans>

@@ -1,43 +1,55 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-import nz.ac.vuw.ecs.rprofs.server.data.Context;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Root;
+
+import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
+import nz.ac.vuw.ecs.rprofs.server.data.InstanceManager;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
+import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
+import nz.ac.vuw.ecs.rprofs.server.request.InstanceService;
 
 
 public class DatasetReport {
 
-	private int numClasses;
-	private int numObjects;
-	private Stat objectsPerClass;
-	private Stat writesPerClass;
-	private Stat writesPerObject;
-
-	public DatasetReport(Context context) {
-		this.numClasses = context.findNumClasses();
-		this.numObjects = context.findNumObjects();
-
-		this.objectsPerClass = Report.computeStats(context.findObjectsPerClass());
-		this.writesPerClass = new Stat(0, 0);
-		this.writesPerObject = new Stat(0, 0);
-	}
+	private ContextManager cm = ContextManager.getInstance();
+	private ClassService classes = new ClassManager();
+	private InstanceService instances = new InstanceManager();
 
 	public int getNumClasses() {
-		return numClasses;
+		return classes.findNumClasses();
 	}
 
 	public int getNumObjects() {
-		return numObjects;
+		return instances.findNumInstances();
 	}
 
 	public Stat getObjectsPerClass() {
-		return objectsPerClass;
+		Context c = cm.getCurrent();
+
+		CriteriaBuilder builder = c.em().getCriteriaBuilder();
+
+		CriteriaQuery<Long> query = builder.createQuery(Long.TYPE);
+		Root<Instance> instance = query.from(Instance.class);
+		Path<nz.ac.vuw.ecs.rprofs.server.domain.Class> type = instance.get("type");
+
+		query.select(builder.count(instance));
+		query.where(builder.isNotNull(type));
+		query.groupBy(type);
+
+		return ReportManager.computeStats(c.em().createQuery(query).getResultList());
 	}
 
 	public Stat getWritesPerClass() {
-		return writesPerClass;
+		return new Stat(0, 0);
 	}
 
 	public Stat getWritesPerObject() {
-		return writesPerObject;
+		return new Stat(0, 0);
 	}
 
 	public Stat getReadsPerClass() {

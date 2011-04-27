@@ -15,11 +15,13 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.place.shared.PlaceController;
+import com.google.gwt.requestfactory.shared.RequestTransport;
 
 public class FactoryImpl implements Factory {
 
 	private final EventBus eventBus;
 	private final RequestFactory requestFactory;
+	private final RequestTransport transport;
 	private final InspectorWidget inspector;
 
 	private final PlaceController placeController;
@@ -30,8 +32,10 @@ public class FactoryImpl implements Factory {
 
 	public FactoryImpl() {
 		eventBus = new SimpleEventBus();
+
 		requestFactory = GWT.create(RequestFactory.class);
-		requestFactory.initialize(eventBus);
+		transport = new DatasetAwareRequestTransport(eventBus);
+		requestFactory.initialize(eventBus, transport);
 
 		placeController = new PlaceController(eventBus);
 

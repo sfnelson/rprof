@@ -2,8 +2,8 @@ package nz.ac.vuw.ecs.rprofs.client.request;
 
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.server.data.InstanceService;
 import nz.ac.vuw.ecs.rprofs.server.data.ServiceLocator;
+import nz.ac.vuw.ecs.rprofs.server.request.InstanceService;
 
 import com.google.gwt.requestfactory.shared.Request;
 import com.google.gwt.requestfactory.shared.RequestContext;

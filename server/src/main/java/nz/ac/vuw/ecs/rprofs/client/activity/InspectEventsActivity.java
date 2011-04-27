@@ -16,7 +16,9 @@ import com.google.gwt.view.client.AsyncDataProvider;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
 
-public class InspectEventsActivity extends AbstractInspectorActivity<BrowseEvents> implements EventView.Presenter {
+public class InspectEventsActivity
+extends AbstractInspectorActivity<BrowseEvents>
+implements EventView.Presenter {
 
 	private final AsyncDataProvider<EventProxy> provider;
 
@@ -49,7 +51,7 @@ public class InspectEventsActivity extends AbstractInspectorActivity<BrowseEvent
 	@Override
 	public void getAvailable() {
 		EventRequest rq = getFactory().getRequestFactory().eventRequest();
-		rq.findNumEvents(getPlace().getDatasetHandle(), filter)
+		rq.findNumEvents(filter)
 		.fire(new Receiver<Long>() {
 			@Override
 			public void onSuccess(Long response) {
@@ -92,7 +94,7 @@ public class InspectEventsActivity extends AbstractInspectorActivity<BrowseEvent
 				}
 			});
 		}
-		rq.findNumEvents(getPlace().getDatasetHandle(), filter).to(new Receiver<Long>() {
+		rq.findNumEvents(filter).to(new Receiver<Long>() {
 			@Override
 			public void onSuccess(Long response) {
 				view.setAvailable(response.intValue());
@@ -109,7 +111,7 @@ public class InspectEventsActivity extends AbstractInspectorActivity<BrowseEvent
 
 			System.out.println("requested events " + r.getStart() + " to " + (r.getStart() + r.getLength()));
 			EventRequest rq = getFactory().getRequestFactory().eventRequest();
-			rq.findEvents(getPlace().getDatasetHandle(), r.getStart(), r.getLength(), filter)
+			rq.findEvents(r.getStart(), r.getLength(), filter)
 			.with("thread", "type", "method", "field", "arguments")
 			.fire(new Receiver<List<EventProxy>>() {
 				@Override

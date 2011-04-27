@@ -8,7 +8,6 @@ import nz.ac.vuw.ecs.rprofs.client.place.BrowseInstances;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.CompositePlace;
 import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.PackageProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
 import com.google.gwt.event.shared.EventBus;
@@ -41,18 +40,18 @@ implements ReportView.Presenter {
 	}
 
 	@Override
-	protected void packagesAvailable(List<PackageProxy> packages) {
+	protected void packagesAvailable(List<String> packages) {
 		view.showPackages(packages);
 	}
 
 	@Override
-	public void selectPackage(final PackageProxy pkg) {
+	public void selectPackage(final String pkg) {
 		view.clear(pkg);
 		findClassesByPackage(pkg);
 	}
 
 	@Override
-	protected void classesAvailable(PackageProxy pkg, List<ClassProxy> classes) {
+	protected void classesAvailable(String pkg, List<ClassProxy> classes) {
 		view.showClasses(pkg, classes);
 	}
 

@@ -5,8 +5,9 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -20,6 +21,12 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
  */
 @Entity
 @Table( name = "instances" )
+@NamedQueries({
+	@NamedQuery(name="numInstances", query="select count(I) from Instance I"),
+	@NamedQuery(name="allInstances", query="select count(I) from Instance I"),
+	@NamedQuery(name="numInstancesForType", query="select count(I) from Instance I where I.type = :type"),
+	@NamedQuery(name="instancesForType", query="select I from Instance I where I.type = :type"),
+})
 public class Instance implements DataObject<Instance> {
 
 	public static final java.lang.Class<Instance> TYPE = Instance.class;
@@ -31,11 +38,9 @@ public class Instance implements DataObject<Instance> {
 	private int version;
 
 	@ManyToOne
-	@JoinColumn(name = "type_id")
 	private Class type;
 
 	@ManyToOne
-	@JoinColumn(name = "constructor_id")
 	protected Method constructor;
 
 	public Instance() {}

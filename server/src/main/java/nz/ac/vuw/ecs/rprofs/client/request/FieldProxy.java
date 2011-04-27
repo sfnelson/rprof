@@ -1,13 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.client.request;
 
-import nz.ac.vuw.ecs.rprofs.server.data.DomainService.FieldLocator;
+import nz.ac.vuw.ecs.rprofs.server.data.FieldManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 
 import com.google.gwt.requestfactory.shared.EntityProxy;
 import com.google.gwt.requestfactory.shared.EntityProxyId;
 import com.google.gwt.requestfactory.shared.ProxyFor;
 
-@ProxyFor(value = Field.class, locator = FieldLocator.class)
+@ProxyFor(value = Field.class, locator = FieldManager.class)
 public interface FieldProxy extends EntityProxy {
 
 	public ClassProxy getOwner();

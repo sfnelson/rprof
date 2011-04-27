@@ -11,12 +11,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 @SuppressWarnings("serial")
 public class Logger extends HttpServlet {
+
+	private final ContextManager cm = ContextManager.getInstance();
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -24,10 +26,16 @@ public class Logger extends HttpServlet {
 
 		int length = req.getContentLength();
 
-		ActiveContext context = ContextManager.getInstance().getCurrent();
+		ActiveContext active = cm.getActive();
+		active.getContext().open();
 
-		List<Event> records = parse(context, length, req.getInputStream());
-		context.storeLogs(records);
+		try {
+			List<Event> records = parse(active, length, req.getInputStream());
+			active.storeLogs(records);
+		}
+		finally {
+			active.getContext().close();
+		}
 
 		resp.setStatus(201);
 	}

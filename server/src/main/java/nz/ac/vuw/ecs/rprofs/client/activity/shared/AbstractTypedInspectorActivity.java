@@ -5,19 +5,19 @@ import nz.ac.vuw.ecs.rprofs.client.Factory;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
 import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.ClassRequest;
-import nz.ac.vuw.ecs.rprofs.client.request.DatasetRequest;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldRequest;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceRequest;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodRequest;
-import nz.ac.vuw.ecs.rprofs.client.request.PackageProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
 import com.google.gwt.requestfactory.shared.Receiver;
 
-public abstract class AbstractTypedInspectorActivity<T extends ReportPlace> extends AbstractInspectorActivity<T> implements ReportView.Presenter {
+public abstract class AbstractTypedInspectorActivity<T extends ReportPlace<T>>
+extends AbstractInspectorActivity<T>
+implements ReportView.Presenter {
 
 	public AbstractTypedInspectorActivity(Factory factory, T place) {
 		super(factory, place);
@@ -25,25 +25,25 @@ public abstract class AbstractTypedInspectorActivity<T extends ReportPlace> exte
 
 	protected void findPackages() {
 		System.out.println("requesting packages");
-		DatasetRequest rq = getFactory().getRequestFactory().datasetRequest();
-		rq.findPackages(getPlace().getDatasetHandle())
-		.fire(new Receiver<List<PackageProxy>>() {
+		ClassRequest rq = getFactory().getRequestFactory().classRequest();
+		rq.findPackages()
+		.fire(new Receiver<List<String>>() {
 			@Override
-			public void onSuccess(List<PackageProxy> response) {
+			public void onSuccess(List<String> response) {
 				System.out.println("found packages");
 				packagesAvailable(response);
 			}
 		});
 	}
 
-	protected void packagesAvailable(List<PackageProxy> packages) {}
+	protected void packagesAvailable(List<String> packages) {}
 
 	@Override
-	public void selectPackage(PackageProxy pkg) {}
+	public void selectPackage(String pkg) {}
 
-	protected void findClassesByPackage(final PackageProxy pkg) {
+	protected void findClassesByPackage(final String pkg) {
 		ClassRequest rq = getFactory().getRequestFactory().classRequest();
-		rq.findClasses(pkg.getDataset(), pkg.getName())
+		rq.findClasses(pkg)
 		.fire(new Receiver<List<ClassProxy>>() {
 			@Override
 			public void onSuccess(List<ClassProxy> response) {
@@ -52,7 +52,7 @@ public abstract class AbstractTypedInspectorActivity<T extends ReportPlace> exte
 		});
 	}
 
-	protected void classesAvailable(PackageProxy pkg, List<ClassProxy> classes) {}
+	protected void classesAvailable(String pkg, List<ClassProxy> classes) {}
 
 	@Override
 	public void selectClass(ClassProxy cls) {}

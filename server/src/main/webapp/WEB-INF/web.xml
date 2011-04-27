@@ -4,61 +4,76 @@
     "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
-  
-  <!-- Servlets -->
-  <servlet>
-    <servlet-name>weaver</servlet-name>
-    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Weave</servlet-class>
-  </servlet>
-  
-  <servlet>
-    <servlet-name>logger</servlet-name>
-    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Logger</servlet-class>
-  </servlet>
-  
-  <servlet>
-    <servlet-name>start</servlet-name>
-    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Start</servlet-class>
-  </servlet>
-  
-  <servlet>
-    <servlet-name>stop</servlet-name>
-    <servlet-class>nz.ac.vuw.ecs.rprofs.server.Stop</servlet-class>
-  </servlet>
-  
-  <servlet>
-    <servlet-name>requestFactoryServlet</servlet-name>
-    <servlet-class>com.google.gwt.requestfactory.server.RequestFactoryServlet</servlet-class>
-  </servlet>
-    
-  <servlet-mapping>
-    <servlet-name>weaver</servlet-name>
-    <url-pattern>/weaver</url-pattern>
-  </servlet-mapping>
-  
-  <servlet-mapping>
-    <servlet-name>logger</servlet-name>
-    <url-pattern>/logger</url-pattern>
-  </servlet-mapping>
-  
-  <servlet-mapping>
-    <servlet-name>start</servlet-name>
-    <url-pattern>/start</url-pattern>
-  </servlet-mapping>
-  
-  <servlet-mapping>
-    <servlet-name>stop</servlet-name>
-    <url-pattern>/stop</url-pattern>
-  </servlet-mapping>
 
-  <servlet-mapping>
-    <servlet-name>requestFactoryServlet</servlet-name>
-    <url-pattern>/gwtRequest</url-pattern>
-  </servlet-mapping>
-  
-  <!-- Default page to serve -->
-  <welcome-file-list>
-    <welcome-file>index.html</welcome-file>
-  </welcome-file-list>
+	<!-- Listeners -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<!-- Servlets -->
+	<servlet>
+		<servlet-name>weaver</servlet-name>
+		<servlet-class>nz.ac.vuw.ecs.rprofs.server.Weave</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>logger</servlet-name>
+		<servlet-class>nz.ac.vuw.ecs.rprofs.server.Logger</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>start</servlet-name>
+		<servlet-class>nz.ac.vuw.ecs.rprofs.server.Start</servlet-class>
+	</servlet>
+
+	<servlet>
+		<servlet-name>stop</servlet-name>
+		<servlet-class>nz.ac.vuw.ecs.rprofs.server.Stop</servlet-class>
+	</servlet>
+
+	<filter>
+		<filter-name>RequestFilter</filter-name>
+		<filter-class>nz.ac.vuw.ecs.rprofs.server.GwtRequest</filter-class>
+	</filter>
+
+	<servlet>
+		<servlet-name>requestFactoryServlet</servlet-name>
+		<servlet-class>com.google.gwt.requestfactory.server.RequestFactoryServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>weaver</servlet-name>
+		<url-pattern>/weaver</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>logger</servlet-name>
+		<url-pattern>/logger</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>start</servlet-name>
+		<url-pattern>/start</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>stop</servlet-name>
+		<url-pattern>/stop</url-pattern>
+	</servlet-mapping>
+
+	<filter-mapping>
+		<filter-name>RequestFilter</filter-name>
+		<url-pattern>/gwtRequest/*</url-pattern>
+	</filter-mapping>
+
+	<servlet-mapping>
+		<servlet-name>requestFactoryServlet</servlet-name>
+		<url-pattern>/gwtRequest/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- Default page to serve -->
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+	</welcome-file-list>
 
 </web-app>

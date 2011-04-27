@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 
@@ -21,31 +21,39 @@ import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 @SuppressWarnings("serial")
 public class Weave extends HttpServlet {
 
+	private final ContextManager cm = ContextManager.getInstance();
+
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
 
-		ActiveContext context = ContextManager.getInstance().getCurrent();
+		ActiveContext active = cm.getActive();
+		active.getContext().open();
 
-		Map<String, String> headers = new HashMap<String, String>();
-		for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements();) {
-			String key = e.nextElement();
-			headers.put(key, req.getHeader(key));
+		try {
+			Map<String, String> headers = new HashMap<String, String>();
+			for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements();) {
+				String key = e.nextElement();
+				headers.put(key, req.getHeader(key));
+			}
+			int length = req.getContentLength();
+
+			byte[] buffer = new byte[length];
+			InputStream is = req.getInputStream();
+			for (int i = 0; i < buffer.length;) {
+				i += is.read(buffer, i, buffer.length - i);
+			}
+
+			buffer = active.weaveClass(buffer);
+
+			resp.setStatus(200);
+			resp.setContentLength(buffer.length);
+			resp.setContentType("application/rprof");
+			resp.getOutputStream().write(buffer);
 		}
-		int length = req.getContentLength();
-
-		byte[] buffer = new byte[length];
-		InputStream is = req.getInputStream();
-		for (int i = 0; i < buffer.length;) {
-			i += is.read(buffer, i, buffer.length - i);
+		finally {
+			active.getContext().close();
 		}
-
-		buffer = context.weaveClass(buffer);
-
-		resp.setStatus(200);
-		resp.setContentLength(buffer.length);
-		resp.setContentType("application/rprof");
-		resp.getOutputStream().write(buffer);
 	}
 }

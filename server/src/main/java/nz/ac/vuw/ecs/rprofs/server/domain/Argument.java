@@ -23,6 +23,8 @@ public class Argument implements Comparable<Argument> {
 	@ManyToOne
 	Instance parameter;
 
+	public Argument() {}
+
 	public Argument(int position, Instance arg) {
 		this.position = position;
 		this.parameter = arg;
@@ -52,19 +54,16 @@ public class Argument implements Comparable<Argument> {
 			return false;
 		}
 		Argument a = (Argument) obj;
-		return id.equals(a.id);
+		return position == a.position;
 	}
 
 	@Override
 	public int hashCode() {
-		return id.hashCode();
+		return position;
 	}
 
 	@Override
 	public int compareTo(Argument o) {
-		if (id.equals(o.getId())) {
-			return o.position - position;
-		}
-		else return id.intValue() - o.id.intValue();
+		return o.position - position;
 	}
 }

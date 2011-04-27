@@ -50,9 +50,9 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 	private final Factory factory;
 	private final FrameLayout parent;
 
-	private final Map<String, PlaceAnchor<ReportPlace>> buttons = Collections.newMap();
+	private final Map<String, PlaceAnchor<ReportPlace<?>>> buttons = Collections.newMap();
 
-	private PlaceAnchor<ReportPlace> selected;
+	private PlaceAnchor<ReportPlace<?>> selected;
 
 	private boolean closed = false;
 
@@ -66,7 +66,7 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 			@Override
 			public void onPlaceChange(PlaceChangeEvent event) {
 				if (event.getNewPlace() instanceof ReportPlace) {
-					setSelected(((ReportPlace) event.getNewPlace()).getType());
+					setSelected(((ReportPlace<?>) event.getNewPlace()).getType());
 				}
 			}
 		});
@@ -97,14 +97,14 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 		closed = !closed;
 	}
 
-	@UiFactory PlaceAnchor<ReportPlace> createAnchor(String reference, String title, String description) {
-		PlaceAnchor<ReportPlace> anchor = new PlaceAnchor<ReportPlace>(factory.getPlaceController());
+	@UiFactory PlaceAnchor<ReportPlace<?>> createAnchor(String reference, String title, String description) {
+		PlaceAnchor<ReportPlace<?>> anchor = new PlaceAnchor<ReportPlace<?>>(factory.getPlaceController());
 
 		final String report = reference;
 		final PlaceController pc = factory.getPlaceController();
-		anchor.setTarget(new PlaceBuilder<ReportPlace>() {
+		anchor.setTarget(new PlaceBuilder<ReportPlace<?>>() {
 			@Override
-			public ReportPlace getPlace() {
+			public ReportPlace<?> getPlace() {
 				return ReportPlace.create(report, pc.getWhere());
 			}
 		});

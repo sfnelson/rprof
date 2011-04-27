@@ -8,10 +8,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.persistence.CascadeType;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
@@ -28,6 +30,12 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
  */
 @Entity
 @Table( name = "events" )
+@NamedQueries({
+	@NamedQuery(name = "getEvents", query = "select E from Event E where band(E.event, :filter) = E.event"),
+	@NamedQuery(name = "numEvents", query = "select count(E) from Event E where band(E.event, :filter) = E.event"),
+	@NamedQuery(name = "eventsWithArg", query = "select E from Event as E inner join E.args as Args where Args.parameter = :instance"),
+	@NamedQuery(name = "numEventsBefore", query = "select count(E) from Event E where band(E.event, :filter) = E.event and E.id.id <= :id")
+})
 public class Event implements DataObject<Event> {
 
 	public static final java.lang.Class<Event> TYPE = Event.class;
@@ -98,7 +106,7 @@ public class Event implements DataObject<Event> {
 	@ManyToOne
 	Field field;
 
-	@OneToMany(fetch=FetchType.EAGER)
+	@OneToMany(cascade=CascadeType.ALL)
 	Set<Argument> args;
 
 	public Event() {}

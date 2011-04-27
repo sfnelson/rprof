@@ -2,13 +2,13 @@ package nz.ac.vuw.ecs.rprofs.client.request;
 
 import java.util.List;
 
-import nz.ac.vuw.ecs.rprofs.server.data.DomainService.EventLocator;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 
 import com.google.gwt.requestfactory.shared.EntityProxy;
 import com.google.gwt.requestfactory.shared.ProxyFor;
 
-@ProxyFor(value = Event.class, locator = EventLocator.class)
+@ProxyFor(value = Event.class, locator = EventManager.class)
 public interface EventProxy extends EntityProxy {
 
 	// Copied from Event.class

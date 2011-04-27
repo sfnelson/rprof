@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 
 
 
@@ -17,11 +17,14 @@ import nz.ac.vuw.ecs.rprofs.server.data.ContextManager;
 @SuppressWarnings("serial")
 public class Stop extends HttpServlet {
 
+	private final ContextManager cm = ContextManager.getInstance();
+
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 	throws ServletException, IOException {
-		ContextManager cm = ContextManager.getInstance();
-		cm.stop(cm.getCurrent().getDataset());
+
+		cm.stopRecording();
+
 	}
 
 }

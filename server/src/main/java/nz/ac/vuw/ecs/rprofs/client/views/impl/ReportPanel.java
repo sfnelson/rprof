@@ -7,7 +7,6 @@ import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.PackageProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
@@ -54,14 +53,14 @@ public class ReportPanel extends Composite implements ReportView {
 	}
 
 	@Override
-	public void showPackages(List<PackageProxy> packages) {
+	public void showPackages(List<String> packages) {
 		int index = 0;
 		boolean even = false;
-		for (PackageProxy pkg: packages) {
+		for (String pkg: packages) {
 			ReportWidget w = createWidget(pkg);
 			w.init(even, index);
 			w.setText(index, pkg);
-			w.setCount(index + 1, pkg.getNumClasses(), "Classes");
+			w.setCount(index + 1, 0 /*pkg.getNumClasses()*/, "Classes");
 			children.add(w);
 			this.packages.add(w);
 			even = !even;
@@ -161,8 +160,8 @@ public class ReportPanel extends Composite implements ReportView {
 		}
 
 		Object o = widgetMap.get(w);
-		if (o instanceof PackageProxy) {
-			presenter.selectPackage((PackageProxy) o);
+		if (o instanceof String) {
+			presenter.selectPackage((String) o);
 		}
 		else if (o instanceof ClassProxy) {
 			presenter.selectClass((ClassProxy) o);

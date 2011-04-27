@@ -8,13 +8,13 @@ import nz.ac.vuw.ecs.rprofs.client.place.BrowseClasses;
 import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.PackageProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
-public class InspectClassesActivity extends AbstractTypedInspectorActivity<BrowseClasses>
+public class InspectClassesActivity
+extends AbstractTypedInspectorActivity<BrowseClasses>
 implements ReportView.Presenter {
 
 	private ReportView view;
@@ -40,18 +40,18 @@ implements ReportView.Presenter {
 	}
 
 	@Override
-	protected void packagesAvailable(List<PackageProxy> packages) {
+	protected void packagesAvailable(List<String> packages) {
 		view.clearAll();
 		view.showPackages(packages);
 	}
 
 	@Override
-	public void selectPackage(final PackageProxy pkg) {
+	public void selectPackage(String pkg) {
 		findClassesByPackage(pkg);
 	}
 
 	@Override
-	protected void classesAvailable(PackageProxy pkg, List<ClassProxy> classes) {
+	protected void classesAvailable(String pkg, List<ClassProxy> classes) {
 		view.clear(pkg);
 		view.showClasses(pkg, classes);
 	}

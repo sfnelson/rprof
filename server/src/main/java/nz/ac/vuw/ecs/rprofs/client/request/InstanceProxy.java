@@ -1,13 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.client.request;
 
-import nz.ac.vuw.ecs.rprofs.server.data.DomainService.InstanceLocator;
+import nz.ac.vuw.ecs.rprofs.server.data.InstanceManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 
 import com.google.gwt.requestfactory.shared.EntityProxy;
 import com.google.gwt.requestfactory.shared.EntityProxyId;
 import com.google.gwt.requestfactory.shared.ProxyFor;
 
-@ProxyFor(value = Instance.class, locator = InstanceLocator.class)
+@ProxyFor(value = Instance.class, locator = InstanceManager.class)
 public interface InstanceProxy extends EntityProxy {
 
 	public long getIndex();

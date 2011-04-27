@@ -5,9 +5,10 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
@@ -20,6 +21,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
  */
 @Entity
 @Table(name = "fields")
+@NamedQueries({
+	@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type")
+})
 public class Field implements Attribute<Field> {
 
 	public static final java.lang.Class<Field> TYPE = Field.class;
@@ -30,7 +34,7 @@ public class Field implements Attribute<Field> {
 	@Version
 	Integer version;
 
-	@ManyToOne(fetch=FetchType.EAGER)
+	@ManyToOne // TODO (fetch=FetchType.EAGER)
 	@JoinColumn(name="owner_id", nullable=false)
 	private Class owner;
 
@@ -115,5 +119,4 @@ public class Field implements Attribute<Field> {
 	public void setHash(boolean b) {
 		this.hash = b;
 	}
-
 }

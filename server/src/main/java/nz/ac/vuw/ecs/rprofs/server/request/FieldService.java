@@ -5,7 +5,7 @@ import java.util.List;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 
-public interface FieldRequest {
+public interface FieldService {
 
 	List<? extends Field> findFields(Class cls);
 

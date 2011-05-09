@@ -43,7 +43,7 @@ implements ReportView.Presenter {
 
 	protected void findClassesByPackage(final String pkg) {
 		ClassRequest rq = getFactory().getRequestFactory().classRequest();
-		rq.findClasses(pkg)
+		rq.findClassesInPackage(pkg)
 		.fire(new Receiver<List<ClassProxy>>() {
 			@Override
 			public void onSuccess(List<ClassProxy> response) {
@@ -93,7 +93,7 @@ implements ReportView.Presenter {
 
 	protected void findInstancesByClass(final ClassProxy cls) {
 		InstanceRequest rq = getFactory().getRequestFactory().instanceRequest();
-		rq.findInstances(cls)
+		rq.findInstancesForClass(cls)
 		.with("type", "constructor")
 		.fire(new Receiver<List<InstanceProxy>>() {
 			@Override

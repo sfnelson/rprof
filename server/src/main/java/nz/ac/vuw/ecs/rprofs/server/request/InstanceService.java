@@ -9,8 +9,8 @@ public interface InstanceService {
 
 	Instance findInstance(Long id);
 
-	int findNumInstances(Class cls);
-	List<? extends Instance> findInstances(Class cls);
+	int findNumInstancesForClass(Class cls);
+	List<? extends Instance> findInstancesForClass(Class cls);
 
 	int findNumInstances();
 	List<? extends Instance> findInstances();

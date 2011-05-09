@@ -3,8 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Field;
-
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -22,7 +20,7 @@ public class HashCodeMethodWeaver extends ExceptionHandlingMethodWeaver {
 	public void visitCode() {
 		super.visitCode();
 
-		push(record.parent.id);		// stack: cid
+		push(record.parent.id.getIndex());		// stack: cid
 		push(record.id);			// stack: cid, mid
 		push(1);					// stack: cid, mid, 1
 		visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));
@@ -41,7 +39,7 @@ public class HashCodeMethodWeaver extends ExceptionHandlingMethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == IRETURN) {
-			push(record.parent.id);
+			push(record.parent.id.getIndex());
 			push(record.id);
 			visitIntInsn(ALOAD, 0);
 			visitTrackerMethod(Tracker.exit);
@@ -54,9 +52,8 @@ public class HashCodeMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 	@Override
 	public void visitFieldInsn(int opcode, String owner, String name, String desc) {
+		// TODO field reference in a hashCode method: create and store an event.
 		//record.parent.addWatch(owner, name, desc);
-		Field fr = record.weaver.getField(owner, name, desc);
-		if (fr != null) record.weaver.setHash(fr, true);
 		super.visitFieldInsn(opcode, owner, name, desc);
 	}
 }

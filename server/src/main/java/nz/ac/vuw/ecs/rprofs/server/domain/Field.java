@@ -34,7 +34,7 @@ public class Field implements Attribute<Field> {
 	@Version
 	Integer version;
 
-	@ManyToOne // TODO (fetch=FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name="owner_id", nullable=false)
 	private Class owner;
 
@@ -50,13 +50,12 @@ public class Field implements Attribute<Field> {
 
 	Field() {}
 
-	public Field(FieldId id, String name, Class owner, String desc, int access, boolean equals, boolean hash) {
+	public Field(FieldId id, String name, Class owner, String desc, int access) {
 		this.id = id;
 		this.owner = owner;
 		this.name = name;
 		this.description = desc;
-		this.equals = equals;
-		this.hash = hash;
+		this.access = access;
 	}
 
 	public FieldId getId() {
@@ -90,14 +89,6 @@ public class Field implements Attribute<Field> {
 		return access;
 	}
 
-	public boolean getEquals() {
-		return equals;
-	}
-
-	public boolean getHash() {
-		return hash;
-	}
-
 	@Override
 	public String toString() {
 		return owner.getName() + "." + name + ":" + description;
@@ -106,17 +97,5 @@ public class Field implements Attribute<Field> {
 	@Override
 	public void visit(AttributeVisitor visitor) {
 		visitor.visitField(this);
-	}
-
-	public static Field clone(Field f, Class owner) {
-		return new Field(f.id, f.name, owner, f.description, f.access, f.equals, f.hash);
-	}
-
-	public void setEquals(boolean b) {
-		this.equals = b;
-	}
-
-	public void setHash(boolean b) {
-		this.hash = b;
 	}
 }

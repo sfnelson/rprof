@@ -1,9 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.Resources;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.ui.EventCell;
 import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
@@ -12,6 +14,8 @@ import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.MouseWheelEvent;
+import com.google.gwt.event.dom.client.MouseWheelHandler;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -27,7 +31,7 @@ import com.google.gwt.view.client.Range;
 
 public class EventPanel extends Composite implements EventView, ClickHandler {
 
-	private class Pager extends AbstractPager implements ClickHandler {
+	private class Pager extends AbstractPager implements ClickHandler, MouseWheelHandler {
 
 		public Pager() {
 			rewind.addClickHandler(this);
@@ -65,6 +69,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 
 			String txt = visible.getStart() + " to " + (visible.getStart() + visible.getLength()) + " of " + d.getRowCount();
 			label.setText(txt);
+			recalculate();
 		}
 
 		private void disable(Anchor a) {
@@ -77,17 +82,64 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 
 		public void onClick(ClickEvent ev) {
 			if (ev.getSource() == rewind) {
-
+				rewind();
 			}
 			else if (ev.getSource() == previous) {
-
+				previous();
 			}
 			else if (ev.getSource() == next) {
-
+				next();
 			}
 			else if (ev.getSource() == fastforward) {
-
+				fastforward();
 			}
+		}
+
+		@Override
+		public void onMouseWheel(MouseWheelEvent event) {
+			if (event.getDeltaY() > 0) {
+				fastforward();
+			}
+			else {
+				rewind();
+			}
+		}
+
+		private void rewind() {
+			System.out.println("rewind");
+			Range visible = list.getVisibleRange();
+			int start = visible.getStart() - visible.getLength();
+			int length = visible.getLength();
+
+			if (start < 0) {
+				start = 0;
+			}
+
+			System.out.println("setting to " + start + ", " + length);
+			list.setVisibleRange(start, length);
+		}
+
+		private void fastforward() {
+			System.out.println("fastforward");
+			Range visible = list.getVisibleRange();
+			int start = visible.getStart() + visible.getLength();
+			int length = visible.getLength();
+			int available = list.getRowCount();
+
+			if (start + length > available) {
+				start = available - length;
+			}
+
+			System.out.println("setting to " + start + ", " + length);
+			list.setVisibleRange(start, length);
+		}
+
+		private void previous() {
+			System.out.println("previous");
+		}
+
+		private void next() {
+			System.out.println("next");
 		}
 	}
 
@@ -104,7 +156,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	}
 
 	@UiField(provided=true) CellList<EventProxy> list;
-	private AbstractPager pager;
+	private Pager pager;
 
 	@UiField Style style;
 
@@ -115,6 +167,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	@UiField Anchor fastforward;
 
 	@UiField Panel filterMenu;
+	@UiField Panel pane;
 
 	@UiField Anchor all;
 	@UiField Anchor objectAllocated;
@@ -133,18 +186,28 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 
 	private EventStyle eventStyle;
 	private Presenter presenter;
+	private Map<InstanceProxy, Integer> threads = Collections.newMap();
 
 	public EventPanel() {
 		Resources res = GWT.create(Resources.class);
 		eventStyle = res.eventStyle();
-		list = new CellList<EventProxy>(new EventCell(eventStyle));
+		eventStyle.ensureInjected();
+		list = new CellList<EventProxy>(new EventCell(eventStyle, threads));
 
 		initWidget(uiBinder.createAndBindUi(this));
 
 		pager = new Pager();
 		pager.setDisplay(list);
+		addDomHandler(pager, MouseWheelEvent.getType());
 
 		init();
+	}
+
+	private void recalculate() {
+		int unit = 15;
+		int total = pane.getOffsetHeight();
+		if (unit == 0 || total == 0) return;
+		list.setPageSize(total / unit);
 	}
 
 	@Override
@@ -163,11 +226,23 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	@Override
 	public void setFirst(int first) {
 		list.setVisibleRange(first, 25);
+		recalculate();
 	}
 
 	@Override
 	public void setFilter(int filter) {
 		refresh(filter);
+	}
+
+	@Override
+	public void setThreads(List<InstanceProxy> threads) {
+		this.threads.clear();
+		int i = 0;
+		for (InstanceProxy thread: threads) {
+			this.threads.put(thread, i++);
+		}
+
+		list.redraw();
 	}
 
 	@Override

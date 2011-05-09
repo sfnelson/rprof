@@ -2,11 +2,19 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import javax.persistence.Embeddable;
 
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 
 @SuppressWarnings("serial")
 @Embeddable
 public class ObjectId extends Id<Instance> {
+
+	public static ObjectId create(Dataset dataset, long id) {
+		if (id == 0) {
+			return null;
+		}
+		return new ObjectId(dataset.getId(), id);
+	}
 
 	private static final long mask = 0xFFFFFFFFFFFFl;
 

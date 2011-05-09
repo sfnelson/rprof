@@ -12,7 +12,11 @@ import com.google.gwt.requestfactory.shared.Service;
 @Service(value=ClassService.class, locator=ServiceLocator.class)
 public interface ClassRequest extends RequestContext {
 
+	Request<Integer> findNumPackages();
 	Request<List<String>> findPackages();
-	Request<List<ClassProxy>> findClasses(String pkg);
+	Request<Integer> findNumClasses();
+	Request<List<ClassProxy>> findClasses();
+	Request<Integer> findNumClassesInPackage(String pkg);
+	Request<List<ClassProxy>> findClassesInPackage(String pkg);
 
 }

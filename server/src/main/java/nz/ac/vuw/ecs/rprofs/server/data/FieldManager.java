@@ -20,7 +20,7 @@ public class FieldManager extends DomainManager<Field> implements FieldService {
 	public List<? extends Field> findFields(Class cls) {
 		EntityManager em = cm.getCurrent().em();
 
-		TypedQuery<Field> q = em.createNamedQuery("fieldsByType", Field.class);
+		TypedQuery<Field> q = em.createNamedQuery("fieldsForType", Field.class);
 		q.setParameter("type", cls);
 		return q.getResultList();
 	}

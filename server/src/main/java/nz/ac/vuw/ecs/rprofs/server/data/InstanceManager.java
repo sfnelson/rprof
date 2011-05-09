@@ -18,11 +18,16 @@ public class InstanceManager extends DomainManager<Instance> implements Instance
 
 	@Override
 	public Instance findInstance(Long id) {
-		return find(new ObjectId(id));
+		if (id == null || id == 0) {
+			return null;
+		}
+		else {
+			return find(new ObjectId(id));
+		}
 	}
 
 	@Override
-	public List<? extends Instance> findInstances(Class cls) {
+	public List<? extends Instance> findInstancesForClass(Class cls) {
 		EntityManager em = cm.getCurrent().em();
 
 		TypedQuery<Instance> q = em.createNamedQuery("instancesForType", Instance.class);
@@ -31,7 +36,7 @@ public class InstanceManager extends DomainManager<Instance> implements Instance
 	}
 
 	@Override
-	public int findNumInstances(Class cls) {
+	public int findNumInstancesForClass(Class cls) {
 		EntityManager em = cm.getCurrent().em();
 
 		TypedQuery<Number> q = em.createNamedQuery("numInstancesForType", Number.class);
@@ -51,6 +56,14 @@ public class InstanceManager extends DomainManager<Instance> implements Instance
 		EntityManager em = cm.getCurrent().em();
 
 		return em.createNamedQuery("allInstances", Instance.class).getResultList();
+	}
+
+	public Instance createInstance(ObjectId id) {
+		EntityManager em = cm.getCurrent().em();
+
+		Instance instance = new Instance(id, null, null);
+		em.persist(instance);
+		return instance;
 	}
 
 }

@@ -14,8 +14,6 @@ public interface FieldProxy extends EntityProxy {
 	public String getName();
 	public String getDescription();
 	public int getAccess();
-	public boolean getEquals();
-	public boolean getHash();
 
 	EntityProxyId<FieldProxy> stableId();
 }

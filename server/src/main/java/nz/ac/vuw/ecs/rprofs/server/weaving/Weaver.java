@@ -1,11 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import java.util.Map;
-
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.Field;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassReader;
@@ -15,15 +12,11 @@ import org.objectweb.asm.Type;
 
 class Weaver {
 
-	private ActiveContext context;
 	private ClassRecord cr;
 	private short lastMethodId = 0;
 	private short lastFieldId = 0;
 
-	private Map<Field, FieldRecord> fieldMap = Collections.newMap();
-
-	Weaver(ActiveContext context, int classId) {
-		this.context = context;
+	Weaver(ClassId classId) {
 		this.cr = new ClassRecord(this, classId);
 	}
 
@@ -52,39 +45,6 @@ class Weaver {
 		FieldRecord fr = new FieldRecord(cr, ++lastFieldId, name);
 		cr.fields.put(fr.id, fr);
 		return fr;
-	}
-
-	void setEquals(Field f, boolean b) {
-		if (fieldMap.containsKey(f)) {
-			fieldMap.get(f).equals = b;
-		}
-		else {
-			context.setEquals(f, b);
-		}
-	}
-
-	void setHash(Field f, boolean b) {
-		if (fieldMap.containsKey(f)) {
-			fieldMap.get(f).hash = b;
-		}
-		else {
-			context.setHash(f, b);
-		}
-	}
-
-	Field getField(String owner, String name, String desc) {
-		if (cr.name.equals(owner)) {
-			FieldRecord fr = cr.getField(name, desc);
-			if (fr != null) {
-				Field f = fr.toAttribute(cr.toClass(context.getDataset()));
-				fieldMap.put(f, fr);
-				return f;
-			}
-			return null;
-		}
-		else {
-			return context.getField(owner, name, desc);
-		}
 	}
 
 	private static class Dispatcher extends ClassVisitorDispatcher {

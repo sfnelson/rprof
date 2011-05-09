@@ -37,6 +37,6 @@ public interface EventProxy extends EntityProxy {
 	public ClassProxy getType();
 	public MethodProxy getMethod();
 	public FieldProxy getField();
-	public List<InstanceProxy> getArguments();
+	public List<InstanceProxy> getArgs();
 
 }

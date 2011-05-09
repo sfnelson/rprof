@@ -11,7 +11,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 class ClassRecord {
 
 	final Weaver weaver;
-	final int id;
+	final ClassId id;
 
 	String name;
 	String superName;
@@ -25,9 +25,9 @@ class ClassRecord {
 	Map<Short, MethodRecord> methods = Collections.newMap();
 	Map<Short, FieldRecord> fields = Collections.newMap();
 
-	ClassRecord(Weaver weaver, int id) {
+	ClassRecord(Weaver weaver, ClassId classId) {
 		this.weaver = weaver;
-		this.id = id;
+		this.id = classId;
 	}
 
 	void init(int version, int access, String name, String signature,
@@ -53,15 +53,7 @@ class ClassRecord {
 	}
 
 	Class toClass(Dataset dataset) {
-		ClassId cid = new ClassId(dataset.getId(), id);
-		Class cls = new Class(cid, name, null, properties);
-		for (MethodRecord m: methods.values()) {
-			cls.addAttribute(m.toAttribute(cls));
-		}
-		for (FieldRecord f: fields.values()) {
-			cls.addAttribute(f.toAttribute(cls));
-		}
-		return cls;
+		return new Class(id, name, null, properties);
 	}
 
 	FieldRecord getField(String name, String desc) {

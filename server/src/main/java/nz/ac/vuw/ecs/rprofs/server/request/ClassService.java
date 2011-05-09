@@ -6,13 +6,13 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 
 public interface ClassService {
 
-	int findNumPackages();
+	Integer findNumPackages();
 	List<String> findPackages();
 
-	int findNumClasses(String pkg);
-	List<? extends Class> findClasses(String pkg);
+	Integer findNumClassesInPackage(String pkg);
+	List<? extends Class> findClassesInPackage(String pkg);
 
-	int findNumClasses();
+	Integer findNumClasses();
 	List<? extends Class> findClasses();
 
 }

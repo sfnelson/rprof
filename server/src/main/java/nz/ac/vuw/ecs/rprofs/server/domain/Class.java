@@ -22,12 +22,13 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 @Entity
 @Table( name = "classes" )
 @NamedQueries({
-	@NamedQuery(name="numPackages", query="select count(packageName) from Class group by packagename"),
-	@NamedQuery(name="allPackages", query="select packageName from Class group by packagename"),
-	@NamedQuery(name="numClassesForPackage", query="select count(C) from Class C where C.packageName = :package"),
-	@NamedQuery(name="classesForPackage", query="select C from Class C where C.packageName = :package"),
-	@NamedQuery(name="numClasses", query="select count(C) from Class C"),
-	@NamedQuery(name="allClasses", query="select C from Class C"),
+	@NamedQuery(name="numPackages", query="select count(packageName) from nz.ac.vuw.ecs.rprofs.server.domain.Class group by packageName"),
+	@NamedQuery(name="allPackages", query="select packageName from nz.ac.vuw.ecs.rprofs.server.domain.Class group by packageName"),
+	@NamedQuery(name="numClassesForPackage", query="select count(C) from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.packageName = :package"),
+	@NamedQuery(name="classesForPackage", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.packageName = :package"),
+	@NamedQuery(name="numClasses", query="select count(C) from nz.ac.vuw.ecs.rprofs.server.domain.Class C"),
+	@NamedQuery(name="allClasses", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C"),
+	@NamedQuery(name="findClassByName", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.fqname = :name")
 })
 public class Class implements DataObject<Class> {
 

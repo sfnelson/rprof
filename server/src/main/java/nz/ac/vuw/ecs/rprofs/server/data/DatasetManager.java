@@ -15,8 +15,6 @@ import com.ibm.icu.util.Calendar;
 
 public class DatasetManager extends Locator<Dataset, Long> implements DatasetService {
 
-	private ContextManager cm = ContextManager.getInstance();
-
 	@Override
 	public List<Dataset> findAllDatasets() {
 		return em().createNamedQuery("allDatasets", Dataset.class).getResultList();
@@ -27,6 +25,14 @@ public class DatasetManager extends Locator<Dataset, Long> implements DatasetSer
 		TypedQuery<Dataset> q = em().createNamedQuery("findDataset", Dataset.class);
 		q.setParameter("handle", handle);
 		return q.getSingleResult();
+	}
+
+	public Dataset findDataset(short id) {
+		return em().find(Dataset.class, id);
+	}
+
+	public void add(Dataset dataset) {
+		em().persist(dataset);
 	}
 
 	@Override
@@ -83,7 +89,7 @@ public class DatasetManager extends Locator<Dataset, Long> implements DatasetSer
 	}
 
 	private EntityManager em() {
-		Context c = cm.getDefault();
+		Context c = ContextManager.getInstance().getDefault();
 		if (!c.isOpen()) {
 			c.open();
 		}

@@ -49,7 +49,7 @@
 			left: 0;
 			bottom: 0;
 			right: 0;
-			overflow: auto;
+			overflow: hidden;
 		}
 		.pager {
 			position: absolute;
@@ -112,7 +112,7 @@
 			<g:Anchor ui:field="objectTagged">Object Tagged</g:Anchor>
 			<g:Anchor ui:field="objectFreed">Object Freed</g:Anchor>
 		</g:FlowPanel>
-		<g:FlowPanel styleName="{style.eventsPane}">
+		<g:FlowPanel ui:field="pane" styleName="{style.eventsPane}">
 			<g:FlowPanel styleName="{style.pager}">
 				<g:Anchor ui:field="rewind" styleName="{style.rewind}">&#9650;<br />&#9650;</g:Anchor>
 				<g:Anchor ui:field="previous" styleName="{style.previous}">&#9650;</g:Anchor>

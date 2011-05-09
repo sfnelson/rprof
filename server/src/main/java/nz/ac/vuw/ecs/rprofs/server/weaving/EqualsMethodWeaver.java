@@ -3,8 +3,6 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Field;
-
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -22,7 +20,7 @@ public class EqualsMethodWeaver extends ExceptionHandlingMethodWeaver {
 	public void visitCode() {
 		super.visitCode();
 
-		push(record.parent.id);		// stack: cid
+		push(record.parent.id.getIndex());		// stack: cid
 		push(record.id);			// stack: cid, mid
 		push(2);					// stack: cid, mid, 2
 		visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));
@@ -47,7 +45,7 @@ public class EqualsMethodWeaver extends ExceptionHandlingMethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == IRETURN) {
-			push(record.parent.id);
+			push(record.parent.id.getIndex());
 			push(record.id);
 			visitIntInsn(ALOAD, 0);
 			visitTrackerMethod(Tracker.exit);
@@ -60,9 +58,8 @@ public class EqualsMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 	@Override
 	public void visitFieldInsn(int opcode, String owner, String name, String desc) {
+		// TODO field reference in an equals method: create and store an event.
 		//record.parent.addWatch(owner, name, desc);
-		Field f = record.weaver.getField(owner, name, desc);
-		record.weaver.setEquals(f, true);
 		super.visitFieldInsn(opcode, owner, name, desc);
 	}
 }

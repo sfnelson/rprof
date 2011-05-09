@@ -4,6 +4,7 @@
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -34,7 +35,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 	@NamedQuery(name = "getEvents", query = "select E from Event E where band(E.event, :filter) = E.event"),
 	@NamedQuery(name = "numEvents", query = "select count(E) from Event E where band(E.event, :filter) = E.event"),
 	@NamedQuery(name = "eventsWithArg", query = "select E from Event as E inner join E.args as Args where Args.parameter = :instance"),
-	@NamedQuery(name = "numEventsBefore", query = "select count(E) from Event E where band(E.event, :filter) = E.event and E.id.id <= :id")
+	@NamedQuery(name = "numEventsBefore", query = "select count(E) from Event E where band(E.event, :filter) = E.event and E.id.id <= :id"),
+	@NamedQuery(name = "numThreads", query = "select count(E.thread.id) from Event as E group by E.thread.id"),
+	@NamedQuery(name = "getThreads", query = "select E.thread.id from Event as E group by E.thread.id")
 })
 public class Event implements DataObject<Event> {
 
@@ -109,6 +112,13 @@ public class Event implements DataObject<Event> {
 	@OneToMany(cascade=CascadeType.ALL)
 	Set<Argument> args;
 
+	private static final Comparator<Argument> comparator = new Comparator<Argument>() {
+		@Override
+		public int compare(Argument a, Argument b) {
+			return a.position - b.position;
+		}
+	};
+
 	public Event() {}
 
 	public Event(EventId id, Instance thread, int event, Class type, Attribute<?> attr, ArrayList<Instance> args) {
@@ -128,6 +138,18 @@ public class Event implements DataObject<Event> {
 
 	public Set<? extends Argument> getArguments() {
 		return args;
+	}
+
+	public List<Instance> getArgs() {
+		if (this.args.isEmpty()) return Collections.emptyList();
+		List<Argument> args = Collections.newList();
+		args.addAll(this.args);
+		Collections.sort(args, comparator);
+		List<Instance> result = Collections.newList();
+		for (Argument a: this.args) {
+			result.add(a.parameter);
+		}
+		return result;
 	}
 
 	public List<ObjectId> getArgumentIds() {

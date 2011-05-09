@@ -16,10 +16,11 @@ public class Context {
 
 	public void open() {
 		em.set(emf.createEntityManager());
+		em.get().getTransaction().begin();
 	}
 
 	public boolean isOpen() {
-		return em.get() == null;
+		return em.get() != null;
 	}
 
 	public EntityManager em() {
@@ -35,6 +36,7 @@ public class Context {
 	}
 
 	public void close() {
+		em.get().getTransaction().commit();
 		em.get().close();
 		em.remove();
 

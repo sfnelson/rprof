@@ -78,8 +78,8 @@ public class ReportPanel extends Composite implements ReportView {
 			ReportWidget w = createWidget(c);
 			w.init(even, index);
 			w.setText(index, c);
-			w.setCount(index + 1, c.getNumMethods(), "Methods");
-			w.setCount(index + 2, c.getNumFields(), "Fields");
+			// w.setCount(index + 1, c.getNumMethods(), "Methods");
+			// w.setCount(index + 2, c.getNumFields(), "Fields");
 			p.addChild(w);
 			even = !even;
 		}

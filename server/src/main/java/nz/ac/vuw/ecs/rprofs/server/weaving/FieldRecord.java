@@ -15,8 +15,6 @@ class FieldRecord implements AttributeRecord {
 	final String name;
 	String description;
 	int access;
-	boolean equals;
-	boolean hash;
 
 	FieldRecord(ClassRecord parent, short id, String name) {
 		this.weaver = parent.weaver;
@@ -33,17 +31,9 @@ class FieldRecord implements AttributeRecord {
 		}
 	}
 
-	void setEquals(boolean equals) {
-		this.equals = equals;
-	}
-
-	void setHash(boolean hash) {
-		this.hash = hash;
-	}
-
 	public Field toAttribute(Class cls) {
 		ClassId cid = cls.getId();
 		FieldId fid = new FieldId(cid.getDataset(), cid.getIndex(), id);
-		return new Field(fid, name, cls, description, access, equals, hash);
+		return new Field(fid, name, cls, description, access);
 	}
 }

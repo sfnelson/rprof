@@ -29,6 +29,7 @@ public class Weave extends HttpServlet {
 	throws ServletException, IOException {
 
 		ActiveContext active = cm.getActive();
+		cm.setCurrent(active.getContext());
 		active.getContext().open();
 
 		try {

@@ -12,9 +12,10 @@ import com.google.gwt.requestfactory.shared.Service;
 @Service(value = EventService.class, locator = ServiceLocator.class)
 public interface EventRequest extends RequestContext {
 
-	Request<List<EventProxy>> findEvents(int start, int length, int filter);
-	Request<Long> findIndexOf(long event, int filter);
-	Request<List<EventProxy>> findEventsByInstance(long instanceId);
-	Request<Long> findNumEvents(int filter);
-
+	Request<List<EventProxy>> findEvents(Integer start, Integer length, Integer filter);
+	Request<Long> findIndexOf(Long event, Integer filter);
+	Request<List<EventProxy>> findEventsByInstance(Long instanceId);
+	Request<Long> findNumEvents(Integer filter);
+	Request<Long> findNumThreads();
+	Request<List<InstanceProxy>> findThreads();
 }

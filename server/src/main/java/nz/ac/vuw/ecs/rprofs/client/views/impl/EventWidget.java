@@ -60,7 +60,7 @@ public class EventWidget extends Composite {
 		setType(event.getType());
 		setMethod(event.getMethod());
 		setField(event.getField());
-		setArgs(event.getArguments());
+		setArgs(event.getArgs());
 	}
 
 	public void setArgs(List<InstanceProxy> arguments) {
@@ -139,7 +139,7 @@ public class EventWidget extends Composite {
 			this.type.setText("null");
 		}
 		else {
-			this.type.setText(cls.getClassName());
+			this.type.setText(cls.getSimpleName());
 			this.type.setTitle(cls.getName());
 		}
 	}

@@ -120,7 +120,7 @@ public class ReportWidget extends Composite {
 
 	public void setText(int index, ClassProxy cls) {
 		HTML name = fields.get(index);
-		name.setText(cls.getClassName());
+		name.setText(cls.getSimpleName());
 		name.setTitle(cls.getName());
 		name.setStyleName(style.text());
 	}
@@ -166,7 +166,7 @@ public class ReportWidget extends Composite {
 		String shortType = null;
 		if (i.getType() != null) {
 			type = i.getType().getName();
-			shortType = i.getType().getClassName();
+			shortType = i.getType().getSimpleName();
 		}
 
 		if (type != null) {

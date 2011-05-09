@@ -1,3 +1,8 @@
+	.eventCell {
+		height: 15px;
+		overflow: hidden;
+	}
+	
 	.objectAllocated {}
 	.arrayAllocated {}
 	.methodEnter {}
@@ -13,12 +18,27 @@
 	.fieldRead .method, .fieldWrite .method { display: none; }
 	
 	.thread {
-		display: inline-block;
-		width: 3em;
+		display: block;
+		float: left;
+		width: 3ex;
+		height: 100%;
+		padding: 0 1ex;
+		border-right: solid 1px #ccc;
+		margin-right: 1ex;
+	}
+	.thread span {
+		display: block;
+		width: 1ex;
+		height: 100%;
+		background-color: #ddf;
+		border-left: solid 1px #aaf;
+		border-right: solid 1px #aaf;
 	}
 	.event {
-		display: inline-block;
+		display: block;
+		float: left;
 		width: 3em;
+		height: 100%;
 		text-align: right;
 		padding-right: 0.5em;
 	}

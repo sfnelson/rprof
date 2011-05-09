@@ -11,12 +11,10 @@ import com.google.gwt.requestfactory.shared.ProxyFor;
 public interface ClassProxy extends EntityProxy {
 
 	public String getPackage();
+	public String getSimpleName();
 	public String getName();
-	public String getClassName();
 
 	public ClassProxy getParent();
-	public int getNumMethods();
-	public int getNumFields();
 	public int getProperties();
 
 	EntityProxyId<ClassProxy> stableId();

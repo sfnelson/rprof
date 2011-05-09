@@ -15,7 +15,7 @@ class MainMethodWeaver extends ExceptionHandlingMethodWeaver {
 	public void visitCode() {
 		super.visitCode();
 
-		push(record.parent.id);
+		push(record.parent.id.getIndex());
 		push(record.id);
 		visitTrackerMethod(Tracker.main);
 		setStack(2);
@@ -32,7 +32,7 @@ class MainMethodWeaver extends ExceptionHandlingMethodWeaver {
 		case ARETURN:
 			setStack(4);
 		case RETURN:
-			push(record.parent.id);
+			push(record.parent.id.getIndex());
 			push(record.id);
 			visitInsn(ACONST_NULL);
 			visitTrackerMethod(Tracker.exit);

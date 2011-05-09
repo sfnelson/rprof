@@ -15,6 +15,7 @@ public interface EventStyle extends CssResource {
 	public String objectTagged();
 	public String objectFreed();
 
+	public String eventCell();
 	public String thread();
 	public String event();
 	public String type();

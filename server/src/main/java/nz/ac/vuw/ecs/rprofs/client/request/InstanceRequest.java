@@ -14,6 +14,6 @@ public interface InstanceRequest extends RequestContext {
 
 	Request<InstanceProxy> findInstance(Long instanceId);
 
-	Request<List<InstanceProxy>> findInstances(ClassProxy cls);
+	Request<List<InstanceProxy>> findInstancesForClass(ClassProxy cls);
 
 }

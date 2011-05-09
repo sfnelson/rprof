@@ -50,7 +50,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 	public FieldVisitor visitField(int access, String name, String desc,
 			String signature, Object value) {
 		if (name.equals("cnum")) {
-			return super.visitField(access, name, desc, signature, new Integer(record.id));
+			return super.visitField(access, name, desc, signature, new Integer(record.id.getIndex()));
 		}
 		else {
 			return super.visitField(access, name, desc, signature, value);

@@ -5,7 +5,7 @@ import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
 
 import com.google.gwt.activity.shared.AbstractActivity;
 
-public abstract class AbstractInspectorActivity<T extends ReportPlace> extends AbstractActivity {
+public abstract class AbstractInspectorActivity<T extends ReportPlace<T>> extends AbstractActivity {
 
 	private final Factory factory;
 	private final T place;

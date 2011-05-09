@@ -4,12 +4,15 @@ import java.util.Calendar;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.db.NamingStrategy;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.XmlWebApplicationContext;
 
 public class ContextManager {
 
@@ -20,6 +23,8 @@ public class ContextManager {
 	}
 
 	private final Map<String, Context> contexts = Collections.newMap();
+
+	private final DatasetManager datasets = new DatasetManager();
 
 	public Context getContext(String dataset) {
 		Context context;
@@ -36,7 +41,20 @@ public class ContextManager {
 	private Context createContext(String dataset) {
 		NamingStrategy.currentRun.set(dataset);
 
-		ApplicationContext c = ContextLoaderListener.getCurrentWebApplicationContext();
+		ApplicationContext c;
+
+		WebApplicationContext parent = ContextLoaderListener.getCurrentWebApplicationContext();
+
+		if (dataset == null) {
+			c = parent;
+		}
+		else {
+			XmlWebApplicationContext child = new XmlWebApplicationContext();
+			child.setServletContext(parent.getServletContext());
+			child.refresh();
+			c = child;
+		}
+
 		Context context = c.getBean(Context.class);
 
 		NamingStrategy.currentRun.set(null);
@@ -50,6 +68,10 @@ public class ContextManager {
 
 	public Context getCurrent() {
 		return current.get();
+	}
+
+	public void setCurrent(Context context) {
+		current.set(context);
 	}
 
 	public Context setCurrent(String dataset) {
@@ -67,8 +89,6 @@ public class ContextManager {
 	}
 
 	public void startRecording() {
-		Context c = getDefault();
-
 		Calendar s = Calendar.getInstance();
 		String handle = String.format("%02d%02d%02d%02d%02d%02d",
 				s.get(Calendar.YEAR),
@@ -82,13 +102,7 @@ public class ContextManager {
 
 		System.out.println("profiler run started at " + ds.getStarted());
 
-		try {
-			c.open();
-			c.em().persist(ds);
-		}
-		finally {
-			c.close();
-		}
+		datasets.add(ds);
 
 		active = new ActiveContext(createContext(ds.getHandle()), ds);
 
@@ -98,13 +112,8 @@ public class ContextManager {
 	public void stopRecording() {
 		if (active == null) return;
 
-		Dataset ds = active.getDataset();
-
-		Context c = getDefault();
-		c.open();
-		ds = c.find(Dataset.class, ds.getId());
+		Dataset ds = datasets.findDataset(active.getDataset().getId());
 		ds.setStopped(Calendar.getInstance().getTime());
-		c.close();
 
 		System.out.println("profiler run stopped at " + ds.getStopped());
 

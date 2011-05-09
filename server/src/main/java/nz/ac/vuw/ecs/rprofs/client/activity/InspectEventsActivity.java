@@ -7,6 +7,7 @@ import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractInspectorActivity;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseEvents;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.EventRequest;
+import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 
 import com.google.gwt.event.shared.EventBus;
@@ -41,6 +42,15 @@ implements EventView.Presenter {
 		view.setFilter(filter);
 
 		panel.setWidget(view);
+
+		getFactory().getRequestFactory().eventRequest().findThreads()
+		.with("type")
+		.fire(new Receiver<List<InstanceProxy>>() {
+			@Override
+			public void onSuccess(List<InstanceProxy> response) {
+				view.setThreads(response);
+			}
+		});
 	}
 
 	@Override
@@ -112,7 +122,7 @@ implements EventView.Presenter {
 			System.out.println("requested events " + r.getStart() + " to " + (r.getStart() + r.getLength()));
 			EventRequest rq = getFactory().getRequestFactory().eventRequest();
 			rq.findEvents(r.getStart(), r.getLength(), filter)
-			.with("thread", "type", "method", "field", "arguments")
+			.with("thread", "type", "method", "field", "args", "args.index", "args.type")
 			.fire(new Receiver<List<EventProxy>>() {
 				@Override
 				public void onSuccess(List<EventProxy> result) {
@@ -124,6 +134,5 @@ implements EventView.Presenter {
 				}
 			});
 		}
-
 	}
 }

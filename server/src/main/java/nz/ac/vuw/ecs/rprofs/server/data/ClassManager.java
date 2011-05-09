@@ -16,7 +16,7 @@ public class ClassManager extends DomainManager<Class> implements ClassService {
 	}
 
 	@Override
-	public int findNumPackages() {
+	public Integer findNumPackages() {
 		EntityManager em = cm.getCurrent().em();
 
 		return em.createNamedQuery("numPackages", Number.class).getSingleResult().intValue();
@@ -30,7 +30,7 @@ public class ClassManager extends DomainManager<Class> implements ClassService {
 	}
 
 	@Override
-	public int findNumClasses(String pkg) {
+	public Integer findNumClassesInPackage(String pkg) {
 		EntityManager em = cm.getCurrent().em();
 
 		TypedQuery<Number> q = em.createNamedQuery("numClassesForPackage", Number.class);
@@ -39,7 +39,7 @@ public class ClassManager extends DomainManager<Class> implements ClassService {
 	}
 
 	@Override
-	public List<? extends Class> findClasses(String pkg) {
+	public List<? extends Class> findClassesInPackage(String pkg) {
 		EntityManager em = cm.getCurrent().em();
 
 		TypedQuery<Class> q = em.createNamedQuery("classesForPackage", Class.class);
@@ -48,7 +48,7 @@ public class ClassManager extends DomainManager<Class> implements ClassService {
 	}
 
 	@Override
-	public int findNumClasses() {
+	public Integer findNumClasses() {
 		EntityManager em = cm.getCurrent().em();
 
 		return em.createNamedQuery("numClasses", Number.class).getSingleResult().intValue();
@@ -59,6 +59,16 @@ public class ClassManager extends DomainManager<Class> implements ClassService {
 		EntityManager em = cm.getCurrent().em();
 
 		return em.createNamedQuery("allClasses", Class.class).getResultList();
+	}
+
+	public Class findClass(String fqname) {
+		EntityManager em = cm.getCurrent().em();
+
+		TypedQuery<Class> q = em.createNamedQuery("findClassByName", Class.class);
+		q.setParameter("name", fqname);
+		List<Class> results = q.getResultList();
+		if (results.isEmpty()) return null;
+		else return results.get(0);
 	}
 
 }

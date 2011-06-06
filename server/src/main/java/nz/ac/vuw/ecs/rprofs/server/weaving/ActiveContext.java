@@ -105,7 +105,7 @@ public class ActiveContext {
 				}
 				else {
 					throw new NullPointerException(
-							String.format("could not find class id %s with parent %s (%s) [%ld %ld]",
+							String.format("could not find class id %s with parent %s (%s) [%d %d]",
 									cid.toString(), cls.getName(), cls.getId().toString(), cid.getId(), cls.getId().getId()));
 				}
 			}

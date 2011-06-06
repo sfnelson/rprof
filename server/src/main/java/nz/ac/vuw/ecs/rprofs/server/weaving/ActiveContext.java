@@ -106,6 +106,8 @@ public class ActiveContext {
 			for (ClassId cid: awaitingSuper.remove(cls.getName())) {
 				Class c = classes.find(cid);
 				if (c != null) {
+					log.info(String.format("found class %s (%s) with parent %s (%s)", c.getName(), cid.toString(),
+							cls.getName(), cls.getId().toString()));
 					c.setParent(cls);
 				}
 				else {

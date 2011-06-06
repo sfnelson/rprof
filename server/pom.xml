@@ -10,7 +10,7 @@
 
 	<properties>
 		<org.springframework.version>3.0.5.RELEASE</org.springframework.version>
-		<com.google.gwt.version>2.2.0</com.google.gwt.version>
+		<com.google.gwt.version>2.3.0</com.google.gwt.version>
 		<maven.compiler.source>1.6</maven.compiler.source>
 		<maven.compiler.target>1.6</maven.compiler.target>
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
@@ -54,7 +54,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>gwt-maven-plugin</artifactId>
-				<version>2.1.0</version>
+				<version>2.2.0</version>
 				<executions>
 					<execution>
 						<goals>
@@ -69,6 +69,18 @@
 					<runTarget>index.html</runTarget>
 					<hostedWebapp>${webappDirectory}</hostedWebapp>
 				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>com.google.gwt</groupId>
+						<artifactId>gwt-user</artifactId>
+						<version>${com.google.gwt.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>com.google.gwt</groupId>
+						<artifactId>gwt-dev</artifactId>
+						<version>${com.google.gwt.version}</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 
 			<!-- Copy static web files before executing gwt:run -->

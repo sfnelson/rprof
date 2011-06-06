@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import java.util.Calendar;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -11,7 +12,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 
 import com.google.gwt.requestfactory.shared.Locator;
-import com.ibm.icu.util.Calendar;
 
 public class DatasetManager extends Locator<Dataset, Long> implements DatasetService {
 

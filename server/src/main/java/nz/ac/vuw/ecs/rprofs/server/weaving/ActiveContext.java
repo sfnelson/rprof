@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
@@ -16,6 +17,8 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 
 public class ActiveContext {
+
+	private Logger log = Logger.getLogger("weaver");
 
 	private final Context context;
 	private final Dataset dataset;
@@ -73,6 +76,8 @@ public class ActiveContext {
 		Class cls = cr.toClass(dataset);
 		context.em().persist(cls);
 
+		log.info(String.format("storing new class %s (%s)", cls.getName(), cls.getId().toString()));
+
 		for (FieldRecord fr: cr.fields.values()) {
 			context.em().persist(fr.toAttribute(cls));
 		}
@@ -112,6 +117,8 @@ public class ActiveContext {
 		}
 
 		context.em().persist(new Event(nextEvent(), null, Event.CLASS_WEAVE, cls, null, new ArrayList<Instance>()));
+
+		log.info(String.format("finished storing new class %s (%s)", cls.getName(), cls.getId().toString()));
 
 		return result;
 	}

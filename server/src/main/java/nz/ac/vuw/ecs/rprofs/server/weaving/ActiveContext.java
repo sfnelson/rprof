@@ -104,7 +104,9 @@ public class ActiveContext {
 					c.setParent(cls);
 				}
 				else {
-					throw new NullPointerException("could not find class: " + cid + " with parent " + cls.getName());
+					throw new NullPointerException(
+							String.format("could not find class id %s with parent %s (%s) [%ld %ld]",
+									cid.toString(), cls.getName(), cls.getId().toString(), cid.getId(), cls.getId().getId()));
 				}
 			}
 		}

@@ -7,5 +7,17 @@
 	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/Applications/eclipse-3.6-cocoa/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r36v201105191508/gwt-2.3.0/gwt-user.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/Applications/eclipse-3.6-cocoa/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r36v201105191508/gwt-2.3.0/doc/javadoc/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Applications/eclipse-3.6-cocoa/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r36v201105191508/gwt-2.3.0/gwt-dev.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/Applications/eclipse-3.6-cocoa/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r36v201105191508/gwt-2.3.0/doc/javadoc/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Applications/eclipse-3.6-cocoa/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r36v201105191508/gwt-2.3.0/validation-api-1.0.0.GA-sources.jar"/>
+	<classpathentry kind="lib" path="/Applications/eclipse-3.6-cocoa/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r36v201105191508/gwt-2.3.0/validation-api-1.0.0.GA.jar" sourcepath="/Applications/eclipse-3.6-cocoa/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r36v201105191508/gwt-2.3.0/validation-api-1.0.0.GA-sources.jar"/>
 	<classpathentry kind="output" path="target/server-1.0-SNAPSHOT/WEB-INF/classes"/>
 </classpath>

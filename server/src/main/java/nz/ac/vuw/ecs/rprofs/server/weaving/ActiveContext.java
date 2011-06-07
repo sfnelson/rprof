@@ -78,6 +78,15 @@ public class ActiveContext {
 
 		log.info(String.format("storing new class %s (%s)", cls.getName(), cls.getId().toString()));
 
+		Class clsTmp = context.em().find(Class.class, cls.getId());
+
+		if (clsTmp != null) {
+			log.info(String.format("retrieved new class %s (%s) successfully", cls.getName(), cls.getId().toString()));
+		}
+		else {
+			log.info(String.format("failed to retrieve new class %s (%s)", cls.getName(), cls.getId().toString()));
+		}
+
 		for (FieldRecord fr: cr.fields.values()) {
 			context.em().persist(fr.toAttribute(cls));
 		}
@@ -104,7 +113,7 @@ public class ActiveContext {
 
 		if (awaitingSuper.containsKey(cls.getName())) {
 			for (ClassId cid: awaitingSuper.remove(cls.getName())) {
-				Class c = classes.find(cid);
+				Class c = context.em().find(Class.class, cid.getId());
 				if (c != null) {
 					log.info(String.format("found class %s (%s) with parent %s (%s)", c.getName(), cid.toString(),
 							cls.getName(), cls.getId().toString()));

@@ -113,7 +113,7 @@ public class ActiveContext {
 
 		if (awaitingSuper.containsKey(cls.getName())) {
 			for (ClassId cid: awaitingSuper.remove(cls.getName())) {
-				Class c = context.em().find(Class.class, cid.getId());
+				Class c = context.em().find(Class.class, cid);
 				if (c != null) {
 					log.info(String.format("found class %s (%s) with parent %s (%s)", c.getName(), cid.toString(),
 							cls.getName(), cls.getId().toString()));

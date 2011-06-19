@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
 
@@ -22,6 +23,7 @@ import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
 @SuppressWarnings("serial")
 public class Weave extends HttpServlet {
 
+	private final java.util.logging.Logger log = java.util.logging.Logger.getLogger("logger");
 	private final ContextManager cm = ContextManager.getInstance();
 
 	@SuppressWarnings("unchecked")
@@ -51,12 +53,14 @@ public class Weave extends HttpServlet {
 
 			byte[] result = weaver.weave(buffer);
 
-			active.storeClass(weaver.getClassRecord());
+			Class cls = active.storeClass(weaver.getClassRecord());
 
 			resp.setStatus(200);
-			resp.setContentLength(buffer.length);
+			resp.setContentLength(result.length);
 			resp.setContentType("application/rprof");
 			resp.getOutputStream().write(result);
+
+			log.info(String.format("received %s (%d bytes), returning %d bytes", cls.getName(), length, result.length));
 		}
 		finally {
 			active.getContext().close();

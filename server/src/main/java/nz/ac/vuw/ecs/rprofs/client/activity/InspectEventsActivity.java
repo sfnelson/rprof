@@ -11,11 +11,11 @@ import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 
 import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.requestfactory.shared.Receiver;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwt.view.client.AsyncDataProvider;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.Range;
+import com.google.web.bindery.requestfactory.shared.Receiver;
 
 public class InspectEventsActivity
 extends AbstractInspectorActivity<BrowseEvents>

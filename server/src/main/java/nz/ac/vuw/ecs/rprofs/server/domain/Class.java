@@ -69,6 +69,20 @@ public class Class implements DataObject<Class> {
 		simpleName = name.substring(name.lastIndexOf('/') + 1);
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (obj.getClass() != getClass()) return false;
+		Class cls = (Class) obj;
+		return id.equals(cls.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return id.hashCode();
+	}
+
 	public ClassId getId() {
 		return id;
 	}

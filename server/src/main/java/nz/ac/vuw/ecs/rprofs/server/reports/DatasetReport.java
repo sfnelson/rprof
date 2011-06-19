@@ -20,8 +20,8 @@ import nz.ac.vuw.ecs.rprofs.server.request.InstanceService;
 public class DatasetReport {
 
 	private ContextManager cm = ContextManager.getInstance();
-	private ClassService classes = new ClassManager();
-	private InstanceService instances = new InstanceManager();
+	private ClassService classes = new ClassManager(cm);
+	private InstanceService instances = new InstanceManager(cm);
 
 	public int getNumClasses() {
 		return classes.findNumClasses();

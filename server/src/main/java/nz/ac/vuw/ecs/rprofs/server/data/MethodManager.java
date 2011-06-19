@@ -5,6 +5,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
@@ -12,8 +13,8 @@ import nz.ac.vuw.ecs.rprofs.server.request.MethodService;
 
 public class MethodManager extends DomainManager<Method> implements MethodService {
 
-	public MethodManager() {
-		super(Method.class, MethodId.class);
+	public MethodManager(ContextManager cm) {
+		super(cm, Method.class, MethodId.class);
 	}
 
 	@Override

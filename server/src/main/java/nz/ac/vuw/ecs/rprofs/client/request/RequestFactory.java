@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.request;
 
-public interface RequestFactory extends com.google.gwt.requestfactory.shared.RequestFactory {
+public interface RequestFactory extends com.google.web.bindery.requestfactory.shared.RequestFactory {
 
 	DatasetRequest datasetRequest();
 

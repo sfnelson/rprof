@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
+import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
 
 
 /**
@@ -46,12 +47,16 @@ public class Weave extends HttpServlet {
 				i += is.read(buffer, i, buffer.length - i);
 			}
 
-			buffer = active.weaveClass(buffer);
+			Weaver weaver = new Weaver(active.nextClass());
+
+			byte[] result = weaver.weave(buffer);
+
+			active.storeClass(weaver.getClassRecord());
 
 			resp.setStatus(200);
 			resp.setContentLength(buffer.length);
 			resp.setContentType("application/rprof");
-			resp.getOutputStream().write(buffer);
+			resp.getOutputStream().write(result);
 		}
 		finally {
 			active.getContext().close();

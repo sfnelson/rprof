@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
@@ -14,10 +15,11 @@ import nz.ac.vuw.ecs.rprofs.server.request.EventService;
 
 public class EventManager extends DomainManager<Event> implements EventService {
 
-	private InstanceManager instances = new InstanceManager();
+	private final InstanceManager instances;
 
-	public EventManager() {
-		super(Event.class, EventId.class);
+	public EventManager(ContextManager cm) {
+		super(cm, Event.class, EventId.class);
+		instances = new InstanceManager(cm);
 	}
 
 	@Override

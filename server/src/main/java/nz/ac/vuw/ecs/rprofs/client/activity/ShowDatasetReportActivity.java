@@ -7,8 +7,8 @@ import nz.ac.vuw.ecs.rprofs.client.views.DatasetReportView;
 
 import com.google.gwt.activity.shared.AbstractActivity;
 import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.requestfactory.shared.Receiver;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import com.google.web.bindery.requestfactory.shared.Receiver;
 
 public class ShowDatasetReportActivity extends AbstractActivity {
 

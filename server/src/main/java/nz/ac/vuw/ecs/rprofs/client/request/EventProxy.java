@@ -5,8 +5,8 @@ import java.util.List;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 
-import com.google.gwt.requestfactory.shared.EntityProxy;
-import com.google.gwt.requestfactory.shared.ProxyFor;
+import com.google.web.bindery.requestfactory.shared.EntityProxy;
+import com.google.web.bindery.requestfactory.shared.ProxyFor;
 
 @ProxyFor(value = Event.class, locator = EventManager.class)
 public interface EventProxy extends EntityProxy {

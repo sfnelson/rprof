@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.Map;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.db.NamingStrategy;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
@@ -25,6 +26,8 @@ public class ContextManager {
 	private final Map<String, Context> contexts = Collections.newMap();
 
 	private final DatasetManager datasets = new DatasetManager();
+
+	private final ClassManager classes = new ClassManager(this);
 
 	public Context getContext(String dataset) {
 		Context context;
@@ -55,7 +58,7 @@ public class ContextManager {
 			c = child;
 		}
 
-		Context context = c.getBean(Context.class);
+		Context context = c.getBean(PersistenceContext.class);
 
 		NamingStrategy.currentRun.set(null);
 
@@ -104,7 +107,7 @@ public class ContextManager {
 
 		datasets.add(ds);
 
-		active = new ActiveContext(createContext(ds.getHandle()), ds);
+		active = new ActiveContext(this, createContext(ds.getHandle()), ds);
 
 		contexts.put(ds.getHandle(), active.getContext());
 	}
@@ -118,5 +121,9 @@ public class ContextManager {
 		System.out.println("profiler run stopped at " + ds.getStopped());
 
 		active = null;
+	}
+
+	public ClassManager getClasses() {
+		return classes;
 	}
 }

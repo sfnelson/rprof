@@ -9,9 +9,9 @@ import nz.ac.vuw.ecs.rprofs.client.views.DatasetListView;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetView;
 
 import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.requestfactory.shared.Receiver;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import com.google.web.bindery.requestfactory.shared.Receiver;
 
 public class SelectDatasetActivity extends AbstractListActivity<DatasetProxy> implements DatasetView.Presenter {
 

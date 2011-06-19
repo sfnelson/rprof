@@ -15,7 +15,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.SimpleEventBus;
 import com.google.gwt.place.shared.PlaceController;
-import com.google.gwt.requestfactory.shared.RequestTransport;
+import com.google.web.bindery.requestfactory.shared.RequestTransport;
 
 public class FactoryImpl implements Factory {
 

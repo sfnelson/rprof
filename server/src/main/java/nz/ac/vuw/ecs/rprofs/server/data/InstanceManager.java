@@ -5,6 +5,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
@@ -12,8 +13,8 @@ import nz.ac.vuw.ecs.rprofs.server.request.InstanceService;
 
 public class InstanceManager extends DomainManager<Instance> implements InstanceService {
 
-	public InstanceManager() {
-		super(Instance.TYPE, ObjectId.class);
+	public InstanceManager(ContextManager cm) {
+		super(cm, Instance.TYPE, ObjectId.class);
 	}
 
 	@Override

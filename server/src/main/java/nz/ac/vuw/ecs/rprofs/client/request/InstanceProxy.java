@@ -3,9 +3,9 @@ package nz.ac.vuw.ecs.rprofs.client.request;
 import nz.ac.vuw.ecs.rprofs.server.data.InstanceManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 
-import com.google.gwt.requestfactory.shared.EntityProxy;
-import com.google.gwt.requestfactory.shared.EntityProxyId;
-import com.google.gwt.requestfactory.shared.ProxyFor;
+import com.google.web.bindery.requestfactory.shared.EntityProxy;
+import com.google.web.bindery.requestfactory.shared.EntityProxyId;
+import com.google.web.bindery.requestfactory.shared.ProxyFor;
 
 @ProxyFor(value = Instance.class, locator = InstanceManager.class)
 public interface InstanceProxy extends EntityProxy {

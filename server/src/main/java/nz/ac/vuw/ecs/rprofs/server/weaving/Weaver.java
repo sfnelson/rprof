@@ -10,17 +10,17 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 
-class Weaver {
+public class Weaver {
 
 	private ClassRecord cr;
 	private short lastMethodId = 0;
 	private short lastFieldId = 0;
 
-	Weaver(ClassId classId) {
+	public Weaver(ClassId classId) {
 		this.cr = new ClassRecord(this, classId);
 	}
 
-	byte[] weave(byte[] classfile) {
+	public byte[] weave(byte[] classfile) {
 
 		ClassReader reader = new ClassReader(classfile);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
@@ -31,7 +31,7 @@ class Weaver {
 		return writer.toByteArray();
 	}
 
-	ClassRecord getClassRecord() {
+	public ClassRecord getClassRecord() {
 		return cr;
 	}
 

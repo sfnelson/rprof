@@ -2,8 +2,8 @@ package nz.ac.vuw.ecs.rprofs.client.request;
 
 import nz.ac.vuw.ecs.rprofs.server.reports.Stat;
 
-import com.google.gwt.requestfactory.shared.ProxyFor;
-import com.google.gwt.requestfactory.shared.ValueProxy;
+import com.google.web.bindery.requestfactory.shared.ProxyFor;
+import com.google.web.bindery.requestfactory.shared.ValueProxy;
 
 @ProxyFor(Stat.class)
 public interface StatProxy extends ValueProxy {

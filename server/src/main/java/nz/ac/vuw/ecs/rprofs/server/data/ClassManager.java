@@ -5,14 +5,15 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
 
 public class ClassManager extends DomainManager<Class> implements ClassService {
 
-	public ClassManager() {
-		super(Class.class, ClassId.TYPE);
+	public ClassManager(ContextManager cm) {
+		super(cm, Class.class, ClassId.TYPE);
 	}
 
 	@Override

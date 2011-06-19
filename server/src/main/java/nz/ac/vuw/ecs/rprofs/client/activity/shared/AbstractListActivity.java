@@ -5,8 +5,8 @@ import java.util.List;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 import com.google.gwt.activity.shared.AbstractActivity;
-import com.google.gwt.requestfactory.shared.Receiver;
-import com.google.gwt.requestfactory.shared.Request;
+import com.google.web.bindery.requestfactory.shared.Receiver;
+import com.google.web.bindery.requestfactory.shared.Request;
 
 public abstract class AbstractListActivity<E> extends AbstractActivity {
 

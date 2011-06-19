@@ -11,7 +11,7 @@ import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 
-import com.google.gwt.requestfactory.shared.Locator;
+import com.google.web.bindery.requestfactory.shared.Locator;
 
 public class DatasetManager extends Locator<Dataset, Long> implements DatasetService {
 

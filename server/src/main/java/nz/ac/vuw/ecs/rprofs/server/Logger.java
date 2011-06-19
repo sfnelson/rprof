@@ -33,10 +33,10 @@ import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 public class Logger extends HttpServlet {
 
 	private final ContextManager cm = ContextManager.getInstance();
-	private final ClassManager classes = new ClassManager();
-	private final FieldManager fields = new FieldManager();
-	private final MethodManager methods = new MethodManager();
-	private final InstanceManager instances = new InstanceManager();
+	private final ClassManager classes = new ClassManager(cm);
+	private final FieldManager fields = new FieldManager(cm);
+	private final MethodManager methods = new MethodManager(cm);
+	private final InstanceManager instances = new InstanceManager(cm);
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)

@@ -13,7 +13,7 @@ import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodRequest;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
-import com.google.gwt.requestfactory.shared.Receiver;
+import com.google.web.bindery.requestfactory.shared.Receiver;
 
 public abstract class AbstractTypedInspectorActivity<T extends ReportPlace<T>>
 extends AbstractInspectorActivity<T>

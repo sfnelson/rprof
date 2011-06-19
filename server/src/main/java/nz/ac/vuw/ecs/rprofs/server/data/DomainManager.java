@@ -5,16 +5,17 @@ import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.Id;
 
-import com.google.gwt.requestfactory.shared.Locator;
+import com.google.web.bindery.requestfactory.shared.Locator;
 
 public abstract class DomainManager<T extends DataObject<T>> extends Locator<T, Long> {
 
-	protected final ContextManager cm = ContextManager.getInstance();
+	protected final ContextManager cm;
 
 	private final java.lang.Class<T> type;
 	private final java.lang.Class<? extends Id<T>> idType;
 
-	protected DomainManager(java.lang.Class<T> type, java.lang.Class<? extends Id<T>> idType) {
+	protected DomainManager(ContextManager cm, java.lang.Class<T> type, java.lang.Class<? extends Id<T>> idType) {
+		this.cm = cm;
 		this.type = type;
 		this.idType = idType;
 	}

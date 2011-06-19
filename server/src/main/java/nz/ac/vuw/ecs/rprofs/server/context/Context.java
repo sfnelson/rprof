@@ -1,52 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.server.context;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceUnit;
 
-public class Context {
+public interface Context {
 
-	@PersistenceUnit
-	private EntityManagerFactory emf;
+	public void open();
 
-	private ContextManager cm = ContextManager.getInstance();
+	public boolean isOpen();
 
-	private ThreadLocal<EntityManager> em = new ThreadLocal<EntityManager>();
+	public EntityManager em();
+	public EntityTransaction tx();
 
-	public void open() {
-		em.set(emf.createEntityManager());
-		em.get().getTransaction().begin();
-	}
+	public <T> T find(Class<T> clazz, Object id);
 
-	public boolean isOpen() {
-		return em.get() != null;
-	}
-
-	public EntityManager em() {
-		return em.get();
-	}
-
-	public EntityTransaction tx() {
-		return em.get().getTransaction();
-	}
-
-	public <T> T find(Class<T> clazz, Object id) {
-		return em.get().find(clazz, id);
-	}
-
-	public void close() {
-		em.get().getTransaction().commit();
-		em.get().close();
-		em.remove();
-
-		if (cm.getDefault() != this && cm.getDefault().isOpen()) {
-			cm.getDefault().close();
-		}
-	}
-
-	public void clear() {
-		em.get().clear();
-		em.remove();
-	}
+	public void close();
+	public void clear();
 }

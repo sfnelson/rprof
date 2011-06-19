@@ -25,7 +25,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 	@NamedQuery(name="numInstances", query="select count(I) from Instance I"),
 	@NamedQuery(name="allInstances", query="select count(I) from Instance I"),
 	@NamedQuery(name="numInstancesForType", query="select count(I) from Instance I where I.type = :type"),
-	@NamedQuery(name="instancesForType", query="select I from Instance I where I.type = :type"),
+	@NamedQuery(name="instancesForType", query="select I from Instance I where I.type = :type")
 })
 public class Instance implements DataObject<Instance> {
 

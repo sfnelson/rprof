@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module rename-to='profiler'>
   <inherits name='com.google.gwt.user.User' />
-  <inherits name='com.google.gwt.requestfactory.RequestFactory' />
+  <inherits name="com.google.web.bindery.requestfactory.RequestFactory"/>
   <inherits name='com.google.gwt.activity.Activity' />
   <entry-point class='nz.ac.vuw.ecs.rprofs.client.AppEntryPoint'/>
   <source path='client'/>

@@ -1,11 +1,15 @@
 package nz.ac.vuw.ecs.rprofs.server.context;
 
+import java.util.logging.Logger;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceUnit;
 
 public class PersistenceContext implements Context {
+
+	private final Logger log = Logger.getLogger("context");
 
 	@PersistenceUnit
 	private EntityManagerFactory emf;
@@ -15,6 +19,7 @@ public class PersistenceContext implements Context {
 	private ThreadLocal<EntityManager> em = new ThreadLocal<EntityManager>();
 
 	public void open() {
+		log.info(String.format("%d: open", System.currentTimeMillis()));
 		em.set(emf.createEntityManager());
 		em.get().getTransaction().begin();
 	}
@@ -39,6 +44,7 @@ public class PersistenceContext implements Context {
 		em.get().getTransaction().commit();
 		em.get().close();
 		em.remove();
+		log.info(String.format("%d: close", System.currentTimeMillis()));
 
 		if (cm.getDefault() != this && cm.getDefault().isOpen()) {
 			cm.getDefault().close();

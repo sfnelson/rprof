@@ -38,7 +38,6 @@ public class PersistenceContext implements Context {
 	public void close() {
 		em.get().getTransaction().commit();
 		em.get().close();
-		em.get().flush();
 		em.remove();
 
 		if (cm.getDefault() != this && cm.getDefault().isOpen()) {

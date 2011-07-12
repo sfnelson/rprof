@@ -12,6 +12,10 @@ import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
 
 public class ClassManager extends DomainManager<Class> implements ClassService {
 
+	public ClassManager() {
+		this(ContextManager.getInstance());
+	}
+
 	public ClassManager(ContextManager cm) {
 		super(cm, Class.class, ClassId.TYPE);
 	}

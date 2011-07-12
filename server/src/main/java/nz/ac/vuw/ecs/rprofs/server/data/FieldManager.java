@@ -13,6 +13,10 @@ import nz.ac.vuw.ecs.rprofs.server.request.FieldService;
 
 public class FieldManager extends DomainManager<Field> implements FieldService {
 
+	public FieldManager() {
+		this(ContextManager.getInstance());
+	}
+
 	public FieldManager(ContextManager cm) {
 		super(cm, Field.class, FieldId.class);
 	}

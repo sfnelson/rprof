@@ -19,7 +19,7 @@ public class PersistenceContext implements Context {
 	private ThreadLocal<EntityManager> em = new ThreadLocal<EntityManager>();
 
 	public void open() {
-		log.info(String.format("%d: open", System.currentTimeMillis()));
+		log.finest(String.format("%d: open", System.currentTimeMillis()));
 		em.set(emf.createEntityManager());
 		em.get().getTransaction().begin();
 	}
@@ -44,7 +44,7 @@ public class PersistenceContext implements Context {
 		em.get().getTransaction().commit();
 		em.get().close();
 		em.remove();
-		log.info(String.format("%d: close", System.currentTimeMillis()));
+		log.finest(String.format("%d: close", System.currentTimeMillis()));
 
 		if (cm.getDefault() != this && cm.getDefault().isOpen()) {
 			cm.getDefault().close();

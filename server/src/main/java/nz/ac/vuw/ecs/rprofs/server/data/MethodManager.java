@@ -13,6 +13,10 @@ import nz.ac.vuw.ecs.rprofs.server.request.MethodService;
 
 public class MethodManager extends DomainManager<Method> implements MethodService {
 
+	public MethodManager() {
+		this(ContextManager.getInstance());
+	}
+
 	public MethodManager(ContextManager cm) {
 		super(cm, Method.class, MethodId.class);
 	}

@@ -13,6 +13,10 @@ import nz.ac.vuw.ecs.rprofs.server.request.InstanceService;
 
 public class InstanceManager extends DomainManager<Instance> implements InstanceService {
 
+	public InstanceManager() {
+		this(ContextManager.getInstance());
+	}
+
 	public InstanceManager(ContextManager cm) {
 		super(cm, Instance.TYPE, ObjectId.class);
 	}

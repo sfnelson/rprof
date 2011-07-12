@@ -17,6 +17,10 @@ public class EventManager extends DomainManager<Event> implements EventService {
 
 	private final InstanceManager instances;
 
+	public EventManager() {
+		this(ContextManager.getInstance());
+	}
+
 	public EventManager(ContextManager cm) {
 		super(cm, Event.class, EventId.class);
 		instances = new InstanceManager(cm);

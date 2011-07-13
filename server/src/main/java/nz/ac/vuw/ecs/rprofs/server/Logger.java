@@ -71,6 +71,14 @@ public class Logger extends HttpServlet {
 		Instance thread = getInstance(ds, ObjectId.create(ds, threadId));
 		Class type = em.find(Class.class, (ClassId.create(ds, cnum)));
 
+		// check consistency
+		if (ds == null) {
+			log.warning("dataset is null");
+		}
+		if (type == null) {
+			log.warning(String.format("type not found: %d", cnum));
+		}
+
 		Attribute<?> attr = null;
 		if ((event & Event.FIELDS) != 0) {
 			attr = em.find(Field.class, FieldId.create(ds, type, mnum));

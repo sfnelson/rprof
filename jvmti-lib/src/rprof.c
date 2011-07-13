@@ -849,6 +849,14 @@ cbFieldAccess(jvmtiEnv *jvmti,
 
 	rField fieldRecord = getField(gdata->fieldMap, gdata->mapLength, field);
 	if (fieldRecord.field == field) {
+		/*
+		 * cnum is set using the class where the field is defined. This is
+		 * required to create a proper reference to the field.
+		 * I suspect that the field_klass property will give us the class
+		 * where the field is dereferenced but I can't access the docs to
+		 * check right now.
+		 */
+		cnum = fieldRecord.cnum;
 		mnum = fieldRecord.fnum;
 	}
 
@@ -862,11 +870,13 @@ cbFieldAccess(jvmtiEnv *jvmti,
 		check_jvmti_error(jvmti, error, "Cannot read object tag");
 	}
 
+	/*
 	if (field_klass != NULL) {
 		error = (*jvmti)->GetTag(jvmti, field_klass, &classID);
 		check_jvmti_error(jvmti, error, "Cannot read class tag");
 		cnum = (jint)(classID & 0xFFFFFFFFll);
 	}
+	 */
 
 	log_method_event(threadID, RPROF_FIELD_READ, cnum, mnum, 1, &objectID);
 }
@@ -893,6 +903,14 @@ cbFieldModification(jvmtiEnv *jvmti,
 
 	rField fieldRecord = getField(gdata->fieldMap, gdata->mapLength, field);
 	if (fieldRecord.field == field) {
+		/*
+		 * cnum is set using the class where the field is defined. This is
+		 * required to create a proper reference to the field.
+		 * I suspect that the field_klass property will give us the class
+		 * where the field is dereferenced but I can't access the docs to
+		 * check right now.
+		 */
+		cnum = fieldRecord.cnum;
 		mnum = fieldRecord.fnum;
 	}
 
@@ -906,11 +924,13 @@ cbFieldModification(jvmtiEnv *jvmti,
 		check_jvmti_error(jvmti, error, "Cannot read object tag");
 	}
 
+	/*
 	if (field_klass != NULL) {
 		error = (*jvmti)->GetTag(jvmti, field_klass, &classID);
 		check_jvmti_error(jvmti, error, "Cannot read class tag");
 		cnum = (jint)(classID & 0xFFFFFFFFll);
 	}
+	 */
 
 	switch (signature_type) {
 	case 'L':

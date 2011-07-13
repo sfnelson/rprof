@@ -5,7 +5,7 @@
   <inherits name='com.google.gwt.activity.Activity' />
   <inherits name='com.google.gwt.uibinder.UiBinder' />
   
-  <set-configuration-property name="UiBinder.usesafeHtmlTemplates" value="true" /> 
+  <set-configuration-property name="UiBinder.useSafeHtmlTemplates" value="true" /> 
 
   <entry-point class='nz.ac.vuw.ecs.rprofs.client.AppEntryPoint'/>
   <source path='client'/>

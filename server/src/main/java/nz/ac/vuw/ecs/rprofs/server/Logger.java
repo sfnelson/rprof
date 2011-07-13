@@ -77,23 +77,19 @@ public class Logger extends HttpServlet {
 		}
 
 		Attribute<?> attr = null;
-		if ((event & Event.FIELDS) != 0) {
-			if (type == null) {
-				log.warning(String.format("type not found: %d", cnum));
+		if (type != null) {
+			if ((event & Event.FIELDS) != 0) {
+				attr = em.find(Field.class, FieldId.create(ds, type, mnum));
 			}
-			attr = em.find(Field.class, FieldId.create(ds, type, mnum));
+			else if ((event & Event.METHODS) != 0) {
+				attr = em.find(Method.class, MethodId.create(ds, type, mnum));
+			}
 			if (attr == null) {
-				log.warning(String.format("field not found: %s.%d", type.getName(), mnum));
+				log.warning(String.format("attribute not found: %s.%d (%d)", type.getName(), mnum, event));
 			}
 		}
-		else if ((event & Event.METHODS) != 0) {
-			if (type == null) {
-				log.warning(String.format("type not found: %d", cnum));
-			}
-			attr = em.find(Method.class, MethodId.create(ds, type, mnum));
-			if (attr == null) {
-				log.warning(String.format("method not found: %s.%d", type.getName(), mnum));
-			}
+		else if ((event & (Event.FIELDS | Event.METHODS)) != 0) {
+			log.warning(String.format("type not found: %d", cnum));
 		}
 
 		ArrayList<Instance> argList = Collections.newList();

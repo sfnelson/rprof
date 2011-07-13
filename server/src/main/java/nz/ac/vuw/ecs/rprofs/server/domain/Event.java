@@ -24,6 +24,8 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.Id;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
+import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -32,14 +34,15 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 @Entity
 @Table( name = "events" )
 @NamedQueries({
-	@NamedQuery(name = "getEvents", query = "select E from Event E where band(E.event, :filter) = E.event"),
-	@NamedQuery(name = "numEvents", query = "select count(E) from Event E where band(E.event, :filter) = E.event"),
-	@NamedQuery(name = "eventsWithArg", query = "select E from Event as E inner join E.args as Args where Args.parameter = :instance"),
-	@NamedQuery(name = "numEventsBefore", query = "select count(E) from Event E where band(E.event, :filter) = E.event and E.id.id <= :id"),
-	@NamedQuery(name = "numThreads", query = "select count(E.thread.id) from Event as E group by E.thread.id"),
-	@NamedQuery(name = "getThreads", query = "select E.thread.id from Event as E group by E.thread.id")
+	@NamedQuery(name = "getEvents", query = "select E from Event E where E.owner = :owner and band(E.event, :filter) = E.event"),
+	@NamedQuery(name = "numEvents", query = "select count(E) from Event E where E.owner = :owner and band(E.event, :filter) = E.event"),
+	@NamedQuery(name = "eventsWithArg", query = "select E from Event as E inner join E.args as Args where E.owner = :owner and Args.parameter = :instance"),
+	@NamedQuery(name = "numEventsBefore", query = "select count(E) from Event E where E.owner = :owner and band(E.event, :filter) = E.event and E.id.id <= :id"),
+	@NamedQuery(name = "numThreads", query = "select count(E.thread.id) from Event as E where E.owner = :owner group by E.thread.id"),
+	@NamedQuery(name = "getThreads", query = "select E.thread from Event as E where E.owner = :owner group by E.thread"),
+	@NamedQuery(name = "deleteEvents", query = "delete Event E where E.owner = :dataset")
 })
-public class Event implements DataObject<Event> {
+public class Event implements DataObject<Event, EventId> {
 
 	public static final java.lang.Class<Event> TYPE = Event.class;
 
@@ -96,6 +99,9 @@ public class Event implements DataObject<Event> {
 	Integer version;
 
 	@ManyToOne
+	Dataset owner;
+
+	@ManyToOne
 	Instance thread;
 
 	Integer event;
@@ -121,7 +127,8 @@ public class Event implements DataObject<Event> {
 
 	public Event() {}
 
-	public Event(EventId id, Instance thread, int event, Class type, Attribute<?> attr, ArrayList<Instance> args) {
+	public Event(Dataset owner, EventId id, Instance thread, int event, Class type, Attribute<?> attr, ArrayList<Instance> args) {
+		this.owner = owner;
 		this.id = id;
 		this.thread = thread;
 		this.event = event;
@@ -174,6 +181,10 @@ public class Event implements DataObject<Event> {
 
 	public EventId getId() {
 		return id;
+	}
+
+	public Long getRpcId() {
+		return id.getId();
 	}
 
 	public long getEventId() {

@@ -14,6 +14,7 @@ import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
+import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -22,7 +23,8 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 @Entity
 @Table(name = "fields")
 @NamedQueries({
-	@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type")
+	@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type"),
+	@NamedQuery(name = "deleteFields", query = "delete Field F where F.owner.owner = :dataset")
 })
 public class Field implements Attribute<Field> {
 
@@ -60,6 +62,10 @@ public class Field implements Attribute<Field> {
 
 	public FieldId getId() {
 		return id;
+	}
+
+	public Long getRpcId() {
+		return id.getId();
 	}
 
 	public Integer getVersion() {

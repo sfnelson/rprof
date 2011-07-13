@@ -11,6 +11,8 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 
@@ -18,13 +20,14 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 @Table(name = "profiler_runs")
 @NamedQueries({
 	@NamedQuery(name = "findDataset", query = "select D from Dataset D where D.handle = :handle"),
-	@NamedQuery(name = "allDatasets", query = "select D from Dataset D")
+	@NamedQuery(name = "allDatasets", query = "select D from Dataset D"),
+	@NamedQuery(name = "deleteDataset", query = "delete Dataset D where D = :dataset")
 })
-public class Dataset implements IsSerializable, Comparable<Dataset> {
+public class Dataset implements DataObject<Dataset, Short>, IsSerializable, Comparable<Dataset> {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE)
-	private short id;
+	private Short id;
 
 	@Version
 	private Integer version;
@@ -43,8 +46,12 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 		this.program = program;
 	}
 
-	public short getId() {
+	public Short getId() {
 		return id;
+	}
+
+	public Long getRpcId() {
+		return new Long(id);
 	}
 
 	public Integer getVersion() {
@@ -83,5 +90,18 @@ public class Dataset implements IsSerializable, Comparable<Dataset> {
 	@Override
 	public String toString() {
 		return handle;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		return id.equals(((Dataset) obj).id);
+	}
+
+	@Override
+	public int hashCode() {
+		return id;
 	}
 }

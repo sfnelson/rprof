@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -12,14 +14,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
-import nz.ac.vuw.ecs.rprofs.server.data.FieldManager;
-import nz.ac.vuw.ecs.rprofs.server.data.InstanceManager;
-import nz.ac.vuw.ecs.rprofs.server.data.MethodManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Attribute;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
@@ -27,60 +25,69 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
+import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
+import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
+import org.springframework.beans.factory.annotation.Autowire;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.transaction.annotation.Transactional;
+
 @SuppressWarnings("serial")
+@Configurable(autowire=Autowire.BY_TYPE)
 public class Logger extends HttpServlet {
 
-	private final ContextManager cm = ContextManager.getInstance();
-	private final ClassManager classes = new ClassManager(cm);
-	private final FieldManager fields = new FieldManager(cm);
-	private final MethodManager methods = new MethodManager(cm);
-	private final InstanceManager instances = new InstanceManager(cm);
+	private final java.util.logging.Logger log = java.util.logging.Logger.getLogger("event-logger");
+
+	@PersistenceContext
+	private EntityManager em;
+
+	@Autowired private ContextManager contexts;
+
+	@Autowired private DatasetService datasets;
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-	throws ServletException, IOException {
+			throws ServletException, IOException {
 
-		ActiveContext active = cm.getActive();
-		cm.setCurrent(active.getDataset().getHandle());
+		Dataset current = datasets.findDataset(req.getHeader("Dataset"));
+		ContextManager.setThreadLocal(current);
 
-		active.getContext().open();
+		ActiveContext active = contexts.getContext(current);
 
-		try {
-			parse(active, req.getContentLength(), req.getInputStream());
-		}
-		finally {
-			active.getContext().close();
-		}
+		parse(active, req.getContentLength(), req.getInputStream());
 
 		resp.setStatus(201);
+		ContextManager.setThreadLocal(null);
 	}
 
+	@Transactional
 	private void createEvent(ActiveContext context, long threadId, int event, short cnum, short mnum, long[] args) {
-		Dataset ds = context.getDataset();
+		Dataset ds = ContextManager.getThreadLocal();
 
 		EventId id = context.nextEvent();
 
-		Instance thread = getInstance(ObjectId.create(ds, threadId));
-		Class type = classes.find(ClassId.create(ds, cnum));
+		Instance thread = getInstance(ds, ObjectId.create(ds, threadId));
+		Class type = em.find(Class.class, (ClassId.create(ds, cnum)));
 
 		Attribute<?> attr = null;
 		if ((event & Event.FIELDS) != 0) {
-			attr = fields.find(FieldId.create(ds, type, mnum));
+			attr = em.find(Field.class, FieldId.create(ds, type, mnum));
 		}
 		else if ((event & Event.METHODS) != 0) {
-			attr = methods.find(MethodId.create(ds, type, mnum));
+			attr = em.find(Method.class, MethodId.create(ds, type, mnum));
 		}
 
 		ArrayList<Instance> argList = Collections.newList();
 		for (long arg: args) {
-			argList.add(getInstance(ObjectId.create(ds, arg)));
+			argList.add(getInstance(ds, ObjectId.create(ds, arg)));
 		}
 
-		storeEvent(context, new Event(id, thread, event, type, attr, argList));
+		storeEvent(context, new Event(ds, id, thread, event, type, attr, argList));
 	}
 
+	@Transactional
 	private void storeEvent(ActiveContext context, Event event) {
 		Class cls = event.getType();
 		Attribute<?> attr = event.getAttribute();
@@ -103,15 +110,17 @@ public class Logger extends HttpServlet {
 			break;
 		}
 
-		context.getContext().em().merge(event);
+		em.merge(event);
 	}
 
-	private Instance getInstance(ObjectId id) {
+	@Transactional
+	private Instance getInstance(Dataset ds, ObjectId id) {
 		if (id == null) return null;
 
-		Instance i = instances.find(id);
+		Instance i = em.find(Instance.class, id);
 		if (i == null) {
-			i = instances.createInstance(id);
+			i = new Instance(ds, id, null, null);
+			em.persist(i);
 		}
 		return i;
 	}
@@ -139,7 +148,7 @@ public class Logger extends HttpServlet {
 			int len = dis.readInt();
 
 			if (len > MAX_PARAMETERS) {
-				System.err.printf("warning: %d is greater than MAX_PARAMETERS\n", len);
+				log.warning(String.format("warning: %d is greater than MAX_PARAMETERS\n", len));
 				len = MAX_PARAMETERS;
 			}
 

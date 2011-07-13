@@ -4,11 +4,11 @@ import java.io.Serializable;
 
 import javax.persistence.MappedSuperclass;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.DataObject;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 @SuppressWarnings("serial")
 @MappedSuperclass
-public abstract class Id<T extends DataObject<T>> implements Serializable {
+public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
 
 	private static final long mask = 0xFFFFFFFFl;
 

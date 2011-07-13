@@ -9,4 +9,5 @@ public interface DatasetService {
 	List<Dataset> findAllDatasets();
 	void stopDataset(String dataset);
 	void deleteDataset(String dataset);
+	Dataset setProgram(Dataset dataset, String program);
 }

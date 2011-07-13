@@ -13,6 +13,7 @@ import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
+import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -21,7 +22,8 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 @Entity
 @Table(name = "methods")
 @NamedQueries({
-	@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type")
+	@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type"),
+	@NamedQuery(name = "deleteMethods", query = "delete Method M where M.owner.owner = :dataset")
 })
 public class Method implements Attribute<Method> {
 
@@ -54,6 +56,10 @@ public class Method implements Attribute<Method> {
 
 	public MethodId getId() {
 		return mid;
+	}
+
+	public Long getRpcId() {
+		return mid.getId();
 	}
 
 	public Integer getVersion() {
@@ -91,7 +97,7 @@ public class Method implements Attribute<Method> {
 
 	public boolean isMain() {
 		return "main".equals(getName()) && "([Ljava/lang/String;)V".equals(getDescription())
-		&& (0x1 | 0x8) == getAccess(); // public, static
+				&& (0x1 | 0x8) == getAccess(); // public, static
 	}
 
 	public boolean isInit() {
@@ -104,12 +110,12 @@ public class Method implements Attribute<Method> {
 
 	public boolean isEquals() {
 		return "equals".equals(getName()) && "(Ljava/lang/Object;)Z".equals(getDescription())
-		&& 0x1 == getAccess(); // public
+				&& 0x1 == getAccess(); // public
 	}
 
 	public boolean isHashCode() {
 		return "hashCode".equals(getName()) && "()I".equals(getDescription())
-		&& 0x1 == getAccess(); // public
+				&& 0x1 == getAccess(); // public
 	}
 
 	public boolean isStatic() {

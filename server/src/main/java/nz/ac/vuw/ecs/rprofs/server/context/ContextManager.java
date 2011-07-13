@@ -2,128 +2,68 @@ package nz.ac.vuw.ecs.rprofs.server.context;
 
 import java.util.Calendar;
 import java.util.Map;
+import java.util.logging.Logger;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
-import nz.ac.vuw.ecs.rprofs.server.db.NamingStrategy;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.context.ContextLoaderListener;
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.XmlWebApplicationContext;
+import org.springframework.transaction.annotation.Transactional;
 
 public class ContextManager {
 
-	private static final ContextManager instance = new ContextManager();
+	private static ThreadLocal<Dataset> dataset = new ThreadLocal<Dataset>();
 
-	public static ContextManager getInstance() {
-		return instance;
+	public static Dataset getThreadLocal() {
+		return dataset.get();
 	}
 
-	private final Map<String, Context> contexts = Collections.newMap();
-
-	private final DatasetManager datasets = new DatasetManager();
-
-	private final ClassManager classes = new ClassManager(this);
-
-	public Context getContext(String dataset) {
-		Context context;
-		if (contexts.containsKey(dataset)) {
-			context = contexts.get(dataset);
-		}
-		else {
-			context = createContext(dataset);
-			contexts.put(dataset, context);
-		}
-		return context;
+	public static void setThreadLocal(Dataset dataset) {
+		ContextManager.dataset.set(dataset);
 	}
 
-	private Context createContext(String dataset) {
-		NamingStrategy.currentRun.set(dataset);
+	private final Logger log = Logger.getLogger("context");
+	private final Map<Dataset, ActiveContext> contexts = Collections.newMap();
 
-		ApplicationContext c;
+	@PersistenceContext
+	private EntityManager em;
 
-		WebApplicationContext parent = ContextLoaderListener.getCurrentWebApplicationContext();
-
-		if (dataset == null) {
-			c = parent;
-		}
-		else {
-			XmlWebApplicationContext child = new XmlWebApplicationContext();
-			child.setServletContext(parent.getServletContext());
-			child.refresh();
-			c = child;
-		}
-
-		Context context = c.getBean(PersistenceContext.class);
-
-		NamingStrategy.currentRun.set(null);
-
-		return context;
-	}
-
-	private ThreadLocal<Context> current = new ThreadLocal<Context>();
-
-	private ActiveContext active;
-
-	public Context getCurrent() {
-		return current.get();
-	}
-
-	public void setCurrent(Context context) {
-		current.set(context);
-	}
-
-	public Context setCurrent(String dataset) {
-		Context c = getContext(dataset);
-		current.set(c);
-		return c;
-	}
-
-	public Context getDefault() {
-		return getContext(null);
-	}
-
-	public ActiveContext getActive() {
-		return active;
-	}
-
-	public void startRecording() {
-		Calendar s = Calendar.getInstance();
+	@Transactional
+	public Dataset startRecording() {
+		Calendar now = Calendar.getInstance();
 		String handle = String.format("%02d%02d%02d%02d%02d%02d",
-				s.get(Calendar.YEAR),
-				s.get(Calendar.MONTH),
-				s.get(Calendar.DATE),
-				s.get(Calendar.HOUR),
-				s.get(Calendar.MINUTE),
-				s.get(Calendar.SECOND));
+				now.get(Calendar.YEAR),
+				now.get(Calendar.MONTH),
+				now.get(Calendar.DATE),
+				now.get(Calendar.HOUR),
+				now.get(Calendar.MINUTE),
+				now.get(Calendar.SECOND));
 
-		Dataset ds = new Dataset(handle, s.getTime(), null, null);
+		log.info("profiler run started at " + now.getTime());
 
-		System.out.println("profiler run started at " + ds.getStarted());
+		Dataset ds = new Dataset(handle, now.getTime(), null, null);
+		em.persist(ds);
 
-		datasets.add(ds);
+		ActiveContext c = new ActiveContext();
+		c.setDataset(ds);
 
-		active = new ActiveContext(this, createContext(ds.getHandle()), ds);
+		log.finest("storing context for dataset with id " + ds.getId());
+		contexts.put(ds, c);
 
-		contexts.put(ds.getHandle(), active.getContext());
+		return ds;
 	}
 
-	public void stopRecording() {
-		if (active == null) return;
-
-		Dataset ds = datasets.findDataset(active.getDataset().getId());
-		ds.setStopped(Calendar.getInstance().getTime());
-
-		System.out.println("profiler run stopped at " + ds.getStopped());
-
-		active = null;
+	public void stopRecording(Dataset ds) {
+		Calendar now = Calendar.getInstance();
+		contexts.remove(getThreadLocal());
+		log.info("profiler run stopped at " + now.getTime());
 	}
 
-	public ClassManager getClasses() {
-		return classes;
+	public ActiveContext getContext(Dataset ds) {
+		log.finest("retrieving context for dataset with id " + ds.getId());
+		return contexts.get(ds);
 	}
 }

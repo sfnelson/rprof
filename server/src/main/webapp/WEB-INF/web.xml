@@ -32,8 +32,8 @@
 	</servlet>
 
 	<filter>
-		<filter-name>RequestFilter</filter-name>
-		<filter-class>nz.ac.vuw.ecs.rprofs.server.GwtRequest</filter-class>
+		<filter-name>request-filter</filter-name>
+		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
 	</filter>
 
 	<servlet>
@@ -62,7 +62,7 @@
 	</servlet-mapping>
 
 	<filter-mapping>
-		<filter-name>RequestFilter</filter-name>
+		<filter-name>request-filter</filter-name>
 		<url-pattern>/gwtRequest/*</url-pattern>
 	</filter-mapping>
 

@@ -16,6 +16,7 @@
 
 #define EVENT_BUFFER_SIZE 65536
 #define HOST_MAX_LENGTH 256
+#define DATASET_MAX_LENGTH 256
 
 struct response {
 	jint* length;
@@ -39,6 +40,7 @@ typedef struct {
 	EventRecord    records[EVENT_BUFFER_SIZE];
 	unsigned int   event_index;
 	char		   host[HOST_MAX_LENGTH];
+	char           dataset[DATASET_MAX_LENGTH];
 } GlobalCommData;
 
 static GlobalCommData *cdata;
@@ -120,6 +122,23 @@ size_t read_response(void *buffer, size_t size, size_t nmemb, struct response* r
 	return size * nmemb;
 }
 
+size_t read_dataset(void *ptr, size_t size, size_t nmemb, void* args) {
+	unsigned int len, i;
+	
+	char header[size * nmemb + 1];
+	for (i = 0; i < size * nmemb; i++) {
+		header[i] = tolower(((char*)ptr)[i]);
+	}
+	header[size * nmemb] = 0;
+
+	if (strstr(header, "dataset:") == header) {
+		sprintf(cdata->dataset, "Dataset: %s", &header[9]);
+		cdata->dataset[9 + 14] = 0;
+	}
+
+	return size * nmemb;
+}
+
 JNIEXPORT void JNICALL log_profiler_started()
 {
 	CURL* handle = curl_easy_init();
@@ -129,7 +148,9 @@ JNIEXPORT void JNICALL log_profiler_started()
 	sprintf(host, "http://%s/start", cdata->host);
 
 	curl_easy_setopt(handle, CURLOPT_URL, host);
-
+	curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, read_dataset);
+	curl_easy_setopt(handle, CURLOPT_WRITEHEADER, NULL);
+	
 	struct curl_slist *headers=NULL;
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
 
@@ -163,6 +184,7 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 	curl_easy_setopt(handle, CURLOPT_URL, host);
 
 	struct curl_slist *headers=NULL;
+	headers = curl_slist_append(headers, cdata->dataset);
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
 
 	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
@@ -227,6 +249,7 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 	curl_easy_setopt(handle, CURLOPT_URL, host);
 
 	struct curl_slist *headers=NULL;
+	headers = curl_slist_append(headers, cdata->dataset);
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
 
 	enterCriticalSection(); {
@@ -285,6 +308,7 @@ JNIEXPORT void JNICALL weave_classfile(
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &r);
 
 	struct curl_slist *headers=NULL;
+	headers = curl_slist_append(headers, cdata->dataset);
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
 
 	/* post binary data */
@@ -295,7 +319,7 @@ JNIEXPORT void JNICALL weave_classfile(
 
 	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
-	//stdout_message("sending %d bytes to weaver\n", class_data_len);
+	// stdout_message("sending %d bytes to weaver\n", class_data_len);
 
 	CURLcode err = curl_easy_perform(handle); /* post away! */
 
@@ -305,7 +329,7 @@ JNIEXPORT void JNICALL weave_classfile(
 
 	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
 	if (status/100 != 2) {
-		fatal_error("error weaving file! HTTP %ld (%s)\n", status, host);
+		fatal_error("error weaving file! HTTP %ld (%s)\n", status, name);
 	}
 
 	curl_slist_free_all(headers); /* free the header list */

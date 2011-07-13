@@ -1,98 +1,79 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
-import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 
-import com.google.web.bindery.requestfactory.shared.Locator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
-public class DatasetManager extends Locator<Dataset, Long> implements DatasetService {
+public class DatasetManager implements DatasetService {
+
+	@PersistenceContext
+	private EntityManager em;
+
+	@Autowired
+	private ContextManager cm;
 
 	@Override
 	public List<Dataset> findAllDatasets() {
-		return em().createNamedQuery("allDatasets", Dataset.class).getResultList();
+		return em.createNamedQuery("allDatasets", Dataset.class).getResultList();
 	}
 
 	@Override
 	public Dataset findDataset(String handle) {
-		TypedQuery<Dataset> q = em().createNamedQuery("findDataset", Dataset.class);
+		TypedQuery<Dataset> q = em.createNamedQuery("findDataset", Dataset.class);
 		q.setParameter("handle", handle);
-		return q.getSingleResult();
-	}
-
-	public Dataset findDataset(short id) {
-		return em().find(Dataset.class, id);
-	}
-
-	public void add(Dataset dataset) {
-		em().persist(dataset);
+		List<Dataset> ds = q.getResultList();
+		if (ds.isEmpty()) return null;
+		else return ds.get(0);
 	}
 
 	@Override
+	@Transactional
 	public void stopDataset(String dataset) {
 		Dataset ds = findDataset(dataset);
 
 		ds.setStopped(Calendar.getInstance().getTime());
+
+		cm.stopRecording(ds);
+	}
+
+	@Transactional
+	public Dataset setStopped(Dataset dataset, Date stopped) {
+		Dataset ds = em.find(Dataset.class, dataset.getId());
+		ds.setStopped(dataset.getStopped());
+		return ds;
+	}
+
+	@Transactional
+	public Dataset setProgram(Dataset dataset, String program) {
+		Dataset ds = em.find(Dataset.class, dataset.getId());
+		ds.setProgram(program);
+		return ds;
 	}
 
 	@Override
+	@Transactional
 	public void deleteDataset(String handle) {
-		EntityManager em = em();
+		Dataset ds = findDataset(handle);
 
-		em.remove(findDataset(handle));
-		em.createNativeQuery("drop table if exists run_" + handle + "_classes cascade;").executeUpdate();
-		em.createNativeQuery("drop table if exists run_" + handle + "_events cascade;").executeUpdate();
-		em.createNativeQuery("drop table if exists run_" + handle + "_event_args cascade;").executeUpdate();
-		em.createNativeQuery("drop table if exists run_" + handle + "_events_args cascade;").executeUpdate();
-		em.createNativeQuery("drop table if exists run_" + handle + "_fields cascade;").executeUpdate();
-		em.createNativeQuery("drop table if exists run_" + handle + "_instances cascade;").executeUpdate();
-		em.createNativeQuery("drop table if exists run_" + handle + "_methods cascade;").executeUpdate();
-		em.createNativeQuery("drop table if exists run_" + handle + "_profiler_runs cascade;").executeUpdate();
-		em.createNativeQuery("drop table if exists run_" + handle + "_field_writes cascade;").executeUpdate();
-	}
+		if (ds == null) return;
 
-	@Override
-	public Dataset create(java.lang.Class<? extends Dataset> clazz) {
-		return new Dataset();
-	}
-
-	@Override
-	public Dataset find(java.lang.Class<? extends Dataset> clazz, Long id) {
-		return em().find(Dataset.class, id.shortValue());
-	}
-
-	@Override
-	public java.lang.Class<Dataset> getDomainType() {
-		return Dataset.class;
-	}
-
-	@Override
-	public Long getId(Dataset dataset) {
-		return (long) dataset.getId();
-	}
-
-	@Override
-	public java.lang.Class<Long> getIdType() {
-		return Long.class;
-	}
-
-	@Override
-	public Integer getVersion(Dataset dataset) {
-		return dataset.getVersion();
-	}
-
-	private EntityManager em() {
-		Context c = ContextManager.getInstance().getDefault();
-		if (!c.isOpen()) {
-			c.open();
-		}
-		return c.em();
+		em.createNamedQuery("deleteArguments").setParameter("dataset", ds).executeUpdate();
+		em.createNamedQuery("deleteEvents").setParameter("dataset", ds).executeUpdate();
+		em.createNamedQuery("deleteInstances").setParameter("dataset", ds).executeUpdate();
+		em.createNamedQuery("deleteFields").setParameter("dataset", ds).executeUpdate();
+		em.createNamedQuery("deleteMethods").setParameter("dataset", ds).executeUpdate();
+		em.createNamedQuery("deleteClasses").setParameter("dataset", ds).executeUpdate();
+		em.createNamedQuery("deleteDataset").setParameter("dataset", ds).executeUpdate();
 	}
 }

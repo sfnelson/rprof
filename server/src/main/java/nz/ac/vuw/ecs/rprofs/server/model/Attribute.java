@@ -1,10 +1,13 @@
-package nz.ac.vuw.ecs.rprofs.server.domain;
+package nz.ac.vuw.ecs.rprofs.server.model;
 
+import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Field;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 
 
-public interface Attribute<T extends Attribute<T>> extends DataObject<T> {
+public interface Attribute<T extends Attribute<T>> extends DataObject<T, AttributeId<T>> {
 
 	AttributeId<T> getId();
 	ClassId getOwnerId();

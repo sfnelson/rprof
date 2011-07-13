@@ -3,23 +3,23 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 import nz.ac.vuw.ecs.rprofs.server.request.InstanceService;
 
-public class InstanceManager extends DomainManager<Instance> implements InstanceService {
+import org.springframework.transaction.annotation.Transactional;
 
-	public InstanceManager() {
-		this(ContextManager.getInstance());
-	}
+public class InstanceManager implements InstanceService {
 
-	public InstanceManager(ContextManager cm) {
-		super(cm, Instance.TYPE, ObjectId.class);
-	}
+	@PersistenceContext
+	private EntityManager em;
 
 	@Override
 	public Instance findInstance(Long id) {
@@ -27,48 +27,63 @@ public class InstanceManager extends DomainManager<Instance> implements Instance
 			return null;
 		}
 		else {
-			return find(new ObjectId(id));
+			return em.find(Instance.class, new ObjectId(id));
 		}
 	}
 
 	@Override
 	public List<? extends Instance> findInstancesForClass(Class cls) {
-		EntityManager em = cm.getCurrent().em();
-
 		TypedQuery<Instance> q = em.createNamedQuery("instancesForType", Instance.class);
+		q.setParameter("owner", owner());
 		q.setParameter("type", cls);
 		return q.getResultList();
 	}
 
 	@Override
 	public int findNumInstancesForClass(Class cls) {
-		EntityManager em = cm.getCurrent().em();
-
 		TypedQuery<Number> q = em.createNamedQuery("numInstancesForType", Number.class);
+		q.setParameter("owner", owner());
 		q.setParameter("type", cls);
 		return q.getSingleResult().intValue();
 	}
 
 	@Override
 	public int findNumInstances() {
-		EntityManager em = cm.getCurrent().em();
-
-		return em.createNamedQuery("numInstances", Number.class).getSingleResult().intValue();
+		TypedQuery<Number> q = em.createNamedQuery("numInstances", Number.class);
+		q.setParameter("owner", owner());
+		return q.getSingleResult().intValue();
 	}
 
 	@Override
 	public List<? extends Instance> findInstances() {
-		EntityManager em = cm.getCurrent().em();
-
-		return em.createNamedQuery("allInstances", Instance.class).getResultList();
+		TypedQuery<Instance> q = em.createNamedQuery("allInstances", Instance.class);
+		q.setParameter("owner", owner());
+		return q.getResultList();
 	}
 
+	@Transactional
 	public Instance createInstance(ObjectId id) {
-		EntityManager em = cm.getCurrent().em();
-
-		Instance instance = new Instance(id, null, null);
+		Instance instance = new Instance(owner(), id, null, null);
 		em.persist(instance);
 		return instance;
+	}
+
+	@Transactional
+	public Instance createInstance(ObjectId id, Class type, Method constructor) {
+		Instance i = createInstance(id);
+		return updateInstance(i);
+	}
+
+	@Transactional
+	public Instance updateInstance(Instance instance) {
+		Instance i = em.find(Instance.class, instance.getId());
+		i.setConstructor(instance.getConstructor());
+		i.setType(instance.getType());
+		return i;
+	}
+
+	private Dataset owner() {
+		return ContextManager.getThreadLocal();
 	}
 
 }

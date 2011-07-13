@@ -8,22 +8,27 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 
+import org.springframework.beans.factory.annotation.Autowire;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 
-/**
- * The server side implementation of the RPC service.
- */
 @SuppressWarnings("serial")
+@Configurable(autowire=Autowire.BY_TYPE)
 public class Start extends HttpServlet {
 
-	private final ContextManager cm = ContextManager.getInstance();
+	@Autowired
+	private ContextManager contexts;
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-	throws ServletException, IOException {
+			throws ServletException, IOException {
 
-		cm.startRecording();
+		Dataset dataset = contexts.startRecording();
 
+		resp.addHeader("Dataset", dataset.getHandle());
+		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 
 }

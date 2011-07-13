@@ -13,6 +13,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 
 /**
@@ -22,15 +23,16 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 @Entity
 @Table( name = "classes" )
 @NamedQueries({
-	@NamedQuery(name="numPackages", query="select count(packageName) from nz.ac.vuw.ecs.rprofs.server.domain.Class group by packageName"),
-	@NamedQuery(name="allPackages", query="select packageName from nz.ac.vuw.ecs.rprofs.server.domain.Class group by packageName"),
-	@NamedQuery(name="numClassesForPackage", query="select count(C) from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.packageName = :package"),
-	@NamedQuery(name="classesForPackage", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.packageName = :package"),
-	@NamedQuery(name="numClasses", query="select count(C) from nz.ac.vuw.ecs.rprofs.server.domain.Class C"),
-	@NamedQuery(name="allClasses", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C"),
-	@NamedQuery(name="findClassByName", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.fqname = :name")
+	@NamedQuery(name="numPackages", query="select count(C.packageName) from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset group by C.packageName"),
+	@NamedQuery(name="allPackages", query="select C.packageName from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset group by C.packageName"),
+	@NamedQuery(name="numClassesForPackage", query="select count(C) from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset and C.packageName = :package"),
+	@NamedQuery(name="classesForPackage", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset and C.packageName = :package"),
+	@NamedQuery(name="numClasses", query="select count(C) from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset"),
+	@NamedQuery(name="allClasses", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset"),
+	@NamedQuery(name="findClassByName", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset and C.fqname = :name"),
+	@NamedQuery(name="deleteClasses", query="delete nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset")
 })
-public class Class implements DataObject<Class> {
+public class Class implements DataObject<Class, ClassId> {
 
 	public static final java.lang.Class<Class> TYPE = Class.class;
 
@@ -40,6 +42,9 @@ public class Class implements DataObject<Class> {
 
 	@EmbeddedId
 	private ClassId id;
+
+	@ManyToOne
+	private Dataset owner;
 
 	private String packageName;
 	private String simpleName;
@@ -56,7 +61,8 @@ public class Class implements DataObject<Class> {
 
 	public Class() {}
 
-	public Class(ClassId id, String name, Class parent, int properties) {
+	public Class(Dataset owner, ClassId id, String name, Class parent, int properties) {
+		this.owner = owner;
 		this.id = id;
 		this.fqname = name;
 		this.parent = parent;
@@ -87,8 +93,16 @@ public class Class implements DataObject<Class> {
 		return id;
 	}
 
+	public Long getRpcId() {
+		return id.getId();
+	}
+
 	public Integer getVersion() {
 		return version;
+	}
+
+	public Dataset getOwner() {
+		return owner;
 	}
 
 	public void setParent(Class parent) {

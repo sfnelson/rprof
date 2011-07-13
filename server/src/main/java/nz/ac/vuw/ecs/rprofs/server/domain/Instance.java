@@ -14,6 +14,7 @@ import javax.persistence.Version;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -22,12 +23,13 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 @Entity
 @Table( name = "instances" )
 @NamedQueries({
-	@NamedQuery(name="numInstances", query="select count(I) from Instance I"),
-	@NamedQuery(name="allInstances", query="select count(I) from Instance I"),
-	@NamedQuery(name="numInstancesForType", query="select count(I) from Instance I where I.type = :type"),
-	@NamedQuery(name="instancesForType", query="select I from Instance I where I.type = :type")
+	@NamedQuery(name="numInstances", query="select count(I) from Instance I where I.owner = :dataset"),
+	@NamedQuery(name="allInstances", query="select count(I) from Instance I where I.owner = :dataset"),
+	@NamedQuery(name="numInstancesForType", query="select count(I) from Instance I where I.owner = :dataset and I.type = :type"),
+	@NamedQuery(name="instancesForType", query="select I from Instance I where I.owner = :dataset and I.type = :type"),
+	@NamedQuery(name = "deleteInstances", query = "delete Instance I where I.owner = :dataset")
 })
-public class Instance implements DataObject<Instance> {
+public class Instance implements DataObject<Instance, ObjectId> {
 
 	public static final java.lang.Class<Instance> TYPE = Instance.class;
 
@@ -38,6 +40,9 @@ public class Instance implements DataObject<Instance> {
 	private int version;
 
 	@ManyToOne
+	private Dataset owner;
+
+	@ManyToOne
 	private Class type;
 
 	@ManyToOne
@@ -45,7 +50,8 @@ public class Instance implements DataObject<Instance> {
 
 	public Instance() {}
 
-	public Instance(ObjectId id, Class type, Method constructor) {
+	public Instance(Dataset owner, ObjectId id, Class type, Method constructor) {
+		this.owner = owner;
 		this.id = id;
 		this.type = type;
 		this.constructor = constructor;
@@ -55,8 +61,16 @@ public class Instance implements DataObject<Instance> {
 		return id;
 	}
 
+	public Long getRpcId() {
+		return id.getId();
+	}
+
 	public Integer getVersion() {
 		return version;
+	}
+
+	public Dataset getOwner() {
+		return owner;
 	}
 
 	public Class getType() {

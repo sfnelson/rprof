@@ -13,6 +13,10 @@ public class MethodId extends AttributeId<Method> {
 		super(dataset, type, attribute);
 	}
 
+	public MethodId(Long id) {
+		super(id);
+	}
+
 	public static MethodId create(Dataset ds, Class type, short mnum) {
 		return new MethodId(ds.getId(), type.getId().getIndex(), mnum);
 	}

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 
 class ClassRecord {
@@ -51,8 +52,8 @@ class ClassRecord {
 		this.properties = properties;
 	}
 
-	Class toClass() {
-		return new Class(id, name, null, properties);
+	Class toClass(Dataset owner) {
+		return new Class(owner, id, name, null, properties);
 	}
 
 	FieldRecord getField(String name, String desc) {

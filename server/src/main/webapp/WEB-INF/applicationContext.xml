@@ -12,6 +12,11 @@
 		http://www.springframework.org/schema/aop 
 		http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 
+
+	<context:annotation-config />
+	<context:spring-configured />
+	<context:component-scan base-package="nz.ac.vuw.ecs.rprofs.server" />
+
 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
 		destroy-method="close">
 		<property name="driverClassName" value="org.postgresql.Driver" />
@@ -20,14 +25,13 @@
 		<property name="password" value="" />
 	</bean>
 
-	<context:annotation-config />
-
 	<bean id="entityManagerFactory"
 		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
 		<property name="persistenceUnitName" value="rprofs" />
 		<property name="jpaVendorAdapter">
 			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-				<property name="databasePlatform" value="nz.ac.vuw.ecs.rprofs.server.db.PostgreSQLDialect" />
+				<property name="databasePlatform"
+					value="nz.ac.vuw.ecs.rprofs.server.db.PostgreSQLDialect" />
 				<property name="generateDdl" value="true" />
 				<property name="showSql" value="false" />
 			</bean>
@@ -35,31 +39,37 @@
 		<property name="dataSource" ref="dataSource" />
 		<property name="jpaProperties">
 			<props>
-				<prop key="hibernate.ejb.naming_strategy">nz.ac.vuw.ecs.rprofs.server.db.NamingStrategy</prop>
 				<prop key="hibernate.hbm2ddl.auto">update</prop>
 			</props>
 		</property>
 	</bean>
 
-	<!-- <bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+	<!-- data manager beans -->
+	<bean id="context" class="nz.ac.vuw.ecs.rprofs.server.context.ContextManager" />
+	<bean id="classes" class="nz.ac.vuw.ecs.rprofs.server.data.ClassManager" />
+	<bean id="datasets" class="nz.ac.vuw.ecs.rprofs.server.data.DatasetManager" />
+	<bean id="events" class="nz.ac.vuw.ecs.rprofs.server.data.EventManager" />
+	<bean id="fields" class="nz.ac.vuw.ecs.rprofs.server.data.FieldManager" />
+	<bean id="instances" class="nz.ac.vuw.ecs.rprofs.server.data.InstanceManager" />
+	<bean id="methods" class="nz.ac.vuw.ecs.rprofs.server.data.MethodManager" />
+	<bean id="reports" class="nz.ac.vuw.ecs.rprofs.server.reports.ReportManager" />
+	
+	<!-- requestfactory autowired @Configurables -->
+	<bean id="locator" class="nz.ac.vuw.ecs.rprofs.server.data.DomainObjectLocator" />
+	<bean id="services" class="nz.ac.vuw.ecs.rprofs.server.data.ServiceLocator" />
+	
+	<!-- servlet autowired @Configurables -->
+	<bean id="request-filter" class="nz.ac.vuw.ecs.rprofs.server.GwtRequest" />
+	<bean id="log" class="nz.ac.vuw.ecs.rprofs.server.Logger" />
+	<bean id="start" class="nz.ac.vuw.ecs.rprofs.server.Start" />
+	<bean id="stop" class="nz.ac.vuw.ecs.rprofs.server.Stop" />
+	<bean id="weave" class="nz.ac.vuw.ecs.rprofs.server.Weave" />
+
+	<bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
-	</bean>-->
+		<property name="dataSource" ref="dataSource" />
+	</bean>
 
-	<bean id="context" class="nz.ac.vuw.ecs.rprofs.server.context.PersistenceContext" />
+	<tx:annotation-driven mode="aspectj" transaction-manager="txManager" />
 
-	<!-- <aop:config>
-		<aop:pointcut id="dbMethods"
-			expression="execution(* nz.ac.vuw.ecs.rprofs.server.db.Datastore.*(..))" />
-		<aop:advisor advice-ref="txAdvice" pointcut-ref="dbMethods" />
-	</aop:config>-->
-
-	<!-- <tx:advice id="txAdvice" transaction-manager="txManager">
-		<tx:attributes>
-			<tx:method name="create*" propagation="REQUIRED" />
-			<tx:method name="update*" propagation="REQUIRED" />
-			<tx:method name="store*" propagation="REQUIRED" />
-			<tx:method name="delete*" propagation="REQUIRED" />
-			<tx:method name="*" propagation="SUPPORTS" read-only="true" />
-		</tx:attributes>
-	</tx:advice>-->
 </beans>

@@ -2,13 +2,17 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import javax.persistence.MappedSuperclass;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.DataObject;
+import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 
 @SuppressWarnings("serial")
 @MappedSuperclass
-public class AttributeId<T extends DataObject<T>> extends Id<T> {
+public class AttributeId<T extends Attribute<T>> extends Id<T> {
 
 	public AttributeId() {}
+
+	public AttributeId(Long id) {
+		super(id);
+	}
 
 	public AttributeId(short dataset, int type, short attribute) {
 		super((((long) dataset) << 48) | (((long) type) << 16) | (attribute));

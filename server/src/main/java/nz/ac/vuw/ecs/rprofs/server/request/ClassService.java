@@ -14,5 +14,6 @@ public interface ClassService {
 
 	Integer findNumClasses();
 	List<? extends Class> findClasses();
+	Class findClass(String fqn);
 
 }

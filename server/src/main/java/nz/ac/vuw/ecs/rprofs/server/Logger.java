@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -56,13 +57,57 @@ public class Logger extends HttpServlet {
 
 		ActiveContext active = contexts.getContext(current);
 
-		parse(active, req.getContentLength(), req.getInputStream());
+		List<Event> events = parseEvents(active, req.getContentLength(), req.getInputStream());
+		storeEvents(active, events);
 
 		resp.setStatus(201);
 		ContextManager.setThreadLocal(null);
 	}
 
-	private void createEvent(ActiveContext context, long threadId, int event, short cnum, short mnum, long[] args) {
+	protected List<Event> parseEvents(ActiveContext context, int length, InputStream in) throws IOException {
+		DataInputStream dis = new DataInputStream(in);
+
+		//		#define MAX_PARAMETERS 16
+		//		struct EventRecord {
+		//			long int thread;
+		//			char message[255];
+		//			int cnum;
+		//			int mnum;
+		//			int len;
+		//			long int params[MAX_PARAMETERS];
+		//		}
+		final int MAX_PARAMETERS = 16;
+		final int RECORD_LENGTH = 8 + 4 + 4 + 4 + 4 + MAX_PARAMETERS * 8;
+
+		List<Event> events = Collections.newList();
+
+		for (int i = 0; i < length / RECORD_LENGTH; i++) {
+			long thread = dis.readLong();
+			int event = dis.readInt();
+			short cnum = (short) dis.readInt();
+			short mnum = (short) dis.readInt();
+			int len = dis.readInt();
+
+			if (len > MAX_PARAMETERS) {
+				log.warning(String.format("warning: %d is greater than MAX_PARAMETERS\n", len));
+				len = MAX_PARAMETERS;
+			}
+
+			long[] args = new long[Math.min(len, MAX_PARAMETERS)];
+			for (int j = 0; j < MAX_PARAMETERS; j++) {
+				long arg = dis.readLong();
+				if (j < len) {
+					args[j] = arg;
+				}
+			}
+
+			events.add(createEvent(context, thread, event, cnum, mnum, args));
+		}
+
+		return events;
+	}
+
+	private Event createEvent(ActiveContext context, long threadId, int event, short cnum, short mnum, long[] args) {
 		Dataset ds = ContextManager.getThreadLocal();
 
 		EventId id = context.nextEvent();
@@ -99,32 +144,42 @@ public class Logger extends HttpServlet {
 			argList.add(getInstance(ds, ObjectId.create(ds, arg)));
 		}
 
-		storeEvent(context, new Event(ds, id, thread, event, type, attr, argList));
+		return new Event(ds, id, thread, event, type, attr, argList);
 	}
 
-	private void storeEvent(ActiveContext context, Event event) {
-		Class cls = event.getType();
-		Attribute<?> attr = event.getAttribute();
-		Instance target = event.getFirstArg();
+	@Transactional
+	private void storeEvents(ActiveContext context, List<Event> events) {
+		for (Event event: events) {
+			Class cls = event.getType();
+			Attribute<?> attr = event.getAttribute();
+			Instance target = event.getFirstArg();
 
-		switch (event.getEvent()) {
-		case Event.METHOD_ENTER:
-			if (attr != null && attr instanceof Method && ((Method) attr).isMain()) {
-				context.setMainMethod(cls.getName());
+			switch (event.getEvent()) {
+			case Event.METHOD_ENTER:
+				if (attr != null && attr instanceof Method && ((Method) attr).isMain()) {
+					context.setMainMethod(cls.getName());
+				}
+				break;
+			case Event.METHOD_RETURN:
+				if (attr != null && attr instanceof Method && ((Method) attr).isInit());
+				else break;
+			case Event.OBJECT_TAGGED:
+				if (target != null) {
+					target.setType(cls);
+					target.setConstructor((Method) event.getAttribute());
+				}
+				break;
 			}
-			break;
-		case Event.METHOD_RETURN:
-			if (attr != null && attr instanceof Method && ((Method) attr).isInit());
-			else break;
-		case Event.OBJECT_TAGGED:
-			if (target != null) {
-				target.setType(cls);
-				target.setConstructor((Method) event.getAttribute());
-			}
-			break;
+
+			em.merge(event);
 		}
+	}
 
-		em.merge(event);
+	@Transactional
+	private Instance createInstance(Dataset ds, ObjectId id) {
+		Instance i = new Instance(ds, id, null, null);
+		em.persist(i);
+		return i;
 	}
 
 	private Instance getInstance(Dataset ds, ObjectId id) {
@@ -132,49 +187,8 @@ public class Logger extends HttpServlet {
 
 		Instance i = em.find(Instance.class, id);
 		if (i == null) {
-			i = new Instance(ds, id, null, null);
-			em.persist(i);
+			i = createInstance(ds, id);
 		}
 		return i;
-	}
-
-	@Transactional
-	private void parse(ActiveContext context, int length, InputStream in) throws IOException {
-		DataInputStream dis = new DataInputStream(in);
-
-		//		#define MAX_PARAMETERS 16
-		//		struct EventRecord {
-		//			long int thread;
-		//			char message[255];
-		//			int cnum;
-		//			int mnum;
-		//			int len;
-		//			long int params[MAX_PARAMETERS];
-		//		}
-		final int MAX_PARAMETERS = 16;
-		final int RECORD_LENGTH = 8 + 4 + 4 + 4 + 4 + MAX_PARAMETERS * 8;
-
-		for (int i = 0; i < length / RECORD_LENGTH; i++) {
-			long thread = dis.readLong();
-			int event = dis.readInt();
-			short cnum = (short) dis.readInt();
-			short mnum = (short) dis.readInt();
-			int len = dis.readInt();
-
-			if (len > MAX_PARAMETERS) {
-				log.warning(String.format("warning: %d is greater than MAX_PARAMETERS\n", len));
-				len = MAX_PARAMETERS;
-			}
-
-			long[] args = new long[Math.min(len, MAX_PARAMETERS)];
-			for (int j = 0; j < MAX_PARAMETERS; j++) {
-				long arg = dis.readLong();
-				if (j < len) {
-					args[j] = arg;
-				}
-			}
-
-			createEvent(context, thread, event, cnum, mnum, args);
-		}
 	}
 }

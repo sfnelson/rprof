@@ -62,7 +62,6 @@ public class Logger extends HttpServlet {
 		ContextManager.setThreadLocal(null);
 	}
 
-	@Transactional
 	private void createEvent(ActiveContext context, long threadId, int event, short cnum, short mnum, long[] args) {
 		Dataset ds = ContextManager.getThreadLocal();
 
@@ -103,7 +102,6 @@ public class Logger extends HttpServlet {
 		storeEvent(context, new Event(ds, id, thread, event, type, attr, argList));
 	}
 
-	@Transactional
 	private void storeEvent(ActiveContext context, Event event) {
 		Class cls = event.getType();
 		Attribute<?> attr = event.getAttribute();
@@ -129,7 +127,6 @@ public class Logger extends HttpServlet {
 		em.merge(event);
 	}
 
-	@Transactional
 	private Instance getInstance(Dataset ds, ObjectId id) {
 		if (id == null) return null;
 
@@ -141,6 +138,7 @@ public class Logger extends HttpServlet {
 		return i;
 	}
 
+	@Transactional
 	private void parse(ActiveContext context, int length, InputStream in) throws IOException {
 		DataInputStream dis = new DataInputStream(in);
 

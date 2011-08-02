@@ -23,8 +23,8 @@ cp ../post/$cls post.class
 javap -verbose pre > pre.javap
 javap -verbose post > post.javap
 
-java -classpath /Applications/eclipse-3.5-cocoa/plugins/com.google.gwt.eclipse.sdkbundle.2.0.4_2.0.4.v201006301254/gwt-2.0.4/gwt-dev.jar com.google.gwt.dev.asm.util.TraceClassVisitor pre.class > pre.asm
-java -classpath /Applications/eclipse-3.5-cocoa/plugins/com.google.gwt.eclipse.sdkbundle.2.0.4_2.0.4.v201006301254/gwt-2.0.4/gwt-dev.jar com.google.gwt.dev.asm.util.TraceClassVisitor post.class > post.asm
+java -classpath /Applications/eclipse-3.7-cocoa-64/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r37v201106211634/gwt-2.3.0/gwt-dev.jar com.google.gwt.dev.asm.util.TraceClassVisitor pre.class > pre.asm
+java -classpath /Applications/eclipse-3.7-cocoa-64/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r37v201106211634/gwt-2.3.0/gwt-dev.jar com.google.gwt.dev.asm.util.TraceClassVisitor post.class > post.asm
 
 if [ "x$type" == "xjavap" ]; then
 	diff pre.javap post.javap

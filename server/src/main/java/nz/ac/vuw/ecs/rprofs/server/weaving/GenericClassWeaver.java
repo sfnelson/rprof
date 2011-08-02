@@ -9,6 +9,7 @@ import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.AnalyzerAdapter;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -54,7 +55,8 @@ public class GenericClassWeaver extends ClassAdapter {
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
-		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+		MethodVisitor mv = new AnalyzerAdapter(cr.name, access, name, desc,
+				super.visitMethod(access, name, desc, signature, exceptions));
 		MethodRecord mr = cr.weaver.createMethodRecord(name);
 		mr.init(access, desc, signature, exceptions);
 

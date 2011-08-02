@@ -12,16 +12,30 @@ COMMON_FLAGS=-fno-strict-aliasing -fPIC -fno-omit-frame-pointer
 COMMON_FLAGS+= -W -Wall  -Wno-unused -Wno-parentheses
 
 OS=$(shell uname)
+LIBRARY_PATH_NAME=LD_LIBRARY_PATH
 
 ifeq ($(OS),Darwin)
-	JDK=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home
+	JDK=/Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
+	HEADERS=
 	CC=cc
-	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -arch i386 -I/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Headers/ -D DEBUG
-	LIBRARY=bin/lib$(LIBNAME).jnilib
+	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
+	DEBUG=-D DEBUG
+	LIBRARY=bin/lib$(LIBNAME).dylib
 	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
-	LD_LIBRARY_PATH=
+	LIBRARY_PATH=$(shell pwd)/bin/
+	LIBRARY_PATH_NAME=DYLD_LIBRARY_PATH
 	HOST=127.0.0.1:8888
 endif
+
+#ifeq ($(OS),Darwin)
+#	JDK=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home
+#	CC=cc
+#	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -arch i386 -I/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Headers/ -D DEBUG
+#	LIBRARY=bin/lib$(LIBNAME).jnilib
+#	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
+#	LIBRARY_PATH=
+#	HOST=127.0.0.1:8888
+#endif
 
 ifeq ($(OS),NetBSD)
 	JDK=/usr/pkg/java/jdk-1.6.0
@@ -29,7 +43,7 @@ ifeq ($(OS),NetBSD)
 	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/netbsd
 	LIBRARY=bin/lib$(LIBNAME).so
 	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
-	LD_LIBRARY_PATH=.:/usr/pkg/lib
+	LIBRARY_PATH=.:/usr/pkg/lib
 	HOST=stephen.pvt.ecs.vuw.ac.nz:8888
 endif
 
@@ -44,7 +58,7 @@ $(LIBRARY): $(OBJECTS)
 
 objects/%.o: src/%.c
 	mkdir -p objects
-	$(CC) $(CFLAGS) -c $? -o $@
+	$(CC) $(CFLAGS) $(DEBUG) -c $? -o $@
 
 # Build jar file
 $(JARFILE): $(JAVA_SOURCES)
@@ -57,7 +71,10 @@ clean:
 	rm -f -r bin classes objects tmp/pre/* tmp/post/*
 
 test: all
-	(cd bin; LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes Test)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes Test)
+
+debug: all
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes Test)
 
 server: all
 	(cd classes; $(JDK)/bin/java nz.ac.vuw.ecs.rprof.Logger)

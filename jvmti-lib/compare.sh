@@ -23,11 +23,16 @@ cp ../post/$cls post.class
 javap -verbose pre > pre.javap
 javap -verbose post > post.javap
 
-java -classpath /Applications/eclipse-3.7-cocoa-64/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r37v201106211634/gwt-2.3.0/gwt-dev.jar com.google.gwt.dev.asm.util.TraceClassVisitor pre.class > pre.asm
-java -classpath /Applications/eclipse-3.7-cocoa-64/plugins/com.google.gwt.eclipse.sdkbundle_2.3.0.r37v201106211634/gwt-2.3.0/gwt-dev.jar com.google.gwt.dev.asm.util.TraceClassVisitor post.class > post.asm
+ASM_CLASSPATH="$HOME/.m2/repository/asm/asm/3.3.1/asm-3.3.1.jar:$HOME/.m2/repository/asm/asm-util/3.3.1/asm-util-3.3.1.jar"
+
+java -classpath $ASM_CLASSPATH org.objectweb.asm.util.TraceClassVisitor pre.class > pre.trace
+java -classpath $ASM_CLASSPATH org.objectweb.asm.util.TraceClassVisitor post.class > post.trace
+
+java -classpath $ASM_CLASSPATH org.objectweb.asm.util.ASMifierClassVisitor pre.class > pre.asm
+java -classpath $ASM_CLASSPATH org.objectweb.asm.util.ASMifierClassVisitor post.class > post.asm
 
 if [ "x$type" == "xjavap" ]; then
 	diff pre.javap post.javap
 else
-	diff pre.asm post.asm
+	diff pre.trace post.trace
 fi

@@ -26,7 +26,7 @@ public class Weaver {
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 
 		reader.accept(new FieldReader(cr), ClassReader.SKIP_CODE);
-		reader.accept(new Dispatcher(writer, cr), ClassReader.EXPAND_FRAMES);
+		reader.accept(new Dispatcher(writer, cr), 0); // ClassReader.EXPAND_FRAMES);
 
 		return writer.toByteArray();
 	}

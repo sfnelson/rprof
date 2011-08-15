@@ -9,21 +9,24 @@ import java.util.List;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 
+import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-public class MethodWeaver extends GeneratorAdapter implements Opcodes {
+public class MethodWeaver extends MethodAdapter implements Opcodes {
 
 	protected final MethodRecord record;
+	private final GeneratorAdapter ga;
 
 	protected int maxStack = 0;
 	protected int maxLocals = 0;
 
 	public MethodWeaver(MethodVisitor mv, MethodRecord mr) {
-		super(mv, mr.access, mr.name, mr.description);
+		super(mv);
 		this.record = mr;
+		this.ga = new GeneratorAdapter(mv, mr.access, mr.name, mr.description);
 	}
 
 	protected void setStack(int stack) {
@@ -32,6 +35,14 @@ public class MethodWeaver extends GeneratorAdapter implements Opcodes {
 
 	protected void setLocals(int locals) {
 		maxLocals = Math.max(maxLocals, locals);
+	}
+
+	protected void push(int value) {
+		ga.push(value);
+	}
+
+	protected void dup() {
+		ga.dup();
 	}
 
 	@Override

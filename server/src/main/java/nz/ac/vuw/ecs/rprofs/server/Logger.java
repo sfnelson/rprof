@@ -3,11 +3,9 @@ package nz.ac.vuw.ecs.rprofs.server;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.net.UnknownHostException;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -15,38 +13,40 @@ import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
-import nz.ac.vuw.ecs.rprofs.server.domain.Field;
-import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
-import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.transaction.annotation.Transactional;
+
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.Mongo;
+import com.mongodb.MongoException;
 
 @SuppressWarnings("serial")
 @Configurable(autowire=Autowire.BY_TYPE)
 public class Logger extends HttpServlet {
 
-	private final java.util.logging.Logger log = java.util.logging.Logger.getLogger("event-logger");
-
-	@PersistenceContext
-	private EntityManager em;
+	private final org.slf4j.Logger log = LoggerFactory.getLogger(Logger.class);
 
 	@Autowired private ContextManager contexts;
 
 	@Autowired private DatasetService datasets;
+
+	DBCollection events;
+
+	public Logger() throws UnknownHostException, MongoException {
+		Mongo mongo = new Mongo();
+		DB db = mongo.getDB("rprof");
+		events = db.getCollection("events");
+	}
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -57,8 +57,9 @@ public class Logger extends HttpServlet {
 
 		ActiveContext active = contexts.getContext(current);
 
-		List<Event> events = parseEvents(active, req.getContentLength(), req.getInputStream());
-		storeEvents(active, events);
+		parseEvents(active, req.getContentLength(), req.getInputStream());
+		// List<Event> events = parseEvents(active, req.getContentLength(), req.getInputStream());
+		// storeEvents(active, events);
 
 		resp.setStatus(201);
 		ContextManager.setThreadLocal(null);
@@ -89,7 +90,7 @@ public class Logger extends HttpServlet {
 			int len = dis.readInt();
 
 			if (len > MAX_PARAMETERS) {
-				log.warning(String.format("warning: %d is greater than MAX_PARAMETERS\n", len));
+				log.warn("warning: {} is greater than MAX_PARAMETERS\n", len);
 				len = MAX_PARAMETERS;
 			}
 
@@ -101,12 +102,21 @@ public class Logger extends HttpServlet {
 				}
 			}
 
-			events.add(createEvent(context, thread, event, cnum, mnum, args));
+			//events.add(createEvent(context, thread, event, cnum, mnum, args));
+
+			DBObject e = BasicDBObjectBuilder.start()
+					.add("thread", thread)
+					.add("event", event)
+					.add("cnum", cnum)
+					.add("mnum", mnum)
+					.add("args", args).get();
+			this.events.insert(e);
 		}
 
 		return events;
 	}
 
+	/*
 	private Event createEvent(ActiveContext context, long threadId, int event, short cnum, short mnum, long[] args) {
 		Dataset ds = ContextManager.getThreadLocal();
 
@@ -190,5 +200,5 @@ public class Logger extends HttpServlet {
 			i = createInstance(ds, id);
 		}
 		return i;
-	}
+	} */
 }

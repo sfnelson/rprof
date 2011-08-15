@@ -1,7 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import java.util.logging.Logger;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -18,6 +16,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Configurable;
 
 import com.google.web.bindery.requestfactory.shared.Locator;
@@ -25,7 +24,7 @@ import com.google.web.bindery.requestfactory.shared.Locator;
 @Configurable
 public class DomainObjectLocator<T> extends Locator<T, Long> {
 
-	private Logger log = Logger.getLogger("locator");
+	private org.slf4j.Logger log = LoggerFactory.getLogger(DomainObjectLocator.class);
 
 	@PersistenceContext
 	private EntityManager em;
@@ -35,10 +34,10 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 		try {
 			return clazz.newInstance();
 		} catch (InstantiationException e) {
-			log.warning(e.getMessage());
+			log.warn(e.getMessage(), e);
 			throw new RuntimeException(e);
 		} catch (IllegalAccessException e) {
-			log.warning(e.getMessage());
+			log.warn(e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
 	}
@@ -66,7 +65,7 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 		if (clazz == Method.class) {
 			return em.find(clazz, new MethodId(id));
 		}
-		log.warning("could not find locator case for " + clazz.getName());
+		log.warn("could not find locator case for {}", clazz.getName());
 		return null;
 	}
 

@@ -16,6 +16,7 @@ LIBRARY_PATH_NAME=LD_LIBRARY_PATH
 
 ifeq ($(OS),Darwin)
 	JDK=/Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
+	#JDK=/Library/Java/JavaVirtualMachines/openjdk-1.7-x86_64/Contents/Home
 	HEADERS=
 	CC=cc
 	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
@@ -79,3 +80,5 @@ debug: all
 server: all
 	(cd classes; $(JDK)/bin/java nz.ac.vuw.ecs.rprof.Logger)
 
+pmd: all
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../../dacapo/benchmarks/dacapo-20110803.jar -n 1 -t 1 pmd)

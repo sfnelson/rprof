@@ -14,6 +14,7 @@ import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
@@ -26,7 +27,7 @@ import org.springframework.beans.factory.annotation.Configurable;
 @Configurable(autowire=Autowire.BY_TYPE)
 public class Weave extends HttpServlet {
 
-	private final java.util.logging.Logger log = java.util.logging.Logger.getLogger("logger");
+	private final org.slf4j.Logger log = LoggerFactory.getLogger(Weave.class);
 
 	@Autowired
 	private ContextManager cm;
@@ -45,7 +46,7 @@ public class Weave extends HttpServlet {
 
 		int length = req.getContentLength();
 
-		log.fine(String.format("received class weave request (%s, %d)", ds, length));
+		log.debug("received class weave request ({}, {})", ds, length);
 
 		buffer = new byte[length];
 		InputStream is = req.getInputStream();
@@ -64,7 +65,9 @@ public class Weave extends HttpServlet {
 		resp.setContentType("application/rprof");
 		resp.getOutputStream().write(result);
 
-		log.finest(String.format("received %s (%d bytes), returning %d bytes", cname, length, result.length));
+		log.info(cname);
+		log.debug("returning {} bytes", new Object[] { result.length });
+
 		ContextManager.setThreadLocal(null);
 	}
 }

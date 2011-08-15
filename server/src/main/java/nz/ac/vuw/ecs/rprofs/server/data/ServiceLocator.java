@@ -1,7 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import java.util.logging.Logger;
-
 import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import nz.ac.vuw.ecs.rprofs.server.request.EventService;
@@ -10,13 +8,14 @@ import nz.ac.vuw.ecs.rprofs.server.request.InstanceService;
 import nz.ac.vuw.ecs.rprofs.server.request.MethodService;
 import nz.ac.vuw.ecs.rprofs.server.request.ReportService;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
 @Configurable
 public class ServiceLocator implements com.google.web.bindery.requestfactory.shared.ServiceLocator {
 
-	private final Logger log = Logger.getLogger("service-locator");
+	private final org.slf4j.Logger log = LoggerFactory.getLogger(ServiceLocator.class);
 
 	@Autowired ClassService classes;
 	@Autowired DatasetService datasets;
@@ -50,7 +49,7 @@ public class ServiceLocator implements com.google.web.bindery.requestfactory.sha
 			return reports;
 		}
 
-		log.warning("don't know how to locate a " + clazz.getName());
+		log.warn("don't know how to locate a {}", clazz.getName());
 		return null;
 	}
 

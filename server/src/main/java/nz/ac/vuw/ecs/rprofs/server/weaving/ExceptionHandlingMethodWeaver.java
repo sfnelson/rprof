@@ -5,6 +5,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 /**
@@ -28,25 +29,28 @@ public class ExceptionHandlingMethodWeaver extends MethodWeaver {
 	@Override
 	public void visitCode() {
 		super.visitCode();
+		visitTryCatchBlock(start, end, handler, Type.getInternalName(Exception.class));
 		visitLabel(start);
 	}
 
 	@Override
 	public void visitMaxs(int stack, int locals) {
 		visitLabel(end);
-		visitLabel(handler);
-		visitTryCatchBlock(start, end, handler, Type.getInternalName(Exception.class));
 
-		visitVarInsn(ASTORE, 2);
-		setLocals(3);
+		visitLabel(handler);
+		//visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { Type.getInternalName(Exception.class) });
+		visitFrame(Opcodes.F_FULL, 0, new Object[] {}, 1, new Object[] { Type.getInternalName(Exception.class) });
+
+		visitVarInsn(ASTORE, 1); // store exception
+		setLocals(2);
 
 		push(record.parent.id.getIndex());
 		push(record.id);
-		visitVarInsn(ALOAD, 2);
+		visitVarInsn(ALOAD, 1);
 		visitTrackerMethod(Tracker.except);
 		setStack(3);
 
-		visitVarInsn(ALOAD, 2);
+		visitVarInsn(ALOAD, 1);
 		visitInsn(ATHROW);
 
 		super.visitMaxs(stack, locals);

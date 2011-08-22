@@ -2,7 +2,6 @@ package nz.ac.vuw.ecs.rprofs.server;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -15,11 +14,12 @@ import javax.servlet.http.HttpServletRequest;
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class GwtRequest implements Filter {
 
-	private final java.util.logging.Logger log = java.util.logging.Logger.getLogger("gwt-request");
+	private final org.slf4j.Logger log = LoggerFactory.getLogger(GwtRequest.class);
 
 	@Autowired
 	private DatasetService datasets;
@@ -39,7 +39,7 @@ public class GwtRequest implements Filter {
 			chain.doFilter(req, rsp);
 		}
 		catch (Exception ex) {
-			log.log(Level.SEVERE, ex.getMessage(), ex);
+			log.error(ex.getMessage(), ex);
 		}
 		finally {
 			ContextManager.setThreadLocal(null);

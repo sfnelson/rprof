@@ -3,7 +3,6 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -18,6 +17,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Configurable
 public class ActiveContext {
 
-	private final Logger log = Logger.getLogger("weaver");
+	private final org.slf4j.Logger log = LoggerFactory.getLogger(ActiveContext.class);
 
 	@PersistenceContext
 	private EntityManager em;
@@ -64,7 +64,7 @@ public class ActiveContext {
 		Class cls = cr.toClass(dataset);
 		em.persist(cls);
 
-		log.finest(String.format("storing new class %s (%s)", cls.getName(), cls.getId().toString()));
+		log.debug(String.format("storing new class {} ({})", cls.getName(), cls.getId()));
 
 		for (FieldRecord fr: cr.getFields().values()) {
 			em.persist(fr.toAttribute(cls));
@@ -97,15 +97,15 @@ public class ActiveContext {
 					c.setParent(cls);
 				}
 				else {
-					log.warning(String.format("could not find class id %s with parent %s (%s) [%d %d]",
-							cid.toString(), cls.getName(), cls.getId().toString(), cid.getId(), cls.getId().getId()));
+					log.warn("could not find class id {} with parent {} ({}) [{} {}]", new Object[] {
+							cid.toString(), cls.getName(), cls.getId().toString(), cid.getId(), cls.getId().getId()});
 				}
 			}
 		}
 
 		em.persist(new Event(dataset, nextEvent(), null, Event.CLASS_WEAVE, cls, null, new ArrayList<Instance>()));
 
-		log.finest(String.format("finished storing new class %s (%s)", cls.getName(), cls.getId().toString()));
+		log.debug("finished storing new class {} ({})", cls.getName(), cls.getId());
 
 		return cls;
 	}

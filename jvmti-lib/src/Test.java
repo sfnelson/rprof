@@ -8,45 +8,47 @@ public class Test extends A {
 		t.a = 4;
 		System.out.println(t.a);
 		t = new Test(t);
-		
+
 		B b = new B();
 		b.foo();
 		b.bar();
-		
+
 		C c = new C(5);
 		c.equals(null);
 		c.equals(c);
-		
+
 		try {
 			c.equals(t);
 		}
 		catch (Exception ex) {}
-		
+
 		try {
 			c.hashCode();
 		}
 		catch (Exception ex) {}
-		
+
 		try {
 			new D();
 		}
 		catch (Exception ex) {}
-		
-		throw new RuntimeException("test main method exception");
+
+		throw new RuntimeException("test exception in main method");
 	}
-	
+
 	public Test(Object foo) {
 		super(foo);
 	}
-	
+
 	public void greet(Test t) {
 		System.out.println("Hello World!");
 	}
-	
+
+	@Override
 	public boolean equals(Object o) {
 		return super.equals(o);
 	}
-	
+
+	@Override
 	public int hashCode() {
 		return 4;
 	}
@@ -58,6 +60,7 @@ class A {
 	public A(Object foo) {
 		this.foo = foo;
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (o == null) return false;
 		if (!o.getClass().equals(getClass())) {
@@ -86,6 +89,7 @@ class C {
 	public C(int a) {
 		this.a = a;
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (o == null) return false;
 		if (o instanceof C) {
@@ -93,6 +97,7 @@ class C {
 		}
 		throw new NullPointerException("test equals exception");
 	}
+	@Override
 	public int hashCode() {
 		throw new NullPointerException("test hashcode exception");
 	}

@@ -54,6 +54,8 @@ public class GenericClassWeaver extends ClassAdapter {
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
 			String signature, String[] exceptions) {
+		//MethodVisitor mv = new AnalyzerAdapter(cr.name, access, name, desc,
+		//		super.visitMethod(access, name, desc, signature, exceptions));
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 		MethodRecord mr = cr.weaver.createMethodRecord(name);
 		mr.init(access, desc, signature, exceptions);

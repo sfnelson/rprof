@@ -26,7 +26,7 @@ public class Weaver {
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 
 		reader.accept(new FieldReader(cr), ClassReader.SKIP_CODE);
-		reader.accept(new Dispatcher(writer, cr), ClassReader.EXPAND_FRAMES);
+		reader.accept(new Dispatcher(writer, cr), 0); // ClassReader.EXPAND_FRAMES);
 
 		return writer.toByteArray();
 	}
@@ -73,7 +73,8 @@ public class Weaver {
 					"com/apple/.*",		// might help jhotdraw?
 					"java/lang/IncompatibleClassChangeError",	// gc blows up if this is woven
 					"java/lang/LinkageError",					// gc blows up if this is woven
-					"java/lang/NullPointerException"			// something blows up - null pointers appear as runtime exceptions with this change
+					"java/lang/NullPointerException",			// something blows up - null pointers appear as runtime exceptions with this change
+					"java/util/concurrent/.*"					// SIGSEGV/SIGBUS in pmd
 			};
 
 			int flags = cr.properties;

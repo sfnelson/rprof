@@ -40,12 +40,11 @@ public class Logger extends HttpServlet {
 
 	@Autowired private DatasetService datasets;
 
-	DBCollection events;
+	@Autowired private Mongo mongo;
 
-	public Logger() throws UnknownHostException, MongoException {
-		Mongo mongo = new Mongo();
+	private DBCollection getEvents() throws UnknownHostException, MongoException {
 		DB db = mongo.getDB("rprof");
-		events = db.getCollection("events");
+		return db.getCollection("events");
 	}
 
 	@Override
@@ -82,6 +81,8 @@ public class Logger extends HttpServlet {
 
 		List<Event> events = Collections.newList();
 
+		DBCollection ev = getEvents();
+
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long thread = dis.readLong();
 			int event = dis.readInt();
@@ -110,7 +111,7 @@ public class Logger extends HttpServlet {
 					.add("cnum", cnum)
 					.add("mnum", mnum)
 					.add("args", args).get();
-			this.events.insert(e);
+			ev.insert(e);
 		}
 
 		return events;

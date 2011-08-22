@@ -72,13 +72,13 @@ clean:
 	rm -f -r bin classes objects tmp/pre/* tmp/post/*
 
 test: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes Test)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes Test)
 
 debug: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes Test)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes Test)
 
 server: all
 	(cd classes; $(JDK)/bin/java nz.ac.vuw.ecs.rprof.Logger)
 
 pmd: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Djava.compiler=NONE -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../../dacapo/benchmarks/dacapo-20110803.jar -n 1 -t 1 pmd)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../../dacapo/benchmarks/dacapo-20110803.jar -n 1 -t 1 pmd)

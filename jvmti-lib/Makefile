@@ -20,7 +20,7 @@ ifeq ($(OS),Darwin)
 	LIBRARY=bin/lib$(LIBNAME).jnilib
 	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
 	LD_LIBRARY_PATH=
-	HOST=127.0.0.1:8888
+	HOST=localhost:8888
 endif
 
 ifeq ($(OS),NetBSD)
@@ -30,7 +30,18 @@ ifeq ($(OS),NetBSD)
 	LIBRARY=bin/lib$(LIBNAME).so
 	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
 	LD_LIBRARY_PATH=.:/usr/pkg/lib
-	HOST=stephen.pvt.ecs.vuw.ac.nz:8888
+#	HOST=stephen.pvt.ecs.vuw.ac.nz:8888
+	HOST=[::1]:8888
+endif
+
+ifeq ($(OS),Linux)
+	JDK=/usr/pkg/java/sun-6
+	CC=gcc
+	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux
+	LIBRARY=bin/lib$(LIBNAME).so
+	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
+	LD_LIBRARY_PATH=.:/usr/pkg/lib
+	HOST=[::1]:8888
 endif
 
 LIBRARIES=-lc -lcurl

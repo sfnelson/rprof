@@ -57,6 +57,8 @@
 				<configuration>
 					<source>${maven.compiler.source}</source>
 					<target>${maven.compiler.target}</target>
+          				<executable>${JAVA_HOME}/bin/javac</executable>
+					<compilerVersion>1.6</compilerVersion>
 				</configuration>
 			</plugin>
 			<plugin>

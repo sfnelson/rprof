@@ -20,17 +20,25 @@ public class Test extends A {
 		try {
 			c.equals(t);
 		}
-		catch (Exception ex) {}
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
 
 		try {
 			c.hashCode();
 		}
-		catch (Exception ex) {}
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
 
 		try {
 			new D();
 		}
-		catch (Exception ex) {}
+		catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		System.out.println(Thread.currentThread().getName());
 
 		throw new RuntimeException("test exception in main method");
 	}

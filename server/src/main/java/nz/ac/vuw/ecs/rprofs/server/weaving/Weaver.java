@@ -89,7 +89,7 @@ public class Weaver {
 			}
 			else if (Type.getInternalName(Throwable.class).equals(name)) {
 				flags |= Class.SPECIAL_CLASS_WEAVER;
-				cv = new ThreadClassWeaver(this.cv, cr);
+				cv = new ThrowableClassWeaver(this.cv, cr);
 			}
 			else if (Type.getInternalName(Object.class).equals(name)) {
 				flags |= Class.SPECIAL_CLASS_WEAVER;

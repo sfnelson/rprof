@@ -3,6 +3,7 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
+import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
@@ -40,6 +41,7 @@ public class Method implements Attribute<Method> {
 	@ManyToOne
 	private Class owner;
 
+	@Column(columnDefinition="character varying(1023)")
 	private String description;
 
 	private Integer access;

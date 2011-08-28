@@ -29,13 +29,14 @@ public class ExceptionHandlingMethodWeaver extends MethodWeaver {
 	@Override
 	public void visitCode() {
 		super.visitCode();
-		visitTryCatchBlock(start, end, handler, Type.getInternalName(Exception.class));
 		visitLabel(start);
 	}
 
 	@Override
 	public void visitMaxs(int stack, int locals) {
 		visitLabel(end);
+
+		visitTryCatchBlock(start, end, handler, Type.getInternalName(Exception.class));
 
 		visitLabel(handler);
 		//visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { Type.getInternalName(Exception.class) });

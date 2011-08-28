@@ -91,4 +91,7 @@ server: all
 	(cd classes; $(JDK)/bin/java nz.ac.vuw.ecs.rprof.Logger)
 
 pmd: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../../dacapo/benchmarks/dacapo-20110803.jar -n 1 -t 1 pmd)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../../dacapo/benchmarks/dacapo-20110822.jar -n 1 -t 1 pmd)
+
+fop: all
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../../dacapo/benchmarks/dacapo-20110822.jar -n 1 -t 1 fop)

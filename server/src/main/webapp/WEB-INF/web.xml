@@ -5,12 +5,20 @@
 
 <web-app>
 
-	<!-- Listeners -->
+	<filter>
+		<filter-name>request-filter</filter-name>
+		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+	</filter>
+	
+	<filter-mapping>
+		<filter-name>request-filter</filter-name>
+		<url-pattern>/gwtRequest/*</url-pattern>
+	</filter-mapping>
+
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
 
-	<!-- Servlets -->
 	<servlet>
 		<servlet-name>weaver</servlet-name>
 		<servlet-class>nz.ac.vuw.ecs.rprofs.server.Weave</servlet-class>
@@ -30,11 +38,6 @@
 		<servlet-name>stop</servlet-name>
 		<servlet-class>nz.ac.vuw.ecs.rprofs.server.Stop</servlet-class>
 	</servlet>
-
-	<filter>
-		<filter-name>request-filter</filter-name>
-		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-	</filter>
 
 	<servlet>
 		<servlet-name>requestFactoryServlet</servlet-name>
@@ -61,17 +64,11 @@
 		<url-pattern>/stop</url-pattern>
 	</servlet-mapping>
 
-	<filter-mapping>
-		<filter-name>request-filter</filter-name>
-		<url-pattern>/gwtRequest/*</url-pattern>
-	</filter-mapping>
-
 	<servlet-mapping>
 		<servlet-name>requestFactoryServlet</servlet-name>
 		<url-pattern>/gwtRequest/*</url-pattern>
 	</servlet-mapping>
 
-	<!-- Default page to serve -->
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>
 	</welcome-file-list>

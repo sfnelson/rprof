@@ -44,7 +44,7 @@ public class ConstructorWeavingTest {
 		byte[] post = generateMinimalClass("TestOutput");
 		Weaver w = new Weaver(new ClassId((short) 0, 1));
 		post = w.weave(post);
-		print(post);
+		//print(post);
 		loader.loadClass("TestOutput", post).newInstance();
 	}
 

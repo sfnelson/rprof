@@ -247,6 +247,7 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 	sprintf(host, "http://%s/logger", cdata->host);
 
 	curl_easy_setopt(handle, CURLOPT_URL, host);
+	curl_easy_setopt(handle, CURLOPT_TIMEOUT, 600);
 
 	struct curl_slist *headers=NULL;
 	headers = curl_slist_append(headers, cdata->dataset);
@@ -306,6 +307,7 @@ JNIEXPORT void JNICALL weave_classfile(
 	curl_easy_setopt(handle, CURLOPT_WRITEHEADER, &r);
 	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, read_response);
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &r);
+	curl_easy_setopt(handle, CURLOPT_TIMEOUT, 300);
 
 	struct curl_slist *headers=NULL;
 	headers = curl_slist_append(headers, cdata->dataset);

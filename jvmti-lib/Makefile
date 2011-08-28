@@ -53,8 +53,9 @@ ifeq ($(OS),Linux)
 	CC=gcc
 	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux
 	LIBRARY=bin/lib$(LIBNAME).so
+	LIBRARY_PATH=$(shell pwd)/bin/:/usr/pkg/lib
+	LIBRARY_PATH_NAME=LD_LIBRARY_PATH
 	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
-	LD_LIBRARY_PATH=.:/usr/pkg/lib
 	HOST=[::1]:8888
 endif
 

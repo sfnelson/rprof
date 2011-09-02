@@ -16,7 +16,6 @@ import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
-import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
@@ -36,14 +35,12 @@ public class Logger extends HttpServlet {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Logger.class);
 
-	@Autowired private ContextManager contexts;
-
 	@Autowired private DatasetService datasets;
 
 	@Autowired private Mongo mongo;
 
-	private DBCollection getEvents() throws UnknownHostException, MongoException {
-		DB db = mongo.getDB("rprof");
+	private DBCollection getEvents(Dataset ds) throws UnknownHostException, MongoException {
+		DB db = mongo.getDB("rprof-" + ds.getHandle());
 		return db.getCollection("events");
 	}
 
@@ -54,17 +51,13 @@ public class Logger extends HttpServlet {
 		Dataset current = datasets.findDataset(req.getHeader("Dataset"));
 		ContextManager.setThreadLocal(current);
 
-		ActiveContext active = contexts.getContext(current);
-
-		parseEvents(active, req.getContentLength(), req.getInputStream());
-		// List<Event> events = parseEvents(active, req.getContentLength(), req.getInputStream());
-		// storeEvents(active, events);
+		parseEvents(current, req.getContentLength(), req.getInputStream());
 
 		resp.setStatus(201);
 		ContextManager.setThreadLocal(null);
 	}
 
-	protected List<Event> parseEvents(ActiveContext context, int length, InputStream in) throws IOException {
+	protected List<Event> parseEvents(Dataset current, int length, InputStream in) throws IOException {
 		DataInputStream dis = new DataInputStream(in);
 
 		//		#define MAX_PARAMETERS 16
@@ -81,7 +74,7 @@ public class Logger extends HttpServlet {
 
 		List<Event> events = Collections.newList();
 
-		DBCollection ev = getEvents();
+		DBCollection ev = getEvents(current);
 
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long thread = dis.readLong();
@@ -103,8 +96,6 @@ public class Logger extends HttpServlet {
 				}
 			}
 
-			//events.add(createEvent(context, thread, event, cnum, mnum, args));
-
 			DBObject e = BasicDBObjectBuilder.start()
 					.add("thread", thread)
 					.add("event", event)
@@ -116,90 +107,4 @@ public class Logger extends HttpServlet {
 
 		return events;
 	}
-
-	/*
-	private Event createEvent(ActiveContext context, long threadId, int event, short cnum, short mnum, long[] args) {
-		Dataset ds = ContextManager.getThreadLocal();
-
-		EventId id = context.nextEvent();
-
-		Instance thread = getInstance(ds, ObjectId.create(ds, threadId));
-		Class type = em.find(Class.class, (ClassId.create(ds, cnum)));
-
-		// check consistency
-		if (ds == null) {
-			log.warning("dataset is null");
-		}
-
-		Attribute<?> attr = null;
-		if ((event & (Event.FIELDS | Event.METHODS)) != 0) {
-			if (type == null) {
-				log.warning(String.format("type not found: %d", cnum));
-			}
-			else if ((event & Event.FIELDS) != 0) {
-				attr = em.find(Field.class, FieldId.create(ds, type, mnum));
-				if (attr == null && type != null) {
-					log.warning(String.format("field not found: %s.%d (%d)", type.getName(), mnum, event));
-				}
-			}
-			else if ((event & Event.METHODS) != 0) {
-				attr = em.find(Method.class, MethodId.create(ds, type, mnum));
-				if (attr == null) {
-					log.warning(String.format("method not found: %s.%d (%d)", type.getName(), mnum, event));
-				}
-			}
-		}
-
-		ArrayList<Instance> argList = Collections.newList();
-		for (long arg: args) {
-			argList.add(getInstance(ds, ObjectId.create(ds, arg)));
-		}
-
-		return new Event(ds, id, thread, event, type, attr, argList);
-	}
-
-	@Transactional
-	private void storeEvents(ActiveContext context, List<Event> events) {
-		for (Event event: events) {
-			Class cls = event.getType();
-			Attribute<?> attr = event.getAttribute();
-			Instance target = event.getFirstArg();
-
-			switch (event.getEvent()) {
-			case Event.METHOD_ENTER:
-				if (attr != null && attr instanceof Method && ((Method) attr).isMain()) {
-					context.setMainMethod(cls.getName());
-				}
-				break;
-			case Event.METHOD_RETURN:
-				if (attr != null && attr instanceof Method && ((Method) attr).isInit());
-				else break;
-			case Event.OBJECT_TAGGED:
-				if (target != null) {
-					target.setType(cls);
-					target.setConstructor((Method) event.getAttribute());
-				}
-				break;
-			}
-
-			em.merge(event);
-		}
-	}
-
-	@Transactional
-	private Instance createInstance(Dataset ds, ObjectId id) {
-		Instance i = new Instance(ds, id, null, null);
-		em.persist(i);
-		return i;
-	}
-
-	private Instance getInstance(Dataset ds, ObjectId id) {
-		if (id == null) return null;
-
-		Instance i = em.find(Instance.class, id);
-		if (i == null) {
-			i = createInstance(ds, id);
-		}
-		return i;
-	} */
 }

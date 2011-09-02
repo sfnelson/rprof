@@ -48,6 +48,7 @@ public class ConstructorWeavingTest {
 		loader.loadClass("TestOutput", post).newInstance();
 	}
 
+	@SuppressWarnings("unused")
 	private static void print(byte[] cls) {
 		ClassReader r = new ClassReader(cls);
 		ClassVisitor w = new ASMifierClassVisitor(new PrintWriter(System.out));

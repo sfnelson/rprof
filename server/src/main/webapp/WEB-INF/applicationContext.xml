@@ -65,7 +65,10 @@
 	<bean id="stop" class="nz.ac.vuw.ecs.rprofs.server.Stop" />
 	<bean id="weave" class="nz.ac.vuw.ecs.rprofs.server.Weave" />
 	
-	<bean id="mongo" class="com.mongodb.Mongo" />
+	<bean id="mongo" class="com.mongodb.Mongo">
+		<constructor-arg type="java.lang.String" value="#{systemProperties['mongoHost']}" />
+		<constructor-arg type="int" value="#{systemProperties['mongoPort']}" />
+	</bean>
 
 	<bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />

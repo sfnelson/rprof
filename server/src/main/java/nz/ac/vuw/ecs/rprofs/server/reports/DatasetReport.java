@@ -11,6 +11,7 @@ import javax.persistence.criteria.Root;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.InstanceManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Argument;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 
@@ -41,7 +42,7 @@ public class DatasetReport {
 
 		CriteriaQuery<Long> query = builder.createQuery(Long.TYPE);
 		Root<Instance> instance = query.from(Instance.class);
-		Path<nz.ac.vuw.ecs.rprofs.server.domain.Class> type = instance.get("type");
+		Path<Clazz> type = instance.get("type");
 
 		query.select(builder.count(instance));
 		query.where(builder.isNotNull(type));
@@ -55,7 +56,7 @@ public class DatasetReport {
 
 		CriteriaQuery<Long> query = builder.createQuery(Long.TYPE);
 		Root<Event> event = query.from(Event.class);
-		Path<nz.ac.vuw.ecs.rprofs.server.domain.Class> type = event.get("type");
+		Path<Clazz> type = event.get("type");
 		Path<Integer> eventType = event.get("event");
 
 		query.select(builder.count(event));
@@ -87,7 +88,7 @@ public class DatasetReport {
 
 		CriteriaQuery<Long> query = builder.createQuery(Long.TYPE);
 		Root<Event> event = query.from(Event.class);
-		Path<nz.ac.vuw.ecs.rprofs.server.domain.Class> type = event.get("type");
+		Path<Clazz> type = event.get("type");
 		Path<Integer> eventType = event.get("event");
 
 		query.select(builder.count(event));

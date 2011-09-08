@@ -7,7 +7,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
 
@@ -41,8 +41,8 @@ public class ClassManager implements ClassService {
 	}
 
 	@Override
-	public List<? extends Class> findClassesInPackage(String pkg) {
-		TypedQuery<Class> q = em.createNamedQuery("classesForPackage", Class.class);
+	public List<? extends Clazz> findClassesInPackage(String pkg) {
+		TypedQuery<Clazz> q = em.createNamedQuery("classesForPackage", Clazz.class);
 		q.setParameter("dataset", owner());
 		q.setParameter("package", pkg);
 		return q.getResultList();
@@ -56,25 +56,25 @@ public class ClassManager implements ClassService {
 	}
 
 	@Override
-	public List<? extends Class> findClasses() {
-		TypedQuery<Class> q = em.createNamedQuery("allClasses", Class.class);
+	public List<? extends Clazz> findClasses() {
+		TypedQuery<Clazz> q = em.createNamedQuery("allClasses", Clazz.class);
 		q.setParameter("dataset", owner());
 		return q.getResultList();
 	}
 
-	public Class findClass(String fqname) {
-		TypedQuery<Class> q = em.createNamedQuery("findClassByName", Class.class);
+	public Clazz findClass(String fqname) {
+		TypedQuery<Clazz> q = em.createNamedQuery("findClassByName", Clazz.class);
 		q.setParameter("dataset", owner());
 		q.setParameter("name", fqname);
-		List<Class> results = q.getResultList();
+		List<Clazz> results = q.getResultList();
 		if (results.isEmpty()) return null;
 		else return results.get(0);
 	}
 
 	@Transactional
-	public Class setParent(Class cls, Class parent) {
-		cls = em.find(Class.class, cls.getId());
-		parent = em.find(Class.class, parent.getId());
+	public Clazz setParent(Clazz cls, Clazz parent) {
+		cls = em.find(Clazz.class, cls.getId());
+		parent = em.find(Clazz.class, parent.getId());
 		cls.setParent(parent);
 		return cls;
 	}

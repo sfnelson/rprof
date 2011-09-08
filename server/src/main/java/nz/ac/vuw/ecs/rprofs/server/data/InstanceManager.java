@@ -7,7 +7,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
@@ -32,7 +32,7 @@ public class InstanceManager implements InstanceService {
 	}
 
 	@Override
-	public List<? extends Instance> findInstancesForClass(Class cls) {
+	public List<? extends Instance> findInstancesForClass(Clazz cls) {
 		TypedQuery<Instance> q = em.createNamedQuery("instancesForType", Instance.class);
 		q.setParameter("dataset", owner());
 		q.setParameter("type", cls);
@@ -40,7 +40,7 @@ public class InstanceManager implements InstanceService {
 	}
 
 	@Override
-	public int findNumInstancesForClass(Class cls) {
+	public int findNumInstancesForClass(Clazz cls) {
 		TypedQuery<Number> q = em.createNamedQuery("numInstancesForType", Number.class);
 		q.setParameter("dataset", owner());
 		q.setParameter("type", cls);
@@ -69,7 +69,7 @@ public class InstanceManager implements InstanceService {
 	}
 
 	@Transactional
-	public Instance createInstance(ObjectId id, Class type, Method constructor) {
+	public Instance createInstance(ObjectId id, Clazz type, Method constructor) {
 		Instance i = createInstance(id);
 		return updateInstance(i);
 	}

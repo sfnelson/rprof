@@ -17,13 +17,13 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 
 
 @Entity
-@Table(name = "profiler_runs")
+@Table
 @NamedQueries({
-	@NamedQuery(name = "findDataset", query = "select D from Dataset D where D.handle = :handle"),
-	@NamedQuery(name = "allDatasets", query = "select D from Dataset D"),
-	@NamedQuery(name = "deleteDataset", query = "delete Dataset D where D = :dataset")
+	@NamedQuery(name = "findDataset", query = "select D from DataSet D where D.handle = :handle"),
+	@NamedQuery(name = "allDatasets", query = "select D from DataSet D"),
+	@NamedQuery(name = "deleteDataset", query = "delete DataSet D where D = :dataset")
 })
-public class Dataset implements DataObject<Dataset, Short>, IsSerializable, Comparable<Dataset> {
+public class DataSet implements DataObject<DataSet, Short>, IsSerializable, Comparable<DataSet> {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE)
@@ -37,9 +37,9 @@ public class Dataset implements DataObject<Dataset, Short>, IsSerializable, Comp
 	private Date started;
 	private Date stopped;
 
-	public Dataset() {}
+	public DataSet() {}
 
-	public Dataset(String handle, Date started, Date stopped, String program) {
+	public DataSet(String handle, Date started, Date stopped, String program) {
 		this.handle = handle;
 		this.started = started;
 		this.stopped = stopped;
@@ -51,7 +51,7 @@ public class Dataset implements DataObject<Dataset, Short>, IsSerializable, Comp
 	}
 
 	public Long getRpcId() {
-		return new Long(id);
+		return id.longValue();
 	}
 
 	public Integer getVersion() {
@@ -83,7 +83,7 @@ public class Dataset implements DataObject<Dataset, Short>, IsSerializable, Comp
 	}
 
 	@Override
-	public int compareTo(Dataset o) {
+	public int compareTo(DataSet o) {
 		return started.compareTo(o.started);
 	}
 
@@ -93,15 +93,17 @@ public class Dataset implements DataObject<Dataset, Short>, IsSerializable, Comp
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		return id.equals(((Dataset) obj).id);
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		DataSet dataSet = (DataSet) o;
+
+		return handle.equals(dataSet.handle);
 	}
 
 	@Override
 	public int hashCode() {
-		return id;
+		return handle.hashCode();
 	}
 }

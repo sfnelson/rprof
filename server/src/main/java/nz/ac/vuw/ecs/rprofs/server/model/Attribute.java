@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.model;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
@@ -12,7 +12,7 @@ public interface Attribute<T extends Attribute<T>> extends DataObject<T, Attribu
 	AttributeId<T> getId();
 	ClassId getOwnerId();
 
-	Class getOwner();
+	Clazz getOwner();
 	String getName();
 	String getDescription();
 

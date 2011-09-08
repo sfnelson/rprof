@@ -43,7 +43,7 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 		if (clazz == Argument.class) {
 			return em.find(clazz, id);
 		}
-		if (clazz == nz.ac.vuw.ecs.rprofs.server.domain.Class.class) {
+		if (clazz == Clazz.class) {
 			return em.find(clazz, new ClassId(id));
 		}
 		if (clazz == DataSet.class) {

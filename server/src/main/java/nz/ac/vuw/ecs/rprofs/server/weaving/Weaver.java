@@ -1,7 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 
 import org.objectweb.asm.ClassAdapter;
@@ -80,25 +80,25 @@ public class Weaver {
 			int flags = cr.properties;
 
 			if (Type.getInternalName(HeapTracker.class).equals(name)) {
-				flags |= Class.SPECIAL_CLASS_WEAVER;
+				flags |= Clazz.SPECIAL_CLASS_WEAVER;
 				cv = new TrackingClassWeaver(this.cv, cr);
 			}
 			else if (Type.getInternalName(Thread.class).equals(name)) {
-				flags |= Class.SPECIAL_CLASS_WEAVER;
+				flags |= Clazz.SPECIAL_CLASS_WEAVER;
 				cv = new ThreadClassWeaver(this.cv, cr);
 			}
 			else if (Type.getInternalName(Throwable.class).equals(name)) {
-				flags |= Class.SPECIAL_CLASS_WEAVER;
+				flags |= Clazz.SPECIAL_CLASS_WEAVER;
 				cv = new ThrowableClassWeaver(this.cv, cr);
 			}
 			else if (Type.getInternalName(Object.class).equals(name)) {
-				flags |= Class.SPECIAL_CLASS_WEAVER;
+				flags |= Clazz.SPECIAL_CLASS_WEAVER;
 				cv = new ObjectClassWeaver(this.cv, cr);
 			}
 			else {
 				for (String filter: filters) {
 					if (name.matches(filter)) {
-						flags |= Class.CLASS_IGNORED_PACKAGE_FILTER;
+						flags |= Clazz.CLASS_IGNORED_PACKAGE_FILTER;
 						cv = new ClassAdapter(this.cv);
 					}
 				}

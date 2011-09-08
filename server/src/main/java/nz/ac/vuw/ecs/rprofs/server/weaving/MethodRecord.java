@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
@@ -30,7 +30,7 @@ class MethodRecord implements AttributeRecord {
 		this.exceptions = exceptions;
 	}
 
-	public Method toAttribute(Class cls) {
+	public Method toAttribute(Clazz cls) {
 		ClassId cid = cls.getId();
 		MethodId mid = new MethodId(cid.datasetValue(), cid.indexValue(), id);
 		return new Method(mid, name, cls, description, access);

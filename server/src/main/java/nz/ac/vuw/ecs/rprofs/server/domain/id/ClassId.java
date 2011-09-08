@@ -2,11 +2,12 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import javax.persistence.Embeddable;
 
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 
 @SuppressWarnings("serial")
 @Embeddable
-public class ClassId extends Id<nz.ac.vuw.ecs.rprofs.server.domain.Class> {
+public class ClassId extends Id<Clazz> {
 
 	public static ClassId create(DataSet dataSet, int cnum) {
 		return new ClassId(dataSet.getId(), cnum);

@@ -7,7 +7,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.request.FieldService;
 
@@ -17,9 +17,8 @@ public class FieldManager implements FieldService {
 	private EntityManager em;
 
 	@Override
-	public List<? extends Field> findFields(Class cls) {
+	public List<? extends Field> findFields(Clazz cls) {
 		TypedQuery<Field> q = em.createNamedQuery("fieldsForType", Field.class);
-		q.setParameter("owner", ContextManager.getThreadLocal());
 		q.setParameter("type", cls);
 		return q.getResultList();
 	}

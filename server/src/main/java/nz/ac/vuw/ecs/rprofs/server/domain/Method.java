@@ -21,7 +21,6 @@ import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
  *
  */
 @Entity
-@Table(name = "methods")
 @NamedQueries({
 	@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type"),
 	@NamedQuery(name = "deleteMethods", query = "delete Method M where M.owner.owner = :dataset")
@@ -39,7 +38,7 @@ public class Method implements Attribute<Method> {
 	private String name;
 
 	@ManyToOne
-	private Class owner;
+	private Clazz owner;
 
 	@Column(columnDefinition="character varying(1023)")
 	private String description;
@@ -48,7 +47,7 @@ public class Method implements Attribute<Method> {
 
 	public Method() {}
 
-	public Method(MethodId id, String name, Class owner, String description, int access) {
+	public Method(MethodId id, String name, Clazz owner, String description, int access) {
 		this.mid = id;
 		this.name = name;
 		this.owner = owner;
@@ -72,7 +71,7 @@ public class Method implements Attribute<Method> {
 		return name;
 	}
 
-	public Class getOwner() {
+	public Clazz getOwner() {
 		return owner;
 	}
 

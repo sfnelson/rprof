@@ -8,7 +8,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
@@ -60,8 +60,8 @@ public class ActiveContext {
 	}
 
 	@Transactional
-	public Class storeClass(ClassRecord cr) {
-		Class cls = cr.toClass(dataSet);
+	public Clazz storeClass(ClassRecord cr) {
+		Clazz cls = cr.toClass(dataSet);
 		em.persist(cls);
 
 		log.debug("storing new class {} ({})", cls.getName(), cls.getId());
@@ -75,7 +75,7 @@ public class ActiveContext {
 		}
 
 		if (cr.getSuperName() != null) {
-			Class parent = classes.findClass(cr.getSuperName());
+			Clazz parent = classes.findClass(cr.getSuperName());
 
 			if (parent != null) {
 				cls.setParent(parent);
@@ -92,7 +92,7 @@ public class ActiveContext {
 
 		if (awaitingSuper.containsKey(cls.getName())) {
 			for (ClassId cid: awaitingSuper.remove(cls.getName())) {
-				Class c = em.find(Class.class, cid);
+				Clazz c = em.find(Clazz.class, cid);
 				if (c != null) {
 					c.setParent(cls);
 				}

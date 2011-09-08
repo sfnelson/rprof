@@ -41,14 +41,14 @@ public class Instance implements DataObject<Instance, ObjectId> {
 	private DataSet owner;
 
 	@ManyToOne
-	private Class type;
+	private Clazz type;
 
 	@ManyToOne
 	protected Method constructor;
 
 	public Instance() {}
 
-	public Instance(DataSet owner, ObjectId id, Class type, Method constructor) {
+	public Instance(DataSet owner, ObjectId id, Clazz type, Method constructor) {
 		this.owner = owner;
 		this.id = id;
 		this.type = type;
@@ -71,7 +71,7 @@ public class Instance implements DataObject<Instance, ObjectId> {
 		return owner;
 	}
 
-	public Class getType() {
+	public Clazz getType() {
 		return type;
 	}
 
@@ -79,7 +79,7 @@ public class Instance implements DataObject<Instance, ObjectId> {
 		return type.getId();
 	}
 
-	public void setType(Class type) {
+	public void setType(Clazz type) {
 		this.type = type;
 	}
 

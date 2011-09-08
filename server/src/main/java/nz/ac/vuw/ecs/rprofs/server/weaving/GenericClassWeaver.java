@@ -3,12 +3,15 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -45,15 +48,15 @@ public class GenericClassWeaver extends ClassAdapter {
 		//int minor = (version >> 16) & 0xFFFF;
 		if (major < 49) {
 			version = 49;
-			cr.setProperties(cr.properties | Class.CLASS_VERSION_UPDATED);
+			cr.setProperties(cr.properties | Clazz.CLASS_VERSION_UPDATED);
 		}
 		cr.init(version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
-	public MethodVisitor visitMethod(int access, String name, String desc,
-			String signature, String[] exceptions) {
+	public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String desc,
+			@Nullable String signature, @Nullable String[] exceptions) {
 		//MethodVisitor mv = new AnalyzerAdapter(cr.name, access, name, desc,
 		//		super.visitMethod(access, name, desc, signature, exceptions));
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);

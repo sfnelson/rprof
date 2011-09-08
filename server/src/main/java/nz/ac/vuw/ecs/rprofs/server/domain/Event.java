@@ -11,12 +11,8 @@ import java.util.TreeSet;
 
 import javax.persistence.CascadeType;
 import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
@@ -96,7 +92,7 @@ public class Event implements DataObject<Event, EventId> {
 	Integer event;
 
 	@ManyToOne
-	Class type;
+	Clazz type;
 
 	@ManyToOne
 	Method method;
@@ -116,7 +112,7 @@ public class Event implements DataObject<Event, EventId> {
 
 	public Event() {}
 
-	public Event(DataSet owner, EventId id, Instance thread, int event, Class type, Attribute<?> attr, ArrayList<Instance> args) {
+	public Event(DataSet owner, EventId id, Instance thread, int event, Clazz type, Attribute<?> attr, ArrayList<Instance> args) {
 		this.owner = owner;
 		this.id = id;
 		this.thread = thread;
@@ -156,11 +152,11 @@ public class Event implements DataObject<Event, EventId> {
 		return ids;
 	}
 
-	public Class getType() {
+	public Clazz getType() {
 		return type;
 	}
 
-	public Id<Class> getTypeId() {
+	public Id<Clazz> getTypeId() {
 		return type.getId();
 	}
 
@@ -217,7 +213,7 @@ public class Event implements DataObject<Event, EventId> {
 		}
 	}
 
-	public void setType(Class type) {
+	public void setType(Clazz type) {
 		this.type = type;
 	}
 

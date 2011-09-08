@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Class;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
@@ -31,7 +31,7 @@ class FieldRecord implements AttributeRecord {
 		}
 	}
 
-	public Field toAttribute(Class cls) {
+	public Field toAttribute(Clazz cls) {
 		ClassId cid = cls.getId();
 		FieldId fid = new FieldId(cid.datasetValue(), cid.indexValue(), id);
 		return new Field(fid, name, cls, description, access);

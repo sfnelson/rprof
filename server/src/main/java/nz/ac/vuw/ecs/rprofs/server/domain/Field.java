@@ -21,7 +21,6 @@ import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
  *
  */
 @Entity
-@Table(name = "fields")
 @NamedQueries({
 	@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type"),
 	@NamedQuery(name = "deleteFields", query = "delete Field F where F.owner.owner = :dataset")
@@ -37,8 +36,7 @@ public class Field implements Attribute<Field> {
 	Integer version;
 
 	@ManyToOne
-	@JoinColumn(name="owner_id", nullable=false)
-	private Class owner;
+	private Clazz owner;
 
 	private String name;
 
@@ -50,9 +48,9 @@ public class Field implements Attribute<Field> {
 
 	protected boolean hash;
 
-	Field() {}
+	public Field() {}
 
-	public Field(FieldId id, String name, Class owner, String desc, int access) {
+	public Field(FieldId id, String name, Clazz owner, String desc, int access) {
 		this.id = id;
 		this.owner = owner;
 		this.name = name;
@@ -73,7 +71,7 @@ public class Field implements Attribute<Field> {
 	}
 
 	@Override
-	public Class getOwner() {
+	public Clazz getOwner() {
 		return owner;
 	}
 

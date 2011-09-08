@@ -5,11 +5,9 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Table;
 import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
@@ -22,18 +20,18 @@ import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name="numPackages", query="select count(C.packageName) from Class C where C.owner = :dataset group by C.packageName"),
-	@NamedQuery(name="allPackages", query="select C.packageName from Class C where C.owner = :dataset group by C.packageName"),
-	@NamedQuery(name="numClassesForPackage", query="select count(C) from Class C where C.owner = :dataset and C.packageName = :package"),
-	@NamedQuery(name="classesForPackage", query="select C from Class C where C.owner = :dataset and C.packageName = :package"),
-	@NamedQuery(name="numClasses", query="select count(C) from Class C where C.owner = :dataset"),
-	@NamedQuery(name="allClasses", query="select C from Class C where C.owner = :dataset"),
-	@NamedQuery(name="findClassByName", query="select C from Class C where C.owner = :dataset and C.fqname = :name"),
-	@NamedQuery(name="deleteClasses", query="delete Class C where C.owner = :dataset")
+	@NamedQuery(name="numPackages", query="select count(C.packageName) from Clazz C where C.owner = :dataset group by C.packageName"),
+	@NamedQuery(name="allPackages", query="select C.packageName from Clazz C where C.owner = :dataset group by C.packageName"),
+	@NamedQuery(name="numClassesForPackage", query="select count(C) from Clazz C where C.owner = :dataset and C.packageName = :package"),
+	@NamedQuery(name="classesForPackage", query="select C from Clazz C where C.owner = :dataset and C.packageName = :package"),
+	@NamedQuery(name="numClasses", query="select count(C) from Clazz C where C.owner = :dataset"),
+	@NamedQuery(name="allClasses", query="select C from Clazz C where C.owner = :dataset"),
+	@NamedQuery(name="findClassByName", query="select C from Clazz C where C.owner = :dataset and C.fqname = :name"),
+	@NamedQuery(name="deleteClasses", query="delete Clazz C where C.owner = :dataset")
 })
-public class Class implements DataObject<Class, ClassId> {
+public class Clazz implements DataObject<Clazz, ClassId> {
 
-	public static final java.lang.Class<Class> TYPE = Class.class;
+	public static final java.lang.Class<Clazz> TYPE = Clazz.class;
 
 	public static final int CLASS_VERSION_UPDATED = 0x1;
 	public static final int CLASS_IGNORED_PACKAGE_FILTER = 0x2;
@@ -52,14 +50,14 @@ public class Class implements DataObject<Class, ClassId> {
 	private Integer properties;
 
 	@ManyToOne
-	private Class parent;
+	private Clazz parent;
 
 	@Version
 	private int version;
 
-	public Class() {}
+	public Clazz() {}
 
-	public Class(DataSet owner, ClassId id, String name, Class parent, int properties) {
+	public Clazz(DataSet owner, ClassId id, String name, Clazz parent, int properties) {
 		this.owner = owner;
 		this.id = id;
 		this.fqname = name;
@@ -78,7 +76,7 @@ public class Class implements DataObject<Class, ClassId> {
 		if (this == obj) return true;
 		if (obj == null) return false;
 		if (obj.getClass() != getClass()) return false;
-		Class cls = (Class) obj;
+		Clazz cls = (Clazz) obj;
 		return id.equals(cls.id);
 	}
 
@@ -103,11 +101,11 @@ public class Class implements DataObject<Class, ClassId> {
 		return owner;
 	}
 
-	public void setParent(Class parent) {
+	public void setParent(Clazz parent) {
 		this.parent = parent;
 	}
 
-	public Class getParent() {
+	public Clazz getParent() {
 		return parent;
 	}
 

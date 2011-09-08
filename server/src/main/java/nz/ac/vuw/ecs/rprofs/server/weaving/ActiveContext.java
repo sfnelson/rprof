@@ -52,11 +52,11 @@ public class ActiveContext {
 	}
 
 	public EventId nextEvent() {
-		return new EventId(dataSet.getId(), ++eventId);
+		return new EventId(dataSet.getId().indexValue(), ++eventId);
 	}
 
 	public ClassId nextClass() {
-		return new ClassId(dataSet.getId(), ++classId);
+		return new ClassId(dataSet.getId().indexValue(), ++classId);
 	}
 
 	@Transactional
@@ -98,7 +98,7 @@ public class ActiveContext {
 				}
 				else {
 					log.warn("could not find class id {} with parent {} ({}) [{} {}]", new Object[] {
-							cid.toString(), cls.getName(), cls.getId().toString(), cid.getId(), cls.getId().getId()});
+							cid.toString(), cls.getName(), cls.getId().toString(), cid.longValue(), cls.getId().longValue()});
 				}
 			}
 		}

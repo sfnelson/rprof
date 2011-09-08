@@ -7,30 +7,29 @@ import javax.persistence.MappedSuperclass;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 @SuppressWarnings("serial")
-@MappedSuperclass
 public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
 
 	private static final long mask = 0xFFFFFFFFl;
 
-	private long id;
+	private long value;
 
 	public Id() {}
 
-	public Id(long id) {
-		this.id = id;
+	public Id(long value) {
+		this.value = value;
 	}
 
-	public Long getId() {
-		return id;
+	public Long longValue() {
+		return value;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setValue(Long value) {
+		this.value = value;
 	}
 
 	@Override
 	public int hashCode() {
-		return ((int) (id & mask)) ^ ((int) (id >>> 32));
+		return ((int) (value & mask)) ^ ((int) (value >>> 32));
 	}
 
 	@Override
@@ -41,14 +40,14 @@ public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
+
 		Id<?> other = (Id<?>) obj;
-		if (id != other.id)
-			return false;
-		return true;
+		
+		return value == other.value;
 	}
 
 	@Override
 	public String toString() {
-		return String.valueOf(id);
+		return String.valueOf(value);
 	}
 }

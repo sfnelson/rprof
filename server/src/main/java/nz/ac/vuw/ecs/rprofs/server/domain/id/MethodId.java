@@ -21,6 +21,6 @@ public class MethodId extends AttributeId<Method> {
 	}
 
 	public static MethodId create(DataSet ds, Clazz type, short mnum) {
-		return new MethodId(ds.getId(), type.getId().indexValue(), mnum);
+		return new MethodId(ds.getId().indexValue(), type.getId().indexValue(), mnum);
 	}
 }

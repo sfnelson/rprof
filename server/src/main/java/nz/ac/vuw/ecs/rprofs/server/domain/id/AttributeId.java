@@ -19,14 +19,14 @@ public class AttributeId<T extends Attribute<T>> extends Id<T> {
 	}
 
 	public short datasetValue() {
-		return (short) ((getId() >>> 48) & 0xFFFF);
+		return (short) ((longValue() >>> 48) & 0xFFFF);
 	}
 	public int typeValue() {
-		return (int) ((getId() >>> 16));
+		return (int) ((longValue() >>> 16));
 	}
 
 	public short attributeValue() {
-		return (short) (getId() & 0xFFFF);
+		return (short) (longValue() & 0xFFFF);
 	}
 
 	@Override

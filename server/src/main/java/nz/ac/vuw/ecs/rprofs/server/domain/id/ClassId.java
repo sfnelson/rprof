@@ -10,7 +10,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 public class ClassId extends Id<Clazz> {
 
 	public static ClassId create(DataSet dataSet, int cnum) {
-		return new ClassId(dataSet.getId(), cnum);
+		return new ClassId(dataSet.getId().indexValue(), cnum);
 	}
 
 	public static final Class<ClassId> TYPE = ClassId.class;
@@ -28,11 +28,11 @@ public class ClassId extends Id<Clazz> {
 	}
 
 	public short datasetValue() {
-		return (short) ((getId() >>> 48) & 0xFFFF);
+		return (short) ((longValue() >>> 48) & 0xFFFF);
 	}
 
 	public int indexValue() {
-		return getId().intValue();
+		return longValue().intValue();
 	}
 
 	@Override

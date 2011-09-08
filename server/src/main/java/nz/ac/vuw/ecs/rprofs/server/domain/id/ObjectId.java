@@ -13,7 +13,7 @@ public class ObjectId extends Id<Instance> {
 		if (id == 0) {
 			return null;
 		}
-		return new ObjectId(dataSet.getId(), id);
+		return new ObjectId(dataSet.getId().indexValue(), id);
 	}
 
 	private static final long mask = 0xFFFFFFFFFFFFl;
@@ -33,15 +33,15 @@ public class ObjectId extends Id<Instance> {
 	}
 
 	public short datasetValue() {
-		return (short) ((getId() >>> 48) & 0xFFFF);
+		return (short) ((longValue() >>> 48) & 0xFFFF);
 	}
 
 	public short threadValue() {
-		return (short) (getId() >>> 32);
+		return (short) (longValue() >>> 32);
 	}
 
 	public int indexValue() {
-		return getId().intValue();
+		return longValue().intValue();
 	}
 
 	@Override

@@ -21,6 +21,6 @@ public class FieldId extends AttributeId<Field> {
 	}
 
 	public static FieldId create(DataSet ds, Clazz type, short fnum) {
-		return new FieldId(ds.getId(), type.getId().indexValue(), fnum);
+		return new FieldId(ds.getId().indexValue(), type.getId().indexValue(), fnum);
 	}
 }

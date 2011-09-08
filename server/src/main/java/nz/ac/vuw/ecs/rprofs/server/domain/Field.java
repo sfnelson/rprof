@@ -5,11 +5,9 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Table;
 import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
@@ -23,7 +21,7 @@ import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type"),
-	@NamedQuery(name = "deleteFields", query = "delete Field F where F.owner.owner = :dataset")
+	@NamedQuery(name = "deleteFields", query = "delete Field F")
 })
 public class Field implements Attribute<Field> {
 
@@ -63,7 +61,7 @@ public class Field implements Attribute<Field> {
 	}
 
 	public Long getRpcId() {
-		return id.getId();
+		return id.longValue();
 	}
 
 	public Integer getVersion() {

@@ -68,7 +68,7 @@ public class ConstructorWeavingTest {
 		ClassWriter cw = new ClassWriter(0);
 		MethodVisitor mv;
 
-		cw.visit(51, ACC_PUBLIC + ACC_SUPER, name, null, "java/lang/Object", null);
+		cw.visit(50, ACC_PUBLIC + ACC_SUPER, name, null, "java/lang/Object", null);
 
 		{
 			mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
@@ -90,7 +90,7 @@ public class ConstructorWeavingTest {
 		ClassWriter cw = new ClassWriter(0);
 		MethodVisitor mv;
 
-		cw.visit(51, ACC_PUBLIC + ACC_SUPER, "Test", null, "java/lang/Object", null);
+		cw.visit(50, ACC_PUBLIC + ACC_SUPER, "Test", null, "java/lang/Object", null);
 
 		{
 			mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);

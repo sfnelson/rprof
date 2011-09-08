@@ -9,6 +9,7 @@ import javax.persistence.PersistenceContext;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class ContextManager {
 
 		log.info("profiler run started at {}", now.getTime());
 
-		DataSet ds = new DataSet(handle, now.getTime(), null, null);
+		DataSet ds = new DataSet(new DataSetId((short) 0), handle, now.getTime());
 		em.persist(ds);
 
 		ActiveContext c = new ActiveContext();

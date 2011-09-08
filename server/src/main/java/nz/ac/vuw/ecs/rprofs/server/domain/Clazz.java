@@ -3,12 +3,7 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Version;
+import javax.persistence.*;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
@@ -20,14 +15,14 @@ import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name="numPackages", query="select count(C.packageName) from Clazz C where C.owner = :dataset group by C.packageName"),
-	@NamedQuery(name="allPackages", query="select C.packageName from Clazz C where C.owner = :dataset group by C.packageName"),
-	@NamedQuery(name="numClassesForPackage", query="select count(C) from Clazz C where C.owner = :dataset and C.packageName = :package"),
-	@NamedQuery(name="classesForPackage", query="select C from Clazz C where C.owner = :dataset and C.packageName = :package"),
-	@NamedQuery(name="numClasses", query="select count(C) from Clazz C where C.owner = :dataset"),
-	@NamedQuery(name="allClasses", query="select C from Clazz C where C.owner = :dataset"),
-	@NamedQuery(name="findClassByName", query="select C from Clazz C where C.owner = :dataset and C.fqname = :name"),
-	@NamedQuery(name="deleteClasses", query="delete Clazz C where C.owner = :dataset")
+	@NamedQuery(name="numPackages", query="select count(C.packageName) from Clazz C group by C.packageName"),
+	@NamedQuery(name="allPackages", query="select C.packageName from Clazz C group by C.packageName"),
+	@NamedQuery(name="numClassesForPackage", query="select count(C) from Clazz C where C.packageName = :package"),
+	@NamedQuery(name="classesForPackage", query="select C from Clazz C where C.packageName = :package"),
+	@NamedQuery(name="numClasses", query="select count(C) from Clazz C"),
+	@NamedQuery(name="allClasses", query="select C from Clazz C"),
+	@NamedQuery(name="findClassByName", query="select C from Clazz C where C.fqname = :name"),
+	@NamedQuery(name="deleteClasses", query="delete Clazz C")
 })
 public class Clazz implements DataObject<Clazz, ClassId> {
 
@@ -40,7 +35,7 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 	@EmbeddedId
 	private ClassId id;
 
-	@ManyToOne
+	@Transient
 	private DataSet owner;
 
 	private String packageName;
@@ -90,7 +85,7 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 	}
 
 	public Long getRpcId() {
-		return id.getId();
+		return id.longValue();
 	}
 
 	public Integer getVersion() {

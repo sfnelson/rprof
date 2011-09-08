@@ -20,23 +20,24 @@ public class EventId extends Id<Event> {
 		super((((long) dataset) << 48) | (event & mask));
 	}
 
-	public short getDataset() {
-		return (short) (getEvent() >>> 48);
-	}
-	public long getEvent() {
-		return getId() & mask;
+	public short datasetValue() {
+		return (short) (eventValue() >>> 48);
 	}
 
-	public short getUpper() {
-		return (short) ((getEvent() >>> 32) & 0xFFFF);
+	public long eventValue() {
+		return longValue() & mask;
 	}
 
-	public int getLower() {
-		return (int) (getEvent() & 0xFFFFFFFFl);
+	public short upperValue() {
+		return (short) ((eventValue() >>> 32) & 0xFFFF);
+	}
+
+	public int lowerValue() {
+		return (int) (eventValue() & 0xFFFFFFFFl);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%d:%d", getDataset(), getEvent());
+		return String.format("%d:%d", datasetValue(), eventValue());
 	}
 }

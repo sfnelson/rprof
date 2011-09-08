@@ -9,7 +9,6 @@ import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Table;
 import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
@@ -23,7 +22,7 @@ import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type"),
-	@NamedQuery(name = "deleteMethods", query = "delete Method M where M.owner.owner = :dataset")
+	@NamedQuery(name = "deleteMethods", query = "delete Method M")
 })
 public class Method implements Attribute<Method> {
 
@@ -60,7 +59,7 @@ public class Method implements Attribute<Method> {
 	}
 
 	public Long getRpcId() {
-		return mid.getId();
+		return mid.longValue();
 	}
 
 	public Integer getVersion() {

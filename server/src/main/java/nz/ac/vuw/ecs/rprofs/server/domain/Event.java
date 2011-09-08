@@ -169,11 +169,11 @@ public class Event implements DataObject<Event, EventId> {
 	}
 
 	public Long getRpcId() {
-		return id.getId();
+		return id.longValue();
 	}
 
 	public long getEventId() {
-		return id.getId();
+		return id.longValue();
 	}
 
 	public Integer getVersion() {

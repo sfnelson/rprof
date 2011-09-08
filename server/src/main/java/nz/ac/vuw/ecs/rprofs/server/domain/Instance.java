@@ -8,7 +8,6 @@ import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Table;
 import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
@@ -21,7 +20,6 @@ import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
  *
  */
 @Entity
-@Table( name = "instances" )
 @NamedQueries({
 	@NamedQuery(name="numInstances", query="select count(I) from Instance I where I.owner = :dataset"),
 	@NamedQuery(name="allInstances", query="select count(I) from Instance I where I.owner = :dataset"),
@@ -40,7 +38,7 @@ public class Instance implements DataObject<Instance, ObjectId> {
 	private int version;
 
 	@ManyToOne
-	private Dataset owner;
+	private DataSet owner;
 
 	@ManyToOne
 	private Class type;
@@ -50,7 +48,7 @@ public class Instance implements DataObject<Instance, ObjectId> {
 
 	public Instance() {}
 
-	public Instance(Dataset owner, ObjectId id, Class type, Method constructor) {
+	public Instance(DataSet owner, ObjectId id, Class type, Method constructor) {
 		this.owner = owner;
 		this.id = id;
 		this.type = type;
@@ -69,7 +67,7 @@ public class Instance implements DataObject<Instance, ObjectId> {
 		return version;
 	}
 
-	public Dataset getOwner() {
+	public DataSet getOwner() {
 		return owner;
 	}
 
@@ -102,10 +100,10 @@ public class Instance implements DataObject<Instance, ObjectId> {
 	}
 
 	public short getThreadIndex() {
-		return id.getThread();
+		return id.threadValue();
 	}
 
 	public int getInstanceIndex() {
-		return id.getIndex();
+		return id.indexValue();
 	}
 }

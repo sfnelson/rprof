@@ -20,7 +20,7 @@ public class EqualsMethodWeaver extends ExceptionHandlingMethodWeaver {
 	public void visitCode() {
 		super.visitCode();
 
-		push(record.parent.id.getIndex());		// stack: cid
+		push(record.parent.id.indexValue());		// stack: cid
 		push(record.id);			// stack: cid, mid
 		push(2);					// stack: cid, mid, 2
 		visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));
@@ -45,7 +45,7 @@ public class EqualsMethodWeaver extends ExceptionHandlingMethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == IRETURN) {
-			push(record.parent.id.getIndex());
+			push(record.parent.id.indexValue());
 			push(record.id);
 			visitIntInsn(ALOAD, 0);
 			visitTrackerMethod(Tracker.exit);

@@ -9,7 +9,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +24,15 @@ public class DatasetManager implements DatasetService {
 	private ContextManager cm;
 
 	@Override
-	public List<Dataset> findAllDatasets() {
-		return em.createNamedQuery("allDatasets", Dataset.class).getResultList();
+	public List<DataSet> findAllDatasets() {
+		return em.createNamedQuery("allDatasets", DataSet.class).getResultList();
 	}
 
 	@Override
-	public Dataset findDataset(String handle) {
-		TypedQuery<Dataset> q = em.createNamedQuery("findDataset", Dataset.class);
+	public DataSet findDataset(String handle) {
+		TypedQuery<DataSet> q = em.createNamedQuery("findDataset", DataSet.class);
 		q.setParameter("handle", handle);
-		List<Dataset> ds = q.getResultList();
+		List<DataSet> ds = q.getResultList();
 		if (ds.isEmpty()) return null;
 		else return ds.get(0);
 	}
@@ -40,7 +40,7 @@ public class DatasetManager implements DatasetService {
 	@Override
 	@Transactional
 	public void stopDataset(String dataset) {
-		Dataset ds = findDataset(dataset);
+		DataSet ds = findDataset(dataset);
 
 		ds.setStopped(Calendar.getInstance().getTime());
 
@@ -48,15 +48,15 @@ public class DatasetManager implements DatasetService {
 	}
 
 	@Transactional
-	public Dataset setStopped(Dataset dataset, Date stopped) {
-		Dataset ds = em.find(Dataset.class, dataset.getId());
-		ds.setStopped(dataset.getStopped());
+	public DataSet setStopped(DataSet dataSet, Date stopped) {
+		DataSet ds = em.find(DataSet.class, dataSet.getId());
+		ds.setStopped(dataSet.getStopped());
 		return ds;
 	}
 
 	@Transactional
-	public Dataset setProgram(Dataset dataset, String program) {
-		Dataset ds = em.find(Dataset.class, dataset.getId());
+	public DataSet setProgram(DataSet dataSet, String program) {
+		DataSet ds = em.find(DataSet.class, dataSet.getId());
 		ds.setProgram(program);
 		return ds;
 	}
@@ -64,16 +64,17 @@ public class DatasetManager implements DatasetService {
 	@Override
 	@Transactional
 	public void deleteDataset(String handle) {
-		Dataset ds = findDataset(handle);
+		DataSet ds = findDataset(handle);
 
 		if (ds == null) return;
 
 		em.createNamedQuery("deleteArguments").setParameter("dataset", ds).executeUpdate();
-		em.createNamedQuery("deleteEvents").setParameter("dataset", ds).executeUpdate();
 		em.createNamedQuery("deleteInstances").setParameter("dataset", ds).executeUpdate();
 		em.createNamedQuery("deleteFields").setParameter("dataset", ds).executeUpdate();
 		em.createNamedQuery("deleteMethods").setParameter("dataset", ds).executeUpdate();
 		em.createNamedQuery("deleteClasses").setParameter("dataset", ds).executeUpdate();
 		em.createNamedQuery("deleteDataset").setParameter("dataset", ds).executeUpdate();
+
+		// @TODO delete events from mongodb
 	}
 }

@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 
@@ -29,6 +29,8 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 
+import static nz.ac.vuw.ecs.rprofs.server.context.ContextManager.setThreadLocal;
+
 @SuppressWarnings("serial")
 @Configurable(autowire=Autowire.BY_TYPE)
 public class Logger extends HttpServlet {
@@ -39,7 +41,7 @@ public class Logger extends HttpServlet {
 
 	@Autowired private Mongo mongo;
 
-	private DBCollection getEvents(Dataset ds) throws UnknownHostException, MongoException {
+	private DBCollection getEvents(DataSet ds) throws UnknownHostException, MongoException {
 		DB db = mongo.getDB("rprof-" + ds.getHandle());
 		return db.getCollection("events");
 	}
@@ -48,16 +50,16 @@ public class Logger extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		Dataset current = datasets.findDataset(req.getHeader("Dataset"));
-		ContextManager.setThreadLocal(current);
+		DataSet current = datasets.findDataset(req.getHeader("Dataset"));
+		setThreadLocal(current);
 
 		parseEvents(current, req.getContentLength(), req.getInputStream());
 
 		resp.setStatus(201);
-		ContextManager.setThreadLocal(null);
+		setThreadLocal(null);
 	}
 
-	protected List<Event> parseEvents(Dataset current, int length, InputStream in) throws IOException {
+	protected List<Event> parseEvents(DataSet current, int length, InputStream in) throws IOException {
 		DataInputStream dis = new DataInputStream(in);
 
 		//		#define MAX_PARAMETERS 16

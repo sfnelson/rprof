@@ -8,7 +8,7 @@ import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
@@ -34,7 +34,7 @@ public class InstanceManager implements InstanceService {
 	@Override
 	public List<? extends Instance> findInstancesForClass(Class cls) {
 		TypedQuery<Instance> q = em.createNamedQuery("instancesForType", Instance.class);
-		q.setParameter("owner", owner());
+		q.setParameter("dataset", owner());
 		q.setParameter("type", cls);
 		return q.getResultList();
 	}
@@ -42,7 +42,7 @@ public class InstanceManager implements InstanceService {
 	@Override
 	public int findNumInstancesForClass(Class cls) {
 		TypedQuery<Number> q = em.createNamedQuery("numInstancesForType", Number.class);
-		q.setParameter("owner", owner());
+		q.setParameter("dataset", owner());
 		q.setParameter("type", cls);
 		return q.getSingleResult().intValue();
 	}
@@ -50,14 +50,14 @@ public class InstanceManager implements InstanceService {
 	@Override
 	public int findNumInstances() {
 		TypedQuery<Number> q = em.createNamedQuery("numInstances", Number.class);
-		q.setParameter("owner", owner());
+		q.setParameter("dataset", owner());
 		return q.getSingleResult().intValue();
 	}
 
 	@Override
 	public List<? extends Instance> findInstances() {
 		TypedQuery<Instance> q = em.createNamedQuery("allInstances", Instance.class);
-		q.setParameter("owner", owner());
+		q.setParameter("dataset", owner());
 		return q.getResultList();
 	}
 
@@ -82,7 +82,7 @@ public class InstanceManager implements InstanceService {
 		return i;
 	}
 
-	private Dataset owner() {
+	private DataSet owner() {
 		return ContextManager.getThreadLocal();
 	}
 

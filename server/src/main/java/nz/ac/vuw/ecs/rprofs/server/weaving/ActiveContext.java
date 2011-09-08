@@ -9,7 +9,7 @@ import javax.persistence.PersistenceContext;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
@@ -36,35 +36,35 @@ public class ActiveContext {
 	@Autowired
 	private DatasetService datasets;
 
-	private Dataset dataset;
+	private DataSet dataSet;
 
 	private long eventId = 0;
 	private int classId = 0;
 
 	private final Map<String, List<ClassId>> awaitingSuper = Collections.newMap();
 
-	public void setDataset(Dataset dataset) {
-		this.dataset = dataset;
+	public void setDataSet(DataSet dataSet) {
+		this.dataSet = dataSet;
 	}
 
 	public void setMainMethod(String program) {
-		dataset = datasets.setProgram(dataset, program);
+		dataSet = datasets.setProgram(dataSet, program);
 	}
 
 	public EventId nextEvent() {
-		return new EventId(dataset.getId(), ++eventId);
+		return new EventId(dataSet.getId(), ++eventId);
 	}
 
 	public ClassId nextClass() {
-		return new ClassId(dataset.getId(), ++classId);
+		return new ClassId(dataSet.getId(), ++classId);
 	}
 
 	@Transactional
 	public Class storeClass(ClassRecord cr) {
-		Class cls = cr.toClass(dataset);
+		Class cls = cr.toClass(dataSet);
 		em.persist(cls);
 
-		log.debug(String.format("storing new class {} ({})", cls.getName(), cls.getId()));
+		log.debug("storing new class {} ({})", cls.getName(), cls.getId());
 
 		for (FieldRecord fr: cr.getFields().values()) {
 			em.persist(fr.toAttribute(cls));
@@ -103,7 +103,7 @@ public class ActiveContext {
 			}
 		}
 
-		em.persist(new Event(dataset, nextEvent(), null, Event.CLASS_WEAVE, cls, null, new ArrayList<Instance>()));
+		em.persist(new Event(dataSet, nextEvent(), null, Event.CLASS_WEAVE, cls, null, new ArrayList<Instance>()));
 
 		log.debug("finished storing new class {} ({})", cls.getName(), cls.getId());
 

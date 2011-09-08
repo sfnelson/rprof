@@ -20,7 +20,7 @@ class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 		List<Integer> args = getArgs();
 
-		push(record.parent.id.getIndex());									// stack: cnum
+		push(record.parent.id.indexValue());									// stack: cnum
 		push(record.id);											// stack: cnum, mnum
 
 		if (args.size() > 1) {
@@ -48,7 +48,7 @@ class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == RETURN) {
-			push(record.parent.id.getIndex());										// stack: cnum
+			push(record.parent.id.indexValue());										// stack: cnum
 			push(record.id);											// stack: cnum, mnum
 			visitIntInsn(ALOAD, 0);										// stack: cnum, mnum, this
 			visitTrackerMethod(Tracker.exit);

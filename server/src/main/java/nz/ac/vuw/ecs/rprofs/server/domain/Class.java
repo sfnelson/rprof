@@ -21,16 +21,15 @@ import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
  *
  */
 @Entity
-@Table( name = "classes" )
 @NamedQueries({
-	@NamedQuery(name="numPackages", query="select count(C.packageName) from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset group by C.packageName"),
-	@NamedQuery(name="allPackages", query="select C.packageName from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset group by C.packageName"),
-	@NamedQuery(name="numClassesForPackage", query="select count(C) from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset and C.packageName = :package"),
-	@NamedQuery(name="classesForPackage", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset and C.packageName = :package"),
-	@NamedQuery(name="numClasses", query="select count(C) from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset"),
-	@NamedQuery(name="allClasses", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset"),
-	@NamedQuery(name="findClassByName", query="select C from nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset and C.fqname = :name"),
-	@NamedQuery(name="deleteClasses", query="delete nz.ac.vuw.ecs.rprofs.server.domain.Class C where C.owner = :dataset")
+	@NamedQuery(name="numPackages", query="select count(C.packageName) from Class C where C.owner = :dataset group by C.packageName"),
+	@NamedQuery(name="allPackages", query="select C.packageName from Class C where C.owner = :dataset group by C.packageName"),
+	@NamedQuery(name="numClassesForPackage", query="select count(C) from Class C where C.owner = :dataset and C.packageName = :package"),
+	@NamedQuery(name="classesForPackage", query="select C from Class C where C.owner = :dataset and C.packageName = :package"),
+	@NamedQuery(name="numClasses", query="select count(C) from Class C where C.owner = :dataset"),
+	@NamedQuery(name="allClasses", query="select C from Class C where C.owner = :dataset"),
+	@NamedQuery(name="findClassByName", query="select C from Class C where C.owner = :dataset and C.fqname = :name"),
+	@NamedQuery(name="deleteClasses", query="delete Class C where C.owner = :dataset")
 })
 public class Class implements DataObject<Class, ClassId> {
 
@@ -44,7 +43,7 @@ public class Class implements DataObject<Class, ClassId> {
 	private ClassId id;
 
 	@ManyToOne
-	private Dataset owner;
+	private DataSet owner;
 
 	private String packageName;
 	private String simpleName;
@@ -53,7 +52,6 @@ public class Class implements DataObject<Class, ClassId> {
 	private Integer properties;
 
 	@ManyToOne
-	@JoinColumn(name = "parent_id")
 	private Class parent;
 
 	@Version
@@ -61,7 +59,7 @@ public class Class implements DataObject<Class, ClassId> {
 
 	public Class() {}
 
-	public Class(Dataset owner, ClassId id, String name, Class parent, int properties) {
+	public Class(DataSet owner, ClassId id, String name, Class parent, int properties) {
 		this.owner = owner;
 		this.id = id;
 		this.fqname = name;
@@ -101,7 +99,7 @@ public class Class implements DataObject<Class, ClassId> {
 		return version;
 	}
 
-	public Dataset getOwner() {
+	public DataSet getOwner() {
 		return owner;
 	}
 

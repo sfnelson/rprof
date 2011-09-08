@@ -6,12 +6,12 @@
 <web-app>
 
 	<filter>
-		<filter-name>request-filter</filter-name>
+		<filter-name>requestFilter</filter-name>
 		<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
 	</filter>
 	
 	<filter-mapping>
-		<filter-name>request-filter</filter-name>
+		<filter-name>requestFilter</filter-name>
 		<url-pattern>/gwtRequest/*</url-pattern>
 	</filter-mapping>
 

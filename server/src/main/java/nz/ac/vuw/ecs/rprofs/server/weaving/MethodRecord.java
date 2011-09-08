@@ -32,7 +32,7 @@ class MethodRecord implements AttributeRecord {
 
 	public Method toAttribute(Class cls) {
 		ClassId cid = cls.getId();
-		MethodId mid = new MethodId(cid.getDataset(), cid.getIndex(), id);
+		MethodId mid = new MethodId(cid.datasetValue(), cid.indexValue(), id);
 		return new Method(mid, name, cls, description, access);
 	}
 

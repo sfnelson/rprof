@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +25,9 @@ public class Start extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		Dataset dataset = contexts.startRecording();
+		DataSet dataSet = contexts.startRecording();
 
-		resp.addHeader("Dataset", dataset.getHandle());
+		resp.addHeader("Dataset", dataSet.getHandle());
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 

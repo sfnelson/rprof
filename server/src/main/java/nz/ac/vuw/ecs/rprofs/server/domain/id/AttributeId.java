@@ -18,19 +18,19 @@ public class AttributeId<T extends Attribute<T>> extends Id<T> {
 		super((((long) dataset) << 48) | (((long) type) << 16) | (attribute));
 	}
 
-	public short getDataset() {
+	public short datasetValue() {
 		return (short) ((getId() >>> 48) & 0xFFFF);
 	}
-	public int getType() {
-		return (int) ((getId() >>> 16) & 0xFFFFFFFF);
+	public int typeValue() {
+		return (int) ((getId() >>> 16));
 	}
 
-	public short getAttribute() {
+	public short attributeValue() {
 		return (short) (getId() & 0xFFFF);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%d.%d.%d", getDataset(), getType(), getAttribute());
+		return String.format("%d.%d.%d", datasetValue(), typeValue(), attributeValue());
 	}
 }

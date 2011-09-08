@@ -8,7 +8,7 @@ import javax.persistence.TypedQuery;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -79,7 +79,7 @@ public class ClassManager implements ClassService {
 		return cls;
 	}
 
-	private Dataset owner() {
+	private DataSet owner() {
 		return ContextManager.getThreadLocal();
 	}
 }

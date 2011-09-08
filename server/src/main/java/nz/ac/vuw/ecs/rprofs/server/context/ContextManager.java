@@ -3,11 +3,12 @@ package nz.ac.vuw.ecs.rprofs.server.context;
 import java.util.Calendar;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 
 import org.slf4j.Logger;
@@ -16,24 +17,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 public class ContextManager {
 
-	private static ThreadLocal<Dataset> dataset = new ThreadLocal<Dataset>();
+	private static ThreadLocal<DataSet> dataset = new ThreadLocal<DataSet>();
 
-	public static Dataset getThreadLocal() {
+	public static @Nullable DataSet getThreadLocal() {
 		return dataset.get();
 	}
 
-	public static void setThreadLocal(Dataset dataset) {
-		ContextManager.dataset.set(dataset);
+	public static void setThreadLocal(@Nullable DataSet dataSet) {
+		ContextManager.dataset.set(dataSet);
 	}
 
 	private final Logger log = LoggerFactory.getLogger(ContextManager.class);
-	private final Map<Dataset, ActiveContext> contexts = Collections.newMap();
+	private final Map<DataSet, ActiveContext> contexts = Collections.newMap();
 
 	@PersistenceContext
 	private EntityManager em;
 
 	@Transactional
-	public Dataset startRecording() {
+	public DataSet startRecording() {
 		Calendar now = Calendar.getInstance();
 		String handle = String.format("%02d%02d%02d%02d%02d%02d",
 				now.get(Calendar.YEAR),
@@ -45,26 +46,26 @@ public class ContextManager {
 
 		log.info("profiler run started at {}", now.getTime());
 
-		Dataset ds = new Dataset(handle, now.getTime(), null, null);
+		DataSet ds = new DataSet(handle, now.getTime(), null, null);
 		em.persist(ds);
 
 		ActiveContext c = new ActiveContext();
-		c.setDataset(ds);
+		c.setDataSet(ds);
 
-		log.debug("storing context for dataset {}", ds.getId());
+		log.debug("storing context for dataSet {}", ds.getId());
 		contexts.put(ds, c);
 
 		return ds;
 	}
 
-	public void stopRecording(Dataset ds) {
+	public void stopRecording(DataSet ds) {
 		Calendar now = Calendar.getInstance();
 		contexts.remove(getThreadLocal());
 		log.info("profiler run stopped at {}", now.getTime());
 	}
 
-	public ActiveContext getContext(Dataset ds) {
-		log.debug("retrieving context for dataset {}", ds.getId());
+	public ActiveContext getContext(DataSet ds) {
+		log.debug("retrieving context for dataSet {}", ds.getId());
 		return contexts.get(ds);
 	}
 }

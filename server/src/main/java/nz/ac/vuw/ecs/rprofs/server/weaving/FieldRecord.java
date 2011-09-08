@@ -33,7 +33,7 @@ class FieldRecord implements AttributeRecord {
 
 	public Field toAttribute(Class cls) {
 		ClassId cid = cls.getId();
-		FieldId fid = new FieldId(cid.getDataset(), cid.getIndex(), id);
+		FieldId fid = new FieldId(cid.datasetValue(), cid.indexValue(), id);
 		return new Field(fid, name, cls, description, access);
 	}
 }

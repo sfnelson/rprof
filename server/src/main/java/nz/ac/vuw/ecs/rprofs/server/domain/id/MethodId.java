@@ -1,7 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 
 @SuppressWarnings("serial")
@@ -17,7 +17,7 @@ public class MethodId extends AttributeId<Method> {
 		super(id);
 	}
 
-	public static MethodId create(Dataset ds, Class type, short mnum) {
-		return new MethodId(ds.getId(), type.getId().getIndex(), mnum);
+	public static MethodId create(DataSet ds, Class type, short mnum) {
+		return new MethodId(ds.getId(), type.getId().indexValue(), mnum);
 	}
 }

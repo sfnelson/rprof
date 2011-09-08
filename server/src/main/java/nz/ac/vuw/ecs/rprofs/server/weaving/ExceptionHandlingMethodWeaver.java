@@ -45,7 +45,7 @@ public class ExceptionHandlingMethodWeaver extends MethodWeaver {
 		visitVarInsn(ASTORE, 1); // store exception
 		setLocals(2);
 
-		push(record.parent.id.getIndex());
+		push(record.parent.id.indexValue());
 		push(record.id);
 		visitVarInsn(ALOAD, 1);
 		visitTrackerMethod(Tracker.except);

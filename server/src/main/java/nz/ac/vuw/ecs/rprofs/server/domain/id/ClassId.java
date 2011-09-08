@@ -2,14 +2,14 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import javax.persistence.Embeddable;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 
 @SuppressWarnings("serial")
 @Embeddable
 public class ClassId extends Id<nz.ac.vuw.ecs.rprofs.server.domain.Class> {
 
-	public static ClassId create(Dataset dataset, int cnum) {
-		return new ClassId(dataset.getId(), cnum);
+	public static ClassId create(DataSet dataSet, int cnum) {
+		return new ClassId(dataSet.getId(), cnum);
 	}
 
 	public static final Class<ClassId> TYPE = ClassId.class;
@@ -26,16 +26,16 @@ public class ClassId extends Id<nz.ac.vuw.ecs.rprofs.server.domain.Class> {
 		super(classId);
 	}
 
-	public short getDataset() {
+	public short datasetValue() {
 		return (short) ((getId() >>> 48) & 0xFFFF);
 	}
 
-	public int getIndex() {
-		return (int) (getId() & mask);
+	public int indexValue() {
+		return getId().intValue();
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%d.%d", getDataset(), getIndex());
+		return String.format("%d.%d", datasetValue(), indexValue());
 	}
 }

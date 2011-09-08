@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
+
+import static nz.ac.vuw.ecs.rprofs.server.context.ContextManager.setThreadLocal;
 
 
 /**
@@ -41,8 +43,8 @@ public class Weave extends HttpServlet {
 		byte[] buffer, result;
 		String cname;
 
-		Dataset ds = datasets.findDataset(req.getHeader("Dataset"));
-		ContextManager.setThreadLocal(ds);
+		DataSet ds = datasets.findDataset(req.getHeader("Dataset"));
+		setThreadLocal(ds);
 
 		int length = req.getContentLength();
 
@@ -68,6 +70,6 @@ public class Weave extends HttpServlet {
 		log.info(cname);
 		log.debug("returning {} bytes", new Object[] { result.length });
 
-		ContextManager.setThreadLocal(null);
+		setThreadLocal(null);
 	}
 }

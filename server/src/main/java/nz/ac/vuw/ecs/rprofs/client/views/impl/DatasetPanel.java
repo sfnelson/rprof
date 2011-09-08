@@ -1,8 +1,17 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.cell.client.DateCell;
+import com.google.gwt.cell.client.SafeHtmlCell;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.uibinder.client.UiFactory;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
 import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetListView;
@@ -18,79 +27,65 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class DatasetPanel extends Composite implements DatasetListView {
 
-	private static DatasetPanelUiBinder uiBinder = GWT.create(DatasetPanelUiBinder.class);
+    private static DatasetPanelUiBinder uiBinder = GWT.create(DatasetPanelUiBinder.class);
 
-	interface DatasetPanelUiBinder extends UiBinder<Widget, DatasetPanel> {}
+    interface DatasetPanelUiBinder extends UiBinder<Widget, DatasetPanel> {
+    }
 
-	@UiField Style style;
+    @UiField
+    CellTable<DatasetProxy> table;
 
-	interface Style extends CssResource {
-		String selected();
-	}
+    public DatasetPanel() {
+        initWidget(uiBinder.createAndBindUi(this));
+    }
 
-	@UiField FlowPanel panel;
+    @Override
+    public void setPresenter(Presenter presenter) {
+        // not used
+    }
 
-	private List<DatasetWidget> available = Collections.newList();
-	private DatasetWidget selected;
-	private Map<DatasetProxy, DatasetWidget> viewMap = Collections.newMap();
+    @Override
+    public void setNumDatasets(int numDatasets) {
+        table.setRowCount(numDatasets);
+    }
 
-	public DatasetPanel() {
-		initWidget(uiBinder.createAndBindUi(this));
-	}
+    @Override
+    public void setDatasets(List<DatasetProxy> datasets) {
+        table.setRowData(datasets);
+    }
 
-	@Override
-	public void addDataset(DatasetProxy dataset, DatasetView.Presenter presenter) {
-		DatasetWidget w;
-		if (available.isEmpty()) {
-			w = new DatasetWidget();
-		}
-		else {
-			w = available.remove(available.size() - 1);
-			panel.remove(w);
-		}
+    @Override
+    public void setSelected(DatasetProxy dataset) {
+        table.getSelectionModel().setSelected(dataset, true);
+    }
 
-		w.setDataset(dataset);
-		w.setPresenter(presenter);
-		viewMap.put(dataset, w);
 
-		panel.add(w);
-		w.setVisible(true);
-	}
+    @UiFactory
+    CellTable<DatasetProxy> createTable() {
+        CellTable<DatasetProxy> table = new CellTable<DatasetProxy>();
 
-	@Override
-	public void updateDataset(DatasetProxy dataset) {
-		DatasetWidget view = viewMap.get(dataset);
+        table.addColumn(new Column<DatasetProxy, Date>(new DateCell(DateTimeFormat.getFormat("M d hh:mm"))) {
+            @Override
+            public Date getValue(DatasetProxy d) {
+                return d.getStarted();
+            }
+        });
 
-		view.setDataset(dataset);
-	}
-
-	@Override
-	public void selectDataset(DatasetProxy dataset) {
-		DatasetWidget view = viewMap.get(dataset);
-
-		if (selected != null) {
-			selected.removeStyleName(style.selected());
-		}
-
-		selected = view;
-
-		if (selected != null) {
-			selected.addStyleName(style.selected());
-		}
-	}
-
-	@Override
-	public void removeDataset(DatasetProxy dataset) {
-		DatasetWidget view = viewMap.get(dataset);
-
-		if (selected == view) {
-			selected.removeStyleName(style.selected());
-			selected = null;
-		}
-
-		view.setVisible(false);
-		available.add(view);
-		viewMap.remove(dataset);
-	}
-
+        table.addColumn(new Column<DatasetProxy, SafeHtml>(new SafeHtmlCell()) {
+            @Override
+            public SafeHtml getValue(DatasetProxy d) {
+                SafeHtmlBuilder sb = new SafeHtmlBuilder();
+                if (d.getStopped() == null) {
+                    sb.appendHtmlConstant("<em>running</em>");
+                }
+                else {
+                    long time = d.getStopped().getTime() - d.getStarted().getTime();
+                    sb.append(time / 1000);
+                    sb.appendEscaped(" seconds");
+                }
+                return sb.toSafeHtml();
+            }
+        });
+        return table;
+    }
 }

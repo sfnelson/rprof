@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 import javax.persistence.Embeddable;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Class;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 
 @SuppressWarnings("serial")
@@ -20,7 +20,7 @@ public class FieldId extends AttributeId<Field> {
 		super(id);
 	}
 
-	public static FieldId create(Dataset ds, Class type, short fnum) {
-		return new FieldId(ds.getId(), type.getId().getIndex(), fnum);
+	public static FieldId create(DataSet ds, Class type, short fnum) {
+		return new FieldId(ds.getId(), type.getId().indexValue(), fnum);
 	}
 }

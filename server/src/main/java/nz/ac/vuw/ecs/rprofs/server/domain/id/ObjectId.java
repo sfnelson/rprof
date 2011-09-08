@@ -2,18 +2,18 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import javax.persistence.Embeddable;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 
 @SuppressWarnings("serial")
 @Embeddable
 public class ObjectId extends Id<Instance> {
 
-	public static ObjectId create(Dataset dataset, long id) {
+	public static ObjectId create(DataSet dataSet, long id) {
 		if (id == 0) {
 			return null;
 		}
-		return new ObjectId(dataset.getId(), id);
+		return new ObjectId(dataSet.getId(), id);
 	}
 
 	private static final long mask = 0xFFFFFFFFFFFFl;
@@ -32,20 +32,20 @@ public class ObjectId extends Id<Instance> {
 		super((((long) dataset) << 48) | (id & mask));
 	}
 
-	public short getDataset() {
+	public short datasetValue() {
 		return (short) ((getId() >>> 48) & 0xFFFF);
 	}
 
-	public short getThread() {
-		return (short) ((getId() >>> 32) & 0xFFFFFFFF);
+	public short threadValue() {
+		return (short) (getId() >>> 32);
 	}
 
-	public int getIndex() {
-		return (int) (getId() & 0xFFFFFFFF);
+	public int indexValue() {
+		return getId().intValue();
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%d:%d.%d", getDataset(), getThread(), getIndex());
+		return String.format("%d:%d.%d", datasetValue(), threadValue(), indexValue());
 	}
 }

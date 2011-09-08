@@ -1,11 +1,10 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui">
-	<ui:style type="nz.ac.vuw.ecs.rprofs.client.views.impl.DatasetPanel.Style">
-		.selected {
-			background-color: #ddd;
-		}
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+    xmlns:c="urn:import:com.google.gwt.user.cellview.client">
+	<ui:style>
 	</ui:style>
-	<g:FlowPanel ui:field='panel'>
-	</g:FlowPanel>
+    <g:FlowPanel>
+	    <c:CellTable ui:field='table' />
+    </g:FlowPanel>
 </ui:UiBinder>

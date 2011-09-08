@@ -19,7 +19,7 @@ public class DatasetActivityMapper implements ActivityMapper {
 	public Activity getActivity(Place place) {
 		if (place instanceof HasDataset) {
 			HasDataset p = (HasDataset) place;
-			activity.setSelected(p.getDatasetHandle());
+			activity.setSelected(p);
 		}
 		else {
 			activity.setSelected(null);

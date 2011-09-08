@@ -3,12 +3,8 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Argument;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.Event;
-import nz.ac.vuw.ecs.rprofs.server.domain.Field;
-import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.domain.Method;
+import nz.ac.vuw.ecs.rprofs.server.domain.*;
+import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
@@ -30,7 +26,7 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 	private EntityManager em;
 
 	@Override
-	public T create(Class<? extends T> clazz) {
+	public T create(java.lang.Class<? extends T> clazz) {
 		try {
 			return clazz.newInstance();
 		} catch (InstantiationException e) {
@@ -43,14 +39,14 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 	}
 
 	@Override
-	public T find(Class<? extends T> clazz, Long id) {
+	public T find(java.lang.Class<? extends T> clazz, Long id) {
 		if (clazz == Argument.class) {
 			return em.find(clazz, id);
 		}
-		if (clazz == Class.class) {
+		if (clazz == nz.ac.vuw.ecs.rprofs.server.domain.Class.class) {
 			return em.find(clazz, new ClassId(id));
 		}
-		if (clazz == Dataset.class) {
+		if (clazz == DataSet.class) {
 			return em.find(clazz, id.shortValue());
 		}
 		if (clazz == Event.class) {
@@ -71,8 +67,8 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Class<T> getDomainType() {
-		return (Class<T>) DataObject.class;
+	public java.lang.Class getDomainType() {
+		return DataObject.class;
 	}
 
 	@Override
@@ -81,7 +77,7 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 	}
 
 	@Override
-	public Class<Long> getIdType() {
+	public java.lang.Class<Long> getIdType() {
 		return Long.TYPE;
 	}
 

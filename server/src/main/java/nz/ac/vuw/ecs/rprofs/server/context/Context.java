@@ -1,19 +1,45 @@
 package nz.ac.vuw.ecs.rprofs.server.context;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import com.google.common.annotations.VisibleForTesting;
+import com.mongodb.DB;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import org.springframework.beans.factory.annotation.Autowired;
 
-public interface Context {
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
-	public void open();
+public class Context {
 
-	public boolean isOpen();
+	@VisibleForTesting
+	@Autowired
+	Database db;
 
-	public EntityManager em();
-	public EntityTransaction tx();
+	private ThreadLocal<Dataset> dataset;
+	private ThreadLocal<DB> database;
 
-	public <T> T find(Class<T> clazz, Object id);
+	public Context() {
+		dataset = new ThreadLocal<Dataset>();
+		database = new ThreadLocal<DB>();
+	}
 
-	public void close();
-	public void clear();
+	public void setDataset(@NotNull Dataset dataset) {
+		this.dataset.set(dataset);
+		this.database.set(db.getDatabase(dataset));
+	}
+
+	public void clear() {
+		this.dataset.remove();
+		this.database.remove();
+	}
+
+	@Nullable
+	public DB getDB() {
+		return database.get();
+	}
+
+	@Nullable
+	public Dataset getDataset() {
+		return dataset.get();
+	}
 }

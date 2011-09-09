@@ -1,57 +1,60 @@
-package nz.ac.vuw.ecs.rprofs.server.weaving;
+package nz.ac.vuw.ecs.rprofs.server.data;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
-import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
-import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
+import nz.ac.vuw.ecs.rprofs.server.weaving.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.weaving.FieldRecord;
+import nz.ac.vuw.ecs.rprofs.server.weaving.MethodRecord;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 
-@Configurable
-public class ActiveContext {
+public class ClassManager {
 
-	private final org.slf4j.Logger log = LoggerFactory.getLogger(ActiveContext.class);
+	private final org.slf4j.Logger log = LoggerFactory.getLogger(ClassManager.class);
 
-	@Autowired
-	private ClassService classes;
-
-	@Autowired
-	private DatasetService datasets;
-
-	private Dataset dataset;
-
-	private long eventId = 0;
-	private int classId = 0;
+	@VisibleForTesting
+	@Autowired(required = true)
+	Context context;
 
 	private final Map<String, List<ClassId>> awaitingSuper = Collections.newMap();
 
-	public void setDataset(Dataset dataset) {
-		this.dataset = dataset;
+	public Clazz createClass() {
+		Dataset dataset = context.getDataset();
+		DB database = context.getDB();
+
+		if (dataset == null || database == null) {
+			throw new RuntimeException("cannot not create class for null dataset");
+		}
+
+		DBCollection classes = database.getCollection("classes");
+		Long numClasses = classes.count();
+		Clazz cls = new Clazz(dataset, ClassId.create(dataset, numClasses.intValue() + 1), null, null, 0);
+		classes.insert(new BasicDBObject()
+				.append("_id", cls.getId().longValue())
+		);
+
+		return cls;
 	}
 
-	public void setMainMethod(String program) {
-		dataset = datasets.setProgram(dataset, program);
-	}
-
-	public EventId nextEvent() {
-		return new EventId(dataset.getId().indexValue(), ++eventId);
-	}
-
-	public ClassId nextClass() {
-		return new ClassId(dataset.getId().indexValue(), ++classId);
+	public Clazz findClass(String name) {
+		// TODO find class using name
+		return null;
 	}
 
 	@Transactional
 	public Clazz storeClass(ClassRecord cr) {
-		Clazz cls = cr.toClass(dataset);
+		Clazz cls = cr.toClass(context.getDataset());
 		// TODO persist class
 
 		log.debug("storing new class {} ({})", cls.getName(), cls.getId());
@@ -65,7 +68,7 @@ public class ActiveContext {
 		}
 
 		if (cr.getSuperName() != null) {
-			Clazz parent = classes.findClass(cr.getSuperName());
+			Clazz parent = findClass(cr.getSuperName());
 
 			if (parent != null) {
 				cls.setParent(parent);

@@ -1,6 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
@@ -13,9 +12,6 @@ public class DatasetManager implements DatasetService {
 
 	@Autowired
 	private Database database;
-
-	@Autowired
-	private ContextManager cm;
 
 	@Override
 	public List<Dataset> findAllDatasets() {
@@ -32,8 +28,6 @@ public class DatasetManager implements DatasetService {
 		Dataset ds = findDataset(dataset);
 
 		ds.setStopped(Calendar.getInstance().getTime());
-
-		cm.stopRecording(ds);
 	}
 
 	@Override

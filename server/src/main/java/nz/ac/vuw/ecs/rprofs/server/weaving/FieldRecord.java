@@ -6,7 +6,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import org.objectweb.asm.Opcodes;
 
-class FieldRecord implements AttributeRecord {
+public class FieldRecord implements AttributeRecord {
 
 	final Weaver weaver;
 	final ClassRecord parent;

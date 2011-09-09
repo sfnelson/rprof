@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
+import com.google.gwt.cell.client.ActionCell;
 import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.client.GWT;
@@ -29,13 +30,15 @@ public class DatasetPanel extends Composite implements DatasetListView {
 	@UiField
 	CellTable<DatasetProxy> table;
 
+	private Presenter presenter;
+
 	public DatasetPanel() {
 		initWidget(uiBinder.createAndBindUi(this));
 	}
 
 	@Override
 	public void setPresenter(Presenter presenter) {
-		// not used
+		this.presenter = presenter;
 	}
 
 	@Override
@@ -58,7 +61,7 @@ public class DatasetPanel extends Composite implements DatasetListView {
 	CellTable<DatasetProxy> createTable() {
 		CellTable<DatasetProxy> table = new CellTable<DatasetProxy>();
 
-		table.addColumn(new Column<DatasetProxy, Date>(new DateCell(DateTimeFormat.getFormat("M d hh:mm"))) {
+		table.addColumn(new Column<DatasetProxy, Date>(new DateCell(DateTimeFormat.getFormat("MMMM dd, h:mm"))) {
 			@Override
 			public Date getValue(DatasetProxy d) {
 				return d.getStarted();
@@ -79,6 +82,52 @@ public class DatasetPanel extends Composite implements DatasetListView {
 				return sb.toSafeHtml();
 			}
 		});
+
+		ActionCell<DatasetProxy> inspect = new ActionCell<DatasetProxy>(
+				new SafeHtmlBuilder().appendEscaped("Inspect").toSafeHtml(),
+				new ActionCell.Delegate<DatasetProxy>() {
+					@Override
+					public void execute(DatasetProxy ds) {
+						presenter.selectDataset(ds);
+					}
+				});
+		table.addColumn(new Column<DatasetProxy, DatasetProxy>(inspect) {
+			@Override
+			public DatasetProxy getValue(DatasetProxy ds) {
+				return ds;
+			}
+		});
+
+		ActionCell<DatasetProxy> stop = new ActionCell<DatasetProxy>(
+				new SafeHtmlBuilder().appendEscaped("Stop").toSafeHtml(),
+				new ActionCell.Delegate<DatasetProxy>() {
+					@Override
+					public void execute(DatasetProxy ds) {
+						presenter.stopDataset(ds);
+					}
+				});
+		table.addColumn(new Column<DatasetProxy, DatasetProxy>(stop) {
+			@Override
+			public DatasetProxy getValue(DatasetProxy ds) {
+				return ds;
+			}
+		});
+
+		ActionCell<DatasetProxy> remove = new ActionCell<DatasetProxy>(
+				new SafeHtmlBuilder().appendEscaped("Delete").toSafeHtml(),
+				new ActionCell.Delegate<DatasetProxy>() {
+					@Override
+					public void execute(DatasetProxy ds) {
+						presenter.deleteDataset(ds);
+					}
+				});
+		table.addColumn(new Column<DatasetProxy, DatasetProxy>(remove) {
+			@Override
+			public DatasetProxy getValue(DatasetProxy ds) {
+				return ds;
+			}
+		});
+
 		return table;
 	}
 }

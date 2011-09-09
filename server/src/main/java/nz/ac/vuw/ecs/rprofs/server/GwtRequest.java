@@ -1,7 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
+import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -17,6 +18,9 @@ public class GwtRequest implements Filter {
 	@Autowired
 	private Database database;
 
+	@Autowired
+	private Context context;
+
 	@Override
 	public void init(FilterConfig config) throws ServletException {
 		// nothing to do
@@ -26,14 +30,17 @@ public class GwtRequest implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse rsp, FilterChain chain)
 			throws IOException, ServletException {
 
-		ContextManager.setThreadLocal(database.getDataset(getDataset(req)));
+		Dataset dataset = database.getDataset(getDataset(req));
+		if (dataset != null) {
+			context.setDataset(dataset);
+		}
 
 		try {
 			chain.doFilter(req, rsp);
 		} catch (Exception ex) {
 			log.error(ex.getMessage(), ex);
 		} finally {
-			ContextManager.clearThreadLocal();
+			context.clear();
 		}
 	}
 

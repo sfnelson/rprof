@@ -42,7 +42,7 @@ public class Database {
 		DB db = mongo.getDB(getName(ds));
 		DBCollection properties = db.getCollection("properties");
 		properties.save(createPropertiesObject(ds));
-		
+
 		return ds;
 	}
 
@@ -57,24 +57,28 @@ public class Database {
 	}
 
 	public Dataset getDataSet(DataSetId id) {
-		for (Dataset ds: getDatasets()) {
+		for (Dataset ds : getDatasets()) {
 			if (ds.getId().equals(id)) return ds;
 		}
 		return null;
 	}
 
 	public Dataset getDataSet(Long id) {
-		for (Dataset ds: getDatasets()) {
+		for (Dataset ds : getDatasets()) {
 			if (ds.getId().longValue().equals(id)) return ds;
 		}
 		return null;
 	}
 
 	public Dataset getDataset(String handle) {
-		for (Dataset ds: getDatasets()) {
+		for (Dataset ds : getDatasets()) {
 			if (ds.getHandle().equals(handle)) return ds;
 		}
 		return null;
+	}
+
+	public DB getDatabase(@NotNull Dataset dataset) {
+		return mongo.getDB(getName(dataset));
 	}
 
 	public Dataset setStopped(Dataset dataset, Date stopped) {
@@ -119,8 +123,7 @@ public class Database {
 		if (event instanceof MongoEventBuilder) {
 			DBCollection events = mongo.getDB(getName(ds)).getCollection("events");
 			events.insert(((MongoEventBuilder) event).toDBObject());
-		}
-		else {
+		} else {
 			throw new RuntimeException("not implemented");
 		}
 	}
@@ -128,7 +131,7 @@ public class Database {
 	@VisibleForTesting
 	short getNextId() {
 		short max = 0;
-		for (String dbname: mongo.getDatabaseNames()) {
+		for (String dbname : mongo.getDatabaseNames()) {
 			if (dbname.startsWith("rprof")) {
 				DB db = mongo.getDB(dbname);
 				DBObject properties = db.getCollection("properties").findOne();
@@ -157,8 +160,7 @@ public class Database {
 			ds.setStopped((Date) properties.get("stopped"));
 			ds.setProgram((String) properties.get("program"));
 			return ds;
-		}
-		else {
+		} else {
 			return null;
 		}
 	}

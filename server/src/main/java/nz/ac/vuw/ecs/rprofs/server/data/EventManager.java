@@ -1,6 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
@@ -80,9 +79,5 @@ public class EventManager implements EventService {
 	@Override
 	public List<Instance> findThreads() {
 		return null;
-	}
-
-	private Dataset owner() {
-		return ContextManager.getThreadLocal();
 	}
 }

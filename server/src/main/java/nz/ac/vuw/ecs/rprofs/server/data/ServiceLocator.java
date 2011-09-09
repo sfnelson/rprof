@@ -3,10 +3,11 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import nz.ac.vuw.ecs.rprofs.server.request.EventService;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
-@Configurable
+@Configurable(autowire = Autowire.BY_TYPE)
 public class ServiceLocator implements com.google.web.bindery.requestfactory.shared.ServiceLocator {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(ServiceLocator.class);

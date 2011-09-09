@@ -1,22 +1,30 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.asm.*;
 import org.objectweb.asm.util.ASMifierClassVisitor;
 
 import java.io.PrintWriter;
+import java.util.Date;
 
 import static org.objectweb.asm.Opcodes.*;
 
 public class ConstructorWeavingTest {
 
 	private TestingClassLoader loader;
+	private Dataset dataset;
+	private Clazz clazz;
 
 	@Before
 	public void setUp() throws Exception {
 		loader = new TestingClassLoader();
+		dataset = new Dataset(new DataSetId((short) 1), "foo", new Date());
+		clazz = new Clazz(dataset, ClassId.create(dataset, 1), "foobar", null, 0);
 	}
 
 	@Test
@@ -25,7 +33,7 @@ public class ConstructorWeavingTest {
 		loader.loadClass("TestInput", pre).newInstance();
 
 		byte[] post = generateMinimalClass("TestOutput");
-		Weaver w = new Weaver(new ClassId((short) 0, 1));
+		Weaver w = new Weaver(clazz);
 		post = w.weave(post);
 		//print(post);
 		loader.loadClass("TestOutput", post).newInstance();

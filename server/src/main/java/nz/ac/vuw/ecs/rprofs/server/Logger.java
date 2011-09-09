@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
+import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.db.MongoEventBuilder;
@@ -18,9 +19,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static nz.ac.vuw.ecs.rprofs.server.context.ContextManager.clearThreadLocal;
-import static nz.ac.vuw.ecs.rprofs.server.context.ContextManager.setThreadLocal;
-
 @SuppressWarnings("serial")
 @Configurable(autowire = Autowire.BY_TYPE)
 public class Logger extends HttpServlet {
@@ -33,17 +31,20 @@ public class Logger extends HttpServlet {
 	@Autowired
 	private EventManager events;
 
+	@Autowired
+	private Context context;
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
 		Dataset current = database.getDataset(req.getHeader("Dataset"));
-		setThreadLocal(current);
+		context.setDataset(current);
 
 		parseEvents(current, req.getContentLength(), req.getInputStream());
 
 		resp.setStatus(201);
-		clearThreadLocal();
+		context.clear();
 	}
 
 	protected void parseEvents(Dataset ds, int length, InputStream in) throws IOException {

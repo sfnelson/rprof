@@ -55,15 +55,10 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 	public Clazz(Dataset owner, ClassId id, String name, Clazz parent, int properties) {
 		this.owner = owner;
 		this.id = id;
-		this.fqname = name;
 		this.parent = parent;
 		this.properties = properties;
 
-		int last = name.lastIndexOf('/');
-		if (last < 0) last = 0;
-		packageName = name.replace('/', '.').substring(0, last);
-
-		simpleName = name.substring(name.lastIndexOf('/') + 1);
+		setName(name);
 	}
 
 	@Override
@@ -110,6 +105,19 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 
 	public String getName() {
 		return fqname;
+	}
+
+	public void setName(String name) {
+		this.fqname = name;
+		if (name != null) {
+			int last = name.lastIndexOf('/');
+			if (last < 0) last = 0;
+			packageName = name.replace('/', '.').substring(0, last);
+			simpleName = name.substring(name.lastIndexOf('/') + 1);
+		} else {
+			packageName = null;
+			simpleName = null;
+		}
 	}
 
 	public int getProperties() {

@@ -8,9 +8,10 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import java.util.Map;
 import java.util.Set;
 
-class ClassRecord {
+public class ClassRecord {
 
 	final Weaver weaver;
+	final Clazz cls;
 	final ClassId id;
 
 	String name;
@@ -25,9 +26,10 @@ class ClassRecord {
 	Map<Short, MethodRecord> methods = Collections.newMap();
 	Map<Short, FieldRecord> fields = Collections.newMap();
 
-	ClassRecord(Weaver weaver, ClassId classId) {
+	ClassRecord(Weaver weaver, Clazz cls) {
 		this.weaver = weaver;
-		this.id = classId;
+		this.cls = cls;
+		this.id = cls.getId();
 	}
 
 	void init(int version, int access, String name, String signature,
@@ -52,11 +54,12 @@ class ClassRecord {
 		this.properties = properties;
 	}
 
-	Clazz toClass(Dataset owner) {
+	public Clazz toClass(Dataset owner) {
+		// TODO update the provided class
 		return new Clazz(owner, id, name, null, properties);
 	}
 
-	FieldRecord getField(String name, String desc) {
+	public FieldRecord getField(String name, String desc) {
 		for (FieldRecord fr : fields.values()) {
 			if (name.equals(fr.name) && desc.equals(fr.description)) {
 				return fr;
@@ -66,15 +69,15 @@ class ClassRecord {
 		return null;
 	}
 
-	Map<Short, MethodRecord> getMethods() {
+	public Map<Short, MethodRecord> getMethods() {
 		return methods;
 	}
 
-	Map<Short, FieldRecord> getFields() {
+	public Map<Short, FieldRecord> getFields() {
 		return fields;
 	}
 
-	String getSuperName() {
+	public String getSuperName() {
 		return superName;
 	}
 }

@@ -5,7 +5,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 
-class MethodRecord implements AttributeRecord {
+public class MethodRecord implements AttributeRecord {
 
 	final Weaver weaver;
 	final short id;
@@ -42,7 +42,7 @@ class MethodRecord implements AttributeRecord {
 
 	public boolean isMain() {
 		return "main".equals(name) && "([Ljava/lang/String;)V".equals(description)
-		&& (0x1 | 0x8) == access; // public, static
+				&& (0x1 | 0x8) == access; // public, static
 	}
 
 	public boolean isInit() {
@@ -55,12 +55,12 @@ class MethodRecord implements AttributeRecord {
 
 	public boolean isEquals() {
 		return "equals".equals(name) && "(Ljava/lang/Object;)Z".equals(description)
-		&& 0x1 == access; // public
+				&& 0x1 == access; // public
 	}
 
 	public boolean isHashCode() {
 		return "hashCode".equals(name) && "()I".equals(description)
-		&& 0x1 == access; // public
+				&& 0x1 == access; // public
 	}
 
 	public boolean isStatic() {

@@ -1,44 +1,39 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
-import nz.ac.vuw.ecs.rprofs.client.views.DatasetView;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyPressEvent;
-import com.google.gwt.event.dom.client.MouseOutEvent;
-import com.google.gwt.event.dom.client.MouseOutHandler;
-import com.google.gwt.event.dom.client.MouseOverEvent;
-import com.google.gwt.event.dom.client.MouseOverHandler;
+import com.google.gwt.event.dom.client.*;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.InlineLabel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
+import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
+import nz.ac.vuw.ecs.rprofs.client.views.DatasetView;
 
 public class DatasetWidget extends Composite implements DatasetView, MouseOverHandler, MouseOutHandler {
 
 	private static final DateTimeFormat date = DateTimeFormat.getFormat("yyyy-MM-dd HH:mm:ss");
 
 	private static DatasetWidgetUiBinder uiBinder = GWT
-	.create(DatasetWidgetUiBinder.class);
+			.create(DatasetWidgetUiBinder.class);
 
-	interface DatasetWidgetUiBinder extends UiBinder<Widget, DatasetWidget> {}
+	interface DatasetWidgetUiBinder extends UiBinder<Widget, DatasetWidget> {
+	}
 
 	DatasetProxy run;
 	Presenter presenter;
 
-	@UiField Anchor program;
-	@UiField InlineLabel started;
-	@UiField InlineLabel stopped;
-	@UiField Button stop;
-	@UiField Button delete;
+	@UiField
+	Anchor program;
+	@UiField
+	InlineLabel started;
+	@UiField
+	InlineLabel stopped;
+	@UiField
+	Button stop;
+	@UiField
+	Button delete;
 
 	public DatasetWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
@@ -51,22 +46,20 @@ public class DatasetWidget extends Composite implements DatasetView, MouseOverHa
 		this.run = run;
 
 		started.setText(date.format(run.getStarted()));
-		program.setTarget("#run="+run.getHandle());
+		program.setTarget("#run=" + run.getHandle());
 		delete.setVisible(false);
 
 		if (run.getStopped() != null) {
 			stopped.setText(date.format(run.getStopped()));
 			stop.setVisible(false);
-		}
-		else {
+		} else {
 			stopped.setText("");
 			stop.setVisible(true);
 		}
 
 		if (run.getProgram() != null) {
 			program.setText(run.getProgram());
-		}
-		else {
+		} else {
 			program.setText("");
 		}
 	}

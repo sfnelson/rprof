@@ -1,28 +1,21 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
-
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 
+import javax.persistence.*;
+
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type"),
-	@NamedQuery(name = "deleteMethods", query = "delete from Method M")
+		@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type"),
+		@NamedQuery(name = "deleteMethods", query = "delete from Method M")
 })
 public class Method implements Attribute<Method> {
 
@@ -39,12 +32,13 @@ public class Method implements Attribute<Method> {
 	@ManyToOne
 	private Clazz owner;
 
-	@Column(columnDefinition="character varying(1023)")
+	@Column(columnDefinition = "character varying(1023)")
 	private String description;
 
 	private Integer access;
 
-	public Method() {}
+	public Method() {
+	}
 
 	public Method(MethodId id, String name, Clazz owner, String description, int access) {
 		this.mid = id;

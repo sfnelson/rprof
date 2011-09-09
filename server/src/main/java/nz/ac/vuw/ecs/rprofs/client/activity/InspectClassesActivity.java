@@ -1,34 +1,37 @@
 package nz.ac.vuw.ecs.rprofs.client.activity;
 
-import java.util.List;
-
-import nz.ac.vuw.ecs.rprofs.client.Factory;
-import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractTypedInspectorActivity;
-import nz.ac.vuw.ecs.rprofs.client.place.BrowseClasses;
-import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
-
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractTypedInspectorActivity;
+import nz.ac.vuw.ecs.rprofs.client.place.BrowseClasses;
+import nz.ac.vuw.ecs.rprofs.client.request.*;
+import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
+
+import java.util.List;
 
 public class InspectClassesActivity
-extends AbstractTypedInspectorActivity<BrowseClasses>
-implements ReportView.Presenter {
+		extends AbstractTypedInspectorActivity<BrowseClasses>
+		implements ReportView.Presenter {
 
-	private ReportView view;
+	private final ReportView view;
 
-	public InspectClassesActivity(Factory factory, BrowseClasses place) {
-		super(factory, place);
+	@Inject
+	public InspectClassesActivity(Provider<ClassRequest> cr,
+								  Provider<FieldRequest> fr,
+								  Provider<MethodRequest> mr,
+								  Provider<InstanceRequest> ir,
+								  ReportView view) {
+		super(cr, fr, mr, ir);
+		this.view = view;
 	}
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		view = getFactory().getReportView();
-		panel.setWidget(view);
-
 		view.setPresenter(this);
+
+		panel.setWidget(view);
 
 		findPackages();
 	}

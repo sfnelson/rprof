@@ -2,16 +2,10 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import java.io.Serializable;
 
-import javax.persistence.MappedSuperclass;
-
-
 @SuppressWarnings("serial")
-@MappedSuperclass
 public class StringId implements Serializable {
 
-	private String handle;
-
-	public StringId() {}
+	private final String handle;
 
 	public StringId(String id) {
 		this.handle = id;

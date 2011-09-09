@@ -1,9 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
-import javax.persistence.Embeddable;
-
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+
+import javax.persistence.Embeddable;
 
 @SuppressWarnings("serial")
 @Embeddable
@@ -17,7 +17,8 @@ public class ClassId extends Id<Clazz> {
 
 	private static final long mask = 0xFFFFFFFF;
 
-	public ClassId() {}
+	public ClassId() {
+	}
 
 	public ClassId(short dataset, int index) {
 		super((((long) dataset) << 48) | index);

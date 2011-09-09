@@ -1,16 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import java.util.List;
-import java.util.Map;
-
-import nz.ac.vuw.ecs.rprofs.client.Resources;
-import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.client.ui.EventCell;
-import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
-import nz.ac.vuw.ecs.rprofs.client.views.EventView;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -21,13 +10,19 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.AbstractPager;
 import com.google.gwt.user.cellview.client.CellList;
-import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HasHTML;
-import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.HasRows;
 import com.google.gwt.view.client.Range;
+import nz.ac.vuw.ecs.rprofs.client.Resources;
+import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.client.ui.EventCell;
+import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
+import nz.ac.vuw.ecs.rprofs.client.views.EventView;
+
+import java.util.List;
+import java.util.Map;
 
 public class EventPanel extends Composite implements EventView, ClickHandler {
 
@@ -49,8 +44,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 				disable(rewind);
 				disable(previous);
 				System.out.println("at start");
-			}
-			else {
+			} else {
 				enable(rewind);
 				enable(previous);
 				System.out.println("not at start");
@@ -60,8 +54,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 				disable(next);
 				disable(fastforward);
 				System.out.println("at end");
-			}
-			else {
+			} else {
 				enable(next);
 				enable(fastforward);
 				System.out.println("not at end");
@@ -83,14 +76,11 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 		public void onClick(ClickEvent ev) {
 			if (ev.getSource() == rewind) {
 				rewind();
-			}
-			else if (ev.getSource() == previous) {
+			} else if (ev.getSource() == previous) {
 				previous();
-			}
-			else if (ev.getSource() == next) {
+			} else if (ev.getSource() == next) {
 				next();
-			}
-			else if (ev.getSource() == fastforward) {
+			} else if (ev.getSource() == fastforward) {
 				fastforward();
 			}
 		}
@@ -99,8 +89,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 		public void onMouseWheel(MouseWheelEvent event) {
 			if (event.getDeltaY() > 0) {
 				fastforward();
-			}
-			else {
+			} else {
 				rewind();
 			}
 		}
@@ -144,43 +133,65 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	}
 
 	private static EventReportPanelUiBinder uiBinder = GWT
-	.create(EventReportPanelUiBinder.class);
+			.create(EventReportPanelUiBinder.class);
 
 	interface EventReportPanelUiBinder extends
-	UiBinder<Widget, EventPanel> {
+			UiBinder<Widget, EventPanel> {
 	}
 
 	interface Style extends CssResource {
 		String active();
+
 		String enabled();
 	}
 
-	@UiField(provided=true) CellList<EventProxy> list;
+	@UiField(provided = true)
+	CellList<EventProxy> list;
 	private Pager pager;
 
-	@UiField Style style;
+	@UiField
+	Style style;
 
-	@UiField Anchor rewind;
-	@UiField Anchor previous;
-	@UiField HasHTML label;
-	@UiField Anchor next;
-	@UiField Anchor fastforward;
+	@UiField
+	Anchor rewind;
+	@UiField
+	Anchor previous;
+	@UiField
+	HasHTML label;
+	@UiField
+	Anchor next;
+	@UiField
+	Anchor fastforward;
 
-	@UiField Panel filterMenu;
-	@UiField Panel pane;
+	@UiField
+	Panel filterMenu;
+	@UiField
+	Panel pane;
 
-	@UiField Anchor all;
-	@UiField Anchor objectAllocated;
-	@UiField Anchor arrayAllocated;
-	@UiField Anchor methodEnter;
-	@UiField Anchor methodReturn;
-	@UiField Anchor methodException;
-	@UiField Anchor fieldRead;
-	@UiField Anchor fieldWrite;
-	@UiField Anchor classWeave;
-	@UiField Anchor classInit;
-	@UiField Anchor objectTagged;
-	@UiField Anchor objectFreed;
+	@UiField
+	Anchor all;
+	@UiField
+	Anchor objectAllocated;
+	@UiField
+	Anchor arrayAllocated;
+	@UiField
+	Anchor methodEnter;
+	@UiField
+	Anchor methodReturn;
+	@UiField
+	Anchor methodException;
+	@UiField
+	Anchor fieldRead;
+	@UiField
+	Anchor fieldWrite;
+	@UiField
+	Anchor classWeave;
+	@UiField
+	Anchor classInit;
+	@UiField
+	Anchor objectTagged;
+	@UiField
+	Anchor objectFreed;
 
 	private List<Anchor> filters = Collections.newList();
 
@@ -238,7 +249,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	public void setThreads(List<InstanceProxy> threads) {
 		this.threads.clear();
 		int i = 0;
-		for (InstanceProxy thread: threads) {
+		for (InstanceProxy thread : threads) {
 			this.threads.put(thread, i++);
 		}
 
@@ -249,8 +260,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	public void onClick(ClickEvent ev) {
 		if (ev.getSource() == all) {
 			presenter.clearFilter();
-		}
-		else if (ev.getSource() instanceof Anchor) {
+		} else if (ev.getSource() instanceof Anchor) {
 			int filter = getFilter((Anchor) ev.getSource());
 			presenter.toggleFilter(filter);
 		}
@@ -259,16 +269,14 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	private void refresh(int filter) {
 		if (filter == EventProxy.ALL) {
 			all.addStyleName(style.active());
-		}
-		else {
+		} else {
 			all.removeStyleName(style.active());
 		}
 
-		for (Anchor a: filters) {
+		for (Anchor a : filters) {
 			if ((getFilter(a) & filter) != 0) {
 				a.addStyleName(style.active());
-			}
-			else {
+			} else {
 				a.removeStyleName(style.active());
 			}
 		}
@@ -297,38 +305,27 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	private int getFilter(Anchor a) {
 		if (a == objectAllocated) {
 			return EventProxy.OBJECT_ALLOCATED;
-		}
-		else if (a == arrayAllocated) {
+		} else if (a == arrayAllocated) {
 			return EventProxy.ARRAY_ALLOCATED;
-		}
-		else if (a == methodEnter) {
+		} else if (a == methodEnter) {
 			return EventProxy.METHOD_ENTER;
-		}
-		else if (a == methodReturn) {
+		} else if (a == methodReturn) {
 			return EventProxy.METHOD_RETURN;
-		}
-		else if (a == methodException) {
+		} else if (a == methodException) {
 			return EventProxy.METHOD_EXCEPTION;
-		}
-		else if (a == fieldRead) {
+		} else if (a == fieldRead) {
 			return EventProxy.FIELD_READ;
-		}
-		else if (a == fieldWrite) {
+		} else if (a == fieldWrite) {
 			return EventProxy.FIELD_WRITE;
-		}
-		else if (a == classWeave) {
+		} else if (a == classWeave) {
 			return EventProxy.CLASS_WEAVE;
-		}
-		else if (a == classInit) {
+		} else if (a == classInit) {
 			return EventProxy.CLASS_INITIALIZED;
-		}
-		else if (a == objectTagged) {
+		} else if (a == objectTagged) {
 			return EventProxy.OBJECT_TAGGED;
-		}
-		else if (a == objectFreed) {
+		} else if (a == objectFreed) {
 			return EventProxy.OBJECT_FREED;
-		}
-		else {
+		} else {
 			return 0;
 		}
 	}

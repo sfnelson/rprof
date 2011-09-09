@@ -1,9 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.client.place;
 
+import com.google.gwt.place.shared.PlaceTokenizer;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.CompositePlace;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.HasDataset;
-
-import com.google.gwt.place.shared.PlaceTokenizer;
 
 
 public class ShowDataset extends CompositePlace<ShowDataset> implements HasDataset {
@@ -11,7 +10,8 @@ public class ShowDataset extends CompositePlace<ShowDataset> implements HasDatas
 	public static final String TYPE = "ShowDataset";
 	public static final Tokenizer TOKENIZER = new Tokenizer();
 
-	ShowDataset() {}
+	ShowDataset() {
+	}
 
 	public ShowDataset(String dataset) {
 		super();

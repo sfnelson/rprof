@@ -1,8 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.client.place;
 
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
-
 import com.google.gwt.place.shared.PlaceTokenizer;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
 
 
 public class BrowseEvents extends ReportPlace<BrowseEvents> {
@@ -10,7 +9,8 @@ public class BrowseEvents extends ReportPlace<BrowseEvents> {
 	public static final String TYPE = "BrowseEvents";
 	public static final Tokenizer TOKENIZER = new Tokenizer();
 
-	public BrowseEvents() {}
+	public BrowseEvents() {
+	}
 
 	@Override
 	public String getType() {

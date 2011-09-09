@@ -1,20 +1,13 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-
-import org.objectweb.asm.ClassAdapter;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class ThreadClassWeaver extends ClassAdapter {
 
@@ -28,14 +21,14 @@ public class ThreadClassWeaver extends ClassAdapter {
 
 	@Override
 	public void visit(int version, int access, String name, String signature,
-			String superName, String[] interfaces) {
+					  String superName, String[] interfaces) {
 		cr.init(version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
-			String signature, String[] exceptions) {
+									 String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 		MethodRecord mr = cr.weaver.createMethodRecord(name);
 		mr.init(access, desc, signature, exceptions);

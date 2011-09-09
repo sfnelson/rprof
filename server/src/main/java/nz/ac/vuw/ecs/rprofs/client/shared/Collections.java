@@ -1,21 +1,12 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.client.shared;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class Collections {
 
@@ -23,8 +14,8 @@ public class Collections {
 		return new ArrayList<T>();
 	}
 
-	public static <S,T> HashMap<S,T> newMap() {
-		return new HashMap<S,T>();
+	public static <S, T> HashMap<S, T> newMap() {
+		return new HashMap<S, T>();
 	}
 
 	public static <T> HashSet<T> newSet() {

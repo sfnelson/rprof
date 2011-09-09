@@ -1,14 +1,12 @@
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import java.util.Date;
-
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-
+import com.google.gwt.user.client.rpc.IsSerializable;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
-import com.google.gwt.user.client.rpc.IsSerializable;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 
 public class Dataset implements DataObject<Dataset, DataSetId>, IsSerializable, Comparable<Dataset> {
@@ -28,7 +26,8 @@ public class Dataset implements DataObject<Dataset, DataSetId>, IsSerializable, 
 	@Nullable
 	private Date stopped;
 
-	public Dataset() {}
+	public Dataset() {
+	}
 
 	public Dataset(@NotNull DataSetId id, @NotNull String handle, @NotNull Date started) {
 		this.id = id;

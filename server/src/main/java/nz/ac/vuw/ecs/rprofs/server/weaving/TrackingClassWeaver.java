@@ -1,16 +1,10 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-
-import org.objectweb.asm.ClassAdapter;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 public class TrackingClassWeaver extends ClassAdapter {
@@ -25,22 +19,21 @@ public class TrackingClassWeaver extends ClassAdapter {
 
 	@Override
 	public void visit(int version, int access, String name,
-			String signature, String superName, String[] interfaces) {
+					  String signature, String superName, String[] interfaces) {
 		record.init(version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
-			String signature, String[] exceptions) {
+									 String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 		MethodRecord mr = record.weaver.createMethodRecord(name);
 		mr.init(access, desc, signature, exceptions);
 
 		if (name.equals("_getTracker")) {
 			mv = new GetTrackerGenerator(mv, mr);
-		}
-		else if (name.equals("_setTracker")) {
+		} else if (name.equals("_setTracker")) {
 			mv = new SetTrackerGenerator(mv, mr);
 		}
 		return mv;
@@ -48,11 +41,10 @@ public class TrackingClassWeaver extends ClassAdapter {
 
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc,
-			String signature, Object value) {
+								   String signature, Object value) {
 		if (name.equals("cnum")) {
 			return super.visitField(access, name, desc, signature, new Integer(record.id.indexValue()));
-		}
-		else {
+		} else {
 			return super.visitField(access, name, desc, signature, value);
 		}
 	}
@@ -90,6 +82,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 			super.visitEnd();
 		}
 	}
+
 	private static class SetTrackerGenerator extends GeneratorAdapter implements Opcodes {
 
 		public SetTrackerGenerator(MethodVisitor mv, MethodRecord mr) {

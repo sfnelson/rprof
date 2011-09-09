@@ -1,7 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import java.util.List;
-
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
@@ -11,25 +9,43 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.request.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 public class EventManager implements EventService {
 
 	public interface EventBuilder {
 		Dataset getDataset();
+
 		EventBuilder setDataSet(Dataset ds);
+
 		EventId getId();
+
 		EventBuilder setId(long id);
+
 		ObjectId getThread();
+
 		EventBuilder setThread(long thread);
+
 		Integer getEvent();
+
 		EventBuilder setEvent(int event);
+
 		ClassId getClazz();
+
 		EventBuilder setClazz(int cnum);
+
 		MethodId getMethod();
+
 		EventBuilder setMethod(short mnum);
+
 		FieldId getField();
+
 		EventBuilder setField(short fnum);
+
 		List<ObjectId> getArgs();
+
 		EventBuilder clearArgs();
+
 		EventBuilder addArg(long arg);
 	}
 

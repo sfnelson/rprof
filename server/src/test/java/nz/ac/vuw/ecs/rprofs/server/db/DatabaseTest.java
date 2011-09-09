@@ -7,12 +7,12 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import org.junit.*;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
+
+import static org.junit.Assert.*;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -36,7 +36,7 @@ public class DatabaseTest {
 		pb.start();
 
 		pb.command().clear();
-		pb.command(path,  "--dbpath", "/tmp/rprof/mongo",
+		pb.command(path, "--dbpath", "/tmp/rprof/mongo",
 				"--bind_ip", "127.0.0.1", "--port", "27018");
 		process = pb.start();
 	}
@@ -150,10 +150,10 @@ public class DatabaseTest {
 	public static void destroyDatabase() throws Exception {
 		process.destroy();
 
-		for (Scanner sc = new Scanner(process.getInputStream()); sc.hasNextLine();) {
+		for (Scanner sc = new Scanner(process.getInputStream()); sc.hasNextLine(); ) {
 			System.out.println(sc.nextLine());
 		}
-		for (Scanner sc = new Scanner(process.getErrorStream()); sc.hasNextLine();) {
+		for (Scanner sc = new Scanner(process.getErrorStream()); sc.hasNextLine(); ) {
 			System.err.println(sc.nextLine());
 		}
 

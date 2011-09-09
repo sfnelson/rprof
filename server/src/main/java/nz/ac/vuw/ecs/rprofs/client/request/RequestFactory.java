@@ -14,6 +14,4 @@ public interface RequestFactory extends com.google.web.bindery.requestfactory.sh
 
 	MethodRequest methodRequest();
 
-	ReportRequest reportRequest();
-
 }

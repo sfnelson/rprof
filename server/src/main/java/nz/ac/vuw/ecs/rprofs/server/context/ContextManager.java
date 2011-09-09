@@ -1,19 +1,17 @@
 package nz.ac.vuw.ecs.rprofs.server.context;
 
-import java.util.Calendar;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import java.util.Calendar;
+import java.util.Map;
 
 public class ContextManager {
 

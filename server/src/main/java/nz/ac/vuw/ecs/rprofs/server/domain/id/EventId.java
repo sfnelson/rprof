@@ -1,10 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
-import javax.persistence.Embeddable;
-import javax.validation.constraints.NotNull;
-
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+
+import javax.persistence.Embeddable;
+import javax.validation.constraints.NotNull;
 
 @SuppressWarnings("serial")
 @Embeddable
@@ -17,7 +17,8 @@ public class EventId extends Id<Event> {
 
 	private static final long mask = 0xFFFFFFFFFFFFl; // 48 bit mask
 
-	public EventId() {}
+	public EventId() {
+	}
 
 	public EventId(long eventId) {
 		super(eventId);

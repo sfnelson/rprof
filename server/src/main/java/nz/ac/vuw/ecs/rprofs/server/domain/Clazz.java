@@ -1,28 +1,27 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
-
-import javax.persistence.*;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
+import javax.persistence.*;
+
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name="numPackages", query="select count(C.packageName) from Clazz C group by C.packageName"),
-	@NamedQuery(name="allPackages", query="select C.packageName from Clazz C group by C.packageName"),
-	@NamedQuery(name="numClassesForPackage", query="select count(C) from Clazz C where C.packageName = :package"),
-	@NamedQuery(name="classesForPackage", query="select C from Clazz C where C.packageName = :package"),
-	@NamedQuery(name="numClasses", query="select count(C) from Clazz C"),
-	@NamedQuery(name="allClasses", query="select C from Clazz C"),
-	@NamedQuery(name="findClassByName", query="select C from Clazz C where C.fqname = :name"),
-	@NamedQuery(name="deleteClasses", query="delete Clazz C")
+		@NamedQuery(name = "numPackages", query = "select count(C.packageName) from Clazz C group by C.packageName"),
+		@NamedQuery(name = "allPackages", query = "select C.packageName from Clazz C group by C.packageName"),
+		@NamedQuery(name = "numClassesForPackage", query = "select count(C) from Clazz C where C.packageName = :package"),
+		@NamedQuery(name = "classesForPackage", query = "select C from Clazz C where C.packageName = :package"),
+		@NamedQuery(name = "numClasses", query = "select count(C) from Clazz C"),
+		@NamedQuery(name = "allClasses", query = "select C from Clazz C"),
+		@NamedQuery(name = "findClassByName", query = "select C from Clazz C where C.fqname = :name"),
+		@NamedQuery(name = "deleteClasses", query = "delete Clazz C")
 })
 public class Clazz implements DataObject<Clazz, ClassId> {
 
@@ -50,7 +49,8 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 	@Version
 	private int version;
 
-	public Clazz() {}
+	public Clazz() {
+	}
 
 	public Clazz(Dataset owner, ClassId id, String name, Clazz parent, int properties) {
 		this.owner = owner;

@@ -1,7 +1,12 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import java.util.List;
-
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.ui.*;
 import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
@@ -9,36 +14,36 @@ import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.ui.ActivePanel;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.resources.client.CssResource;
-import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HasWidgets;
-import com.google.gwt.user.client.ui.InlineHTML;
-import com.google.gwt.user.client.ui.Widget;
+import java.util.List;
 
 public class ReportWidget extends Composite {
 
 	public static final int MAX_WIDGETS = 10;
 
 	private static ReportWidgetUiBinder uiBinder = GWT.create(ReportWidgetUiBinder.class);
-	interface ReportWidgetUiBinder extends UiBinder<Widget, ReportWidget> {}
+
+	interface ReportWidgetUiBinder extends UiBinder<Widget, ReportWidget> {
+	}
+
 	interface Style extends CssResource {
 		String even();
+
 		String odd();
+
 		String count();
+
 		String text();
+
 		String longer();
 	}
 
-	@UiField Style style;
+	@UiField
+	Style style;
 
-	@UiField ActivePanel data;
-	@UiField HasWidgets children;
+	@UiField
+	ActivePanel data;
+	@UiField
+	HasWidgets children;
 
 	private List<HTML> fields;
 
@@ -65,15 +70,14 @@ public class ReportWidget extends Composite {
 	public void init(boolean even, int index) {
 		if (this.even) {
 			data.removeStyleName(style.even());
-		}
-		else {
+		} else {
 			data.removeStyleName(style.odd());
 		}
 
 		this.even = even;
 		this.index = index;
 
-		for (HTML w: fields) {
+		for (HTML w : fields) {
 			w.setText("");
 			w.setTitle("");
 			w.setStyleName("");
@@ -81,8 +85,7 @@ public class ReportWidget extends Composite {
 
 		if (even) {
 			data.addStyleName(style.even());
-		}
-		else {
+		} else {
 			data.addStyleName(style.odd());
 		}
 	}
@@ -110,8 +113,7 @@ public class ReportWidget extends Composite {
 		HTML name = fields.get(index);
 		if ("".equals(pkg)) {
 			name.setHTML("<em>default</em>");
-		}
-		else {
+		} else {
 			name.setText(pkg);
 		}
 		name.setTitle(pkg);
@@ -172,8 +174,7 @@ public class ReportWidget extends Composite {
 		if (type != null) {
 			name.setText(shortType + ":" + instance);
 			name.setTitle(type + ":" + instance);
-		}
-		else {
+		} else {
 			name.setText(instance);
 			name.setTitle(instance);
 		}

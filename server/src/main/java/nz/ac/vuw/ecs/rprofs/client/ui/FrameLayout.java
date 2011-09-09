@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.client.ui;
 
@@ -16,16 +16,10 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
-import com.google.gwt.user.client.ui.AcceptsOneWidget;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.IsWidget;
-import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class FrameLayout extends Composite {
 
@@ -34,25 +28,33 @@ public class FrameLayout extends Composite {
 	public static final int HIDE_BOTTOM = 0x4;
 
 	private static FrameLayoutUiBinder uiBinder = GWT
-	.create(FrameLayoutUiBinder.class);
+			.create(FrameLayoutUiBinder.class);
 
 	interface FrameLayoutUiBinder extends UiBinder<Widget, FrameLayout> {
 	}
 
-	@UiField Style style;
+	@UiField
+	Style style;
 
 	interface Style extends CssResource {
 		String hideTop();
+
 		String hideBottom();
 	}
 
-	@UiField Panel wrapper;
+	@UiField
+	Panel wrapper;
 
-	@UiField BorderPanel top;
-	@UiField Spacer topSpacer;
-	@UiField Panel center;
-	@UiField Spacer bottomSpacer;
-	@UiField BorderPanel bottom;
+	@UiField
+	BorderPanel top;
+	@UiField
+	Spacer topSpacer;
+	@UiField
+	Panel center;
+	@UiField
+	Spacer bottomSpacer;
+	@UiField
+	BorderPanel bottom;
 
 	public FrameLayout() {
 		this(0);
@@ -70,7 +72,7 @@ public class FrameLayout extends Composite {
 
 		this.top.setHeight(topHeight, unit);
 		this.bottom.setHeight(bottomHeight, unit);
-		this.wrapper.getElement().getStyle().setProperty("minHeight", (topHeight+bottomHeight)*1.25, unit);
+		this.wrapper.getElement().getStyle().setProperty("minHeight", (topHeight + bottomHeight) * 1.25, unit);
 
 		if ((flags & MAX_HEIGHT) == MAX_HEIGHT) {
 			setHeight("100%");
@@ -98,8 +100,7 @@ public class FrameLayout extends Composite {
 				top.clear();
 				if (w == null) {
 					showTop(false);
-				}
-				else {
+				} else {
 					top.add(w);
 					showTop(true);
 				}
@@ -126,8 +127,7 @@ public class FrameLayout extends Composite {
 				bottom.clear();
 				if (w == null) {
 					showBottom(false);
-				}
-				else {
+				} else {
 					bottom.add(w);
 					showBottom(true);
 				}
@@ -150,8 +150,7 @@ public class FrameLayout extends Composite {
 			topSpacer.getElement().getStyle().setTop(top.height, top.unit);
 			center.getElement().getStyle().setTop(top.height, top.unit);
 			removeStyleName(style.hideTop());
-		}
-		else {
+		} else {
 			top.setVisible(false);
 			topSpacer.setVisible(false);
 			center.getElement().getStyle().setTop(0, Unit.PX);
@@ -174,8 +173,7 @@ public class FrameLayout extends Composite {
 			bottomSpacer.getElement().getStyle().setBottom(bottom.height, bottom.unit);
 			center.getElement().getStyle().setBottom(bottom.height, bottom.unit);
 			removeStyleName(style.hideBottom());
-		}
-		else {
+		} else {
 			bottom.setVisible(false);
 			bottomSpacer.setVisible(false);
 			center.getElement().getStyle().setBottom(0, Unit.PX);
@@ -211,8 +209,7 @@ public class FrameLayout extends Composite {
 			int height = event.getRelativeY(wrapper.getElement());
 			top.setHeight(height, Unit.PX);
 			showTop(true);
-		}
-		else {
+		} else {
 			int height = wrapper.getElement().getClientHeight() - event.getRelativeY(wrapper.getElement());
 			bottom.setHeight(height, Unit.PX);
 			showBottom(true);
@@ -232,8 +229,7 @@ public class FrameLayout extends Composite {
 		dragging.panel.setHeight(dragging.lastPosition, dragging.lastUnit);
 		if (dragging == topSpacer) {
 			showTop(true);
-		}
-		else {
+		} else {
 			showBottom(true);
 		}
 	}

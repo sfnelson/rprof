@@ -1,18 +1,18 @@
 package nz.ac.vuw.ecs.rprofs.client.place.shared;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+
+import java.util.Map;
+import java.util.Map.Entry;
 
 public abstract class CompositePlace<P extends CompositePlace<P>> extends Place {
 
 	protected final Map<String, String> parameters = Collections.newMap();
 
-	public CompositePlace() {}
+	public CompositePlace() {
+	}
 
 	public CompositePlace(CompositePlace<?> other) {
 		this.parameters.putAll(other.parameters);
@@ -53,7 +53,7 @@ public abstract class CompositePlace<P extends CompositePlace<P>> extends Place 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		for (Entry<String, String> p: parameters.entrySet()) {
+		for (Entry<String, String> p : parameters.entrySet()) {
 			sb.append(p.getKey());
 			sb.append('=');
 			sb.append(p.getValue());
@@ -90,7 +90,7 @@ public abstract class CompositePlace<P extends CompositePlace<P>> extends Place 
 		@Override
 		public String getToken(P place) {
 			StringBuilder sb = new StringBuilder();
-			for (Entry<String, String> p: place.parameters.entrySet()) {
+			for (Entry<String, String> p : place.parameters.entrySet()) {
 				sb.append(p.getKey());
 				sb.append('=');
 				sb.append(p.getValue());

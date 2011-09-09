@@ -1,34 +1,44 @@
 package nz.ac.vuw.ecs.rprofs.client.activity;
 
-import java.util.List;
-
-import nz.ac.vuw.ecs.rprofs.client.Factory;
+import com.google.gwt.event.shared.EventBus;
+import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceController;
+import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractTypedInspectorActivity;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseInstances;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.CompositePlace;
-import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.*;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
-import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.place.shared.Place;
-import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import java.util.List;
 
 public class InspectInstancesActivity extends AbstractTypedInspectorActivity<BrowseInstances>
-implements ReportView.Presenter {
+		implements ReportView.Presenter {
 
-	private ReportView view;
+	private final ReportView view;
+	private final PlaceController pc;
 
-	public InspectInstancesActivity(Factory factory, BrowseInstances place) {
-		super(factory, place);
+	@Inject
+	public InspectInstancesActivity(Provider<ClassRequest> cr,
+									Provider<FieldRequest> fr,
+									Provider<MethodRequest> mr,
+									Provider<InstanceRequest> ir,
+									ReportView view,
+									PlaceController pc) {
+		super(cr, fr, mr, ir);
+
+		this.view = view;
+		this.pc = pc;
 	}
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		view = getFactory().getReportView();
+		view.setPresenter(this);
+
 		panel.setWidget(view);
 
-		view.setPresenter(this);
 		view.clearAll();
 		findPackages();
 	}
@@ -68,12 +78,12 @@ implements ReportView.Presenter {
 
 	@Override
 	public void selectInstance(InstanceProxy instance) {
-		Place current = getFactory().getPlaceController().getWhere();
+		Place current = pc.getWhere();
 		if (current instanceof CompositePlace) {
 			CompositePlace<?> c = (CompositePlace<?>) current;
 			c = c.clonePlace();
 			c.setParameter("i", String.valueOf(instance.getIndex()));
-			getFactory().getPlaceController().goTo(c);
+			pc.goTo(c);
 		}
 	}
 }

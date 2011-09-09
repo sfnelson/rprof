@@ -1,27 +1,21 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
-
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Version;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 
+import javax.persistence.*;
+
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type"),
-	@NamedQuery(name = "deleteFields", query = "delete from Field F")
+		@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type"),
+		@NamedQuery(name = "deleteFields", query = "delete from Field F")
 })
 public class Field implements Attribute<Field> {
 
@@ -46,7 +40,8 @@ public class Field implements Attribute<Field> {
 
 	protected boolean hash;
 
-	public Field() {}
+	public Field() {
+	}
 
 	public Field(FieldId id, String name, Clazz owner, String desc, int access) {
 		this.id = id;

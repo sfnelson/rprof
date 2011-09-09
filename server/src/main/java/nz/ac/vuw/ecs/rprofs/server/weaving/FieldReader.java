@@ -1,17 +1,12 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.*;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class FieldReader implements ClassVisitor {
 
@@ -23,7 +18,7 @@ public class FieldReader implements ClassVisitor {
 
 	@Override
 	public void visit(int version, int access, String name, String signature,
-			String superName, String[] interfaces) {
+					  String superName, String[] interfaces) {
 		record.init(version, access, name, signature, superName, interfaces);
 	}
 
@@ -44,7 +39,7 @@ public class FieldReader implements ClassVisitor {
 
 	@Override
 	public FieldVisitor visitField(int access, String name, String desc,
-			String signature, Object value) {
+								   String signature, Object value) {
 		FieldRecord fr = record.weaver.createFieldRecord(name);
 		fr.init(access, desc);
 		return null;
@@ -52,13 +47,13 @@ public class FieldReader implements ClassVisitor {
 
 	@Override
 	public void visitInnerClass(String name, String outerName,
-			String innerName, int access) {
+								String innerName, int access) {
 		// Nothing to do.
 	}
 
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
-			String signature, String[] exceptions) {
+									 String signature, String[] exceptions) {
 		// Ignore methods
 		return null;
 	}

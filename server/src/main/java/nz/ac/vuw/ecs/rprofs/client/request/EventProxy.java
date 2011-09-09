@@ -1,12 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.client.request;
 
-import java.util.List;
-
+import com.google.web.bindery.requestfactory.shared.EntityProxy;
+import com.google.web.bindery.requestfactory.shared.ProxyFor;
 import nz.ac.vuw.ecs.rprofs.server.data.DomainObjectLocator;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 
-import com.google.web.bindery.requestfactory.shared.EntityProxy;
-import com.google.web.bindery.requestfactory.shared.ProxyFor;
+import java.util.List;
 
 @ProxyFor(value = Event.class, locator = DomainObjectLocator.class)
 public interface EventProxy extends EntityProxy {
@@ -32,11 +31,17 @@ public interface EventProxy extends EntityProxy {
 	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
 
 	public long getEventId();
+
 	public InstanceProxy getThread();
+
 	public int getEvent();
+
 	public ClassProxy getType();
+
 	public MethodProxy getMethod();
+
 	public FieldProxy getField();
+
 	public List<InstanceProxy> getArgs();
 
 }

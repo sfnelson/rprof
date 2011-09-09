@@ -1,12 +1,12 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import java.util.Map;
-import java.util.Set;
-
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+
+import java.util.Map;
+import java.util.Set;
 
 class ClassRecord {
 
@@ -31,7 +31,7 @@ class ClassRecord {
 	}
 
 	void init(int version, int access, String name, String signature,
-			String superName, String[] interfaces) {
+			  String superName, String[] interfaces) {
 		this.name = name;
 		this.version = version;
 		this.access = access;
@@ -57,7 +57,7 @@ class ClassRecord {
 	}
 
 	FieldRecord getField(String name, String desc) {
-		for (FieldRecord fr: fields.values()) {
+		for (FieldRecord fr : fields.values()) {
 			if (name.equals(fr.name) && desc.equals(fr.description)) {
 				return fr;
 			}

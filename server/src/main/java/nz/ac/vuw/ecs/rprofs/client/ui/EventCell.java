@@ -1,14 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.client.ui;
 
-import java.util.Map;
-
+import com.google.gwt.cell.client.AbstractCell;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
 
-import com.google.gwt.cell.client.AbstractCell;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import java.util.Map;
 
 public class EventCell extends AbstractCell<EventProxy> {
 
@@ -31,8 +30,7 @@ public class EventCell extends AbstractCell<EventProxy> {
 
 		if ((e.getEvent() & EventProxy.METHODS) == e.getEvent()) {
 			renderMethod(c, e, o);
-		}
-		else {
+		} else {
 			renderType(c, e, o);
 		}
 
@@ -66,8 +64,7 @@ public class EventCell extends AbstractCell<EventProxy> {
 
 		if (type == null) {
 			o.appendHtmlConstant("<em>null</em>");
-		}
-		else {
+		} else {
 			o.appendHtmlConstant("<span title=\"" + type.getName() + "\">");
 			o.appendEscaped(type.getSimpleName());
 			o.appendHtmlConstant("</span>");
@@ -85,8 +82,7 @@ public class EventCell extends AbstractCell<EventProxy> {
 			o.appendHtmlConstant("<span class='" + style.type() + "' title='" + t.getName() + "'>");
 			o.appendEscaped(t.getSimpleName());
 			o.appendHtmlConstant("</span>");
-		}
-		else {
+		} else {
 			o.appendHtmlConstant("<span class='" + style.type() + "' title='" + t.getName() + "'>");
 			o.appendEscaped(t.getSimpleName());
 			o.appendHtmlConstant("</span>");
@@ -97,11 +93,10 @@ public class EventCell extends AbstractCell<EventProxy> {
 
 		o.appendHtmlConstant("<span class='" + style.args() + "'>(");
 		if (e.getArgs() != null) {
-			for (InstanceProxy arg: e.getArgs()) {
+			for (InstanceProxy arg : e.getArgs()) {
 				if (arg != null) {
 					o.appendEscaped(arg.getType().getSimpleName());
-				}
-				else {
+				} else {
 					o.appendHtmlConstant("null");
 				}
 			}
@@ -111,59 +106,59 @@ public class EventCell extends AbstractCell<EventProxy> {
 
 	String getEventDescription(EventProxy e) {
 		switch (e.getEvent()) {
-		case EventProxy.OBJECT_ALLOCATED:
-			return "new";
-		case EventProxy.ARRAY_ALLOCATED:
-			return "new[]";
-		case EventProxy.METHOD_ENTER:
-			return "&rarr;";
-		case EventProxy.METHOD_RETURN:
-			return "&larr;";
-		case EventProxy.FIELD_READ:
-			return "<em>read</em>";
-		case EventProxy.FIELD_WRITE:
-			return "<em>write</em>";
-		case EventProxy.CLASS_WEAVE:
-			return "<em>weave</em>";
-		case EventProxy.CLASS_INITIALIZED:
-			return "<em>init</em>";
-		case EventProxy.OBJECT_TAGGED:
-			return "<em>tag</em>";
-		case EventProxy.OBJECT_FREED:
-			return "<em>free</em>";
-		case EventProxy.METHOD_EXCEPTION:
-			return "&#x219A;";
-		default:
-			return "<em>unknown</em>";
+			case EventProxy.OBJECT_ALLOCATED:
+				return "new";
+			case EventProxy.ARRAY_ALLOCATED:
+				return "new[]";
+			case EventProxy.METHOD_ENTER:
+				return "&rarr;";
+			case EventProxy.METHOD_RETURN:
+				return "&larr;";
+			case EventProxy.FIELD_READ:
+				return "<em>read</em>";
+			case EventProxy.FIELD_WRITE:
+				return "<em>write</em>";
+			case EventProxy.CLASS_WEAVE:
+				return "<em>weave</em>";
+			case EventProxy.CLASS_INITIALIZED:
+				return "<em>init</em>";
+			case EventProxy.OBJECT_TAGGED:
+				return "<em>tag</em>";
+			case EventProxy.OBJECT_FREED:
+				return "<em>free</em>";
+			case EventProxy.METHOD_EXCEPTION:
+				return "&#x219A;";
+			default:
+				return "<em>unknown</em>";
 		}
 	}
 
 	String getStyleName(EventProxy e) {
 		switch (e.getEvent()) {
-		case EventProxy.OBJECT_ALLOCATED:
-			return style.objectAllocated();
-		case EventProxy.ARRAY_ALLOCATED:
-			return style.arrayAllocated();
-		case EventProxy.METHOD_ENTER:
-			return style.methodEnter();
-		case EventProxy.METHOD_RETURN:
-			return style.methodExit();
-		case EventProxy.FIELD_READ:
-			return style.fieldRead();
-		case EventProxy.FIELD_WRITE:
-			return style.fieldWrite();
-		case EventProxy.CLASS_WEAVE:
-			return style.classWeave();
-		case EventProxy.CLASS_INITIALIZED:
-			return style.classInit();
-		case EventProxy.OBJECT_TAGGED:
-			return style.objectTagged();
-		case EventProxy.OBJECT_FREED:
-			return style.objectFreed();
-		case EventProxy.METHOD_EXCEPTION:
-			return style.methodException();
-		default:
-			return "";
+			case EventProxy.OBJECT_ALLOCATED:
+				return style.objectAllocated();
+			case EventProxy.ARRAY_ALLOCATED:
+				return style.arrayAllocated();
+			case EventProxy.METHOD_ENTER:
+				return style.methodEnter();
+			case EventProxy.METHOD_RETURN:
+				return style.methodExit();
+			case EventProxy.FIELD_READ:
+				return style.fieldRead();
+			case EventProxy.FIELD_WRITE:
+				return style.fieldWrite();
+			case EventProxy.CLASS_WEAVE:
+				return style.classWeave();
+			case EventProxy.CLASS_INITIALIZED:
+				return style.classInit();
+			case EventProxy.OBJECT_TAGGED:
+				return style.objectTagged();
+			case EventProxy.OBJECT_FREED:
+				return style.objectFreed();
+			case EventProxy.METHOD_EXCEPTION:
+				return style.methodException();
+			default:
+				return "";
 		}
 	}
 }

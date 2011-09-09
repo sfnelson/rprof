@@ -1,8 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
-import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
-
 import com.google.gwt.resources.client.ClientBundle;
+import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
 
 public interface Resources extends ClientBundle {
 

@@ -4,7 +4,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-
 import org.objectweb.asm.Opcodes;
 
 class FieldRecord implements AttributeRecord {

@@ -1,22 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.client.activity.shared;
 
-import nz.ac.vuw.ecs.rprofs.client.Factory;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
-
 import com.google.gwt.activity.shared.AbstractActivity;
+import com.google.gwt.activity.shared.Activity;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
 
 public abstract class AbstractInspectorActivity<T extends ReportPlace<T>> extends AbstractActivity {
 
-	private final Factory factory;
-	private final T place;
+	private T place;
 
-	public AbstractInspectorActivity(Factory factory, T place) {
-		this.factory = factory;
-		this.place = place;
+	public AbstractInspectorActivity() {
 	}
 
-	protected Factory getFactory() {
-		return factory;
+	public Activity setPlace(T place) {
+		this.place = place;
+		return this;
 	}
 
 	protected T getPlace() {
@@ -28,7 +25,10 @@ public abstract class AbstractInspectorActivity<T extends ReportPlace<T>> extend
 		if (this == obj) return true;
 		if (obj == null) return false;
 		if (!(this.getClass() == obj.getClass())) return false;
-		return place.equals(((AbstractInspectorActivity<?>) obj).place);
+
+		AbstractInspectorActivity<?> a = (AbstractInspectorActivity<?>) obj;
+
+		return place.equals(a.place);
 	}
 
 	@Override

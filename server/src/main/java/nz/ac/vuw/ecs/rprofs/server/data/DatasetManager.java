@@ -1,20 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Calendar;
+import java.util.List;
 
 public class DatasetManager implements DatasetService {
 

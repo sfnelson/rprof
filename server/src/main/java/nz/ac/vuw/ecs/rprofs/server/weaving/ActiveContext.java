@@ -1,8 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import java.util.List;
-import java.util.Map;
-
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
@@ -10,11 +7,13 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.request.ClassService;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
-
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
 
 @Configurable
 public class ActiveContext {
@@ -57,11 +56,11 @@ public class ActiveContext {
 
 		log.debug("storing new class {} ({})", cls.getName(), cls.getId());
 
-		for (FieldRecord fr: cr.getFields().values()) {
+		for (FieldRecord fr : cr.getFields().values()) {
 			// TODO em.persist(fr.toAttribute(cls));
 		}
 
-		for (MethodRecord mr: cr.getMethods().values()) {
+		for (MethodRecord mr : cr.getMethods().values()) {
 			// TODO em.persist(mr.toAttribute(cls));
 		}
 
@@ -70,8 +69,7 @@ public class ActiveContext {
 
 			if (parent != null) {
 				cls.setParent(parent);
-			}
-			else {
+			} else {
 				List<ClassId> list = awaitingSuper.get(cr.getSuperName());
 				if (list == null) {
 					list = Collections.newList();
@@ -82,13 +80,12 @@ public class ActiveContext {
 		}
 
 		if (awaitingSuper.containsKey(cls.getName())) {
-			for (ClassId cid: awaitingSuper.remove(cls.getName())) {
+			for (ClassId cid : awaitingSuper.remove(cls.getName())) {
 				Clazz c = null; // TODO em.find(Clazz.class, cid);
 				if (c != null) {
 					c.setParent(cls);
-				}
-				else {
-					log.warn("could not find class id {} with parent {} ({}) [{} {}]", new Object[] {
+				} else {
+					log.warn("could not find class id {} with parent {} ({}) [{} {}]", new Object[]{
 							cid.toString(), cls.getName(), cls.getId().toString(), cid.longValue(), cls.getId().longValue()});
 				}
 			}

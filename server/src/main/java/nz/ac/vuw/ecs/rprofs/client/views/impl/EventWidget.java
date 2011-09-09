@@ -1,54 +1,62 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import java.util.List;
-
-import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.ui.InstanceLabel;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
+import nz.ac.vuw.ecs.rprofs.client.request.*;
+import nz.ac.vuw.ecs.rprofs.client.ui.InstanceLabel;
+
+import java.util.List;
 
 public class EventWidget extends Composite {
 
 	interface Style extends CssResource {
 		public String objectAllocated();
+
 		public String arrayAllocated();
+
 		public String methodEnter();
+
 		public String methodExit();
+
 		public String methodException();
+
 		public String fieldRead();
+
 		public String fieldWrite();
+
 		public String classWeave();
+
 		public String classInit();
+
 		public String objectTagged();
+
 		public String objectFreed();
 	}
 
 	private static EventWidgetUiBinder uiBinder = GWT
-	.create(EventWidgetUiBinder.class);
+			.create(EventWidgetUiBinder.class);
 
 	interface EventWidgetUiBinder extends UiBinder<Widget, EventWidget> {
 	}
 
-	@UiField Style style;
+	@UiField
+	Style style;
 
-	@UiField InstanceLabel thread;
-	@UiField HTML event;
-	@UiField Label type;
-	@UiField Label method;
-	@UiField Label field;
-	@UiField Panel args;
+	@UiField
+	InstanceLabel thread;
+	@UiField
+	HTML event;
+	@UiField
+	Label type;
+	@UiField
+	Label method;
+	@UiField
+	Label field;
+	@UiField
+	Panel args;
 
 	public EventWidget() {
 		initWidget(uiBinder.createAndBindUi(this));
@@ -68,7 +76,7 @@ public class EventWidget extends Composite {
 		if (arguments == null) {
 			return;
 		}
-		for (InstanceProxy arg: arguments) {
+		for (InstanceProxy arg : arguments) {
 			InstanceLabel label = new InstanceLabel();
 			label.setInstance(arg);
 			args.add(label);
@@ -84,50 +92,50 @@ public class EventWidget extends Composite {
 		String type = null;
 
 		switch (event) {
-		case EventProxy.OBJECT_ALLOCATED:
-			text = "new";
-			type = style.objectAllocated();
-			break;
-		case EventProxy.ARRAY_ALLOCATED:
-			text = "new[]";
-			type = style.arrayAllocated();
-			break;
-		case EventProxy.METHOD_ENTER:
-			text = "&rarr;";
-			type = style.methodEnter();
-			break;
-		case EventProxy.METHOD_RETURN:
-			text = "&larr;";
-			type = style.methodExit();
-			break;
-		case EventProxy.FIELD_READ:
-			text = "<em>read</em>";
-			type = style.fieldRead();
-			break;
-		case EventProxy.FIELD_WRITE:
-			text = "<em>write</em>";
-			type = style.fieldWrite();
-			break;
-		case EventProxy.CLASS_WEAVE:
-			text = "<em>weave</em>";
-			type = style.classWeave();
-			break;
-		case EventProxy.CLASS_INITIALIZED:
-			text = "<em>init</em>";
-			type = style.classInit();
-			break;
-		case EventProxy.OBJECT_TAGGED:
-			text = "<em>tag</em>";
-			type = style.objectTagged();
-			break;
-		case EventProxy.OBJECT_FREED:
-			text = "<em>free</em>";
-			type = style.objectFreed();
-			break;
-		case EventProxy.METHOD_EXCEPTION:
-			text = "&#x219A;";
-			type = style.methodException();
-			break;
+			case EventProxy.OBJECT_ALLOCATED:
+				text = "new";
+				type = style.objectAllocated();
+				break;
+			case EventProxy.ARRAY_ALLOCATED:
+				text = "new[]";
+				type = style.arrayAllocated();
+				break;
+			case EventProxy.METHOD_ENTER:
+				text = "&rarr;";
+				type = style.methodEnter();
+				break;
+			case EventProxy.METHOD_RETURN:
+				text = "&larr;";
+				type = style.methodExit();
+				break;
+			case EventProxy.FIELD_READ:
+				text = "<em>read</em>";
+				type = style.fieldRead();
+				break;
+			case EventProxy.FIELD_WRITE:
+				text = "<em>write</em>";
+				type = style.fieldWrite();
+				break;
+			case EventProxy.CLASS_WEAVE:
+				text = "<em>weave</em>";
+				type = style.classWeave();
+				break;
+			case EventProxy.CLASS_INITIALIZED:
+				text = "<em>init</em>";
+				type = style.classInit();
+				break;
+			case EventProxy.OBJECT_TAGGED:
+				text = "<em>tag</em>";
+				type = style.objectTagged();
+				break;
+			case EventProxy.OBJECT_FREED:
+				text = "<em>free</em>";
+				type = style.objectFreed();
+				break;
+			case EventProxy.METHOD_EXCEPTION:
+				text = "&#x219A;";
+				type = style.methodException();
+				break;
 		}
 
 		this.event.setHTML(text);
@@ -137,8 +145,7 @@ public class EventWidget extends Composite {
 	public void setType(ClassProxy cls) {
 		if (cls == null) {
 			this.type.setText("null");
-		}
-		else {
+		} else {
 			this.type.setText(cls.getSimpleName());
 			this.type.setTitle(cls.getName());
 		}

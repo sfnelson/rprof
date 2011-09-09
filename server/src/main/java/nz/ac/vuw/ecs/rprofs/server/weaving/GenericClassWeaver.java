@@ -1,10 +1,9 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
-
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -15,7 +14,6 @@ import javax.validation.constraints.NotNull;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class GenericClassWeaver extends ClassAdapter {
 
@@ -43,7 +41,7 @@ public class GenericClassWeaver extends ClassAdapter {
 
 	@Override
 	public void visit(int version, int access, String name, String signature,
-			String superName, String[] interfaces) {
+					  String superName, String[] interfaces) {
 		int major = version & 0xFFFF;
 		//int minor = (version >> 16) & 0xFFFF;
 		if (major < 49) {
@@ -56,7 +54,7 @@ public class GenericClassWeaver extends ClassAdapter {
 
 	@Override
 	public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String desc,
-			@Nullable String signature, @Nullable String[] exceptions) {
+									 @Nullable String signature, @Nullable String[] exceptions) {
 		//MethodVisitor mv = new AnalyzerAdapter(cr.name, access, name, desc,
 		//		super.visitMethod(access, name, desc, signature, exceptions));
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
@@ -88,7 +86,7 @@ public class GenericClassWeaver extends ClassAdapter {
 	}
 
 	protected MethodVisitor visitMethodRaw(int access, String name, String desc,
-			String signature, String[] exceptions) {
+										   String signature, String[] exceptions) {
 		return super.visitMethod(access, name, desc, signature, exceptions);
 	}
 }

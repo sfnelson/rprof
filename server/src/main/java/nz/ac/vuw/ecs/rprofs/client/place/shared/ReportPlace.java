@@ -1,14 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.client.place.shared;
 
-import java.util.Map;
-
+import com.google.gwt.place.shared.Place;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseClasses;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseEvents;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseFields;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseInstances;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
-import com.google.gwt.place.shared.Place;
+import java.util.Map;
 
 public abstract class ReportPlace<P extends ReportPlace<P>> extends CompositePlace<P> implements HasDataset {
 
@@ -29,8 +28,7 @@ public abstract class ReportPlace<P extends ReportPlace<P>> extends CompositePla
 		Map<String, String> params;
 		if (current instanceof CompositePlace) {
 			params = ((CompositePlace<?>) current).parameters;
-		}
-		else {
+		} else {
 			params = Collections.newMap();
 		}
 		CompositeTokenizer<? extends ReportPlace<?>> tok = types.get(report);
@@ -44,7 +42,8 @@ public abstract class ReportPlace<P extends ReportPlace<P>> extends CompositePla
 		return p;
 	}
 
-	public ReportPlace() {}
+	public ReportPlace() {
+	}
 
 	@Override
 	public String getDatasetHandle() {

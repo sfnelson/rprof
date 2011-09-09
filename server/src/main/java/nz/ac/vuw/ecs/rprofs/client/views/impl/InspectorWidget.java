@@ -1,21 +1,23 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import nz.ac.vuw.ecs.rprofs.client.Factory;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.shared.EventBus;
+import com.google.gwt.place.shared.PlaceController;
+import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import com.google.inject.Inject;
 import nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout;
 import nz.ac.vuw.ecs.rprofs.client.views.ProfilerAppView;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportSelectorView;
-
-import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 public class InspectorWidget extends FrameLayout implements ProfilerAppView {
 
 	private final ReportSelectorView reportPanel;
 
-	public InspectorWidget(Factory factory) {
+	@Inject
+	public InspectorWidget(PlaceController pc, EventBus bus) {
 		super(FrameLayout.MAX_HEIGHT | FrameLayout.HIDE_BOTTOM, 15, 50, Unit.PCT);
 
-		reportPanel = new ReportSelectionPanel(factory, this);
+		reportPanel = new ReportSelectionPanel(pc, bus, this);
 		getCenter().setWidget(reportPanel);
 	}
 

@@ -1,12 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.client.activity.shared;
 
-import java.util.List;
-
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-
 import com.google.gwt.activity.shared.AbstractActivity;
 import com.google.web.bindery.requestfactory.shared.Receiver;
 import com.google.web.bindery.requestfactory.shared.Request;
+import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+
+import java.util.List;
 
 public abstract class AbstractListActivity<E> extends AbstractActivity {
 
@@ -39,17 +38,17 @@ public abstract class AbstractListActivity<E> extends AbstractActivity {
 		toAdd.addAll(list);
 		toAdd.removeAll(current);
 
-		for (E e: toRemove) {
+		for (E e : toRemove) {
 			removeEntry(e);
 		}
 
 		current.removeAll(toRemove);
 
-		for (E e: toAdd) {
+		for (E e : toAdd) {
 			addEntry(e);
 		}
 
-		for (E e: list) {
+		for (E e : list) {
 			updateEntry(e);
 		}
 
@@ -58,7 +57,7 @@ public abstract class AbstractListActivity<E> extends AbstractActivity {
 
 	@Override
 	public void onStop() {
-		for (E e: current) {
+		for (E e : current) {
 			removeEntry(e);
 		}
 
@@ -66,6 +65,8 @@ public abstract class AbstractListActivity<E> extends AbstractActivity {
 	}
 
 	protected abstract void addEntry(E e);
+
 	protected abstract void updateEntry(E e);
+
 	protected abstract void removeEntry(E e);
 }

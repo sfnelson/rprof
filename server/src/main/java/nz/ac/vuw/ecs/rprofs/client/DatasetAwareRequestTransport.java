@@ -1,10 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.client;
 
-import nz.ac.vuw.ecs.rprofs.client.place.shared.HasDataset;
-
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.web.bindery.requestfactory.gwt.client.DefaultRequestTransport;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.HasDataset;
 
 public class DatasetAwareRequestTransport extends DefaultRequestTransport implements PlaceChangeEvent.Handler {
 
@@ -18,8 +17,7 @@ public class DatasetAwareRequestTransport extends DefaultRequestTransport implem
 	public String getRequestUrl() {
 		if (ds != null) {
 			return super.getRequestUrl() + "/" + ds;
-		}
-		else {
+		} else {
 			return super.getRequestUrl();
 		}
 	}
@@ -28,8 +26,7 @@ public class DatasetAwareRequestTransport extends DefaultRequestTransport implem
 	public void onPlaceChange(PlaceChangeEvent event) {
 		if (event.getNewPlace() instanceof HasDataset) {
 			ds = ((HasDataset) event.getNewPlace()).getDatasetHandle();
-		}
-		else {
+		} else {
 			ds = null;
 		}
 	}

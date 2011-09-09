@@ -1,8 +1,14 @@
 package nz.ac.vuw.ecs.rprofs.client.activity;
 
-import java.util.List;
-
-import nz.ac.vuw.ecs.rprofs.client.Factory;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.shared.EventBus;
+import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import com.google.gwt.view.client.AsyncDataProvider;
+import com.google.gwt.view.client.HasData;
+import com.google.gwt.view.client.Range;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.web.bindery.requestfactory.shared.Receiver;
 import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractInspectorActivity;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseEvents;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
@@ -10,47 +16,46 @@ import nz.ac.vuw.ecs.rprofs.client.request.EventRequest;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 
-import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.user.client.ui.AcceptsOneWidget;
-import com.google.gwt.view.client.AsyncDataProvider;
-import com.google.gwt.view.client.HasData;
-import com.google.gwt.view.client.Range;
-import com.google.web.bindery.requestfactory.shared.Receiver;
+import java.util.List;
 
 public class InspectEventsActivity
-extends AbstractInspectorActivity<BrowseEvents>
-implements EventView.Presenter {
+		extends AbstractInspectorActivity<BrowseEvents>
+		implements EventView.Presenter {
 
 	private final AsyncDataProvider<EventProxy> provider;
 
-	private EventView view;
+	private final Provider<EventRequest> er;
+
+	private final EventView view;
 	private int filter = EventProxy.ALL;
 	private int previous = 0;
 
 	private EventProxy first;
 
-	public InspectEventsActivity(Factory factory, BrowseEvents place) {
-		super(factory, place);
+	@Inject
+	public InspectEventsActivity(Provider<EventRequest> er, EventView view) {
+		this.er = er;
+		this.view = view;
 
 		provider = new EventProvider();
 	}
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		view = getFactory().getEventView();
 		view.setPresenter(this);
+
 		view.setFilter(filter);
 
 		panel.setWidget(view);
 
-		getFactory().getRequestFactory().eventRequest().findThreads()
-		.with("type")
-		.fire(new Receiver<List<InstanceProxy>>() {
-			@Override
-			public void onSuccess(List<InstanceProxy> response) {
-				view.setThreads(response);
-			}
-		});
+		er.get().findThreads()
+				.with("type")
+				.fire(new Receiver<List<InstanceProxy>>() {
+					@Override
+					public void onSuccess(List<InstanceProxy> response) {
+						view.setThreads(response);
+					}
+				});
 	}
 
 	@Override
@@ -60,14 +65,13 @@ implements EventView.Presenter {
 
 	@Override
 	public void getAvailable() {
-		EventRequest rq = getFactory().getRequestFactory().eventRequest();
-		rq.findNumEvents(filter)
-		.fire(new Receiver<Long>() {
-			@Override
-			public void onSuccess(Long response) {
-				view.setAvailable(response.intValue());
-			}
-		});
+		er.get().findNumEvents(filter)
+				.fire(new Receiver<Long>() {
+					@Override
+					public void onSuccess(Long response) {
+						view.setAvailable(response.intValue());
+					}
+				});
 	}
 
 	@Override
@@ -82,8 +86,7 @@ implements EventView.Presenter {
 	public void clearFilter() {
 		if (filter == EventProxy.ALL) {
 			filter = previous;
-		}
-		else {
+		} else {
 			previous = filter;
 			filter = EventProxy.ALL;
 		}
@@ -95,7 +98,7 @@ implements EventView.Presenter {
 	private void update() {
 		long id = (first != null) ? first.getEventId() : 0;
 
-		EventRequest rq = getFactory().getRequestFactory().eventRequest();
+		EventRequest rq = er.get();
 		if (id != 0) {
 			rq.findIndexOf(id, filter).to(new Receiver<Long>() {
 				@Override
@@ -119,20 +122,19 @@ implements EventView.Presenter {
 		protected void onRangeChanged(final HasData<EventProxy> container) {
 			final Range r = container.getVisibleRange();
 
-			System.out.println("requested events " + r.getStart() + " to " + (r.getStart() + r.getLength()));
-			EventRequest rq = getFactory().getRequestFactory().eventRequest();
-			rq.findEvents(r.getStart(), r.getLength(), filter)
-			.with("thread", "type", "method", "field", "args", "args.index", "args.type")
-			.fire(new Receiver<List<EventProxy>>() {
-				@Override
-				public void onSuccess(List<EventProxy> result) {
-					System.out.println("received " + result.size() + " events");
-					if (!result.isEmpty()) {
-						first = result.get(0);
-					}
-					container.setRowData(r.getStart(), result);
-				}
-			});
+			GWT.log("requested events " + r.getStart() + " to " + (r.getStart() + r.getLength()));
+			er.get().findEvents(r.getStart(), r.getLength(), filter)
+					.with("thread", "type", "method", "field", "args", "args.index", "args.type")
+					.fire(new Receiver<List<EventProxy>>() {
+						@Override
+						public void onSuccess(List<EventProxy> result) {
+							System.out.println("received " + result.size() + " events");
+							if (!result.isEmpty()) {
+								first = result.get(0);
+							}
+							container.setRowData(r.getStart(), result);
+						}
+					});
 		}
 	}
 }

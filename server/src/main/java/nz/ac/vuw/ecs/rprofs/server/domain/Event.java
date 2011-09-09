@@ -1,29 +1,19 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import java.util.*;
-
-import javax.annotation.Nullable;
-import javax.persistence.CascadeType;
-import javax.persistence.EmbeddedId;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Version;
-import javax.validation.constraints.NotNull;
-
-import nz.ac.vuw.ecs.rprofs.client.views.impl.EventWidget;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.Id;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
 import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class Event implements DataObject<Event, EventId> {
 
@@ -31,30 +21,61 @@ public class Event implements DataObject<Event, EventId> {
 
 	public interface EventVisitor {
 		public void visitArrayAllocated(Event e);
+
 		public void visitClassInitialized(Event e);
+
 		public void visitClassWeave(Event e);
+
 		public void visitFieldRead(Event e);
+
 		public void visitFieldWrite(Event e);
+
 		public void visitObjectAllocated(Event e);
+
 		public void visitObjectFreed(Event e);
+
 		public void visitObjectTagged(Event e);
+
 		public void visitMethodEnter(Event e);
+
 		public void visitMethodException(Event e);
+
 		public void visitMethodReturn(Event e);
 	}
 
 	public static abstract class AbstractVisitor implements EventVisitor {
-		public void visitArrayAllocated(Event e) {}
-		public void visitClassInitialized(Event e) {}
-		public void visitClassWeave(Event e) {}
-		public void visitFieldRead(Event e) {}
-		public void visitFieldWrite(Event e) {}
-		public void visitObjectAllocated(Event e) {}
-		public void visitObjectFreed(Event e) {}
-		public void visitObjectTagged(Event e) {}
-		public void visitMethodEnter(Event e) {}
-		public void visitMethodException(Event e) {}
-		public void visitMethodReturn(Event e) {}
+		public void visitArrayAllocated(Event e) {
+		}
+
+		public void visitClassInitialized(Event e) {
+		}
+
+		public void visitClassWeave(Event e) {
+		}
+
+		public void visitFieldRead(Event e) {
+		}
+
+		public void visitFieldWrite(Event e) {
+		}
+
+		public void visitObjectAllocated(Event e) {
+		}
+
+		public void visitObjectFreed(Event e) {
+		}
+
+		public void visitObjectTagged(Event e) {
+		}
+
+		public void visitMethodEnter(Event e) {
+		}
+
+		public void visitMethodException(Event e) {
+		}
+
+		public void visitMethodReturn(Event e) {
+		}
 	}
 
 	public static final int OBJECT_ALLOCATED = 0x1;
@@ -96,7 +117,8 @@ public class Event implements DataObject<Event, EventId> {
 	@Nullable
 	private List<Instance> args;
 
-	public Event() {}
+	public Event() {
+	}
 
 	public Event(@NotNull EventId id, @NotNull Integer event) {
 		this.id = id;
@@ -164,8 +186,7 @@ public class Event implements DataObject<Event, EventId> {
 	public Event setAttribute(@NotNull Attribute<?> attribute) {
 		if (attribute instanceof Method) {
 			method = (Method) attribute;
-		}
-		else {
+		} else {
 			field = (Field) attribute;
 		}
 		return this;
@@ -175,8 +196,7 @@ public class Event implements DataObject<Event, EventId> {
 	public List<Instance> getArgs() {
 		if (this.args == null || this.args.isEmpty()) {
 			return Collections.emptyList();
-		}
-		else {
+		} else {
 			return Collections.unmodifiableList(args);
 		}
 	}
@@ -199,28 +219,39 @@ public class Event implements DataObject<Event, EventId> {
 
 	public void visit(EventVisitor visitor) {
 		switch (getEvent()) {
-		case OBJECT_ALLOCATED:
-			visitor.visitObjectAllocated(this); break;
-		case ARRAY_ALLOCATED:
-			visitor.visitArrayAllocated(this); break;
-		case METHOD_ENTER:
-			visitor.visitMethodEnter(this); break;
-		case METHOD_RETURN:
-			visitor.visitMethodReturn(this); break;
-		case FIELD_READ:
-			visitor.visitFieldRead(this); break;
-		case FIELD_WRITE:
-			visitor.visitFieldWrite(this); break;
-		case CLASS_WEAVE:
-			visitor.visitClassWeave(this); break;
-		case CLASS_INITIALIZED:
-			visitor.visitClassInitialized(this); break;
-		case OBJECT_TAGGED:
-			visitor.visitObjectTagged(this); break;
-		case OBJECT_FREED:
-			visitor.visitObjectFreed(this); break;
-		case METHOD_EXCEPTION:
-			visitor.visitMethodException(this); break;
+			case OBJECT_ALLOCATED:
+				visitor.visitObjectAllocated(this);
+				break;
+			case ARRAY_ALLOCATED:
+				visitor.visitArrayAllocated(this);
+				break;
+			case METHOD_ENTER:
+				visitor.visitMethodEnter(this);
+				break;
+			case METHOD_RETURN:
+				visitor.visitMethodReturn(this);
+				break;
+			case FIELD_READ:
+				visitor.visitFieldRead(this);
+				break;
+			case FIELD_WRITE:
+				visitor.visitFieldWrite(this);
+				break;
+			case CLASS_WEAVE:
+				visitor.visitClassWeave(this);
+				break;
+			case CLASS_INITIALIZED:
+				visitor.visitClassInitialized(this);
+				break;
+			case OBJECT_TAGGED:
+				visitor.visitObjectTagged(this);
+				break;
+			case OBJECT_FREED:
+				visitor.visitObjectFreed(this);
+				break;
+			case METHOD_EXCEPTION:
+				visitor.visitMethodException(this);
+				break;
 		}
 	}
 }

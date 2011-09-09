@@ -1,8 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import java.util.List;
-import java.util.Map;
-
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HasWidgets;
+import com.google.gwt.user.client.ui.Widget;
 import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
@@ -10,25 +13,17 @@ import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.resources.client.CssResource;
-import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HasWidgets;
-import com.google.gwt.user.client.ui.Widget;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class ReportPanel extends Composite implements ReportView {
 
 	private static ReportPanelUiBinder uiBinder = GWT.create(ReportPanelUiBinder.class);
-	interface ReportPanelUiBinder extends UiBinder<Widget, ReportPanel> {}
-	interface Style extends CssResource {
-		String even();
-		String refresh();
+
+	interface ReportPanelUiBinder extends UiBinder<Widget, ReportPanel> {
 	}
 
 	private Presenter presenter;
@@ -39,7 +34,8 @@ public class ReportPanel extends Composite implements ReportView {
 
 	private List<ReportWidget> packages = Collections.newList();
 
-	@UiField HasWidgets children;
+	@UiField
+	HasWidgets children;
 
 	public ReportPanel() {
 		initWidget(uiBinder.createAndBindUi(this));
@@ -56,7 +52,7 @@ public class ReportPanel extends Composite implements ReportView {
 	public void showPackages(List<String> packages) {
 		int index = 0;
 		boolean even = false;
-		for (String pkg: packages) {
+		for (String pkg : packages) {
 			ReportWidget w = createWidget(pkg);
 			w.init(even, index);
 			w.setText(index, pkg);
@@ -74,7 +70,7 @@ public class ReportPanel extends Composite implements ReportView {
 
 		int index = p.getIndex() + 1;
 		boolean even = !p.isEven();
-		for (ClassProxy c: classes) {
+		for (ClassProxy c : classes) {
 			ReportWidget w = createWidget(c);
 			w.init(even, index);
 			w.setText(index, c);
@@ -92,7 +88,7 @@ public class ReportPanel extends Composite implements ReportView {
 
 		int index = p.getIndex() + 1;
 		boolean even = !p.isEven();
-		for (MethodProxy m: methods) {
+		for (MethodProxy m : methods) {
 			if (m == null) {
 				System.out.println("null method");
 				continue;
@@ -112,7 +108,7 @@ public class ReportPanel extends Composite implements ReportView {
 
 		int index = p.getIndex() + 1;
 		boolean even = !p.isEven();
-		for (FieldProxy f: fields) {
+		for (FieldProxy f : fields) {
 			if (f == null) {
 				System.out.println("null field");
 				continue;
@@ -132,7 +128,7 @@ public class ReportPanel extends Composite implements ReportView {
 
 		int index = p.getIndex() + 1;
 		boolean even = !p.isEven();
-		for (InstanceProxy i: instances) {
+		for (InstanceProxy i : instances) {
 			ReportWidget w = createWidget(i);
 			w.init(even, index);
 			w.setText(index, i);
@@ -162,17 +158,13 @@ public class ReportPanel extends Composite implements ReportView {
 		Object o = widgetMap.get(w);
 		if (o instanceof String) {
 			presenter.selectPackage((String) o);
-		}
-		else if (o instanceof ClassProxy) {
+		} else if (o instanceof ClassProxy) {
 			presenter.selectClass((ClassProxy) o);
-		}
-		else if (o instanceof FieldProxy) {
+		} else if (o instanceof FieldProxy) {
 			presenter.selectField((FieldProxy) o);
-		}
-		else if (o instanceof MethodProxy) {
+		} else if (o instanceof MethodProxy) {
 			presenter.selectMethod((MethodProxy) o);
-		}
-		else if (o instanceof InstanceProxy) {
+		} else if (o instanceof InstanceProxy) {
 			presenter.selectInstance((InstanceProxy) o);
 		}
 	}
@@ -181,8 +173,7 @@ public class ReportPanel extends Composite implements ReportView {
 		ReportWidget w;
 		if (available.isEmpty()) {
 			w = new ReportWidget(this);
-		}
-		else {
+		} else {
 			w = available.remove(available.size() - 1);
 		}
 
@@ -202,7 +193,7 @@ public class ReportPanel extends Composite implements ReportView {
 	}
 
 	private void remove(List<ReportWidget> widgets) {
-		for (ReportWidget c: widgets) {
+		for (ReportWidget c : widgets) {
 			remove(c);
 		}
 	}

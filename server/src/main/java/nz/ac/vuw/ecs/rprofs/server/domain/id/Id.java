@@ -1,10 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
-import java.io.Serializable;
-
-import javax.persistence.MappedSuperclass;
-
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+
+import java.io.Serializable;
 
 @SuppressWarnings("serial")
 public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
@@ -13,7 +11,8 @@ public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
 
 	private long value;
 
-	public Id() {}
+	public Id() {
+	}
 
 	public Id(long value) {
 		this.value = value;
@@ -42,7 +41,7 @@ public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
 			return false;
 
 		Id<?> other = (Id<?>) obj;
-		
+
 		return value == other.value;
 	}
 

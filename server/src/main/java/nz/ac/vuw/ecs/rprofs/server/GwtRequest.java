@@ -1,21 +1,14 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import java.io.IOException;
-import java.util.StringTokenizer;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
-
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.StringTokenizer;
 
 public class GwtRequest implements Filter {
 
@@ -37,11 +30,9 @@ public class GwtRequest implements Filter {
 
 		try {
 			chain.doFilter(req, rsp);
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			log.error(ex.getMessage(), ex);
-		}
-		finally {
+		} finally {
 			ContextManager.clearThreadLocal();
 		}
 	}

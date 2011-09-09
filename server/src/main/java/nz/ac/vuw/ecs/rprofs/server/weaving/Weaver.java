@@ -3,12 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-
-import org.objectweb.asm.ClassAdapter;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 
 public class Weaver {
 
@@ -59,12 +54,12 @@ public class Weaver {
 
 		@Override
 		public void visit(int version, int access, String name,
-				String signature, String superName, String[] interfaces) {
+						  String signature, String superName, String[] interfaces) {
 
 			ClassVisitor cv = null;
 
 
-			String[] filters = new String[] {
+			String[] filters = new String[]{
 					"sun/reflect/.*",	// jhotdraw crashes in this package
 					"java/awt/.*",		// jhotdraw has font problems if this packages is included
 					"com/sun/.*",
@@ -82,21 +77,17 @@ public class Weaver {
 			if (Type.getInternalName(HeapTracker.class).equals(name)) {
 				flags |= Clazz.SPECIAL_CLASS_WEAVER;
 				cv = new TrackingClassWeaver(this.cv, cr);
-			}
-			else if (Type.getInternalName(Thread.class).equals(name)) {
+			} else if (Type.getInternalName(Thread.class).equals(name)) {
 				flags |= Clazz.SPECIAL_CLASS_WEAVER;
 				cv = new ThreadClassWeaver(this.cv, cr);
-			}
-			else if (Type.getInternalName(Throwable.class).equals(name)) {
+			} else if (Type.getInternalName(Throwable.class).equals(name)) {
 				flags |= Clazz.SPECIAL_CLASS_WEAVER;
 				cv = new ThrowableClassWeaver(this.cv, cr);
-			}
-			else if (Type.getInternalName(Object.class).equals(name)) {
+			} else if (Type.getInternalName(Object.class).equals(name)) {
 				flags |= Clazz.SPECIAL_CLASS_WEAVER;
 				cv = new ObjectClassWeaver(this.cv, cr);
-			}
-			else {
-				for (String filter: filters) {
+			} else {
+				for (String filter : filters) {
 					if (name.matches(filter)) {
 						flags |= Clazz.CLASS_IGNORED_PACKAGE_FILTER;
 						cv = new ClassAdapter(this.cv);

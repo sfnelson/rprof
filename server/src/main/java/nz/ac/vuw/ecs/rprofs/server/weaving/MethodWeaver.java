@@ -1,19 +1,18 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-
 import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MethodWeaver extends MethodAdapter implements Opcodes {
 
@@ -66,9 +65,10 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 
 		String desc = record.description;
 		outer:
-			for (int i = 0; i < desc.length(); i++) {
-				switch(desc.charAt(i)) {
-				case ')': break outer;
+		for (int i = 0; i < desc.length(); i++) {
+			switch (desc.charAt(i)) {
+				case ')':
+					break outer;
 				case 'J': // long
 				case 'D': // double
 					argIndex++;
@@ -85,11 +85,11 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 					useful.add(argIndex++);
 					while (desc.charAt(i) == '[') i++;
 					if (desc.charAt(i) == 'L') {
-						while (desc.charAt(++i) != ';');
+						while (desc.charAt(++i) != ';') ;
 					}
 					break;
-				}
 			}
+		}
 
 		return useful;
 	}
@@ -114,7 +114,7 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 		try {
 			Method[] methods = Tracker.cls.getMethods();
 			Method e = null;
-			for (Method m: methods) {
+			for (Method m : methods) {
 				if (m.getName() == name) {
 					e = m;
 					break;

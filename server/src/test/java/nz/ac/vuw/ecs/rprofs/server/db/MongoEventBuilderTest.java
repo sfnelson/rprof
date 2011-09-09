@@ -6,9 +6,10 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import java.util.Date;
+
+import static org.junit.Assert.*;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>

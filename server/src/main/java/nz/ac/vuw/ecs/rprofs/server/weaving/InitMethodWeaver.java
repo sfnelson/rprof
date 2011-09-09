@@ -1,12 +1,12 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import java.util.List;
-
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
+
+import java.util.List;
 
 class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 
@@ -36,8 +36,7 @@ class InitMethodWeaver extends ExceptionHandlingMethodWeaver {
 				visitInsn(AASTORE);										// stack: cnum, mnum, args
 				setStack(6);
 			}
-		}
-		else {
+		} else {
 			visitInsn(ACONST_NULL);										// stack: cnum, mnum, null
 			setStack(3);
 		}

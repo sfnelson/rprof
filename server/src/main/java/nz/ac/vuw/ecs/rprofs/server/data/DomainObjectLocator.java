@@ -1,13 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import com.google.web.bindery.requestfactory.shared.Locator;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
-
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Configurable;
-
-import com.google.web.bindery.requestfactory.shared.Locator;
 
 @Configurable
 public class DomainObjectLocator<T> extends Locator<T, Long> {
@@ -29,9 +26,6 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 
 	@Override
 	public T find(java.lang.Class<? extends T> clazz, Long id) {
-		if (clazz == Argument.class) {
-			return null;
-		}
 		if (clazz == Clazz.class) {
 			return null;
 		}

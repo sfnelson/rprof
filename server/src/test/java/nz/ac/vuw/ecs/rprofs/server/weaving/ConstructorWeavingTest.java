@@ -1,31 +1,14 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
-import static org.objectweb.asm.Opcodes.ACC_SUPER;
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ASTORE;
-import static org.objectweb.asm.Opcodes.ATHROW;
-import static org.objectweb.asm.Opcodes.DUP;
-import static org.objectweb.asm.Opcodes.GETSTATIC;
-import static org.objectweb.asm.Opcodes.GOTO;
-import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
-import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
-import static org.objectweb.asm.Opcodes.NEW;
-import static org.objectweb.asm.Opcodes.RETURN;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import org.junit.Before;
+import org.junit.Test;
+import org.objectweb.asm.*;
+import org.objectweb.asm.util.ASMifierClassVisitor;
 
 import java.io.PrintWriter;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.util.ASMifierClassVisitor;
+import static org.objectweb.asm.Opcodes.*;
 
 public class ConstructorWeavingTest {
 
@@ -85,7 +68,7 @@ public class ConstructorWeavingTest {
 		return cw.toByteArray();
 	}
 
-	public static byte[] generateExceptionClass () throws Exception {
+	public static byte[] generateExceptionClass() throws Exception {
 
 		ClassWriter cw = new ClassWriter(0);
 		MethodVisitor mv;
@@ -109,7 +92,7 @@ public class ConstructorWeavingTest {
 			Label l3 = new Label();
 			mv.visitJumpInsn(GOTO, l3);
 			mv.visitLabel(l2);
-			mv.visitFrame(Opcodes.F_FULL, 1, new Object[] {"Test"}, 1, new Object[] {"java/lang/Exception"});
+			mv.visitFrame(Opcodes.F_FULL, 1, new Object[]{"Test"}, 1, new Object[]{"java/lang/Exception"});
 			mv.visitVarInsn(ASTORE, 1);
 			mv.visitTypeInsn(NEW, "java/lang/RuntimeException");
 			mv.visitInsn(DUP);

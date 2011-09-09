@@ -1,6 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import com.google.gwt.user.client.rpc.IsSerializable;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
@@ -8,8 +7,7 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
-
-public class Dataset implements DataObject<Dataset, DataSetId>, IsSerializable, Comparable<Dataset> {
+public class Dataset implements DataObject<Dataset, DataSetId>, Comparable<Dataset> {
 
 	@NotNull
 	private DataSetId id;

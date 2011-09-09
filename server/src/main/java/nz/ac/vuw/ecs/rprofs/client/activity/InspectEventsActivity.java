@@ -96,7 +96,7 @@ public class InspectEventsActivity
 	}
 
 	private void update() {
-		long id = (first != null) ? first.getEventId() : 0;
+		long id = (first != null) ? first.getRpcId() : 0;
 
 		EventRequest rq = er.get();
 		if (id != 0) {

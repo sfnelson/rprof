@@ -30,11 +30,11 @@ public interface EventProxy extends EntityProxy {
 	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
 	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
 
-	public long getEventId();
+	public Long getRpcId();
 
 	public InstanceProxy getThread();
 
-	public int getEvent();
+	public Integer getEvent();
 
 	public ClassProxy getType();
 

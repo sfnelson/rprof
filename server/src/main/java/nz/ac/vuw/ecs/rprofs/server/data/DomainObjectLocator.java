@@ -1,15 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
-import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 import org.slf4j.LoggerFactory;
@@ -21,9 +13,6 @@ import com.google.web.bindery.requestfactory.shared.Locator;
 public class DomainObjectLocator<T> extends Locator<T, Long> {
 
 	private org.slf4j.Logger log = LoggerFactory.getLogger(DomainObjectLocator.class);
-
-	@PersistenceContext
-	private EntityManager em;
 
 	@Override
 	public T create(java.lang.Class<? extends T> clazz) {
@@ -41,25 +30,25 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 	@Override
 	public T find(java.lang.Class<? extends T> clazz, Long id) {
 		if (clazz == Argument.class) {
-			return em.find(clazz, id);
+			return null;
 		}
 		if (clazz == Clazz.class) {
-			return em.find(clazz, new ClassId(id));
+			return null;
 		}
-		if (clazz == DataSet.class) {
-			return em.find(clazz, id.shortValue());
+		if (clazz == Dataset.class) {
+			return null;
 		}
 		if (clazz == Event.class) {
-			return em.find(clazz, new EventId(id));
+			return null;
 		}
 		if (clazz == Field.class) {
-			return em.find(clazz, new FieldId(id));
+			return null;
 		}
 		if (clazz == Instance.class) {
-			return em.find(clazz, new ObjectId(id));
+			return null;
 		}
 		if (clazz == Method.class) {
-			return em.find(clazz, new MethodId(id));
+			return null;
 		}
 		log.warn("could not find locator case for {}", clazz.getName());
 		return null;

@@ -9,8 +9,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
-import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ActiveContext;
 import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
 
@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
+import static nz.ac.vuw.ecs.rprofs.server.context.ContextManager.clearThreadLocal;
 import static nz.ac.vuw.ecs.rprofs.server.context.ContextManager.setThreadLocal;
 
 
@@ -35,7 +36,7 @@ public class Weave extends HttpServlet {
 	private ContextManager cm;
 
 	@Autowired
-	private DatasetService datasets;
+	private Database database;
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -43,7 +44,7 @@ public class Weave extends HttpServlet {
 		byte[] buffer, result;
 		String cname;
 
-		DataSet ds = datasets.findDataset(req.getHeader("Dataset"));
+		Dataset ds = database.getDataset(req.getHeader("Dataset"));
 		setThreadLocal(ds);
 
 		int length = req.getContentLength();
@@ -70,6 +71,6 @@ public class Weave extends HttpServlet {
 		log.info(cname);
 		log.debug("returning {} bytes", new Object[] { result.length });
 
-		setThreadLocal(null);
+		clearThreadLocal();
 	}
 }

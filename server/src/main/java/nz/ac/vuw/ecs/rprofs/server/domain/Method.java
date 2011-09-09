@@ -22,7 +22,7 @@ import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type"),
-	@NamedQuery(name = "deleteMethods", query = "delete Method M")
+	@NamedQuery(name = "deleteMethods", query = "delete from Method M")
 })
 public class Method implements Attribute<Method> {
 

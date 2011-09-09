@@ -17,36 +17,19 @@ public class ServiceLocator implements com.google.web.bindery.requestfactory.sha
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(ServiceLocator.class);
 
-	@Autowired ClassService classes;
-	@Autowired DatasetService datasets;
-	@Autowired EventService events;
-	@Autowired FieldService fields;
-	@Autowired InstanceService instances;
-	@Autowired MethodService methods;
-	@Autowired ReportService reports;
+	@Autowired
+	private DatasetManager datasets;
 
+	@Autowired
+	private EventManager events;
+	
 	@Override
 	public Object getInstance(Class<?> clazz) {
-		if (clazz == ClassService.class) {
-			return classes;
-		}
-		else if (clazz == DatasetService.class) {
+		if (clazz == DatasetService.class) {
 			return datasets;
 		}
 		else if (clazz == EventService.class) {
 			return events;
-		}
-		else if (clazz == FieldService.class) {
-			return fields;
-		}
-		else if (clazz == InstanceService.class) {
-			return instances;
-		}
-		else if (clazz == MethodService.class) {
-			return methods;
-		}
-		else if (clazz == ReportService.class) {
-			return reports;
 		}
 
 		log.warn("don't know how to locate a {}", clazz.getName());

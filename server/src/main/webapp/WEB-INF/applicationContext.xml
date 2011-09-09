@@ -2,56 +2,26 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:context="http://www.springframework.org/schema/context"
-	xmlns:tx="http://www.springframework.org/schema/tx"
 	xsi:schemaLocation="
         http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
         http://www.springframework.org/schema/context
         http://www.springframework.org/schema/context/spring-context-3.0.xsd
-        http://www.springframework.org/schema/tx 
-		http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+        ">
 
 
 	<context:annotation-config />
 	<context:spring-configured />
 	<context:component-scan base-package="nz.ac.vuw.ecs.rprofs.server" />
 
-	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
-		destroy-method="close">
-		<property name="driverClassName" value="org.postgresql.Driver" />
-		<property name="url" value="jdbc:postgresql:rprof" />
-		<property name="username" value="stephen" />
-		<property name="password" value="" />
-	</bean>
-
-	<bean id="entityManagerFactory"
-		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-		<property name="persistenceUnitName" value="rprofs" />
-		<property name="jpaVendorAdapter">
-			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
-				<property name="databasePlatform"
-					value="nz.ac.vuw.ecs.rprofs.server.db.PostgreSQLDialect" />
-				<property name="generateDdl" value="true" />
-				<property name="showSql" value="false" />
-			</bean>
-		</property>
-		<property name="dataSource" ref="dataSource" />
-		<property name="jpaProperties">
-			<props>
-				<prop key="hibernate.hbm2ddl.auto">update</prop>
-			</props>
-		</property>
-	</bean>
-
 	<!-- data manager beans -->
+    <bean id="database" class="nz.ac.vuw.ecs.rprofs.server.db.Database">
+        <constructor-arg ref="mongo" />
+    </bean>
+
 	<bean id="context" class="nz.ac.vuw.ecs.rprofs.server.context.ContextManager" />
-	<bean id="classes" class="nz.ac.vuw.ecs.rprofs.server.data.ClassManager" />
-	<bean id="datasets" class="nz.ac.vuw.ecs.rprofs.server.data.DatasetManager" />
-	<bean id="events" class="nz.ac.vuw.ecs.rprofs.server.data.EventManager" />
-	<bean id="fields" class="nz.ac.vuw.ecs.rprofs.server.data.FieldManager" />
-	<bean id="instances" class="nz.ac.vuw.ecs.rprofs.server.data.InstanceManager" />
-	<bean id="methods" class="nz.ac.vuw.ecs.rprofs.server.data.MethodManager" />
-	<bean id="reports" class="nz.ac.vuw.ecs.rprofs.server.reports.ReportManager" />
+    <bean id="datasets" class="nz.ac.vuw.ecs.rprofs.server.data.DatasetManager" />
+    <bean id="events" class="nz.ac.vuw.ecs.rprofs.server.data.EventManager" />
 	
 	<!-- requestfactory autowired @Configurables -->
 	<bean id="locator" class="nz.ac.vuw.ecs.rprofs.server.data.DomainObjectLocator" />
@@ -67,12 +37,5 @@
 	<bean id="mongo" class="com.mongodb.Mongo">
 		<constructor-arg type="java.lang.String" value="#{systemProperties['mongo']}" />
 	</bean>
-
-	<bean id="txManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-		<property name="entityManagerFactory" ref="entityManagerFactory" />
-		<property name="dataSource" ref="dataSource" />
-	</bean>
-
-	<tx:annotation-driven mode="aspectj" transaction-manager="txManager" />
 
 </beans>

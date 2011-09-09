@@ -5,7 +5,7 @@ import java.util.Set;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
-import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 
 class ClassRecord {
@@ -52,7 +52,7 @@ class ClassRecord {
 		this.properties = properties;
 	}
 
-	Clazz toClass(DataSet owner) {
+	Clazz toClass(Dataset owner) {
 		return new Clazz(owner, id, name, null, properties);
 	}
 

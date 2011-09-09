@@ -25,6 +25,7 @@ struct response {
 };
 
 typedef struct {
+    long int id;
 	int thread_upper;
 	int thread_lower;
 	int message;
@@ -41,6 +42,7 @@ typedef struct {
 	unsigned int   event_index;
 	char		   host[HOST_MAX_LENGTH];
 	char           dataset[DATASET_MAX_LENGTH];
+	long int       lastId;
 } GlobalCommData;
 
 static GlobalCommData *cdata;
@@ -220,6 +222,7 @@ JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
 		record = &(cdata->records[cdata->event_index++]);
 		memset(record, 0, sizeof(record));
 
+        record->id = cdata->++lastId;
 		record->thread_upper = htonl((thread >> 32) & 0xffffffff);
 		record->thread_lower = htonl(thread & 0xffffffff);
 		record->message = htonl(message);

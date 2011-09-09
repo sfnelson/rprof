@@ -2,88 +2,85 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import java.util.Date;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.Version;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 
-@Entity
-@Table
-@NamedQueries({
-	@NamedQuery(name = "findDataset", query = "select D from DataSet D where D.handle = :handle"),
-	@NamedQuery(name = "allDatasets", query = "select D from DataSet D"),
-	@NamedQuery(name = "deleteDataset", query = "delete DataSet D where D = :dataset")
-})
-public class DataSet implements DataObject<DataSet, Short>, IsSerializable, Comparable<DataSet> {
+public class Dataset implements DataObject<Dataset, DataSetId>, IsSerializable, Comparable<Dataset> {
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE)
-	private Short id;
+	@NotNull
+	private DataSetId id;
 
-	@Version
-	private Integer version;
-
+	@NotNull
 	private String handle;
+
+	@Nullable
 	private String program;
+
+	@NotNull
 	private Date started;
+
+	@Nullable
 	private Date stopped;
 
-	public DataSet() {}
+	public Dataset() {}
 
-	public DataSet(String handle, Date started, Date stopped, String program) {
+	public Dataset(@NotNull DataSetId id, @NotNull String handle, @NotNull Date started) {
+		this.id = id;
 		this.handle = handle;
 		this.started = started;
-		this.stopped = stopped;
-		this.program = program;
 	}
 
-	public Short getId() {
+	@NotNull
+	public DataSetId getId() {
 		return id;
 	}
 
+	@NotNull
 	public Long getRpcId() {
 		return id.longValue();
 	}
 
+	@NotNull
 	public Integer getVersion() {
-		return version;
+		return 0;
 	}
 
+	@NotNull
 	public String getHandle() {
 		return handle;
 	}
 
+	@Nullable
 	public String getProgram() {
 		return program;
 	}
 
-	public void setProgram(String program) {
+	public void setProgram(@Nullable String program) {
 		this.program = program;
 	}
 
+	@NotNull
 	public Date getStarted() {
 		return started;
 	}
 
+	@Nullable
 	public Date getStopped() {
 		return stopped;
 	}
 
-	public void setStopped(Date time) {
+	public void setStopped(@Nullable Date time) {
 		this.stopped = time;
 	}
 
 	@Override
-	public int compareTo(DataSet o) {
+	public int compareTo(Dataset o) {
 		return started.compareTo(o.started);
 	}
 
@@ -97,13 +94,13 @@ public class DataSet implements DataObject<DataSet, Short>, IsSerializable, Comp
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 
-		DataSet dataSet = (DataSet) o;
+		Dataset dataset = (Dataset) o;
 
-		return handle.equals(dataSet.handle);
+		return id.equals(dataset.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return handle.hashCode();
+		return id.hashCode();
 	}
 }

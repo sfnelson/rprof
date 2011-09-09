@@ -33,7 +33,7 @@ public class Instance implements DataObject<Instance, ObjectId> {
 	private int version;
 
 	@Transient
-	private DataSet owner;
+	private Dataset owner;
 
 	@ManyToOne
 	private Clazz type;
@@ -43,7 +43,7 @@ public class Instance implements DataObject<Instance, ObjectId> {
 
 	public Instance() {}
 
-	public Instance(DataSet owner, ObjectId id, Clazz type, Method constructor) {
+	public Instance(Dataset owner, ObjectId id, Clazz type, Method constructor) {
 		this.owner = owner;
 		this.id = id;
 		this.type = type;
@@ -62,7 +62,7 @@ public class Instance implements DataObject<Instance, ObjectId> {
 		return version;
 	}
 
-	public DataSet getOwner() {
+	public Dataset getOwner() {
 		return owner;
 	}
 

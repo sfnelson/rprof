@@ -2,18 +2,39 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.request.EventService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class EventManager implements EventService {
+
+	public interface EventBuilder {
+		Dataset getDataset();
+		EventBuilder setDataSet(Dataset ds);
+		EventId getId();
+		EventBuilder setId(long id);
+		ObjectId getThread();
+		EventBuilder setThread(long thread);
+		Integer getEvent();
+		EventBuilder setEvent(int event);
+		ClassId getClazz();
+		EventBuilder setClazz(int cnum);
+		MethodId getMethod();
+		EventBuilder setMethod(short mnum);
+		FieldId getField();
+		EventBuilder setField(short fnum);
+		List<ObjectId> getArgs();
+		EventBuilder clearArgs();
+		EventBuilder addArg(long arg);
+	}
+
+	@Autowired
+	private Database database;
 
 	@Override
 	public List<? extends Event> findEvents(Integer start, Integer length, Integer filter) {
@@ -45,7 +66,7 @@ public class EventManager implements EventService {
 		return null;
 	}
 
-	private DataSet owner() {
+	private Dataset owner() {
 		return ContextManager.getThreadLocal();
 	}
 }

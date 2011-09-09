@@ -36,7 +36,7 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 	private ClassId id;
 
 	@Transient
-	private DataSet owner;
+	private Dataset owner;
 
 	private String packageName;
 	private String simpleName;
@@ -52,7 +52,7 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 
 	public Clazz() {}
 
-	public Clazz(DataSet owner, ClassId id, String name, Clazz parent, int properties) {
+	public Clazz(Dataset owner, ClassId id, String name, Clazz parent, int properties) {
 		this.owner = owner;
 		this.id = id;
 		this.fqname = name;
@@ -92,7 +92,7 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 		return version;
 	}
 
-	public DataSet getOwner() {
+	public Dataset getOwner() {
 		return owner;
 	}
 

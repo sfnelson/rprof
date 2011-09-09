@@ -6,7 +6,6 @@ import nz.ac.vuw.ecs.rprofs.client.views.DatasetReportView;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.DatasetPanel;
-import nz.ac.vuw.ecs.rprofs.client.views.impl.DatasetReportPanel;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.EventPanel;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.InspectorWidget;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.ReportPanel;
@@ -83,7 +82,7 @@ public class FactoryImpl implements Factory {
 
 	@Override
 	public DatasetReportView getDatasetReportView() {
-		return new DatasetReportPanel();
+		return null;
 	}
 
 }

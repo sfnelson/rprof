@@ -12,7 +12,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
-import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class GwtRequest implements Filter {
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(GwtRequest.class);
 
 	@Autowired
-	private DatasetService datasets;
+	private Database database;
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
@@ -33,7 +33,7 @@ public class GwtRequest implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse rsp, FilterChain chain)
 			throws IOException, ServletException {
 
-		ContextManager.setThreadLocal(datasets.findDataset(getDataset(req)));
+		ContextManager.setThreadLocal(database.getDataset(getDataset(req)));
 
 		try {
 			chain.doFilter(req, rsp);
@@ -42,7 +42,7 @@ public class GwtRequest implements Filter {
 			log.error(ex.getMessage(), ex);
 		}
 		finally {
-			ContextManager.setThreadLocal(null);
+			ContextManager.clearThreadLocal();
 		}
 	}
 
@@ -52,7 +52,7 @@ public class GwtRequest implements Filter {
 		while (tokenizer.hasMoreTokens()) {
 			dataset = tokenizer.nextToken();
 		}
-		if (dataset.equals("gwtRequest")) {
+		if ("gwtRequest".equals(dataset)) {
 			dataset = null;
 		}
 		return dataset;

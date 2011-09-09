@@ -21,7 +21,7 @@ import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type"),
-	@NamedQuery(name = "deleteFields", query = "delete Field F")
+	@NamedQuery(name = "deleteFields", query = "delete from Field F")
 })
 public class Field implements Attribute<Field> {
 

@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 import com.google.common.collect.Lists;
 import com.mongodb.Mongo;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.domain.DataSet;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import org.junit.*;
 
@@ -54,7 +54,7 @@ public class DatabaseTest {
 	public void testCreateDataset() throws Exception {
 		assertEquals(Lists.newArrayList("admin"), mongo.getDatabaseNames());
 
-		DataSet dataset = database.createDataset();
+		Dataset dataset = database.createDataset();
 		assertNotNull(dataset);
 		assertNotNull(dataset.getId());
 		assertTrue(dataset.getId().indexValue() > 0);
@@ -76,8 +76,8 @@ public class DatabaseTest {
 
 	@Test
 	public void testGetName() throws Exception {
-		assertEquals("rprof_foo_0", database.getName(new DataSet(new DataSetId((short) 0), "foo", new Date())));
-		assertEquals("rprof_20110101_1", database.getName(new DataSet(new DataSetId((short) 1), "20110101", new Date())));
+		assertEquals("rprof_foo_0", database.getName(new Dataset(new DataSetId((short) 0), "foo", new Date())));
+		assertEquals("rprof_20110101_1", database.getName(new Dataset(new DataSetId((short) 1), "20110101", new Date())));
 	}
 
 	@Test
@@ -91,40 +91,48 @@ public class DatabaseTest {
 
 	@Test
 	public void testGetDatasets() throws Exception {
-		assertEquals(new ArrayList<DataSet>(), database.getDatasets());
-		DataSet ds1 = database.createDataset();
+		assertEquals(new ArrayList<Dataset>(), database.getDatasets());
+		Dataset ds1 = database.createDataset();
 		assertEquals(Lists.newArrayList(ds1), database.getDatasets());
-		DataSet ds2 = database.createDataset();
+		Dataset ds2 = database.createDataset();
 
-		List<DataSet> result = database.getDatasets();
+		List<Dataset> result = database.getDatasets();
 		Collections.sort(result);
 		assertEquals(Lists.newArrayList(ds1, ds2), result);
 	}
 
 	@Test
 	public void testGetDataSetDatasetId() throws Exception {
-		DataSet in = database.createDataset();
+		Dataset in = database.createDataset();
 		assertEquals(in, database.getDataSet(in.getId()));
+
+		assertNull(database.getDataSet(new DataSetId((short) 0)));
 	}
 
 	@Test
 	public void testGetDataSetLong() throws Exception {
-		DataSet in = database.createDataset();
+		Dataset in = database.createDataset();
 		assertEquals(in, database.getDataSet(in.getId().longValue()));
+
+		assertNull(database.getDataSet(0l));
 	}
 
 	@Test
 	public void testGetDataSetHandle() throws Exception {
-		DataSet in = database.createDataset();
-		assertEquals(in, database.getDataSet(in.getHandle()));
+		Dataset in = database.createDataset();
+		assertEquals(in, database.getDataset(in.getHandle()));
+
+		assertNull(database.getDataset("foobar"));
 	}
 
 	@Test
 	public void testDropDataset() throws Exception {
-		DataSet in = database.createDataset();
+		Dataset in = database.createDataset();
 		assertEquals(Lists.newArrayList(in), database.getDatasets());
 		database.dropDataset(in);
-		assertEquals(new ArrayList<DataSet>(), database.getDatasets());
+		assertEquals(new ArrayList<Dataset>(), database.getDatasets());
+
+		assertNull(database.dropDataset(in));
 	}
 
 	@After

@@ -7,7 +7,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
+import nz.ac.vuw.ecs.rprofs.server.context.ContextManager;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,14 +23,19 @@ import org.springframework.beans.factory.annotation.Configurable;
 public class Stop extends HttpServlet {
 
 	@Autowired
-	private DatasetService datasets;
+	private ContextManager contexts;
+
+	@Autowired
+	private Database database;
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		String dataset = req.getHeader("Dataset");
-		datasets.stopDataset(dataset);
+		Dataset dataset = database.getDataset(req.getHeader("Dataset"));
+		contexts.stopRecording(dataset);
+
+		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 
 }

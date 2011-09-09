@@ -3,19 +3,17 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
+import javax.annotation.Nullable;
 import javax.persistence.CascadeType;
 import javax.persistence.EmbeddedId;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Version;
+import javax.validation.constraints.NotNull;
 
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import nz.ac.vuw.ecs.rprofs.client.views.impl.EventWidget;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.Id;
@@ -77,144 +75,126 @@ public class Event implements DataObject<Event, EventId> {
 	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
 	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
 
-	@EmbeddedId
-	EventId id;
+	@NotNull
+	private EventId id;
 
-	@Version
-	Integer version;
+	@Nullable
+	private Instance thread;
 
-	@ManyToOne
-    DataSet owner;
+	@NotNull
+	private Integer event;
 
-	@ManyToOne
-	Instance thread;
+	@Nullable
+	private Clazz type;
 
-	Integer event;
+	@Nullable
+	private Method method;
 
-	@ManyToOne
-	Clazz type;
+	@Nullable
+	private Field field;
 
-	@ManyToOne
-	Method method;
-
-	@ManyToOne
-	Field field;
-
-	@OneToMany(cascade=CascadeType.ALL)
-	Set<Argument> args;
-
-	private static final Comparator<Argument> comparator = new Comparator<Argument>() {
-		@Override
-		public int compare(Argument a, Argument b) {
-			return a.position - b.position;
-		}
-	};
+	@Nullable
+	private List<Instance> args;
 
 	public Event() {}
 
-	public Event(DataSet owner, EventId id, Instance thread, int event, Clazz type, Attribute<?> attr, ArrayList<Instance> args) {
-		this.owner = owner;
+	public Event(@NotNull EventId id, @NotNull Integer event) {
 		this.id = id;
-		this.thread = thread;
 		this.event = event;
-		this.type = type;
-
-		this.args = new TreeSet<Argument>();
-		for (int i = 0; i < args.size(); i++) {
-			Argument a = new Argument(i, args.get(i));
-			this.args.add(a);
-		}
-
-		setAttribute(attr);
 	}
 
-	public Set<? extends Argument> getArguments() {
-		return args;
-	}
-
-	public List<Instance> getArgs() {
-		if (this.args.isEmpty()) return Collections.emptyList();
-		List<Argument> args = Collections.newList();
-		args.addAll(this.args);
-		Collections.sort(args, comparator);
-		List<Instance> result = Collections.newList();
-		for (Argument a: this.args) {
-			result.add(a.parameter);
-		}
-		return result;
-	}
-
-	public List<ObjectId> getArgumentIds() {
-		List<ObjectId> ids = Collections.newList();
-		for (Argument a: args) {
-			ids.add(a.getParameter().getId());
-		}
-		return ids;
-	}
-
-	public Clazz getType() {
-		return type;
-	}
-
-	public Id<Clazz> getTypeId() {
-		return type.getId();
-	}
-
-	public int getEvent() {
-		return event;
-	}
-
+	@NotNull
 	public EventId getId() {
 		return id;
 	}
 
+	@NotNull
 	public Long getRpcId() {
 		return id.longValue();
 	}
 
-	public long getEventId() {
-		return id.longValue();
-	}
-
+	@NotNull
 	public Integer getVersion() {
-		return version;
+		return 0;
 	}
 
-	public Field getField() {
-		return field;
-	}
-
-	public Method getMethod() {
-		return method;
-	}
-
-	public Attribute<?> getAttribute() {
-		return (method == null) ? field : method;
-	}
-
-	public AttributeId<?> getAttributeId() {
-		return getAttribute().getId();
-	}
-
+	@Nullable
 	public Instance getThread() {
 		return thread;
 	}
 
-	public ObjectId getThreadId() {
-		return thread.getId();
+	@NotNull
+	public Event setThread(@Nullable Instance thread) {
+		this.thread = thread;
+		return this;
 	}
 
-	public void setAttribute(Attribute<?> attribute) {
+	@Nullable
+	public Clazz getType() {
+		return type;
+	}
+
+	@NotNull
+	public Event setType(@Nullable Clazz type) {
+		this.type = type;
+		return this;
+	}
+
+	@NotNull
+	public Integer getEvent() {
+		return event;
+	}
+
+	@Nullable
+	public Field getField() {
+		return field;
+	}
+
+	@Nullable
+	public Method getMethod() {
+		return method;
+	}
+
+	@Nullable
+	public Attribute<?> getAttribute() {
+		return (method == null) ? field : method;
+	}
+
+	@NotNull
+	public Event setAttribute(@NotNull Attribute<?> attribute) {
 		if (attribute instanceof Method) {
 			method = (Method) attribute;
 		}
 		else {
 			field = (Field) attribute;
 		}
+		return this;
 	}
 
-	public void setType(Clazz type) {
-		this.type = type;
+	@Nullable
+	public List<Instance> getArgs() {
+		if (this.args == null || this.args.isEmpty()) {
+			return Collections.emptyList();
+		}
+		else {
+			return Collections.unmodifiableList(args);
+		}
+	}
+
+	@Nullable
+	public Instance getFirstArg() {
+		List<Instance> args = this.args;
+		if (args != null && args.size() >= 1) {
+			return args.get(0);
+		}
+
+		return null;
+	}
+
+	@NotNull
+	public Event setArgs(@Nullable List<Instance> args) {
+		this.args = args;
+		return this;
 	}
 
 	public void visit(EventVisitor visitor) {
@@ -242,15 +222,5 @@ public class Event implements DataObject<Event, EventId> {
 		case METHOD_EXCEPTION:
 			visitor.visitMethodException(this); break;
 		}
-	}
-
-	public Instance getFirstArg() {
-		for (Argument a: args) {
-			if (a.position == 0) {
-				return a.parameter;
-			}
-		}
-
-		return null;
 	}
 }

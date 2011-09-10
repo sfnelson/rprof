@@ -100,4 +100,8 @@ public class Dataset implements DataObject<Dataset, DataSetId>, Comparable<Datas
 	public int hashCode() {
 		return id.hashCode();
 	}
+
+	public void visit(DomainVisitor visitor) {
+		visitor.visitDataset(this);
+	}
 }

@@ -95,4 +95,8 @@ public class Field implements Attribute<Field> {
 	public void visit(AttributeVisitor visitor) {
 		visitor.visitField(this);
 	}
+
+	public void visit(DomainVisitor visitor) {
+		// TODO visitField()
+	}
 }

@@ -1,9 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
-import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,34 +20,33 @@ public class StopTest {
 
 	private Stop stop;
 	private Dataset dataset;
-	private Database database;
+	private DatasetManager manager;
 	private HttpServletRequest request;
 	private HttpServletResponse response;
 
 	@Before
 	public void setup() {
-		database = createMock(Database.class);
+		manager = createMock(DatasetManager.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
 
 		dataset = new Dataset(new DataSetId((short) 1), "foo", new Date());
 		stop = new Stop();
-		stop.database = database;
+		stop.datasets = manager;
 	}
 
 	@Test
 	public void testDoGet() throws Exception {
 
 		expect(request.getHeader("Dataset")).andReturn("foo");
-		expect(database.getDataset(EasyMock.eq("foo"))).andReturn(dataset);
-		expect(database.setStopped(EasyMock.same(dataset), EasyMock.anyObject(Date.class)))
-				.andReturn(dataset);
+		manager.stopDataset("foo");
+		expect(manager.findDataset("foo")).andReturn(dataset);
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 
-		replay(request, response, database);
+		replay(request, response, manager);
 
 		stop.doGet(request, response);
 
-		verify(request, response, database);
+		verify(request, response, manager);
 	}
 }

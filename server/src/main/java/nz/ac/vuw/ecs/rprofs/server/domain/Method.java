@@ -124,4 +124,8 @@ public class Method implements Attribute<Method> {
 	public void visit(AttributeVisitor visitor) {
 		visitor.visitMethod(this);
 	}
+
+	public void visit(DomainVisitor visitor) {
+		// TODO visitMethod();
+	}
 }

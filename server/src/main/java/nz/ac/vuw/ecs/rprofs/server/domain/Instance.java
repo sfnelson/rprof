@@ -101,4 +101,8 @@ public class Instance implements DataObject<Instance, ObjectId> {
 	public int getInstanceIndex() {
 		return id.indexValue();
 	}
+
+	public void visit(DomainVisitor visitor) {
+		// TODO visitInstance()
+	}
 }

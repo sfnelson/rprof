@@ -80,4 +80,8 @@ public class EventManager implements EventService {
 	public List<Instance> findThreads() {
 		return null;
 	}
+
+	public void storeEvent(EventBuilder builder) {
+		// TODO store event
+	}
 }

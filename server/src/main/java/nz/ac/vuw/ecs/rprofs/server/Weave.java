@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server;
 import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public class Weave extends HttpServlet {
 
 	@VisibleForTesting
 	@Autowired(required = true)
-	Database database;
+	DatasetManager datasets;
 
 	@VisibleForTesting
 	@Autowired(required = true)
@@ -44,7 +44,7 @@ public class Weave extends HttpServlet {
 		byte[] buffer, result;
 		String cname;
 
-		Dataset ds = database.getDataset(req.getHeader("Dataset"));
+		Dataset ds = datasets.findDataset(req.getHeader("Dataset"));
 		context.setDataset(ds);
 
 		int length = req.getContentLength();

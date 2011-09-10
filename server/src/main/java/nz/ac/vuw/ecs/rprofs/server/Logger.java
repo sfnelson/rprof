@@ -1,8 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.db.MongoEventBuilder;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
@@ -25,20 +25,20 @@ public class Logger extends HttpServlet {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Logger.class);
 
-	@Autowired
-	private Database database;
+	@Autowired(required = true)
+	private DatasetManager datasets;
 
-	@Autowired
+	@Autowired(required = true)
 	private EventManager events;
 
-	@Autowired
+	@Autowired(required = true)
 	private Context context;
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		Dataset current = database.getDataset(req.getHeader("Dataset"));
+		Dataset current = datasets.findDataset(req.getHeader("Dataset"));
 		context.setDataset(current);
 
 		parseEvents(current, req.getContentLength(), req.getInputStream());
@@ -93,7 +93,7 @@ public class Logger extends HttpServlet {
 				}
 			}
 
-			database.storeEvent(ds, builder);
+			events.storeEvent(builder);
 		}
 	}
 }

@@ -131,4 +131,8 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 	public String getSimpleName() {
 		return simpleName;
 	}
+
+	public void visit(DomainVisitor visitor) {
+		// TODO visitClass()
+	}
 }

@@ -1,13 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.weaving.FieldRecord;
@@ -27,29 +24,24 @@ public class ClassManager {
 	@Autowired(required = true)
 	Context context;
 
+	@VisibleForTesting
+	@Autowired(required = true)
+	Database database;
+
 	private final Map<String, List<ClassId>> awaitingSuper = Collections.newMap();
 
 	public Clazz createClass() {
-		Dataset dataset = context.getDataset();
-		DB database = context.getDB();
+		return database.createEntity(Clazz.class);
+	}
 
-		if (dataset == null || database == null) {
-			throw new RuntimeException("cannot not create class for null dataset");
-		}
-
-		DBCollection classes = database.getCollection("classes");
-		Long numClasses = classes.count();
-		Clazz cls = new Clazz(dataset, ClassId.create(dataset, numClasses.intValue() + 1), null, null, 0);
-		classes.insert(new BasicDBObject()
-				.append("_id", cls.getId().longValue())
-		);
-
-		return cls;
+	public Clazz updateClazz(Clazz clazz) {
+		return database.updateEntity(clazz);
 	}
 
 	public Clazz findClass(String name) {
-		// TODO find class using name
-		return null;
+		List<Clazz> classes = database.findEntities(Clazz.class, name);
+		if (classes.isEmpty()) return null;
+		else return classes.get(0);
 	}
 
 	@Transactional

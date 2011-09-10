@@ -14,6 +14,8 @@ import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.ProvidesKey;
+import com.google.gwt.view.client.SingleSelectionModel;
 import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetListView;
 
@@ -127,6 +129,14 @@ public class DatasetPanel extends Composite implements DatasetListView {
 				return ds;
 			}
 		});
+
+		ProvidesKey<DatasetProxy> keyProvider = new ProvidesKey<DatasetProxy>() {
+			@Override
+			public String getKey(DatasetProxy item) {
+				return item.getHandle();
+			}
+		};
+		table.setSelectionModel(new SingleSelectionModel<DatasetProxy>(keyProvider));
 
 		return table;
 	}

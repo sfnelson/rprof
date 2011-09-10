@@ -254,4 +254,8 @@ public class Event implements DataObject<Event, EventId> {
 				break;
 		}
 	}
+
+	public void visit(DomainVisitor visitor) {
+		// TODO visitEvent()
+	}
 }

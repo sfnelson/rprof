@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 9/09/11
  */
-public class DatabaseTest {
+public class DatabaseIntegrationTest {
 
 	private static Process process;
 
@@ -52,9 +52,13 @@ public class DatabaseTest {
 
 	@Test
 	public void testCreateDataset() throws Exception {
-		assertEquals(Lists.newArrayList("admin"), mongo.getDatabaseNames());
+		List<String> dbs = mongo.getDatabaseNames();
+		dbs.remove("admin");
+		dbs.remove("local");
+		dbs.remove("test");
+		assertEquals(Lists.newArrayList(), dbs);
 
-		Dataset dataset = database.createDataset();
+		Dataset dataset = database.createEntity(Dataset.class, "foobar", new Date());
 		assertNotNull(dataset);
 		assertNotNull(dataset.getId());
 		assertTrue(dataset.getId().indexValue() > 0);
@@ -63,11 +67,10 @@ public class DatabaseTest {
 		assertNotNull(dataset.getRpcId());
 		assertEquals(dataset.getId().indexValue(), dataset.getRpcId().shortValue());
 
-		assertEquals(2, mongo.getDatabaseNames().size());
-
-		List<String> dbs = mongo.getDatabaseNames();
-		dbs.remove("test");
+		dbs = mongo.getDatabaseNames();
 		dbs.remove("admin");
+		dbs.remove("local");
+		dbs.remove("test");
 		assertEquals(1, dbs.size());
 
 		String dbname = dbs.get(0);
@@ -83,56 +86,40 @@ public class DatabaseTest {
 	@Test
 	public void testGetNextId() throws Exception {
 		assertEquals((short) 1, database.getNextId());
-		database.createDataset();
+		database.createEntity(Dataset.class, "foo", new Date());
 		assertEquals((short) 2, database.getNextId());
-		database.createDataset();
+		database.createEntity(Dataset.class, "bar", new Date());
 		assertEquals((short) 3, database.getNextId());
 	}
 
 	@Test
 	public void testGetDatasets() throws Exception {
-		assertEquals(new ArrayList<Dataset>(), database.getDatasets());
-		Dataset ds1 = database.createDataset();
-		assertEquals(Lists.newArrayList(ds1), database.getDatasets());
-		Dataset ds2 = database.createDataset();
+		assertEquals(new ArrayList<Dataset>(), database.findEntities(Dataset.class));
+		Dataset ds1 = database.createEntity(Dataset.class, "foo", new Date());
+		assertEquals(Lists.newArrayList(ds1), database.findEntities(Dataset.class));
+		Dataset ds2 = database.createEntity(Dataset.class, "bar", new Date());
 
-		List<Dataset> result = database.getDatasets();
+		List<Dataset> result = database.findEntities(Dataset.class);
 		Collections.sort(result);
 		assertEquals(Lists.newArrayList(ds1, ds2), result);
 	}
 
 	@Test
-	public void testGetDataSetDatasetId() throws Exception {
-		Dataset in = database.createDataset();
-		assertEquals(in, database.getDataSet(in.getId()));
+	public void testGetDatasetDatasetId() throws Exception {
+		Dataset in = database.createEntity(Dataset.class, "foobar", new Date());
+		assertEquals(in, database.findEntity(Dataset.class, in.getId()));
 
-		assertNull(database.getDataSet(new DataSetId((short) 0)));
-	}
-
-	@Test
-	public void testGetDataSetLong() throws Exception {
-		Dataset in = database.createDataset();
-		assertEquals(in, database.getDataSet(in.getId().longValue()));
-
-		assertNull(database.getDataSet(0l));
-	}
-
-	@Test
-	public void testGetDataSetHandle() throws Exception {
-		Dataset in = database.createDataset();
-		assertEquals(in, database.getDataset(in.getHandle()));
-
-		assertNull(database.getDataset("foobar"));
+		assertNull(database.findEntity(Dataset.class, new DataSetId((short) 0)));
 	}
 
 	@Test
 	public void testDropDataset() throws Exception {
-		Dataset in = database.createDataset();
-		assertEquals(Lists.newArrayList(in), database.getDatasets());
-		database.dropDataset(in);
-		assertEquals(new ArrayList<Dataset>(), database.getDatasets());
+		Dataset in = database.createEntity(Dataset.class, "foobar", new Date());
+		assertEquals(Lists.newArrayList(in), database.findEntities(Dataset.class));
+		database.deleteEntity(in);
+		assertEquals(new ArrayList<Dataset>(), database.findEntities(Dataset.class));
 
-		assertNull(database.dropDataset(in));
+		assertNull(database.findEntity(Dataset.class, in.getId()));
 	}
 
 	@After

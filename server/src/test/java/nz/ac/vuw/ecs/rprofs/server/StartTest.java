@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import org.junit.Before;
@@ -20,31 +20,31 @@ public class StartTest {
 
 	private Start start;
 	private Dataset dataset;
-	private Database database;
+	private DatasetManager manager;
 	private HttpServletRequest request;
 	private HttpServletResponse response;
 
 	@Before
 	public void setup() {
-		database = createMock(Database.class);
+		manager = createMock(DatasetManager.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
 
 		dataset = new Dataset(new DataSetId((short) 1), "foo", new Date());
 		start = new Start();
-		start.database = database;
+		start.datasets = manager;
 	}
 
 	@Test
 	public void testDoGet() throws Exception {
-		expect(database.createDataset()).andReturn(dataset);
+		expect(manager.createDataset()).andReturn(dataset);
 		response.addHeader("Dataset", "foo");
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 
-		replay(request, response, database);
+		replay(request, response, manager);
 
 		start.doGet(request, response);
 
-		verify(request, response, database);
+		verify(request, response, manager);
 	}
 }

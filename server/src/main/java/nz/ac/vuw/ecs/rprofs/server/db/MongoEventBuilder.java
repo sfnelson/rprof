@@ -102,7 +102,7 @@ public class MongoEventBuilder implements EventManager.EventBuilder {
 	@Override
 	public EventManager.EventBuilder setField(short fnum) {
 		if (fnum == 0) this.fieldId = null;
-		else this.fieldId = FieldId.create(dataset,  classId, fnum);
+		else this.fieldId = FieldId.create(dataset, classId, fnum);
 		this.methodId = null;
 		return this;
 	}
@@ -135,8 +135,8 @@ public class MongoEventBuilder implements EventManager.EventBuilder {
 		if (fieldId != null) b.add("field", fieldId.longValue());
 		if (!args.isEmpty()) {
 			List<Long> args = Lists.newArrayList();
-			for (ObjectId o: this.args) {
-				args.add(o.longValue());
+			for (ObjectId o : this.args) {
+				args.add(o == null ? 0l : o.longValue());
 			}
 			b.add("args", args);
 		}

@@ -1,7 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
 import com.google.common.annotations.VisibleForTesting;
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Calendar;
 
 @SuppressWarnings("serial")
 @Configurable(autowire = Autowire.BY_TYPE)
@@ -23,17 +22,19 @@ public class Stop extends HttpServlet {
 
 	@VisibleForTesting
 	@Autowired
-	Database database;
+	DatasetManager datasets;
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		Dataset dataset = database.getDataset(req.getHeader("Dataset"));
-		Calendar now = Calendar.getInstance();
-		log.info("profiler run stopped at {}", now.getTime());
+		String handle = req.getHeader("Dataset");
 
-		database.setStopped(dataset, now.getTime());
+		datasets.stopDataset(handle);
+
+		Dataset ds = datasets.findDataset(handle);
+
+		log.info("profiler run stopped at {}", ds.getStopped());
 
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}

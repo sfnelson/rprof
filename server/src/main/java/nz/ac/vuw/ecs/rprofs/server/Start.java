@@ -1,7 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
 import com.google.common.annotations.VisibleForTesting;
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
@@ -22,13 +22,13 @@ public class Start extends HttpServlet {
 
 	@VisibleForTesting
 	@Autowired
-	Database database;
+	DatasetManager datasets;
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		Dataset dataset = database.createDataset();
+		Dataset dataset = datasets.createDataset();
 
 		log.info("profiler run started at {}", dataset.getStarted());
 

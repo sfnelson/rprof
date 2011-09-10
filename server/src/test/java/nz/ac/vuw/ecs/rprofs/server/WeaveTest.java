@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server;
 
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
@@ -32,7 +32,7 @@ public class WeaveTest {
 	private Dataset dataset;
 	private Clazz clazz;
 
-	private Database database;
+	private DatasetManager manager;
 	private ClassManager classes;
 	private Context context;
 	private HttpServletRequest request;
@@ -41,7 +41,7 @@ public class WeaveTest {
 	@Before
 	public void setup() {
 		classes = createMock(ClassManager.class);
-		database = createMock(Database.class);
+		manager = createMock(DatasetManager.class);
 		context = createMock(Context.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
@@ -52,7 +52,7 @@ public class WeaveTest {
 		weave = new Weave();
 		weave.classes = classes;
 		weave.context = context;
-		weave.database = database;
+		weave.datasets = manager;
 	}
 
 	@Test
@@ -63,7 +63,7 @@ public class WeaveTest {
 		Capture<Integer> responseLength = new Capture<Integer>();
 
 		expect(request.getHeader("Dataset")).andReturn("foobar");
-		expect(database.getDataset("foobar")).andReturn(dataset);
+		expect(manager.findDataset("foobar")).andReturn(dataset);
 		context.setDataset(dataset);
 		expect(request.getContentLength()).andReturn(data.content.length);
 		expect(request.getInputStream()).andReturn(data);
@@ -75,11 +75,11 @@ public class WeaveTest {
 		expect(response.getOutputStream()).andReturn(output);
 		context.clear();
 
-		replay(request, response, context, classes, database);
+		replay(request, response, context, classes, manager);
 
 		weave.doPost(request, response);
 
-		verify(request, response, context, classes, database);
+		verify(request, response, context, classes, manager);
 
 		assertEquals(data.content.length, data.count); // ensure whole class was read.
 		assertEquals(responseLength.getValue().intValue(), output.count); // ensure whole class was written

@@ -1,16 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
+import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
-import nz.ac.vuw.ecs.rprofs.server.db.MongoEventBuilder;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventBuilder;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
 
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -25,14 +28,17 @@ public class Logger extends HttpServlet {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Logger.class);
 
+	@VisibleForTesting
 	@Autowired(required = true)
-	private DatasetManager datasets;
+	DatasetManager datasets;
 
+	@VisibleForTesting
 	@Autowired(required = true)
-	private EventManager events;
+	EventManager events;
 
+	@VisibleForTesting
 	@Autowired(required = true)
-	private Context context;
+	Context context;
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -63,22 +69,30 @@ public class Logger extends HttpServlet {
 		final int MAX_PARAMETERS = 16;
 		final int RECORD_LENGTH = 8 + 8 + 4 + 4 + 4 + 4 + MAX_PARAMETERS * 8;
 
-		EventManager.EventBuilder builder = new MongoEventBuilder();
-		builder.setDataSet(ds);
+		EventBuilder b = events.getBuilder();
 
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
-			builder.setId(dis.readLong())
-					.setThread(dis.readLong())
-					.setEvent(dis.readInt())
-					.setClazz((short) dis.readInt());
+			b.setId(EventId.create(ds, dis.readLong()));
+			b.setThread(parseObjectId(ds, dis.readLong()));
 
-			if ((builder.getEvent() & Event.METHODS) == builder.getEvent()) {
-				builder.setMethod((short) dis.readInt());
-			} else {
-				builder.setField((short) dis.readInt());
+			int type = dis.readInt();
+
+			b.setEvent(type);
+
+			int cnum = dis.readInt();
+			int mnum = dis.readInt();
+
+			if ((type & Event.HAS_CLASS) == type) {
+				ClassId classId = ClassId.create(ds, cnum);
+				b.setClazz(classId);
+
+				if ((type & Event.METHODS) == type) {
+					b.setMethod(MethodId.create(ds, classId, (short) mnum));
+				} else if ((type & Event.FIELDS) == type) {
+					b.setField(FieldId.create(ds, classId, (short) mnum));
+				}
 			}
 
-			builder.clearArgs();
 			int len = dis.readInt();
 
 			if (len > MAX_PARAMETERS) {
@@ -89,11 +103,17 @@ public class Logger extends HttpServlet {
 			for (int j = 0; j < MAX_PARAMETERS; j++) {
 				long arg = dis.readLong();
 				if (j < len) {
-					builder.addArg(arg);
+					b.addArg(parseObjectId(ds, arg));
 				}
 			}
 
-			events.storeEvent(builder);
+			b.store();
 		}
+	}
+
+	@Nullable
+	ObjectId parseObjectId(Dataset ds, long id) {
+		if (id == 0) return null;
+		return ObjectId.create(ds, id);
 	}
 }

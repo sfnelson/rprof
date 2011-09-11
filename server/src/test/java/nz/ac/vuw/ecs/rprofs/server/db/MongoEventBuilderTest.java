@@ -1,7 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
-import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
+import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import org.junit.Before;
@@ -22,116 +22,118 @@ public class MongoEventBuilderTest {
 	private Dataset ds;
 	private MongoEventBuilder b;
 
+	private DBObject result;
+
 	@Before
 	public void createBuilder() {
-		b = new MongoEventBuilder();
 		ds = new Dataset(new DataSetId(DS), "foo", new Date());
-		b.setDataSet(ds);
-	}
-
-	@Test
-	public void testDataSet() throws Exception {
-		assertEquals(ds, b.getDataset());
+		b = new MongoEventBuilder() {
+			void _store(DBObject toStore) {
+				result = toStore;
+			}
+		};
 	}
 
 	@Test
 	public void testSetId() throws Exception {
-		assertNull(b.getId());
-		assertEquals(b, b.setId(15));
-		assertEquals(DS, b.getId().datasetValue());
-		assertEquals(15, b.getId().eventValue());
+		EventId id = EventId.create(ds, 1);
+
+		assertNull(b.b.get("_id"));
+		assertSame(b, b.setId(id));
+		assertEquals(id.longValue(), b.b.get("_id"));
 	}
 
 	@Test
 	public void testSetThread() throws Exception {
-		assertNull(b.getThread());
-		assertEquals(b, b.setThread(15));
-		assertEquals(DS, b.getThread().datasetValue());
-		assertEquals(15, b.getThread().indexValue());
+		ObjectId thread = ObjectId.create(ds, 2);
+
+		assertNull(b.b.get("thread"));
+		assertEquals(b, b.setThread(thread));
+		assertEquals(thread.longValue(), b.b.get("thread"));
 	}
 
 	@Test
 	public void testSetEvent() throws Exception {
-		assertNull(b.getEvent());
-		assertEquals(b, b.setEvent(15));
-		assertEquals(15, b.getEvent().longValue());
+		assertNull(b.b.get("event"));
+		assertEquals(b, b.setEvent(3));
+		assertEquals(3, b.b.get("event"));
 	}
 
 	@Test
 	public void testSetClazz() throws Exception {
-		assertNull(b.getClazz());
-		assertEquals(b, b.setClazz(15));
-		assertEquals(DS, b.getClazz().datasetValue());
-		assertEquals(15, b.getClazz().indexValue());
+		ClassId clazz = ClassId.create(ds, 4);
+
+		assertNull(b.b.get("class"));
+		assertEquals(b, b.setClazz(clazz));
+		assertEquals(clazz.longValue(), b.b.get("class"));
 	}
 
 	@Test
 	public void testSetMethod() throws Exception {
-		assertNull(b.getMethod());
-		assertEquals(b, b.setClazz(15));
-		assertEquals(b, b.setMethod((short) 35));
-		assertEquals(DS, b.getMethod().datasetValue());
-		assertEquals(15, b.getMethod().typeValue());
-		assertEquals(35, b.getMethod().attributeValue());
+		ClassId clazz = ClassId.create(ds, 4);
+		MethodId method = MethodId.create(ds, clazz, (short) 5);
+
+		assertNull(b.b.get("method"));
+		assertEquals(b, b.setMethod(method));
+		assertEquals(method.longValue(), b.b.get("method"));
 	}
 
 	@Test
 	public void testSetField() throws Exception {
-		assertNull(b.getField());
-		assertEquals(b, b.setClazz(15));
-		assertEquals(b, b.setField((short) 35));
-		assertEquals(DS, b.getField().datasetValue());
-		assertEquals(15, b.getField().typeValue());
-		assertEquals(35, b.getField().attributeValue());
+		ClassId clazz = ClassId.create(ds, 4);
+		FieldId field = FieldId.create(ds, clazz, (short) 6);
+
+		assertNull(b.b.get("field"));
+		assertEquals(b, b.setField(field));
+		assertEquals(field.longValue(), b.b.get("field"));
 	}
 
 	@Test
 	public void testArgs() throws Exception {
-		assertTrue(b.getArgs().isEmpty());
+		ObjectId x = ObjectId.create(ds, 7);
+		ObjectId y = null;
+		ObjectId z = ObjectId.create(ds, 8);
 
-		assertEquals(b, b.addArg(1));
-		assertEquals(1, b.getArgs().size());
-		assertEquals(DS, b.getArgs().get(0).datasetValue());
-		assertEquals(1, b.getArgs().get(0).indexValue());
+		assertTrue(b.args.isEmpty());
 
-		assertEquals(b, b.addArg(2));
-		assertEquals(2, b.getArgs().size());
-		assertEquals(DS, b.getArgs().get(1).datasetValue());
-		assertEquals(2, b.getArgs().get(1).indexValue());
+		b.addArg(x);
+		b.addArg(y);
+		b.addArg(z);
 
-		assertEquals(b, b.clearArgs());
-		assertTrue(b.getArgs().isEmpty());
+		assertEquals(Lists.newArrayList(x.longValue(), null, z.longValue()), b.args);
 	}
 
 	@Test
-	public void testToObject() throws Exception {
-		assertEquals(EventId.create(ds, 1).longValue(),
-				m(b.setId(1)).toDBObject().get("_id"));
+	public void testStore() throws Exception {
+		EventId id = EventId.create(ds, 1);
+		ObjectId thread = ObjectId.create(ds, 2);
+		ClassId clazz = ClassId.create(ds, 4);
+		MethodId method = MethodId.create(ds, clazz, (short) 5);
+		FieldId field = FieldId.create(ds, clazz, (short) 6);
+		ObjectId x = ObjectId.create(ds, 7);
+		ObjectId y = null;
+		ObjectId z = ObjectId.create(ds, 8);
 
-		assertNull(b.toDBObject().get("thread"));
-		assertEquals(ObjectId.create(ds, 1).longValue(),
-				m(b.setThread(1)).toDBObject().get("thread"));
+		b.setId(id);
+		b.setThread(thread);
+		b.setEvent(3);
+		b.setClazz(clazz);
+		b.setMethod(method);
+		b.setField(field);
+		b.addArg(x);
+		b.addArg(y);
+		b.addArg(z);
 
-		assertEquals(2, m(b.setEvent(2)).toDBObject().get("event"));
+		b.store();
 
-		assertNull(b.toDBObject().get("class"));
-		assertEquals(ClassId.create(ds, 3).longValue(),
-				m(b.setClazz(3)).toDBObject().get("class"));
+		assertTrue(b.b.isEmpty());
 
-		assertNull(b.toDBObject().get("method"));
-		assertEquals(MethodId.create(ds, ClassId.create(ds, 3), (short) 4).longValue(),
-				m(b.setMethod((short) 4)).toDBObject().get("method"));
-
-		assertNull(b.toDBObject().get("field"));
-		assertEquals(FieldId.create(ds, ClassId.create(ds, 3), (short) 5).longValue(),
-				m(b.setField((short) 5)).toDBObject().get("field"));
-
-		assertNull(b.toDBObject().get("args"));
-		assertEquals(Lists.newArrayList(ObjectId.create(ds, 1).longValue(), ObjectId.create(ds, 2).longValue()),
-				m(b.addArg(1).addArg(2)).toDBObject().get("args"));
-	}
-
-	private MongoEventBuilder m(EventManager.EventBuilder b) {
-		return (MongoEventBuilder) b;
+		assertEquals(id.longValue(), result.get("_id"));
+		assertEquals(thread.longValue(), result.get("thread"));
+		assertEquals(3, result.get("event"));
+		assertEquals(clazz.longValue(), result.get("class"));
+		assertEquals(method.longValue(), result.get("method"));
+		assertEquals(field.longValue(), result.get("field"));
+		assertEquals(Lists.newArrayList(x.longValue(), null, z.longValue()), result.get("args"));
 	}
 }

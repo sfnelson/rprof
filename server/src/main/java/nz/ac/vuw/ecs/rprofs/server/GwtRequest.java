@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
+import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
@@ -15,11 +16,13 @@ public class GwtRequest implements Filter {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(GwtRequest.class);
 
+	@VisibleForTesting
 	@Autowired(required = true)
-	private DatasetManager datasets;
+	DatasetManager datasets;
 
+	@VisibleForTesting
 	@Autowired(required = true)
-	private Context context;
+	Context context;
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
@@ -30,15 +33,25 @@ public class GwtRequest implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse rsp, FilterChain chain)
 			throws IOException, ServletException {
 
-		Dataset dataset = datasets.findDataset(getDataset(req));
-		if (dataset != null) {
-			context.setDataset(dataset);
+		String handle = getDataset(req);
+		if (handle != null) {
+			Dataset dataset = datasets.findDataset(handle);
+			if (dataset != null) {
+				context.setDataset(dataset);
+			}
 		}
 
 		try {
 			chain.doFilter(req, rsp);
-		} catch (Exception ex) {
+		} catch (RuntimeException ex) {
 			log.error(ex.getMessage(), ex);
+			throw ex;
+		} catch (IOException ex) {
+			log.error(ex.getMessage(), ex);
+			throw ex;
+		} catch (ServletException ex) {
+			log.error(ex.getMessage(), ex);
+			throw ex;
 		} finally {
 			context.clear();
 		}

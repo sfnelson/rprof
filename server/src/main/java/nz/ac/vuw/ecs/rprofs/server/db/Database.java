@@ -4,6 +4,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.mongodb.*;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
@@ -32,6 +34,67 @@ public class Database {
 		this.mongo = mongo;
 	}
 
+	public DatasetManager.DatasetBuilder getDatasetBuilder() {
+		return new MongoDatasetBuilder() {
+			@Override
+			public short _getId() {
+				short max = 0;
+				for (String dbname : mongo.getDatabaseNames()) {
+					if (dbname.startsWith("rprof")) {
+						DB db = mongo.getDB(dbname);
+						DBObject properties = db.getCollection("properties").findOne();
+						short id = ((Integer) properties.get("_id")).shortValue();
+						if (id > max) max = id;
+					}
+				}
+				return ++max;
+			}
+
+			@Override
+			public void _store(DBObject dataset) {
+				assert (dataset.get("_id") != null);
+				assert (dataset.get("handle") != null);
+				assert (dataset.get("started") != null);
+
+				String dbname = "rprof_" + dataset.get("handle") + "_" + dataset.get("_id");
+				DB db = mongo.getDB(dbname);
+				DBCollection properties = db.getCollection("properties");
+
+				properties.insert(dataset);
+			}
+		};
+	}
+
+	public DatasetManager.DatasetBuilder getDatasetUpdater(final Dataset dataset) {
+		DB db = getDatabase(dataset);
+		final DBCollection properties = db.getCollection("properties");
+
+		return new MongoDatasetBuilder() {
+			@Override
+			public short _getId() {
+				return dataset.getId().indexValue();
+			}
+
+			@Override
+			public void _store(DBObject dataset) {
+				properties.update(new BasicDBObject("_id", _getId()), dataset);
+			}
+		};
+	}
+
+	public EventManager.EventBuilder getEventBuilder() {
+		Dataset dataset = context.getDataset();
+		DB db = getDatabase(dataset);
+		final DBCollection events = db.getCollection("events");
+
+		return new MongoEventBuilder() {
+			@Override
+			void _store(DBObject event) {
+				events.insert(event);
+			}
+		};
+	}
+
 	@SuppressWarnings("unchecked")
 	public <T extends DataObject> T createEntity(Class<T> type, Object... params) {
 
@@ -44,7 +107,7 @@ public class Database {
 			short id = getNextId();
 			Dataset ds = new Dataset(new DataSetId(id), handle, started);
 
-			DB db = mongo.getDB(getName(ds));
+			DB db = mongo.getDB(getDBName(ds));
 			DBCollection properties = db.getCollection("properties");
 
 			ds.visit(update);
@@ -151,7 +214,7 @@ public class Database {
 		collection.remove(query.getQuery());
 
 		if (entity.getClass() == Dataset.class) {
-			mongo.dropDatabase(getName((Dataset) entity));
+			mongo.dropDatabase(getDBName((Dataset) entity));
 		}
 
 		return true;
@@ -170,7 +233,7 @@ public class Database {
 	}
 
 	private DB getDatabase(@NotNull Dataset dataset) {
-		return mongo.getDB(getName(dataset));
+		return mongo.getDB(getDBName(dataset));
 	}
 
 	@VisibleForTesting
@@ -188,7 +251,12 @@ public class Database {
 	}
 
 	@VisibleForTesting
-	String getName(Dataset dataset) {
+	String getDBName(String handle, int id) {
+		return "rprof_" + handle + "_" + id;
+	}
+
+	@VisibleForTesting
+	String getDBName(Dataset dataset) {
 		return "rprof_" + dataset.getHandle() + "_" + dataset.getId().indexValue();
 	}
 
@@ -223,7 +291,7 @@ public class Database {
 		}
 
 		public void visitDataset(Dataset ds) {
-			checkProperty("_id", Integer.valueOf(ds.getId().indexValue()));
+			checkProperty("_id", ds.getId().indexValue());
 			checkProperty("handle", ds.getHandle());
 			checkProperty("started", ds.getStarted());
 			checkProperty("stopped", ds.getStopped());
@@ -231,9 +299,9 @@ public class Database {
 		}
 
 		private void checkProperty(String key, Object value) {
-			if (current.containsField(key) && !current.get(key).equals(value)
-					|| value == null) ;
-			else update.add(key, value);
+			if ((!current.containsField(key) || !current.get(key).equals(value)) && value != null) {
+				update.add(key, value);
+			}
 		}
 	}
 

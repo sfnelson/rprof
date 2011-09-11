@@ -3,8 +3,7 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
-import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 import javax.annotation.Nullable;
@@ -94,25 +93,26 @@ public class Event implements DataObject<Event, EventId> {
 	public static final int ALLOCATION = OBJECT_ALLOCATED | OBJECT_TAGGED;
 	public static final int METHODS = METHOD_ENTER | METHOD_RETURN | METHOD_EXCEPTION;
 	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
-	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
+	public static final int CLASS_EVENTS = CLASS_WEAVE | CLASS_INITIALIZED;
+	public static final int HAS_CLASS = METHODS | FIELDS | CLASS_EVENTS | OBJECT_TAGGED;
 
 	@NotNull
 	private EventId id;
 
 	@Nullable
-	private Instance thread;
+	private ObjectId thread;
 
 	@NotNull
 	private Integer event;
 
 	@Nullable
-	private Clazz type;
+	private ClassId type;
 
 	@Nullable
-	private Method method;
+	private MethodId method;
 
 	@Nullable
-	private Field field;
+	private FieldId field;
 
 	@Nullable
 	private List<Instance> args;
@@ -141,23 +141,23 @@ public class Event implements DataObject<Event, EventId> {
 	}
 
 	@Nullable
-	public Instance getThread() {
+	public ObjectId getThread() {
 		return thread;
 	}
 
 	@NotNull
-	public Event setThread(@Nullable Instance thread) {
+	public Event setThread(@Nullable ObjectId thread) {
 		this.thread = thread;
 		return this;
 	}
 
 	@Nullable
-	public Clazz getType() {
+	public ClassId getType() {
 		return type;
 	}
 
 	@NotNull
-	public Event setType(@Nullable Clazz type) {
+	public Event setType(@Nullable ClassId type) {
 		this.type = type;
 		return this;
 	}
@@ -168,26 +168,26 @@ public class Event implements DataObject<Event, EventId> {
 	}
 
 	@Nullable
-	public Field getField() {
+	public FieldId getField() {
 		return field;
 	}
 
 	@Nullable
-	public Method getMethod() {
+	public MethodId getMethod() {
 		return method;
 	}
 
 	@Nullable
-	public Attribute<?> getAttribute() {
+	public AttributeId<?> getAttribute() {
 		return (method == null) ? field : method;
 	}
 
 	@NotNull
-	public Event setAttribute(@NotNull Attribute<?> attribute) {
-		if (attribute instanceof Method) {
-			method = (Method) attribute;
+	public Event setAttribute(@NotNull AttributeId<?> attribute) {
+		if (attribute instanceof MethodId) {
+			method = (MethodId) attribute;
 		} else {
-			field = (Field) attribute;
+			field = (FieldId) attribute;
 		}
 		return this;
 	}

@@ -30,7 +30,8 @@ public class Stop extends HttpServlet {
 
 		String handle = req.getHeader("Dataset");
 
-		datasets.stopDataset(handle);
+		Dataset dataset = datasets.findDataset(handle);
+		datasets.stopDataset(dataset);
 
 		Dataset ds = datasets.findDataset(handle);
 

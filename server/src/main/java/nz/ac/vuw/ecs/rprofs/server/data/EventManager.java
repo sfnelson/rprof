@@ -1,87 +1,39 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.Event;
-import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
-import nz.ac.vuw.ecs.rprofs.server.request.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.List;
-
-public class EventManager implements EventService {
+/**
+ * Author: Stephen Nelson <stephen@sfnelson.org>
+ * Date: 11/09/11
+ */
+public class EventManager {
 
 	public interface EventBuilder {
-		Dataset getDataset();
+		EventBuilder setId(EventId id);
 
-		EventBuilder setDataSet(Dataset ds);
-
-		EventId getId();
-
-		EventBuilder setId(long id);
-
-		ObjectId getThread();
-
-		EventBuilder setThread(long thread);
-
-		Integer getEvent();
+		EventBuilder setThread(ObjectId thread);
 
 		EventBuilder setEvent(int event);
 
-		ClassId getClazz();
+		EventBuilder setClazz(ClassId clazz);
 
-		EventBuilder setClazz(int cnum);
+		EventBuilder setMethod(MethodId method);
 
-		MethodId getMethod();
+		EventBuilder setField(FieldId field);
 
-		EventBuilder setMethod(short mnum);
+		EventBuilder addArg(ObjectId arg);
 
-		FieldId getField();
-
-		EventBuilder setField(short fnum);
-
-		List<ObjectId> getArgs();
-
-		EventBuilder clearArgs();
-
-		EventBuilder addArg(long arg);
+		void store();
 	}
 
-	@Autowired
-	private Database database;
+	@VisibleForTesting
+	@Autowired(required = true)
+	Database database;
 
-	@Override
-	public List<? extends Event> findEvents(Integer start, Integer length, Integer filter) {
-		return null;
-	}
-
-	@Override
-	public List<? extends Event> findEventsByInstance(Long instance) {
-		return null;
-	}
-
-	@Override
-	public Long findNumEvents(Integer filter) {
-		return null;
-	}
-
-	@Override
-	public Long findIndexOf(Long eventId, Integer filter) {
-		return null;
-	}
-
-	@Override
-	public Long findNumThreads() {
-		return null;
-	}
-
-	@Override
-	public List<Instance> findThreads() {
-		return null;
-	}
-
-	public void storeEvent(EventBuilder builder) {
-		// TODO store event
+	public EventBuilder getBuilder() {
+		return database.getEventBuilder();
 	}
 }

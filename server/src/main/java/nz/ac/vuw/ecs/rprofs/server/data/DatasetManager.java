@@ -1,7 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,8 +13,21 @@ import java.util.List;
 
 public class DatasetManager implements DatasetService {
 
-	@Autowired
-	private Database database;
+	public interface DatasetBuilder {
+		DatasetBuilder setHandle(String handle);
+
+		DatasetBuilder setStarted(Date date);
+
+		DatasetBuilder setStopped(Date date);
+
+		DatasetBuilder setProgram(String program);
+
+		DataSetId store();
+	}
+
+	@VisibleForTesting
+	@Autowired(required = true)
+	Database database;
 
 	public Dataset createDataset() {
 		Calendar now = Calendar.getInstance();
@@ -24,7 +39,12 @@ public class DatasetManager implements DatasetService {
 				now.get(Calendar.MINUTE),
 				now.get(Calendar.SECOND));
 
-		return database.createEntity(Dataset.class, handle, now.getTime());
+		DatasetBuilder builder = database.getDatasetBuilder();
+		builder.setHandle(handle);
+		builder.setStarted(now.getTime());
+		DataSetId id = builder.store();
+
+		return database.findEntity(Dataset.class, id);
 	}
 
 	@Override
@@ -40,25 +60,21 @@ public class DatasetManager implements DatasetService {
 	}
 
 	@Override
-	public void stopDataset(String dataset) {
-		Dataset ds = findDataset(dataset);
-		ds.setStopped(Calendar.getInstance().getTime());
-		database.updateEntity(ds);
+	public void stopDataset(Dataset dataset) {
+		DatasetBuilder builder = database.getDatasetUpdater(dataset);
+		builder.setStopped(Calendar.getInstance().getTime());
+		builder.store();
 	}
 
 	@Override
-	public Dataset setProgram(Dataset dataset, String program) {
-		dataset.setProgram(program);
-		return database.updateEntity(dataset);
-	}
-
-	public Dataset setStopped(Dataset dataset, Date stopped) {
-		dataset.setStopped(stopped);
-		return database.updateEntity(dataset);
+	public void setProgram(Dataset dataset, String program) {
+		DatasetBuilder builder = database.getDatasetUpdater(dataset);
+		builder.setProgram(program);
+		builder.store();
 	}
 
 	@Override
-	public void deleteDataset(String handle) {
-		database.deleteEntity(findDataset(handle));
+	public void deleteDataset(Dataset dataset) {
+		database.deleteEntity(dataset);
 	}
 }

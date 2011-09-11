@@ -39,6 +39,8 @@ public class DatabaseIntegrationTest {
 		pb.command(path, "--dbpath", "/tmp/rprof/mongo",
 				"--bind_ip", "127.0.0.1", "--port", "27018");
 		process = pb.start();
+
+		Thread.sleep(500);
 	}
 
 	private Database database;
@@ -56,7 +58,7 @@ public class DatabaseIntegrationTest {
 		dbs.remove("admin");
 		dbs.remove("local");
 		dbs.remove("test");
-		assertEquals(Lists.newArrayList(), dbs);
+		assertEquals(Lists.<String>newArrayList(), dbs);
 
 		Dataset dataset = database.createEntity(Dataset.class, "foobar", new Date());
 		assertNotNull(dataset);
@@ -74,13 +76,13 @@ public class DatabaseIntegrationTest {
 		assertEquals(1, dbs.size());
 
 		String dbname = dbs.get(0);
-		assertEquals(dbname, database.getName(dataset));
+		assertEquals(dbname, database.getDBName(dataset));
 	}
 
 	@Test
 	public void testGetName() throws Exception {
-		assertEquals("rprof_foo_0", database.getName(new Dataset(new DataSetId((short) 0), "foo", new Date())));
-		assertEquals("rprof_20110101_1", database.getName(new Dataset(new DataSetId((short) 1), "20110101", new Date())));
+		assertEquals("rprof_foo_0", database.getDBName(new Dataset(new DataSetId((short) 0), "foo", new Date())));
+		assertEquals("rprof_20110101_1", database.getDBName(new Dataset(new DataSetId((short) 1), "20110101", new Date())));
 	}
 
 	@Test

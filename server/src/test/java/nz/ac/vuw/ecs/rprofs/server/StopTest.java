@@ -39,7 +39,8 @@ public class StopTest {
 	public void testDoGet() throws Exception {
 
 		expect(request.getHeader("Dataset")).andReturn("foo");
-		manager.stopDataset("foo");
+		expect(manager.findDataset("foo")).andReturn(dataset);
+		manager.stopDataset(dataset);
 		expect(manager.findDataset("foo")).andReturn(dataset);
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 

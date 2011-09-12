@@ -17,7 +17,7 @@ public class MongoClassBuilderTest {
 
 	private MongoClassBuilder builder;
 	private long nextId;
-	private DBObject stored;
+	private BasicDBObject stored;
 
 	@Before
 	public void setUp() throws Exception {
@@ -29,7 +29,7 @@ public class MongoClassBuilderTest {
 
 			@Override
 			void _store(DBObject data) {
-				stored = data;
+				stored = (BasicDBObject) data;
 			}
 		};
 	}
@@ -82,8 +82,12 @@ public class MongoClassBuilderTest {
 		builder.setParent(parent);
 		builder.setParentName("org.Foo");
 		builder.setProperties(2);
-		builder.b.put("_id", 3l); // this is retrieved from the database usually.
+		nextId = 3l;
+
+		builder.store();
+		builder.b = stored;
 		Clazz result = builder.get();
+
 		assertEquals(3l, result.getId().longValue());
 		assertEquals("org.foo.Bar", result.getName());
 		assertEquals(parent, result.getParent());

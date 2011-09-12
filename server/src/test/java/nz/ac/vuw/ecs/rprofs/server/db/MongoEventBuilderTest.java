@@ -1,8 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,14 +24,14 @@ public class MongoEventBuilderTest {
 	private Dataset ds;
 	private MongoEventBuilder b;
 
-	private DBObject result;
+	private BasicDBObject result;
 
 	@Before
 	public void createBuilder() {
 		ds = new Dataset(new DatasetId(DS), "foo", new Date());
 		b = new MongoEventBuilder() {
 			void _store(DBObject toStore) {
-				result = toStore;
+				result = (BasicDBObject) toStore;
 			}
 		};
 	}
@@ -135,5 +137,39 @@ public class MongoEventBuilderTest {
 		assertEquals(method.longValue(), result.get("method"));
 		assertEquals(field.longValue(), result.get("field"));
 		assertEquals(Lists.newArrayList(x.longValue(), null, z.longValue()), result.get("args"));
+	}
+
+	@Test
+	public void testGet() throws Exception {
+		EventId id = EventId.create(ds, 1);
+		InstanceId thread = InstanceId.create(ds, 2);
+		ClazzId clazz = ClazzId.create(ds, 4);
+		MethodId method = MethodId.create(ds, clazz, (short) 5);
+		FieldId field = FieldId.create(ds, clazz, (short) 6);
+		InstanceId x = InstanceId.create(ds, 7);
+		InstanceId y = null;
+		InstanceId z = InstanceId.create(ds, 8);
+
+		b.setId(id);
+		b.setThread(thread);
+		b.setEvent(Event.METHOD_EXCEPTION);
+		b.setClazz(clazz);
+		b.setMethod(method);
+		b.setField(field);
+		b.addArg(x);
+		b.addArg(y);
+		b.addArg(z);
+
+		b.store();
+		b.b = result;
+		Event result = b.get();
+
+		assertEquals(id, result.getId());
+		assertEquals(thread, result.getThread());
+		assertEquals(Event.METHOD_EXCEPTION, result.getEvent());
+		assertEquals(clazz, result.getClazz());
+		assertEquals(method, result.getMethod());
+		assertEquals(field, result.getField());
+		assertEquals(Lists.newArrayList(x, y, z), result.getArgs());
 	}
 }

@@ -1,6 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,7 +18,7 @@ public class MongoDatasetBuilderTest {
 
 	MongoDatasetBuilder builder;
 	short toReturn;
-	DBObject stored;
+	BasicDBObject stored;
 
 	@Before
 	public void setUp() throws Exception {
@@ -28,7 +30,7 @@ public class MongoDatasetBuilderTest {
 
 			@Override
 			public void _store(DBObject dataset) {
-				stored = dataset;
+				stored = (BasicDBObject) dataset;
 			}
 		};
 	}
@@ -64,5 +66,26 @@ public class MongoDatasetBuilderTest {
 		toReturn = 15;
 		builder.store();
 		assertEquals(15l, stored.get("_id"));
+	}
+
+	@Test
+	public void testGet() throws Exception {
+		Date started = new Date();
+		Date stopped = new Date();
+		toReturn = 1;
+		builder.setHandle("foobar");
+		builder.setStarted(started);
+		builder.setStopped(stopped);
+		builder.setProgram("prog");
+
+		builder.store();
+		builder.b = stored;
+		Dataset ds = builder.get();
+
+		assertEquals(1l, ds.getId().longValue());
+		assertEquals("foobar", ds.getHandle());
+		assertEquals(started, ds.getStarted());
+		assertEquals(stopped, ds.getStopped());
+		assertEquals("prog", ds.getProgram());
 	}
 }

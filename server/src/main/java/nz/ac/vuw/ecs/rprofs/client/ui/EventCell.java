@@ -1,139 +1,223 @@
 package nz.ac.vuw.ecs.rprofs.client.ui;
 
 import com.google.gwt.cell.client.AbstractCell;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.safecss.shared.SafeStyles;
+import com.google.gwt.safehtml.client.SafeHtmlTemplates;
+import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
-import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.id.ClazzIdProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.id.InstanceIdProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.id.MethodIdProxy;
 
 import java.util.Map;
 
 public class EventCell extends AbstractCell<EventProxy> {
 
-	private final EventStyle style;
-	private final Map<InstanceProxy, Integer> threads;
+	interface Templates extends SafeHtmlTemplates {
+		@Template("<div class='{0}'>{1}{2}{3}</div>")
+		SafeHtml event(SafeStyles style, SafeHtml thread, SafeHtml event, SafeHtml content);
 
-	public EventCell(EventStyle style, Map<InstanceProxy, Integer> threads) {
+		@Template("<span class='{0}' style='width: {1}ex'>{2}</span>")
+		SafeHtml thread(SafeStyles style, int size, SafeHtml thread);
+
+		@Template("<span title='{0}' style='margin-left: {1}ex'></span>")
+		SafeHtml threadDetails(SafeHtml title, int margin);
+
+		@Template("<span class='{0}'>{1}</span>")
+		SafeHtml eventDetails(SafeStyles style, SafeHtml details);
+
+		@Template("<span class='{0}'>{1}</span>")
+		SafeHtml type(SafeStyles style, SafeHtml details);
+
+		@Template("<em>null</em>")
+		SafeHtml nullType();
+
+		@Template("<span title='{0}'>{1}</span>")
+		SafeHtml typeDetails(SafeHtml title, SafeHtml name);
+
+		@Template("{0}{1}")
+		SafeHtml method(SafeHtml call, SafeHtml args);
+
+		@Template("<span class='{0}'>new</span><span class='{1}' title='{2}'>{3}></span>")
+		SafeHtml initMethod(SafeStyles method, SafeStyles type, SafeHtml title, SafeHtml name);
+
+		@Template("<span class='{0}' title='{1}'>{2}</span><span class='{3}'>.{4}</span>")
+		SafeHtml methodCall(SafeStyles type, SafeHtml title, SafeHtml cls, SafeStyles method, SafeHtml name);
+
+		@Template("<span class='{0}'>({1})</span>")
+		SafeHtml args(SafeStyles style, SafeHtml args);
+
+		@Template("")
+		SafeHtml empty();
+	}
+
+	private static Templates templates = GWT.create(Templates.class);
+
+	interface EventNames extends SafeHtmlTemplates {
+		@Template("new")
+		SafeHtml newObject();
+
+		@Template("new[]")
+		SafeHtml newArray();
+
+		@Template("&rarr")
+		SafeHtml methodEnter();
+
+		@Template("&larr")
+		SafeHtml methodReturn();
+
+		@Template("&#x219A;")
+		SafeHtml methodException();
+
+		@Template("<em>read</em>")
+		SafeHtml fieldRead();
+
+		@Template("<em>write</em>")
+		SafeHtml fieldWrite();
+
+		@Template("<em>weave</em>")
+		SafeHtml classWeave();
+
+		@Template("<em>init</em>")
+		SafeHtml classInit();
+
+		@Template("<em>tag</em>")
+		SafeHtml objectTagged();
+
+		@Template("<em>free</em>")
+		SafeHtml objectFreed();
+
+		@Template("<em>unknown</em>")
+		SafeHtml unknown();
+	}
+
+	private static EventNames events = GWT.create(EventNames.class);
+
+	private final EventStyle style;
+	private final Map<InstanceIdProxy, Integer> threads;
+
+	public EventCell(EventStyle style, Map<InstanceIdProxy, Integer> threads) {
 		this.style = style;
 		this.threads = threads;
 	}
 
 	@Override
-	public void render(Context c, EventProxy e, SafeHtmlBuilder o) {
+	public void render(Context c, EventProxy e, SafeHtmlBuilder sb) {
 		if (e == null) return;
 
-		o.appendHtmlConstant("<div class='" + style.eventCell() + " " + getStyleName(e) + "'>");
+		SafeHtml thread = renderThread(e);
+		SafeHtml event = renderEvent(e);
 
-		renderThread(c, e, o);
-		renderEvent(c, e, o);
-
+		SafeHtml content;
 		if ((e.getEvent() & EventProxy.METHODS) == e.getEvent()) {
-			renderMethod(c, e, o);
+			content = renderMethod(e);
 		} else {
-			renderType(c, e, o);
+			content = renderType(e);
 		}
 
-		o.appendHtmlConstant("</div>");
+		sb.append(templates.event(style.eventCell(), thread, event, content));
 	}
 
-	void renderThread(Context c, EventProxy e, SafeHtmlBuilder o) {
-		o.appendHtmlConstant("<span class='" + style.thread() + "' style='width: " + threads.size() + "ex'>");
-
+	SafeHtml renderThread(EventProxy e) {
+		SafeHtml thread;
 		if (threads.containsKey(e.getThread())) {
 			int position = threads.get(e.getThread());
-			o.appendHtmlConstant("<span title='" + String.valueOf(e.getThread()) + "' style='margin-left: " + position + "ex'>");
-			o.appendHtmlConstant("</span>");
-		}
-
-		o.appendHtmlConstant("</span>");
-	}
-
-	void renderEvent(Context c, EventProxy e, SafeHtmlBuilder o) {
-		o.appendHtmlConstant("<span class='" + style.event() + "'>");
-
-		o.appendHtmlConstant(getEventDescription(e));
-
-		o.appendHtmlConstant("</span>");
-	}
-
-	void renderType(Context c, EventProxy e, SafeHtmlBuilder o) {
-		o.appendHtmlConstant("<span class='" + style.type() + "'>");
-
-		ClassProxy type = e.getType();
-
-		if (type == null) {
-			o.appendHtmlConstant("<em>null</em>");
+			SafeHtml title = SafeHtmlUtils.fromString(String.valueOf(e.getThread()));
+			thread = templates.threadDetails(title, position);
 		} else {
-			o.appendHtmlConstant("<span title=\"" + type.getName() + "\">");
-			o.appendEscaped(type.getSimpleName());
-			o.appendHtmlConstant("</span>");
+			thread = templates.empty();
 		}
-
-		o.appendHtmlConstant("</span>");
+		return templates.thread(style.thread(), threads.size(), thread);
 	}
 
-	void renderMethod(Context c, EventProxy e, SafeHtmlBuilder o) {
-		ClassProxy t = e.getType();
-		MethodProxy m = e.getMethod();
+	SafeHtml renderEvent(EventProxy e) {
+		SafeHtml details = getEventDescription(e);
+		return templates.eventDetails(style.event(), details);
+	}
 
-		if (m.getName().equals("<init>")) {
-			o.appendHtmlConstant("<span class='" + style.method() + "'>new</span> ");
-			o.appendHtmlConstant("<span class='" + style.type() + "' title='" + t.getName() + "'>");
-			o.appendEscaped(t.getSimpleName());
-			o.appendHtmlConstant("</span>");
+	SafeHtml renderType(EventProxy e) {
+		SafeHtml details;
+		if (e.getClazz() == null) {
+			details = templates.nullType();
 		} else {
-			o.appendHtmlConstant("<span class='" + style.type() + "' title='" + t.getName() + "'>");
-			o.appendEscaped(t.getSimpleName());
-			o.appendHtmlConstant("</span>");
-			o.appendHtmlConstant("<span class='" + style.method() + "'>.");
-			o.appendEscaped(m.getName());
-			o.appendHtmlConstant("</span>");
+			// TODO get the class name from a cache
+			String fqname = "org.foo.Bar";
+			String simple = "Bar";
+			SafeHtml title = SafeHtmlUtils.fromString(fqname);
+			SafeHtml name = SafeHtmlUtils.fromString(simple);
+			details = templates.typeDetails(title, name);
+		}
+		return templates.type(style.type(), details);
+	}
+
+	SafeHtml renderMethod(EventProxy e) {
+		ClazzIdProxy t = e.getClazz();
+		MethodIdProxy m = e.getMethod();
+
+		// TODO get details from a cache
+		String className = "org.foo.Bar";
+		String simpleClassName = "Bar";
+		String methodName = "baz";
+
+		SafeHtml call;
+		if (methodName.equals("<init>")) {
+			SafeHtml title = SafeHtmlUtils.fromString(className);
+			SafeHtml name = SafeHtmlUtils.fromString(simpleClassName);
+			call = templates.initMethod(style.method(), style.type(), title, name);
+		} else {
+			SafeHtml title = SafeHtmlUtils.fromString(className);
+			SafeHtml name = SafeHtmlUtils.fromString(simpleClassName);
+			SafeHtml method = SafeHtmlUtils.fromString(methodName);
+			call = templates.methodCall(style.type(), title, name, style.method(), method);
 		}
 
-		o.appendHtmlConstant("<span class='" + style.args() + "'>(");
+		SafeHtmlBuilder args = new SafeHtmlBuilder();
 		if (e.getArgs() != null) {
-			for (InstanceProxy arg : e.getArgs()) {
+			for (InstanceIdProxy arg : e.getArgs()) {
 				if (arg != null) {
-					o.appendEscaped(arg.getType().getSimpleName());
+					// TODO get instance information
+					args.appendEscaped(String.valueOf(arg));
 				} else {
-					o.appendHtmlConstant("null");
+					args.appendHtmlConstant("<em>null</em>");
 				}
 			}
 		}
-		o.appendHtmlConstant(")</span>");
+		return templates.method(call, args.toSafeHtml());
 	}
 
-	String getEventDescription(EventProxy e) {
+	SafeHtml getEventDescription(EventProxy e) {
 		switch (e.getEvent()) {
 			case EventProxy.OBJECT_ALLOCATED:
-				return "new";
+				return events.newObject();
 			case EventProxy.ARRAY_ALLOCATED:
-				return "new[]";
+				return events.newArray();
 			case EventProxy.METHOD_ENTER:
-				return "&rarr;";
+				return events.methodEnter();
 			case EventProxy.METHOD_RETURN:
-				return "&larr;";
+				return events.methodReturn();
 			case EventProxy.FIELD_READ:
-				return "<em>read</em>";
+				return events.fieldRead();
 			case EventProxy.FIELD_WRITE:
-				return "<em>write</em>";
+				return events.fieldWrite();
 			case EventProxy.CLASS_WEAVE:
-				return "<em>weave</em>";
+				return events.classWeave();
 			case EventProxy.CLASS_INITIALIZED:
-				return "<em>init</em>";
+				return events.classWeave();
 			case EventProxy.OBJECT_TAGGED:
-				return "<em>tag</em>";
+				return events.objectTagged();
 			case EventProxy.OBJECT_FREED:
-				return "<em>free</em>";
+				return events.objectFreed();
 			case EventProxy.METHOD_EXCEPTION:
-				return "&#x219A;";
+				return events.methodException();
 			default:
-				return "<em>unknown</em>";
+				return events.unknown();
 		}
 	}
 
-	String getStyleName(EventProxy e) {
+	SafeStyles getStyleName(EventProxy e) {
 		switch (e.getEvent()) {
 			case EventProxy.OBJECT_ALLOCATED:
 				return style.objectAllocated();
@@ -158,7 +242,7 @@ public class EventCell extends AbstractCell<EventProxy> {
 			case EventProxy.METHOD_EXCEPTION:
 				return style.methodException();
 			default:
-				return "";
+				return style.unknown();
 		}
 	}
 }

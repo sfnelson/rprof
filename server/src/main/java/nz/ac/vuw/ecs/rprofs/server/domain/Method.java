@@ -3,75 +3,71 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 
-import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  */
-@Entity
-@NamedQueries({
-		@NamedQuery(name = "methodsForType", query = "select M from Method M where M.owner = :type"),
-		@NamedQuery(name = "deleteMethods", query = "delete from Method M")
-})
-public class Method implements Attribute<Method> {
+public class Method implements Attribute<MethodId, Method> {
 
 	public static final java.lang.Class<Method> TYPE = Method.class;
 
-	@EmbeddedId
+	@NotNull
 	private MethodId mid;
 
-	@Version
-	private Integer version;
-
+	@NotNull
 	private String name;
 
-	@ManyToOne
-	private Clazz owner;
+	@NotNull
+	private ClazzId owner;
 
-	@Column(columnDefinition = "character varying(1023)")
+	@NotNull
+	private String ownerName;
+
+	@NotNull
 	private String description;
 
-	private Integer access;
+	private int access;
 
 	public Method() {
 	}
 
-	public Method(MethodId id, String name, Clazz owner, String description, int access) {
+	public Method(MethodId id, String name, ClazzId owner, String ownerName,
+				  String description, int access) {
 		this.mid = id;
 		this.name = name;
 		this.owner = owner;
+		this.ownerName = ownerName;
 		this.description = description;
 		this.access = access;
 	}
 
+	@Override
+	@NotNull
 	public MethodId getId() {
 		return mid;
 	}
 
-	public Long getRpcId() {
-		return mid.longValue();
-	}
-
-	public Integer getVersion() {
-		return version;
-	}
-
+	@NotNull
 	public String getName() {
 		return name;
 	}
 
-	public Clazz getOwner() {
+	@NotNull
+	public ClazzId getOwner() {
 		return owner;
 	}
 
-	public ClassId getOwnerId() {
-		return owner.getId();
+	@NotNull
+	public String getOwnerName() {
+		return ownerName;
 	}
 
+	@NotNull
 	public String getDescription() {
 		return description;
 	}
@@ -81,12 +77,13 @@ public class Method implements Attribute<Method> {
 	}
 
 	@Override
+	@NotNull
 	public String toString() {
-		return owner.getName() + "." + name + ":" + description;
+		return ownerName + "." + name + ":" + description;
 	}
 
 	public boolean isNative() {
-		return (0x800 & getAccess()) != 0;
+		return (0x800 & access) != 0;
 	}
 
 	public boolean isMain() {
@@ -116,16 +113,13 @@ public class Method implements Attribute<Method> {
 		return (0x8 & getAccess()) != 0; // static
 	}
 
+	@NotNull
 	public String toMethodString() {
 		return getName() + ":" + getDescription();
 	}
 
 	@Override
-	public void visit(AttributeVisitor visitor) {
+	public void visit(@NotNull AttributeVisitor visitor) {
 		visitor.visitMethod(this);
-	}
-
-	public void visit(DomainVisitor visitor) {
-		// TODO visitMethod();
 	}
 }

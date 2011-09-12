@@ -3,81 +3,76 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 
-import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  */
-@Entity
-@NamedQueries({
-		@NamedQuery(name = "fieldsForType", query = "select F from Field F where F.owner = :type"),
-		@NamedQuery(name = "deleteFields", query = "delete from Field F")
-})
-public class Field implements Attribute<Field> {
+public class Field implements Attribute<FieldId, Field> {
 
 	public static final java.lang.Class<Field> TYPE = Field.class;
 
-	@EmbeddedId
-	FieldId id;
+	@NotNull
+	private FieldId id;
 
-	@Version
-	Integer version;
-
-	@ManyToOne
-	private Clazz owner;
-
+	@NotNull
 	private String name;
 
+	@NotNull
+	private ClazzId owner;
+
+	@NotNull
+	private String ownerName;
+
+	@NotNull
 	protected String description;
 
 	protected int access;
 
-	protected boolean equals;
-
-	protected boolean hash;
-
 	public Field() {
 	}
 
-	public Field(FieldId id, String name, Clazz owner, String desc, int access) {
+	public Field(@NotNull FieldId id, @NotNull String name,
+				 @NotNull ClazzId owner, @NotNull String ownerName,
+				 @NotNull String desc, int access) {
 		this.id = id;
-		this.owner = owner;
 		this.name = name;
+		this.owner = owner;
+		this.ownerName = ownerName;
 		this.description = desc;
 		this.access = access;
 	}
 
+	@Override
+	@NotNull
 	public FieldId getId() {
 		return id;
 	}
 
-	public Long getRpcId() {
-		return id.longValue();
-	}
-
-	public Integer getVersion() {
-		return version;
-	}
-
 	@Override
-	public Clazz getOwner() {
+	@NotNull
+	public ClazzId getOwner() {
 		return owner;
 	}
 
 	@Override
-	public ClassId getOwnerId() {
-		return owner.getId();
+	@NotNull
+	public String getOwnerName() {
+		return ownerName;
 	}
 
 	@Override
+	@NotNull
 	public String getName() {
 		return name;
 	}
 
+	@Override
+	@NotNull
 	public String getDescription() {
 		return description;
 	}
@@ -87,16 +82,13 @@ public class Field implements Attribute<Field> {
 	}
 
 	@Override
+	@NotNull
 	public String toString() {
-		return owner.getName() + "." + name + ":" + description;
+		return ownerName + "." + name + ":" + description;
 	}
 
 	@Override
-	public void visit(AttributeVisitor visitor) {
+	public void visit(@NotNull AttributeVisitor visitor) {
 		visitor.visitField(this);
-	}
-
-	public void visit(DomainVisitor visitor) {
-		// TODO visitField()
 	}
 }

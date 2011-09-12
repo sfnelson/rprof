@@ -1,16 +1,16 @@
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
-public class Dataset implements DataObject<Dataset, DataSetId>, Comparable<Dataset> {
+public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Dataset> {
 
 	@NotNull
-	private DataSetId id;
+	private DatasetId id;
 
 	@NotNull
 	private String handle;
@@ -27,25 +27,16 @@ public class Dataset implements DataObject<Dataset, DataSetId>, Comparable<Datas
 	public Dataset() {
 	}
 
-	public Dataset(@NotNull DataSetId id, @NotNull String handle, @NotNull Date started) {
+	public Dataset(@NotNull DatasetId id, @NotNull String handle, @NotNull Date started) {
 		this.id = id;
 		this.handle = handle;
 		this.started = started;
 	}
 
 	@NotNull
-	public DataSetId getId() {
+	@Override
+	public DatasetId getId() {
 		return id;
-	}
-
-	@NotNull
-	public Long getRpcId() {
-		return id.longValue();
-	}
-
-	@NotNull
-	public Integer getVersion() {
-		return 0;
 	}
 
 	@NotNull
@@ -99,9 +90,5 @@ public class Dataset implements DataObject<Dataset, DataSetId>, Comparable<Datas
 	@Override
 	public int hashCode() {
 		return id.hashCode();
-	}
-
-	public void visit(DomainVisitor visitor) {
-		visitor.visitDataset(this);
 	}
 }

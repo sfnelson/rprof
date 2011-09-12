@@ -18,7 +18,7 @@ public class InspectFieldsActivity
 	private final ReportView view;
 
 	@Inject
-	public InspectFieldsActivity(Provider<ClassRequest> cr,
+	public InspectFieldsActivity(Provider<ClazzRequest> cr,
 								 Provider<FieldRequest> fr,
 								 Provider<MethodRequest> mr,
 								 Provider<InstanceRequest> ir,
@@ -49,18 +49,18 @@ public class InspectFieldsActivity
 	}
 
 	@Override
-	protected void classesAvailable(String pkg, List<ClassProxy> classes) {
+	protected void classesAvailable(String pkg, List<ClazzProxy> classes) {
 		view.clear(pkg);
 		view.showClasses(pkg, classes);
 	}
 
 	@Override
-	public void selectClass(ClassProxy cls) {
+	public void selectClass(ClazzProxy cls) {
 		findFieldsByClass(cls);
 	}
 
 	@Override
-	protected void fieldsAvailable(ClassProxy cls, List<FieldProxy> fields) {
+	protected void fieldsAvailable(ClazzProxy cls, List<FieldProxy> fields) {
 		view.clear(cls);
 		view.showFields(cls, fields);
 	}

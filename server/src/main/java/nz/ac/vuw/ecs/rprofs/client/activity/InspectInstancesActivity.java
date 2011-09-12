@@ -21,7 +21,7 @@ public class InspectInstancesActivity extends AbstractTypedInspectorActivity<Bro
 	private final PlaceController pc;
 
 	@Inject
-	public InspectInstancesActivity(Provider<ClassRequest> cr,
+	public InspectInstancesActivity(Provider<ClazzRequest> cr,
 									Provider<FieldRequest> fr,
 									Provider<MethodRequest> mr,
 									Provider<InstanceRequest> ir,
@@ -61,18 +61,18 @@ public class InspectInstancesActivity extends AbstractTypedInspectorActivity<Bro
 	}
 
 	@Override
-	protected void classesAvailable(String pkg, List<ClassProxy> classes) {
+	protected void classesAvailable(String pkg, List<ClazzProxy> classes) {
 		view.showClasses(pkg, classes);
 	}
 
 	@Override
-	public void selectClass(final ClassProxy cls) {
+	public void selectClass(final ClazzProxy cls) {
 		view.clear(cls);
 		findInstancesByClass(cls);
 	}
 
 	@Override
-	protected void instancesAvailable(ClassProxy cls, List<InstanceProxy> instances) {
+	protected void instancesAvailable(ClazzProxy cls, List<InstanceProxy> instances) {
 		view.showInstances(cls, instances);
 	}
 
@@ -82,7 +82,7 @@ public class InspectInstancesActivity extends AbstractTypedInspectorActivity<Bro
 		if (current instanceof CompositePlace) {
 			CompositePlace<?> c = (CompositePlace<?>) current;
 			c = c.clonePlace();
-			c.setParameter("i", String.valueOf(instance.getIndex()));
+			c.setParameter("i", String.valueOf(instance.stableId()));
 			pc.goTo(c);
 		}
 	}

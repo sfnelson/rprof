@@ -4,18 +4,16 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.mongodb.*;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.Id;
+import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -35,40 +33,11 @@ public class Database {
 	}
 
 	public DatasetManager.DatasetBuilder getDatasetBuilder() {
-		return new MongoDatasetBuilder() {
-			@Override
-			public short _getId() {
-				short max = 0;
-				for (String dbname : mongo.getDatabaseNames()) {
-					if (dbname.startsWith("rprof")) {
-						DB db = mongo.getDB(dbname);
-						DBObject properties = db.getCollection("properties").findOne();
-						short id = ((Integer) properties.get("_id")).shortValue();
-						if (id > max) max = id;
-					}
-				}
-				return ++max;
-			}
-
-			@Override
-			public void _store(DBObject dataset) {
-				assert (dataset.get("_id") != null);
-				assert (dataset.get("handle") != null);
-				assert (dataset.get("started") != null);
-
-				String dbname = "rprof_" + dataset.get("handle") + "_" + dataset.get("_id");
-				DB db = mongo.getDB(dbname);
-				DBCollection properties = db.getCollection("properties");
-
-				properties.insert(dataset);
-			}
-		};
+		return createDatasetBuilder();
 	}
 
 	public DatasetManager.DatasetBuilder getDatasetUpdater(final Dataset dataset) {
-		DB db = getDatabase(dataset);
-		final DBCollection properties = db.getCollection("properties");
-
+		final DBCollection properties = getCollection(dataset, Dataset.class);
 		return new MongoDatasetBuilder() {
 			@Override
 			public short _getId() {
@@ -82,67 +51,33 @@ public class Database {
 		};
 	}
 
+	public ClassManager.ClassBuilder getClassBuilder() {
+		return createClassBuilder();
+	}
+
 	public EventManager.EventBuilder getEventBuilder() {
-		Dataset dataset = context.getDataset();
-		DB db = getDatabase(dataset);
-		final DBCollection events = db.getCollection("events");
-
-		return new MongoEventBuilder() {
-			@Override
-			void _store(DBObject event) {
-				events.insert(event);
-			}
-		};
+		return createEventBuilder();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends DataObject> T createEntity(Class<T> type, Object... params) {
-
-		UpdateBuilder update = new UpdateBuilder(new BasicDBObject());
-
-		if (type == Dataset.class) {
-			assert (params.length == 2);
-			String handle = (String) params[0];
-			Date started = (Date) params[1];
-			short id = getNextId();
-			Dataset ds = new Dataset(new DataSetId(id), handle, started);
-
-			DB db = mongo.getDB(getDBName(ds));
-			DBCollection properties = db.getCollection("properties");
-
-			ds.visit(update);
-
-			properties.save(update.getUpdate());
-
-			return (T) ds;
+	public <T extends DataObject<?, T>> T findEntity(@Nullable Id<?, T> id) {
+		if (id == null) {
+			return null;
 		}
-
-		Dataset dataset = context.getDataset();
-		DB db = getDatabase(dataset);
-
-		if (type == Clazz.class) {
-			assert (params.length == 0);
-
-			DBCollection classes = db.getCollection("classes");
-			Long numClasses = classes.count();
-			ClassId id = ClassId.create(dataset, numClasses.intValue() + 1);
-			Clazz cls = new Clazz(dataset, id, null, null, 0);
-			cls.visit(update);
-			classes.insert(update.getUpdate());
-			return (T) cls;
-		}
-
-		return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T extends DataObject<T, I>, I extends Id<T>> T findEntity(Class<T> type, Id<T> id) {
-		if (type == Dataset.class) {
+		if (Dataset.class.equals(id.getTargetClass())) {
 			for (Dataset ds : getDatasets()) {
-				if (ds.getId().equals(id)) return (T) ds;
+				if (ds.getId().equals(id)) {
+					return id.getTargetClass().cast(ds);
+				}
 			}
+			return null;
+		} else {
+			Dataset current = context.getDataset();
+			DB db = getDatabase(current);
+			DBCollection collection = getCollection(db, id.getTargetClass());
+			DBObject data = collection.findOne(new BasicDBObject("_id", id.longValue()));
+			return getBuilder(id.getTargetClass()).init(data).get();
 		}
-		return null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -165,37 +100,7 @@ public class Database {
 		return null;
 	}
 
-	public <T extends DataObject> T updateEntity(T entity) {
-		EntityQueryBuilder query = new EntityQueryBuilder();
-		entity.visit(query);
-
-		Dataset dataset;
-		if (entity.getClass() == Dataset.class) {
-			dataset = (Dataset) entity;
-		} else {
-			dataset = context.getDataset();
-		}
-
-		if (dataset == null) throw new RuntimeException("no dataset in context");
-
-		DB database = getDatabase(dataset);
-
-		if (database == null) throw new RuntimeException("invalid dataset provided");
-
-		DBCollection collection = database.getCollection(query.getCollection());
-		DBObject target = collection.findOne(query.getQuery());
-
-		UpdateBuilder update = new UpdateBuilder(target);
-		entity.visit(update);
-
-		collection.update(query.getQuery(), update.getUpdate());
-
-		return entity;
-	}
-
 	public <T extends DataObject> boolean deleteEntity(T entity) {
-		EntityQueryBuilder query = new EntityQueryBuilder();
-		entity.visit(query);
 
 		Dataset dataset;
 		if (entity.getClass() == Dataset.class) {
@@ -210,8 +115,8 @@ public class Database {
 
 		if (database == null) throw new RuntimeException("invalid dataset provided");
 
-		DBCollection collection = database.getCollection(query.getCollection());
-		collection.remove(query.getQuery());
+		DBCollection collection = getCollection(database, entity.getClass());
+		collection.remove(new BasicDBObject("_id", entity.getId().longValue()));
 
 		if (entity.getClass() == Dataset.class) {
 			mongo.dropDatabase(getDBName((Dataset) entity));
@@ -220,20 +125,57 @@ public class Database {
 		return true;
 	}
 
-	private List<Dataset> getDatasets() {
-		List<Dataset> result = Lists.newArrayList();
-		for (String dbname : mongo.getDatabaseNames()) {
-			if (dbname.startsWith("rprof_")) {
-				DBObject properties = mongo.getDB(dbname)
-						.getCollection("properties").findOne();
-				result.add(create(Dataset.class, properties));
-			}
-		}
-		return result;
+	private DB getDatabase() {
+		Dataset current = context.getDataset();
+		if (current != null) return getDatabase(current);
+		else return null;
 	}
 
 	private DB getDatabase(@NotNull Dataset dataset) {
 		return mongo.getDB(getDBName(dataset));
+	}
+
+	private DBCollection getCollection(Class<? extends DataObject> type) {
+		DB root = getDatabase();
+		if (root != null) return getCollection(root, type);
+		else return null;
+	}
+
+	private DBCollection getCollection(Dataset dataset, Class<? extends DataObject> type) {
+		DB root = getDatabase(dataset);
+		if (root != null) return getCollection(root, type);
+		else return null;
+	}
+
+	private DBCollection getCollection(DB root, Class<? extends DataObject> type) {
+		if (type == Dataset.class) {
+			return root.getCollection("properties");
+		} else if (type == Clazz.class) {
+			return root.getCollection("classes");
+		} else if (type == Method.class) {
+			return root.getCollection("methods");
+		} else if (type == Field.class) {
+			return root.getCollection("fields");
+		} else if (type == Instance.class) {
+			return root.getCollection("objects");
+		} else if (type == Event.class) {
+			return root.getCollection("events");
+		} else {
+			throw new RuntimeException("type not implemented: " + type);
+		}
+	}
+
+	private List<Dataset> getDatasets() {
+		List<Dataset> result = Lists.newArrayList();
+		MongoDatasetBuilder builder = createDatasetBuilder();
+		for (String dbname : mongo.getDatabaseNames()) {
+			if (dbname.startsWith("rprof_")) {
+				DBObject properties = mongo.getDB(dbname)
+						.getCollection("properties").findOne();
+				result.add(builder.init(properties).get());
+			}
+		}
+		return result;
 	}
 
 	@VisibleForTesting
@@ -243,7 +185,7 @@ public class Database {
 			if (dbname.startsWith("rprof")) {
 				DB db = mongo.getDB(dbname);
 				DBObject properties = db.getCollection("properties").findOne();
-				short id = ((Integer) properties.get("_id")).shortValue();
+				short id = ((Long) properties.get("_id")).shortValue();
 				if (id > max) max = id;
 			}
 		}
@@ -251,71 +193,71 @@ public class Database {
 	}
 
 	@VisibleForTesting
-	String getDBName(String handle, int id) {
-		return "rprof_" + handle + "_" + id;
-	}
-
-	@VisibleForTesting
 	String getDBName(Dataset dataset) {
 		return "rprof_" + dataset.getHandle() + "_" + dataset.getId().indexValue();
 	}
 
-	private class EntityQueryBuilder implements DataObject.DomainVisitor {
-		BasicDBObjectBuilder query = new BasicDBObjectBuilder();
-		String collection = null;
-
-		public void visitDataset(Dataset dataset) {
-			query.add("_id", dataset.getId().indexValue());
-			collection = "properties";
-		}
-
-		public DBObject getQuery() {
-			return query.get();
-		}
-
-		public String getCollection() {
-			return collection;
-		}
-	}
-
-	private class UpdateBuilder implements DataObject.DomainVisitor {
-		BasicDBObjectBuilder update = new BasicDBObjectBuilder();
-		DBObject current;
-
-		public UpdateBuilder(DBObject current) {
-			this.current = current;
-		}
-
-		public DBObject getUpdate() {
-			return update.get();
-		}
-
-		public void visitDataset(Dataset ds) {
-			checkProperty("_id", ds.getId().indexValue());
-			checkProperty("handle", ds.getHandle());
-			checkProperty("started", ds.getStarted());
-			checkProperty("stopped", ds.getStopped());
-			checkProperty("program", ds.getProgram());
-		}
-
-		private void checkProperty(String key, Object value) {
-			if ((!current.containsField(key) || !current.get(key).equals(value)) && value != null) {
-				update.add(key, value);
-			}
-		}
-	}
-
 	@SuppressWarnings("unchecked")
-	private static <T extends DataObject> T create(Class<T> type, DBObject properties) {
-		if (type == Dataset.class) {
-			short id = ((Integer) properties.get("_id")).shortValue();
-			String handle = (String) properties.get("handle");
-			Date started = (Date) properties.get("started");
-			Dataset ds = new Dataset(new DataSetId(id), handle, started);
-			ds.setStopped((Date) properties.get("stopped"));
-			ds.setProgram((String) properties.get("program"));
-			return (T) ds;
+	private <T extends DataObject<?, T>> EntityBuilder<T> getBuilder(@NotNull Class<T> type) {
+		if (type.equals(Dataset.class)) {
+			return EntityBuilder.class.cast(createDatasetBuilder());
+		} else if (type.equals(Event.class)) {
+			return EntityBuilder.class.cast(createEventBuilder());
 		}
 		return null;
+	}
+
+	private MongoDatasetBuilder createDatasetBuilder() {
+		return new MongoDatasetBuilder() {
+			@Override
+			public short _getId() {
+				short max = 0;
+				for (String dbname : mongo.getDatabaseNames()) {
+					if (dbname.startsWith("rprof")) {
+						DB db = mongo.getDB(dbname);
+						DBObject properties = db.getCollection("properties").findOne();
+						short id = ((Long) properties.get("_id")).shortValue();
+						if (id > max) max = id;
+					}
+				}
+				return ++max;
+			}
+
+			@Override
+			public void _store(DBObject dataset) {
+				String dbname = "rprof_" + dataset.get("handle") + "_" + dataset.get("_id");
+				DB db = mongo.getDB(dbname);
+				DBCollection properties = db.getCollection("properties");
+				properties.insert(dataset);
+			}
+		};
+	}
+
+	private MongoEventBuilder createEventBuilder() {
+		return new MongoEventBuilder() {
+			final DBCollection events = getCollection(Event.class);
+
+			@Override
+			void _store(DBObject event) {
+				events.insert(event);
+			}
+		};
+	}
+
+	private MongoClassBuilder createClassBuilder() {
+		return new MongoClassBuilder() {
+			DBCollection classes = getCollection(Clazz.class);
+
+			@Override
+			long _nextId() {
+				// TODO this is not thread-safe!
+				return classes.count() + 1;
+			}
+
+			@Override
+			void _store(DBObject data) {
+				classes.insert(data);
+			}
+		};
 	}
 }

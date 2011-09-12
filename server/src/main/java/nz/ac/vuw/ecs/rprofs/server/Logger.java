@@ -83,13 +83,13 @@ public class Logger extends HttpServlet {
 			int mnum = dis.readInt();
 
 			if ((type & Event.HAS_CLASS) == type) {
-				ClassId classId = ClassId.create(ds, cnum);
-				b.setClazz(classId);
+				ClazzId clazzId = ClazzId.create(ds, cnum);
+				b.setClazz(clazzId);
 
 				if ((type & Event.METHODS) == type) {
-					b.setMethod(MethodId.create(ds, classId, (short) mnum));
+					b.setMethod(MethodId.create(ds, clazzId, (short) mnum));
 				} else if ((type & Event.FIELDS) == type) {
-					b.setField(FieldId.create(ds, classId, (short) mnum));
+					b.setField(FieldId.create(ds, clazzId, (short) mnum));
 				}
 			}
 
@@ -112,8 +112,8 @@ public class Logger extends HttpServlet {
 	}
 
 	@Nullable
-	ObjectId parseObjectId(Dataset ds, long id) {
+	InstanceId parseObjectId(Dataset ds, long id) {
 		if (id == 0) return null;
-		return ObjectId.create(ds, id);
+		return InstanceId.create(ds, id);
 	}
 }

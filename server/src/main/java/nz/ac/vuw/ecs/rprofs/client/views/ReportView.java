@@ -1,7 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.client.views;
 
 import com.google.gwt.user.client.ui.IsWidget;
-import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.ClazzProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
@@ -14,7 +14,7 @@ public interface ReportView extends IsWidget {
 
 	public void showPackages(List<String> packages);
 
-	public void showClasses(Object parent, List<ClassProxy> classes);
+	public void showClasses(Object parent, List<ClazzProxy> classes);
 
 	public void showMethods(Object parent, List<MethodProxy> methods);
 
@@ -29,7 +29,7 @@ public interface ReportView extends IsWidget {
 	public interface Presenter {
 		public void selectPackage(String pkg);
 
-		public void selectClass(ClassProxy cls);
+		public void selectClass(ClazzProxy cls);
 
 		public void selectMethod(MethodProxy method);
 

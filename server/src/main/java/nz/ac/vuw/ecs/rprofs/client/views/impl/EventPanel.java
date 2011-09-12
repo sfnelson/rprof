@@ -16,6 +16,7 @@ import com.google.gwt.view.client.Range;
 import nz.ac.vuw.ecs.rprofs.client.Resources;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.id.InstanceIdProxy;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.ui.EventCell;
 import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
@@ -197,7 +198,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 
 	private EventStyle eventStyle;
 	private Presenter presenter;
-	private Map<InstanceProxy, Integer> threads = Collections.newMap();
+	private Map<InstanceIdProxy, Integer> threads = Collections.newMap();
 
 	public EventPanel() {
 		Resources res = GWT.create(Resources.class);
@@ -217,7 +218,7 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	private void recalculate() {
 		int unit = 15;
 		int total = pane.getOffsetHeight();
-		if (unit == 0 || total == 0) return;
+		if (total == 0) return;
 		list.setPageSize(total / unit);
 	}
 
@@ -250,7 +251,9 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 		this.threads.clear();
 		int i = 0;
 		for (InstanceProxy thread : threads) {
-			this.threads.put(thread, i++);
+			if (thread != null) {
+				this.threads.put(thread.getId(), i++);
+			}
 		}
 
 		list.redraw();

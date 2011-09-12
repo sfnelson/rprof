@@ -2,6 +2,7 @@ package nz.ac.vuw.ecs.rprofs.client.request;
 
 import com.google.web.bindery.requestfactory.shared.EntityProxy;
 import com.google.web.bindery.requestfactory.shared.ProxyFor;
+import nz.ac.vuw.ecs.rprofs.client.request.id.*;
 import nz.ac.vuw.ecs.rprofs.server.data.DomainObjectLocator;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 
@@ -30,18 +31,18 @@ public interface EventProxy extends EntityProxy {
 	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
 	public static final int CLASSES = CLASS_WEAVE | CLASS_INITIALIZED;
 
-	public Long getRpcId();
+	public EventIdProxy getId();
 
-	public InstanceProxy getThread();
+	public InstanceIdProxy getThread();
 
-	public Integer getEvent();
+	public int getEvent();
 
-	public ClassProxy getType();
+	public ClazzIdProxy getClazz();
 
-	public MethodProxy getMethod();
+	public MethodIdProxy getMethod();
 
-	public FieldProxy getField();
+	public FieldIdProxy getField();
 
-	public List<InstanceProxy> getArgs();
+	public List<InstanceIdProxy> getArgs();
 
 }

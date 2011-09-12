@@ -3,28 +3,28 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 
-import javax.persistence.Embeddable;
+public class ClazzId extends Id<ClazzId, Clazz> {
 
-@SuppressWarnings("serial")
-@Embeddable
-public class ClassId extends Id<Clazz> {
-
-	public static ClassId create(Dataset dataset, int cnum) {
-		return new ClassId(dataset.getId().indexValue(), cnum);
+	public static ClazzId create(Dataset dataset, int cnum) {
+		return new ClazzId(dataset.getId().indexValue(), cnum);
 	}
 
-	public static final Class<ClassId> TYPE = ClassId.class;
+	public static final Class<ClazzId> TYPE = ClazzId.class;
 
 	private static final long mask = 0xFFFFFFFF;
 
-	public ClassId() {
+	public ClazzId() {
 	}
 
-	public ClassId(short dataset, int index) {
+	public Class<Clazz> getTargetClass() {
+		return Clazz.class;
+	}
+
+	public ClazzId(short dataset, int index) {
 		super((((long) dataset) << 48) | index);
 	}
 
-	public ClassId(long classId) {
+	public ClazzId(long classId) {
 		super(classId);
 	}
 
@@ -33,7 +33,7 @@ public class ClassId extends Id<Clazz> {
 	}
 
 	public int indexValue() {
-		return longValue().intValue();
+		return (int) longValue();
 	}
 
 	@Override

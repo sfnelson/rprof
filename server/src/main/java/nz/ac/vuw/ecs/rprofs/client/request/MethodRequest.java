@@ -12,6 +12,6 @@ import java.util.List;
 @Service(value = MethodService.class, locator = ServiceLocator.class)
 public interface MethodRequest extends RequestContext {
 
-	Request<List<MethodProxy>> findMethods(ClassProxy cls);
+	Request<List<MethodProxy>> findMethods(ClazzProxy cls);
 
 }

@@ -2,8 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 
 import java.util.Map;
 import java.util.Set;
@@ -11,8 +10,7 @@ import java.util.Set;
 public class ClassRecord {
 
 	final Weaver weaver;
-	final Clazz cls;
-	final ClassId id;
+	final ClazzId id;
 
 	String name;
 	String superName;
@@ -26,10 +24,9 @@ public class ClassRecord {
 	Map<Short, MethodRecord> methods = Collections.newMap();
 	Map<Short, FieldRecord> fields = Collections.newMap();
 
-	ClassRecord(Weaver weaver, Clazz cls) {
+	ClassRecord(Weaver weaver, ClazzId id) {
 		this.weaver = weaver;
-		this.cls = cls;
-		this.id = cls.getId();
+		this.id = id;
 	}
 
 	void init(int version, int access, String name, String signature,
@@ -54,9 +51,8 @@ public class ClassRecord {
 		this.properties = properties;
 	}
 
-	public Clazz toClass(Dataset owner) {
-		// TODO update the provided class
-		return new Clazz(owner, id, name, null, properties);
+	public Clazz toClass() {
+		return new Clazz(id, name, null, superName, properties);
 	}
 
 	public FieldRecord getField(String name, String desc) {

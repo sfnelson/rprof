@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,7 +31,7 @@ public class DatasetManagerTest {
 
 	@Test
 	public void testCreateDataset() throws Exception {
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
 		DatasetManager.DatasetBuilder builder = createMock(DatasetManager.DatasetBuilder.class);
@@ -40,7 +40,7 @@ public class DatasetManagerTest {
 		expect(builder.setHandle(anyObject(String.class))).andReturn(builder);
 		expect(builder.setStarted(anyObject(Date.class))).andReturn(builder);
 		expect(builder.store()).andReturn(id);
-		expect(database.findEntity(Dataset.class, id)).andReturn(dataset);
+		expect(database.findEntity(id)).andReturn(dataset);
 
 		replay(database, builder);
 
@@ -68,7 +68,7 @@ public class DatasetManagerTest {
 	@Test
 	public void testFindDataset() throws Exception {
 
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 		List<Dataset> list = Lists.newArrayList(dataset);
 
@@ -84,7 +84,7 @@ public class DatasetManagerTest {
 
 	@Test
 	public void testStopDataset() throws Exception {
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
 		DatasetManager.DatasetBuilder builder = createMock(DatasetManager.DatasetBuilder.class);
@@ -101,7 +101,7 @@ public class DatasetManagerTest {
 
 	@Test
 	public void testSetProgram() throws Exception {
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
 		DatasetManager.DatasetBuilder builder = createMock(DatasetManager.DatasetBuilder.class);
@@ -118,7 +118,7 @@ public class DatasetManagerTest {
 
 	@Test
 	public void testDeleteDataset() throws Exception {
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
 		expect(database.deleteEntity(dataset)).andReturn(true);

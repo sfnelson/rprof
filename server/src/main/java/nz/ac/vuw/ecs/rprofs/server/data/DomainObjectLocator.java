@@ -3,11 +3,12 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import com.google.web.bindery.requestfactory.shared.Locator;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Configurable;
 
 @Configurable
-public class DomainObjectLocator<T> extends Locator<T, Long> {
+public class DomainObjectLocator<I extends Id<I, T>, T extends DataObject<I, T>> extends Locator<T, Long> {
 
 	private org.slf4j.Logger log = LoggerFactory.getLogger(DomainObjectLocator.class);
 
@@ -26,22 +27,22 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 
 	@Override
 	public T find(java.lang.Class<? extends T> clazz, Long id) {
-		if (clazz == Clazz.class) {
+		if (Clazz.class.equals(clazz)) {
 			return null;
 		}
-		if (clazz == Dataset.class) {
+		if (Dataset.class.equals(clazz)) {
 			return null;
 		}
-		if (clazz == Event.class) {
+		if (Event.class.equals(clazz)) {
 			return null;
 		}
-		if (clazz == Field.class) {
+		if (Field.class.equals(clazz)) {
 			return null;
 		}
-		if (clazz == Instance.class) {
+		if (Instance.class.equals(clazz)) {
 			return null;
 		}
-		if (clazz == Method.class) {
+		if (Method.class.equals(clazz)) {
 			return null;
 		}
 		log.warn("could not find locator case for {}", clazz.getName());
@@ -55,8 +56,8 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 	}
 
 	@Override
-	public Long getId(T o) {
-		return ((DataObject<?, ?>) o).getRpcId();
+	public Long getId(T object) {
+		return object.getId().longValue();
 	}
 
 	@Override
@@ -66,7 +67,7 @@ public class DomainObjectLocator<T> extends Locator<T, Long> {
 
 	@Override
 	public Object getVersion(T o) {
-		return ((DataObject<?, ?>) o).getVersion();
+		return 1;
 	}
 
 }

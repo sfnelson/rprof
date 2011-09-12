@@ -1,10 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.server.request;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 
 import java.util.List;
 
-public interface ClassService {
+public interface ClazzService {
 
 	Integer findNumPackages();
 
@@ -18,6 +19,6 @@ public interface ClassService {
 
 	List<? extends Clazz> findClasses();
 
-	Clazz findClass(String fqn);
+	Clazz findClass(ClazzId id);
 
 }

@@ -39,7 +39,7 @@ public class LoggerTest {
 
 	@Before
 	public void setup() {
-		ds = new Dataset(new DataSetId((short) 1), "foobar", new Date());
+		ds = new Dataset(new DatasetId((short) 1), "foobar", new Date());
 
 		datasets = createMock(DatasetManager.class);
 		context = createMock(Context.class);
@@ -120,14 +120,14 @@ public class LoggerTest {
 		};
 
 		EventId id = EventId.create(ds, 1);
-		ObjectId thread = ObjectId.create(ds, 2);
+		InstanceId thread = InstanceId.create(ds, 2);
 		int event = 4;
-		ClassId clazz = ClassId.create(ds, 3);
+		ClazzId clazz = ClazzId.create(ds, 3);
 		MethodId method = MethodId.create(ds, clazz, (short) 5);
-		List<ObjectId> args = Lists.newArrayList(
-				ObjectId.create(ds, 7), null,
-				ObjectId.create(ds, 9), null, null,
-				ObjectId.create(ds, 12)
+		List<InstanceId> args = Lists.newArrayList(
+				InstanceId.create(ds, 7), null,
+				InstanceId.create(ds, 9), null, null,
+				InstanceId.create(ds, 12)
 		);
 
 		expect(events.getBuilder()).andReturn(builder);
@@ -136,7 +136,7 @@ public class LoggerTest {
 		expect(builder.setEvent(event)).andReturn(builder);
 		expect(builder.setClazz(clazz)).andReturn(builder);
 		expect(builder.setMethod(method)).andReturn(builder);
-		for (ObjectId arg : args) {
+		for (InstanceId arg : args) {
 			expect(builder.addArg(arg)).andReturn(builder);
 		}
 		builder.store();
@@ -180,13 +180,13 @@ public class LoggerTest {
 		};
 
 		EventId id = EventId.create(ds, 2);
-		ObjectId thread = null;
+		InstanceId thread = null;
 		int event = Event.FIELD_WRITE;
-		ClassId clazz = ClassId.create(ds, 1);
+		ClazzId clazz = ClazzId.create(ds, 1);
 		FieldId field = FieldId.create(ds, clazz, (short) 2);
-		List<ObjectId> args = Lists.newArrayList(
-				ObjectId.create(ds, 1),
-				ObjectId.create(ds, 2)
+		List<InstanceId> args = Lists.newArrayList(
+				InstanceId.create(ds, 1),
+				InstanceId.create(ds, 2)
 		);
 
 		expect(events.getBuilder()).andReturn(builder);
@@ -195,7 +195,7 @@ public class LoggerTest {
 		expect(builder.setEvent(event)).andReturn(builder);
 		expect(builder.setClazz(clazz)).andReturn(builder);
 		expect(builder.setField(field)).andReturn(builder);
-		for (ObjectId arg : args) {
+		for (InstanceId arg : args) {
 			expect(builder.addArg(arg)).andReturn(builder);
 		}
 		builder.store();
@@ -262,11 +262,11 @@ public class LoggerTest {
 		};
 
 		EventId id = EventId.create(ds, 3);
-		ObjectId thread = null;
+		InstanceId thread = null;
 		int event1 = Event.OBJECT_ALLOCATED;
 		int event2 = Event.CLASS_WEAVE;
-		ClassId clazz = ClassId.create(ds, 3);
-		List<ObjectId> args = Lists.newArrayList(
+		ClazzId clazz = ClazzId.create(ds, 3);
+		List<InstanceId> args = Lists.newArrayList(
 				null, null, null, null,
 				null, null, null, null,
 				null, null, null, null,
@@ -277,7 +277,7 @@ public class LoggerTest {
 		expect(builder.setId(eq(id))).andReturn(builder);
 		expect(builder.setThread(thread)).andReturn(builder);
 		expect(builder.setEvent(event1)).andReturn(builder);
-		for (ObjectId arg : args) {
+		for (InstanceId arg : args) {
 			expect(builder.addArg(arg)).andReturn(builder);
 		}
 		builder.store();

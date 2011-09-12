@@ -5,8 +5,8 @@ import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ConstructorWeavingTest;
 import org.easymock.Capture;
@@ -46,8 +46,8 @@ public class WeaveTest {
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
 
-		dataset = new Dataset(new DataSetId((short) 1), "foo", new Date());
-		clazz = new Clazz(dataset, ClassId.create(dataset, 1), "org.foo.Bar", null, 0);
+		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
+		clazz = new Clazz(ClazzId.create(dataset, 1), "org.foo.Bar", null, null, 0);
 
 		weave = new Weave();
 		weave.classes = classes;
@@ -67,7 +67,7 @@ public class WeaveTest {
 		context.setDataset(dataset);
 		expect(request.getContentLength()).andReturn(data.content.length);
 		expect(request.getInputStream()).andReturn(data);
-		expect(classes.createClass()).andReturn(clazz);
+		expect(classes.createClass()).andReturn(clazz.getId());
 		expect(classes.storeClass(EasyMock.anyObject(ClassRecord.class))).andReturn(clazz);
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentLength(EasyMock.capture(responseLength));

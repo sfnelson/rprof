@@ -5,6 +5,7 @@ package nz.ac.vuw.ecs.rprofs.server.domain;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+import nz.ac.vuw.ecs.rprofs.server.model.EventVisitor;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -14,68 +15,9 @@ import java.util.List;
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  */
-public class Event implements DataObject<Event, EventId> {
+public class Event implements DataObject<EventId, Event> {
 
 	public static final java.lang.Class<Event> TYPE = Event.class;
-
-	public interface EventVisitor {
-		public void visitArrayAllocated(Event e);
-
-		public void visitClassInitialized(Event e);
-
-		public void visitClassWeave(Event e);
-
-		public void visitFieldRead(Event e);
-
-		public void visitFieldWrite(Event e);
-
-		public void visitObjectAllocated(Event e);
-
-		public void visitObjectFreed(Event e);
-
-		public void visitObjectTagged(Event e);
-
-		public void visitMethodEnter(Event e);
-
-		public void visitMethodException(Event e);
-
-		public void visitMethodReturn(Event e);
-	}
-
-	public static abstract class AbstractVisitor implements EventVisitor {
-		public void visitArrayAllocated(Event e) {
-		}
-
-		public void visitClassInitialized(Event e) {
-		}
-
-		public void visitClassWeave(Event e) {
-		}
-
-		public void visitFieldRead(Event e) {
-		}
-
-		public void visitFieldWrite(Event e) {
-		}
-
-		public void visitObjectAllocated(Event e) {
-		}
-
-		public void visitObjectFreed(Event e) {
-		}
-
-		public void visitObjectTagged(Event e) {
-		}
-
-		public void visitMethodEnter(Event e) {
-		}
-
-		public void visitMethodException(Event e) {
-		}
-
-		public void visitMethodReturn(Event e) {
-		}
-	}
 
 	public static final int OBJECT_ALLOCATED = 0x1;
 	public static final int ARRAY_ALLOCATED = 0x2;
@@ -100,13 +42,12 @@ public class Event implements DataObject<Event, EventId> {
 	private EventId id;
 
 	@Nullable
-	private ObjectId thread;
+	private InstanceId thread;
 
-	@NotNull
-	private Integer event;
+	private int event;
 
 	@Nullable
-	private ClassId type;
+	private ClazzId type;
 
 	@Nullable
 	private MethodId method;
@@ -115,24 +56,20 @@ public class Event implements DataObject<Event, EventId> {
 	private FieldId field;
 
 	@Nullable
-	private List<Instance> args;
+	private List<InstanceId> args;
 
 	public Event() {
 	}
 
-	public Event(@NotNull EventId id, @NotNull Integer event) {
+	public Event(@NotNull EventId id, int event) {
 		this.id = id;
 		this.event = event;
 	}
 
 	@NotNull
+	@Override
 	public EventId getId() {
 		return id;
-	}
-
-	@NotNull
-	public Long getRpcId() {
-		return id.longValue();
 	}
 
 	@NotNull
@@ -141,29 +78,25 @@ public class Event implements DataObject<Event, EventId> {
 	}
 
 	@Nullable
-	public ObjectId getThread() {
+	public InstanceId getThread() {
 		return thread;
 	}
 
-	@NotNull
-	public Event setThread(@Nullable ObjectId thread) {
+	public void setThread(@Nullable InstanceId thread) {
 		this.thread = thread;
-		return this;
 	}
 
 	@Nullable
-	public ClassId getType() {
+	public ClazzId getClazz() {
 		return type;
 	}
 
-	@NotNull
-	public Event setType(@Nullable ClassId type) {
+	public void setClazz(@Nullable ClazzId type) {
 		this.type = type;
-		return this;
 	}
 
 	@NotNull
-	public Integer getEvent() {
+	public int getEvent() {
 		return event;
 	}
 
@@ -178,32 +111,30 @@ public class Event implements DataObject<Event, EventId> {
 	}
 
 	@Nullable
-	public AttributeId<?> getAttribute() {
+	public AttributeId<?, ?> getAttribute() {
 		return (method == null) ? field : method;
 	}
 
-	@NotNull
-	public Event setAttribute(@NotNull AttributeId<?> attribute) {
+	public void setAttribute(@NotNull AttributeId<?, ?> attribute) {
 		if (attribute instanceof MethodId) {
 			method = (MethodId) attribute;
 		} else {
 			field = (FieldId) attribute;
 		}
-		return this;
 	}
 
 	@Nullable
-	public List<Instance> getArgs() {
+	public List<InstanceId> getArgs() {
 		if (this.args == null || this.args.isEmpty()) {
-			return Collections.emptyList();
+			return null;
 		} else {
 			return Collections.unmodifiableList(args);
 		}
 	}
 
 	@Nullable
-	public Instance getFirstArg() {
-		List<Instance> args = this.args;
+	public InstanceId getFirstArg() {
+		List<InstanceId> args = this.args;
 		if (args != null && args.size() >= 1) {
 			return args.get(0);
 		}
@@ -212,7 +143,7 @@ public class Event implements DataObject<Event, EventId> {
 	}
 
 	@NotNull
-	public Event setArgs(@Nullable List<Instance> args) {
+	public Event setArgs(@Nullable List<InstanceId> args) {
 		this.args = args;
 		return this;
 	}
@@ -253,9 +184,5 @@ public class Event implements DataObject<Event, EventId> {
 				visitor.visitMethodException(this);
 				break;
 		}
-	}
-
-	public void visit(DomainVisitor visitor) {
-		// TODO visitEvent()
 	}
 }

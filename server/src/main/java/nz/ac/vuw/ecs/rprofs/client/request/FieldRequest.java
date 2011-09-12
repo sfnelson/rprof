@@ -11,6 +11,6 @@ import java.util.List;
 @Service(value = FieldService.class, locator = ServiceLocator.class)
 public interface FieldRequest extends RequestContext {
 
-	Request<List<FieldProxy>> findFields(ClassProxy cls);
+	Request<List<FieldProxy>> findFields(ClazzProxy cls);
 
 }

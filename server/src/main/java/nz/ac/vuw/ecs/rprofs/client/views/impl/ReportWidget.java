@@ -7,7 +7,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.*;
-import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.ClazzProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
@@ -35,6 +35,10 @@ public class ReportWidget extends Composite {
 		String text();
 
 		String longer();
+
+		String data();
+
+		String children();
 	}
 
 	@UiField
@@ -120,9 +124,9 @@ public class ReportWidget extends Composite {
 		name.setStyleName(style.longer());
 	}
 
-	public void setText(int index, ClassProxy cls) {
+	public void setText(int index, ClazzProxy cls) {
 		HTML name = fields.get(index);
-		name.setText(cls.getSimpleName());
+		name.setText(cls.getName());
 		name.setTitle(cls.getName());
 		name.setStyleName(style.text());
 	}
@@ -133,7 +137,7 @@ public class ReportWidget extends Composite {
 
 		String field = f.getName();
 		String description = f.getDescription();
-		String parent = f.getOwner().getName();
+		String parent = String.valueOf(f.getOwner());
 
 		name.setText(field);
 		desc.setText(description);
@@ -150,7 +154,7 @@ public class ReportWidget extends Composite {
 
 		String method = m.getName();
 		String description = m.getDescription();
-		String parent = m.getOwner().getName();
+		String parent = String.valueOf(m.getOwner());
 
 		name.setText(method);
 		desc.setText(description);
@@ -163,12 +167,12 @@ public class ReportWidget extends Composite {
 	public void setText(int index, InstanceProxy i) {
 		HTML name = fields.get(index);
 
-		String instance = i.getThreadIndex() + "." + i.getInstanceIndex();
+		String instance = String.valueOf(i);
 		String type = null;
 		String shortType = null;
 		if (i.getType() != null) {
-			type = i.getType().getName();
-			shortType = i.getType().getSimpleName();
+			type = String.valueOf(i.getType());
+			shortType = String.valueOf(i.getType());
 		}
 
 		if (type != null) {

@@ -2,6 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import org.objectweb.asm.*;
 
 public class Weaver {
@@ -10,7 +11,7 @@ public class Weaver {
 	private short lastMethodId = 0;
 	private short lastFieldId = 0;
 
-	public Weaver(Clazz cls) {
+	public Weaver(ClazzId cls) {
 		this.cr = new ClassRecord(this, cls);
 	}
 

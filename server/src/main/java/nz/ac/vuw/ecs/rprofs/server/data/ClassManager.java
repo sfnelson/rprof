@@ -5,18 +5,27 @@ import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.weaving.FieldRecord;
 import nz.ac.vuw.ecs.rprofs.server.weaving.MethodRecord;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 
 public class ClassManager {
+
+	public interface ClassBuilder {
+		ClassBuilder setName(String name);
+
+		ClassBuilder setParent(ClazzId parent);
+
+		ClassBuilder setProperties(int properties);
+
+		ClazzId store();
+	}
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(ClassManager.class);
 
@@ -28,25 +37,20 @@ public class ClassManager {
 	@Autowired(required = true)
 	Database database;
 
-	private final Map<String, List<ClassId>> awaitingSuper = Collections.newMap();
+	private final Map<String, List<ClazzId>> awaitingSuper = Collections.newMap();
 
-	public Clazz createClass() {
-		return database.createEntity(Clazz.class);
-	}
-
-	public Clazz updateClazz(Clazz clazz) {
-		return database.updateEntity(clazz);
+	public ClazzId createClass() {
+		return database.getClassBuilder().store();
 	}
 
 	public Clazz findClass(String name) {
 		List<Clazz> classes = database.findEntities(Clazz.class, name);
-		if (classes.isEmpty()) return null;
+		if (classes == null || classes.isEmpty()) return null;
 		else return classes.get(0);
 	}
 
-	@Transactional
 	public Clazz storeClass(ClassRecord cr) {
-		Clazz cls = cr.toClass(context.getDataset());
+		Clazz cls = cr.toClass();
 		// TODO persist class
 
 		log.debug("storing new class {} ({})", cls.getName(), cls.getId());
@@ -63,9 +67,9 @@ public class ClassManager {
 			Clazz parent = findClass(cr.getSuperName());
 
 			if (parent != null) {
-				cls.setParent(parent);
+				cls.setParent(parent.getId());
 			} else {
-				List<ClassId> list = awaitingSuper.get(cr.getSuperName());
+				List<ClazzId> list = awaitingSuper.get(cr.getSuperName());
 				if (list == null) {
 					list = Collections.newList();
 					awaitingSuper.put(cr.getSuperName(), list);
@@ -75,13 +79,15 @@ public class ClassManager {
 		}
 
 		if (awaitingSuper.containsKey(cls.getName())) {
-			for (ClassId cid : awaitingSuper.remove(cls.getName())) {
-				Clazz c = null; // TODO em.find(Clazz.class, cid);
+			for (ClazzId cid : awaitingSuper.remove(cls.getName())) {
+				Clazz c = database.findEntity(cid);
 				if (c != null) {
-					c.setParent(cls);
+					c.setParent(cls.getId());
 				} else {
-					log.warn("could not find class id {} with parent {} ({}) [{} {}]", new Object[]{
-							cid.toString(), cls.getName(), cls.getId().toString(), cid.longValue(), cls.getId().longValue()});
+					log.warn("could not find class id {} with parent {} ({}) [{} {}]",
+							new Object[]{
+									cid, cls.getName(), cls.getId(), cid, cls.getId()
+							});
 				}
 			}
 		}

@@ -1,52 +1,91 @@
-	.eventCell {
-		height: 15px;
-		overflow: hidden;
-	}
-	
-	.objectAllocated {}
-	.arrayAllocated {}
-	.methodEnter {}
-	.methodExit {}
-	.methodException {}
-	.fieldRead {}
-	.fieldWrite {}
-	.classWeave {}
-	.classInit {}
-	.objectTagged {}
-	.objectFreed {}
-	
-	.fieldRead .method, .fieldWrite .method { display: none; }
-	
-	.thread {
-		display: block;
-		float: left;
-		width: 3ex;
-		height: 100%;
-		padding: 0 1ex;
-		border-right: solid 1px #ccc;
-		margin-right: 1ex;
-	}
-	.thread span {
-		display: block;
-		width: 1ex;
-		height: 100%;
-		background-color: #ddf;
-		border-left: solid 1px #aaf;
-		border-right: solid 1px #aaf;
-	}
-	.event {
-		display: block;
-		float: left;
-		width: 3em;
-		height: 100%;
-		text-align: right;
-		padding-right: 0.5em;
-	}
-	.type {}
-	.deref {}
-	.method {}
-	.field {}
-	.args {
-		display: inline-block;
-	}
-	.hidden {}
+.eventCell {
+    height: 15px;
+    overflow: hidden;
+}
+
+.objectAllocated {
+}
+
+.arrayAllocated {
+}
+
+.methodEnter {
+}
+
+.methodExit {
+}
+
+.methodException {
+}
+
+.fieldRead {
+}
+
+.fieldWrite {
+}
+
+.classWeave {
+}
+
+.classInit {
+}
+
+.objectTagged {
+}
+
+.objectFreed {
+}
+
+.unknown {
+}
+
+.fieldRead .method, .fieldWrite .method {
+    display: none;
+}
+
+.thread {
+    display: block;
+    float: left;
+    width: 3ex;
+    height: 100%;
+    padding: 0 1ex;
+    border-right: solid 1px #ccc;
+    margin-right: 1ex;
+}
+
+.thread span {
+    display: block;
+    width: 1ex;
+    height: 100%;
+    background-color: #ddf;
+    border-left: solid 1px #aaf;
+    border-right: solid 1px #aaf;
+}
+
+.event {
+    display: block;
+    float: left;
+    width: 3em;
+    height: 100%;
+    text-align: right;
+    padding-right: 0.5em;
+}
+
+.type {
+}
+
+.deref {
+}
+
+.method {
+}
+
+.field {
+}
+
+.args {
+    display: inline-block;
+}
+
+.hidden {
+}

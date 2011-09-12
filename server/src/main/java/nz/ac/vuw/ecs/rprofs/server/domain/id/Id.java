@@ -2,10 +2,8 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
-import java.io.Serializable;
-
-@SuppressWarnings("serial")
-public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
+abstract class Id<I extends Id<I, T>, T extends DataObject<I, T>>
+		implements nz.ac.vuw.ecs.rprofs.server.model.Id<I, T> {
 
 	private static final long mask = 0xFFFFFFFFl;
 
@@ -18,11 +16,11 @@ public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
 		this.value = value;
 	}
 
-	public Long longValue() {
+	public long longValue() {
 		return value;
 	}
 
-	public void setValue(Long value) {
+	public void setValue(long value) {
 		this.value = value;
 	}
 
@@ -40,7 +38,7 @@ public abstract class Id<T extends DataObject<T, ?>> implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 
-		Id<?> other = (Id<?>) obj;
+		Id<?, ?> other = (Id<?, ?>) obj;
 
 		return value == other.value;
 	}

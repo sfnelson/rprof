@@ -3,12 +3,9 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 
-import javax.persistence.Embeddable;
 import javax.validation.constraints.NotNull;
 
-@SuppressWarnings("serial")
-@Embeddable
-public class EventId extends Id<Event> {
+public class EventId extends Id<EventId, Event> {
 
 	@NotNull
 	public static EventId create(Dataset ds, long id) {
@@ -18,6 +15,11 @@ public class EventId extends Id<Event> {
 	private static final long mask = 0xFFFFFFFFFFFFl; // 48 bit mask
 
 	public EventId() {
+	}
+
+	@Override
+	public Class<Event> getTargetClass() {
+		return Event.class;
 	}
 
 	public EventId(long eventId) {

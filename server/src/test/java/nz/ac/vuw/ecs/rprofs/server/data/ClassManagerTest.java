@@ -2,10 +2,9 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
-import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Test;
 
 import java.util.Date;
@@ -22,13 +21,15 @@ public class ClassManagerTest {
 	Context context;
 	Dataset dataset;
 	Database database;
+	ClassManager.ClassBuilder builder;
 
 	@org.junit.Before
 	public void setup() {
 		context = createMock(Context.class);
 		database = createMock(Database.class);
+		builder = createMock(ClassManager.ClassBuilder.class);
 
-		dataset = new Dataset(new DataSetId((short) 1), "foo", new Date());
+		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
 
 		cm = new ClassManager();
 		cm.context = context;
@@ -38,27 +39,19 @@ public class ClassManagerTest {
 	@Test
 	public void testCreateClass() throws Exception {
 
-		expect(database.createEntity(Clazz.class)).andReturn(null);
+		expect(database.getClassBuilder()).andReturn(builder);
+		expect(builder.store()).andReturn(null);
 
-		replay(context, database);
+		replay(context, database, builder);
 
-		Clazz result = cm.createClass();
+		ClazzId result = cm.createClass();
 
-		verify(context, database);
+		verify(context, database, builder);
 	}
 
 	@Test
 	public void testUpdateClass() throws Exception {
-		ClassId id = ClassId.create(dataset, 1);
-		Clazz cls = new Clazz(dataset, id, "org.foo.Bar", null, 0);
 
-		expect(database.updateEntity(cls)).andReturn(cls);
-
-		replay(context, database);
-
-		Clazz result = cm.updateClazz(cls);
-
-		verify(context, database);
 	}
 
 	@Test

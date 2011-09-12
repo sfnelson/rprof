@@ -2,16 +2,13 @@ package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
 import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
 
-import javax.persistence.MappedSuperclass;
-
-@SuppressWarnings("serial")
-@MappedSuperclass
-public class AttributeId<T extends Attribute<T>> extends Id<T> {
+public abstract class AttributeId<I extends AttributeId<I, T>, T extends Attribute<I, T>>
+		extends Id<I, T> {
 
 	public AttributeId() {
 	}
 
-	public AttributeId(Long id) {
+	public AttributeId(long id) {
 		super(id);
 	}
 

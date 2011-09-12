@@ -26,7 +26,7 @@ public class MongoEventBuilderTest {
 
 	@Before
 	public void createBuilder() {
-		ds = new Dataset(new DataSetId(DS), "foo", new Date());
+		ds = new Dataset(new DatasetId(DS), "foo", new Date());
 		b = new MongoEventBuilder() {
 			void _store(DBObject toStore) {
 				result = toStore;
@@ -45,7 +45,7 @@ public class MongoEventBuilderTest {
 
 	@Test
 	public void testSetThread() throws Exception {
-		ObjectId thread = ObjectId.create(ds, 2);
+		InstanceId thread = InstanceId.create(ds, 2);
 
 		assertNull(b.b.get("thread"));
 		assertEquals(b, b.setThread(thread));
@@ -61,7 +61,7 @@ public class MongoEventBuilderTest {
 
 	@Test
 	public void testSetClazz() throws Exception {
-		ClassId clazz = ClassId.create(ds, 4);
+		ClazzId clazz = ClazzId.create(ds, 4);
 
 		assertNull(b.b.get("class"));
 		assertEquals(b, b.setClazz(clazz));
@@ -70,7 +70,7 @@ public class MongoEventBuilderTest {
 
 	@Test
 	public void testSetMethod() throws Exception {
-		ClassId clazz = ClassId.create(ds, 4);
+		ClazzId clazz = ClazzId.create(ds, 4);
 		MethodId method = MethodId.create(ds, clazz, (short) 5);
 
 		assertNull(b.b.get("method"));
@@ -80,7 +80,7 @@ public class MongoEventBuilderTest {
 
 	@Test
 	public void testSetField() throws Exception {
-		ClassId clazz = ClassId.create(ds, 4);
+		ClazzId clazz = ClazzId.create(ds, 4);
 		FieldId field = FieldId.create(ds, clazz, (short) 6);
 
 		assertNull(b.b.get("field"));
@@ -90,9 +90,9 @@ public class MongoEventBuilderTest {
 
 	@Test
 	public void testArgs() throws Exception {
-		ObjectId x = ObjectId.create(ds, 7);
-		ObjectId y = null;
-		ObjectId z = ObjectId.create(ds, 8);
+		InstanceId x = InstanceId.create(ds, 7);
+		InstanceId y = null;
+		InstanceId z = InstanceId.create(ds, 8);
 
 		assertTrue(b.args.isEmpty());
 
@@ -106,13 +106,13 @@ public class MongoEventBuilderTest {
 	@Test
 	public void testStore() throws Exception {
 		EventId id = EventId.create(ds, 1);
-		ObjectId thread = ObjectId.create(ds, 2);
-		ClassId clazz = ClassId.create(ds, 4);
+		InstanceId thread = InstanceId.create(ds, 2);
+		ClazzId clazz = ClazzId.create(ds, 4);
 		MethodId method = MethodId.create(ds, clazz, (short) 5);
 		FieldId field = FieldId.create(ds, clazz, (short) 6);
-		ObjectId x = ObjectId.create(ds, 7);
-		ObjectId y = null;
-		ObjectId z = ObjectId.create(ds, 8);
+		InstanceId x = InstanceId.create(ds, 7);
+		InstanceId y = null;
+		InstanceId z = InstanceId.create(ds, 8);
 
 		b.setId(id);
 		b.setThread(thread);

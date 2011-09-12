@@ -6,13 +6,17 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 9/09/11
  */
-public class DataSetId extends Id<Dataset> {
+public class DatasetId extends Id<DatasetId, Dataset> {
 
-	public DataSetId(short id) {
+	public DatasetId(short id) {
 		super(id);
 	}
 
+	public Class<Dataset> getTargetClass() {
+		return Dataset.class;
+	}
+
 	public short indexValue() {
-		return longValue().shortValue();
+		return (short) longValue();
 	}
 }

@@ -8,7 +8,7 @@ public interface RequestFactory extends com.google.web.bindery.requestfactory.sh
 
 	EventRequest eventRequest();
 
-	ClassRequest classRequest();
+	ClazzRequest classRequest();
 
 	FieldRequest fieldRequest();
 

@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,7 +58,7 @@ public class GwtRequestTest {
 
 	@Test
 	public void testDoFilter() throws Exception {
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "dataset_id", new Date());
 
 		expect(req.getRequestURI()).andReturn("/gwtRequest/dataset_id");
@@ -76,7 +76,7 @@ public class GwtRequestTest {
 
 	@Test
 	public void testDoFilterRuntimeException() throws Exception {
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = null;
 
 		expect(req.getRequestURI()).andReturn("/gwtRequest");
@@ -98,7 +98,7 @@ public class GwtRequestTest {
 
 	@Test
 	public void testDoFilterIOException() throws Exception {
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = null;
 
 		expect(req.getRequestURI()).andReturn("/gwtRequest");
@@ -120,7 +120,7 @@ public class GwtRequestTest {
 
 	@Test
 	public void testDoFilterServletException() throws Exception {
-		DataSetId id = new DataSetId((short) 1);
+		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = null;
 
 		expect(req.getRequestURI()).andReturn("/gwtRequest");

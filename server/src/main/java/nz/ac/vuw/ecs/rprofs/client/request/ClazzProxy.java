@@ -1,24 +1,22 @@
 package nz.ac.vuw.ecs.rprofs.client.request;
 
 import com.google.web.bindery.requestfactory.shared.EntityProxy;
-import com.google.web.bindery.requestfactory.shared.EntityProxyId;
 import com.google.web.bindery.requestfactory.shared.ProxyFor;
+import nz.ac.vuw.ecs.rprofs.client.request.id.ClazzIdProxy;
 import nz.ac.vuw.ecs.rprofs.server.data.DomainObjectLocator;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 
 @ProxyFor(value = Clazz.class, locator = DomainObjectLocator.class)
-public interface ClassProxy extends EntityProxy {
+public interface ClazzProxy extends EntityProxy {
 
-	public String getPackage();
-
-	public String getSimpleName();
+	public ClazzIdProxy getId();
 
 	public String getName();
 
-	public ClassProxy getParent();
+	public ClazzIdProxy getParent();
+
+	public String getParentName();
 
 	public int getProperties();
-
-	EntityProxyId<ClassProxy> stableId();
 
 }

@@ -3,27 +3,16 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
-import javax.persistence.*;
-
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  */
-@Entity
-@NamedQueries({
-		@NamedQuery(name = "numPackages", query = "select count(C.packageName) from Clazz C group by C.packageName"),
-		@NamedQuery(name = "allPackages", query = "select C.packageName from Clazz C group by C.packageName"),
-		@NamedQuery(name = "numClassesForPackage", query = "select count(C) from Clazz C where C.packageName = :package"),
-		@NamedQuery(name = "classesForPackage", query = "select C from Clazz C where C.packageName = :package"),
-		@NamedQuery(name = "numClasses", query = "select count(C) from Clazz C"),
-		@NamedQuery(name = "allClasses", query = "select C from Clazz C"),
-		@NamedQuery(name = "findClassByName", query = "select C from Clazz C where C.fqname = :name"),
-		@NamedQuery(name = "deleteClasses", query = "delete Clazz C")
-})
-public class Clazz implements DataObject<Clazz, ClassId> {
+public class Clazz implements DataObject<ClazzId, Clazz> {
 
 	public static final java.lang.Class<Clazz> TYPE = Clazz.class;
 
@@ -31,34 +20,31 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 	public static final int CLASS_IGNORED_PACKAGE_FILTER = 0x2;
 	public static final int SPECIAL_CLASS_WEAVER = 0x4;
 
-	@EmbeddedId
-	private ClassId id;
+	@NotNull
+	private ClazzId id;
 
-	@Transient
-	private Dataset owner;
+	@Nullable
+	private String name;
 
-	private String packageName;
-	private String simpleName;
-	private String fqname;
+	@Nullable
+	private ClazzId parent;
 
-	private Integer properties;
+	@Nullable
+	private String parentName;
 
-	@ManyToOne
-	private Clazz parent;
-
-	@Version
-	private int version;
+	private int properties;
 
 	public Clazz() {
 	}
 
-	public Clazz(Dataset owner, ClassId id, String name, Clazz parent, int properties) {
-		this.owner = owner;
+	public Clazz(@NotNull ClazzId id, @Nullable String name,
+				 @Nullable ClazzId parent, @Nullable String parentName,
+				 int properties) {
 		this.id = id;
+		this.name = name;
 		this.parent = parent;
+		this.parentName = parentName;
 		this.properties = properties;
-
-		setName(name);
 	}
 
 	@Override
@@ -75,64 +61,46 @@ public class Clazz implements DataObject<Clazz, ClassId> {
 		return id.hashCode();
 	}
 
-	public ClassId getId() {
+	@Override
+	@NotNull
+	public ClazzId getId() {
 		return id;
 	}
 
-	public Long getRpcId() {
-		return id.longValue();
-	}
-
-	public Integer getVersion() {
-		return version;
-	}
-
-	public Dataset getOwner() {
-		return owner;
-	}
-
-	public void setParent(Clazz parent) {
+	public void setParent(@Nullable ClazzId parent) {
 		this.parent = parent;
 	}
 
-	public Clazz getParent() {
+	@Nullable
+	public ClazzId getParent() {
 		return parent;
 	}
 
-	public ClassId getParentId() {
-		return parent.getId();
+	@Nullable
+	public String getParentName() {
+		return parentName;
 	}
 
+	@Nullable
 	public String getName() {
-		return fqname;
+		return name;
 	}
 
-	public void setName(String name) {
-		this.fqname = name;
-		if (name != null) {
-			int last = name.lastIndexOf('/');
-			if (last < 0) last = 0;
-			packageName = name.replace('/', '.').substring(0, last);
-			simpleName = name.substring(name.lastIndexOf('/') + 1);
-		} else {
-			packageName = null;
-			simpleName = null;
-		}
+	public void setName(@Nullable String name) {
+		this.name = name;
 	}
 
 	public int getProperties() {
 		return properties;
 	}
 
-	public String getPackage() {
-		return packageName;
+	public static String getPackageName(String fqname) {
+		int last = fqname.lastIndexOf('/');
+		if (last < 0) last = 0;
+		return fqname.replace('/', '.').substring(0, last);
 	}
 
-	public String getSimpleName() {
-		return simpleName;
-	}
-
-	public void visit(DomainVisitor visitor) {
-		// TODO visitClass()
+	public static String getSimpleName(String fqname) {
+		return fqname.substring(fqname.lastIndexOf('/') + 1);
 	}
 }

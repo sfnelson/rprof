@@ -52,7 +52,7 @@ public class ProfilerModule extends AbstractGinModule {
 	}
 
 	@Provides
-	public ClassRequest getClassRequest(RequestFactory rf) {
+	public ClazzRequest getClassRequest(RequestFactory rf) {
 		return rf.classRequest();
 	}
 

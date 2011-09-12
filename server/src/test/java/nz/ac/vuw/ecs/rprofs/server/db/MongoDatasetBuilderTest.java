@@ -63,6 +63,6 @@ public class MongoDatasetBuilderTest {
 	public void testStore() throws Exception {
 		toReturn = 15;
 		builder.store();
-		assertEquals((short) 15, stored.get("_id"));
+		assertEquals(15l, stored.get("_id"));
 	}
 }

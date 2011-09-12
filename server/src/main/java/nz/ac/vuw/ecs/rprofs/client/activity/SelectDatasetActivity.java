@@ -58,7 +58,7 @@ public class SelectDatasetActivity extends AbstractActivity implements DatasetLi
 
 	@Override
 	public void stopDataset(DatasetProxy dataset) {
-		rf.get().stopDataset(dataset.getHandle()).fire(new Receiver<Void>() {
+		rf.get().stopDataset(dataset).fire(new Receiver<Void>() {
 			@Override
 			public void onSuccess(Void response) {
 				refresh();
@@ -68,7 +68,7 @@ public class SelectDatasetActivity extends AbstractActivity implements DatasetLi
 
 	@Override
 	public void deleteDataset(DatasetProxy dataset) {
-		rf.get().deleteDataset(dataset.getHandle()).fire(new Receiver<Void>() {
+		rf.get().deleteDataset(dataset).fire(new Receiver<Void>() {
 			@Override
 			public void onSuccess(Void response) {
 				refresh();

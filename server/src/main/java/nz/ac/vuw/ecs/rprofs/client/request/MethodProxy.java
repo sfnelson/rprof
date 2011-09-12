@@ -1,13 +1,16 @@
 package nz.ac.vuw.ecs.rprofs.client.request;
 
 import com.google.web.bindery.requestfactory.shared.EntityProxy;
-import com.google.web.bindery.requestfactory.shared.EntityProxyId;
 import com.google.web.bindery.requestfactory.shared.ProxyFor;
+import nz.ac.vuw.ecs.rprofs.client.request.id.ClazzIdProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.id.MethodIdProxy;
 import nz.ac.vuw.ecs.rprofs.server.data.DomainObjectLocator;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 
 @ProxyFor(value = Method.class, locator = DomainObjectLocator.class)
 public interface MethodProxy extends EntityProxy {
+
+	public MethodIdProxy getId();
 
 	public String getName();
 
@@ -15,7 +18,6 @@ public interface MethodProxy extends EntityProxy {
 
 	public int getAccess();
 
-	public ClassProxy getOwner();
+	public ClazzIdProxy getOwner();
 
-	EntityProxyId<MethodProxy> stableId();
 }

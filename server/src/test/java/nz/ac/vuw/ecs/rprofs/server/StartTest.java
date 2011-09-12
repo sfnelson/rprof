@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server;
 
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,7 +30,7 @@ public class StartTest {
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
 
-		dataset = new Dataset(new DataSetId((short) 1), "foo", new Date());
+		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
 		start = new Start();
 		start.datasets = manager;
 	}

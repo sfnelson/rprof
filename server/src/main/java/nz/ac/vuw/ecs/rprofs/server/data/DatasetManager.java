@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,7 +22,7 @@ public class DatasetManager implements DatasetService {
 
 		DatasetBuilder setProgram(String program);
 
-		DataSetId store();
+		DatasetId store();
 	}
 
 	@VisibleForTesting
@@ -42,9 +42,9 @@ public class DatasetManager implements DatasetService {
 		DatasetBuilder builder = database.getDatasetBuilder();
 		builder.setHandle(handle);
 		builder.setStarted(now.getTime());
-		DataSetId id = builder.store();
+		DatasetId id = builder.store();
 
-		return database.findEntity(Dataset.class, id);
+		return database.findEntity(id);
 	}
 
 	@Override
@@ -57,6 +57,11 @@ public class DatasetManager implements DatasetService {
 		List<Dataset> ds = database.findEntities(Dataset.class, handle);
 		assert (ds.size() == 1);
 		return ds.get(0);
+	}
+
+	@Override
+	public Dataset findDataset(DatasetId id) {
+		return database.findEntity(id);
 	}
 
 	@Override

@@ -3,106 +3,61 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ObjectId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
-import javax.persistence.*;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  */
-@Entity
-@NamedQueries({
-		@NamedQuery(name = "numInstances", query = "select count(I) from Instance I"),
-		@NamedQuery(name = "allInstances", query = "select count(I) from Instance I"),
-		@NamedQuery(name = "numInstancesForType", query = "select count(I) from Instance I where I.type = :type"),
-		@NamedQuery(name = "instancesForType", query = "select I from Instance I where I.type = :type"),
-		@NamedQuery(name = "deleteInstances", query = "delete Instance I")
-})
-public class Instance implements DataObject<Instance, ObjectId> {
+public class Instance implements DataObject<InstanceId, Instance> {
 
 	public static final java.lang.Class<Instance> TYPE = Instance.class;
 
-	@EmbeddedId
-	private ObjectId id;
+	@NotNull
+	private InstanceId id;
 
-	@Version
-	private int version;
+	@Nullable
+	private ClazzId type;
 
-	@Transient
-	private Dataset owner;
-
-	@ManyToOne
-	private Clazz type;
-
-	@ManyToOne
-	protected Method constructor;
+	@Nullable
+	protected MethodId constructor;
 
 	public Instance() {
 	}
 
-	public Instance(Dataset owner, ObjectId id, Clazz type, Method constructor) {
-		this.owner = owner;
+	public Instance(@NotNull InstanceId id, @Nullable ClazzId type,
+					@Nullable MethodId constructor) {
 		this.id = id;
 		this.type = type;
 		this.constructor = constructor;
 	}
 
-	public ObjectId getId() {
+	@NotNull
+	@Override
+	public InstanceId getId() {
 		return id;
 	}
 
-	public Long getRpcId() {
-		return id.longValue();
-	}
-
-	public Integer getVersion() {
-		return version;
-	}
-
-	public Dataset getOwner() {
-		return owner;
-	}
-
-	public Clazz getType() {
+	@Nullable
+	public ClazzId getType() {
 		return type;
 	}
 
-	public ClassId getTypeId() {
-		return type.getId();
-	}
-
-	public void setType(Clazz type) {
+	public void setType(@Nullable ClazzId type) {
 		this.type = type;
 	}
 
-	public Method getConstructor() {
+	@Nullable
+	public MethodId getConstructor() {
 		return constructor;
 	}
 
-	public AttributeId<Method> getConstructorId() {
-		return constructor.getId();
-	}
-
-	public void setConstructor(Method m) {
+	public void setConstructor(@Nullable MethodId m) {
 		this.constructor = m;
-	}
-
-	public long getIndex() {
-		return id.longValue();
-	}
-
-	public short getThreadIndex() {
-		return id.threadValue();
-	}
-
-	public int getInstanceIndex() {
-		return id.indexValue();
-	}
-
-	public void visit(DomainVisitor visitor) {
-		// TODO visitInstance()
 	}
 }

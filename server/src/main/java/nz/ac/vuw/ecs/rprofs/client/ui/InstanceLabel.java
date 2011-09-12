@@ -8,10 +8,7 @@ public class InstanceLabel extends InlineLabel {
 		if (instance == null) {
 			setText("null");
 		} else {
-			int upper = instance.getThreadIndex();
-			int lower = instance.getInstanceIndex();
-
-			setText(upper + "." + lower);
+			setText(instance.getId().toString());
 		}
 	}
 }

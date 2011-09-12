@@ -6,7 +6,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
-import nz.ac.vuw.ecs.rprofs.client.request.ClassProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.ClazzProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
@@ -64,13 +64,13 @@ public class ReportPanel extends Composite implements ReportView {
 	}
 
 	@Override
-	public void showClasses(Object parent, List<ClassProxy> classes) {
+	public void showClasses(Object parent, List<ClazzProxy> classes) {
 		ReportWidget p = objectMap.get(parent);
 		if (p == null || classes == null) return;
 
 		int index = p.getIndex() + 1;
 		boolean even = !p.isEven();
-		for (ClassProxy c : classes) {
+		for (ClazzProxy c : classes) {
 			ReportWidget w = createWidget(c);
 			w.init(even, index);
 			w.setText(index, c);
@@ -158,8 +158,8 @@ public class ReportPanel extends Composite implements ReportView {
 		Object o = widgetMap.get(w);
 		if (o instanceof String) {
 			presenter.selectPackage((String) o);
-		} else if (o instanceof ClassProxy) {
-			presenter.selectClass((ClassProxy) o);
+		} else if (o instanceof ClazzProxy) {
+			presenter.selectClass((ClazzProxy) o);
 		} else if (o instanceof FieldProxy) {
 			presenter.selectField((FieldProxy) o);
 		} else if (o instanceof MethodProxy) {

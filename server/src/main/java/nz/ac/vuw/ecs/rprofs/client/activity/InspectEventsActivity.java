@@ -96,11 +96,9 @@ public class InspectEventsActivity
 	}
 
 	private void update() {
-		long id = (first != null) ? first.getRpcId() : 0;
-
 		EventRequest rq = er.get();
-		if (id != 0) {
-			rq.findIndexOf(id, filter).to(new Receiver<Long>() {
+		if (first != null) {
+			rq.findIndexOf(first.getId(), filter).to(new Receiver<Long>() {
 				@Override
 				public void onSuccess(Long response) {
 					view.setFirst(response.intValue());

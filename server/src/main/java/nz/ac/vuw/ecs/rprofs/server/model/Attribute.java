@@ -1,25 +1,36 @@
 package nz.ac.vuw.ecs.rprofs.server.model;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.AttributeId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+
+import javax.validation.constraints.NotNull;
 
 
-public interface Attribute<T extends Attribute<T>> extends DataObject<T, AttributeId<T>> {
+public interface Attribute<I extends AttributeId<I, T>, T extends Attribute<I, T>>
+		extends DataObject<I, T> {
 
-	AttributeId<T> getId();
-	ClassId getOwnerId();
+	@NotNull
+	I getId();
 
-	Clazz getOwner();
+	@NotNull
+	ClazzId getOwner();
+
+	@NotNull
+	String getOwnerName();
+
+	@NotNull
 	String getName();
+
+	@NotNull
 	String getDescription();
 
-	void visit(AttributeVisitor visitor);
+	void visit(@NotNull AttributeVisitor visitor);
 
 	public interface AttributeVisitor {
-		void visitField(Field field);
-		void visitMethod(Method method);
+		void visitField(@NotNull Field field);
+
+		void visitMethod(@NotNull Method method);
 	}
 }

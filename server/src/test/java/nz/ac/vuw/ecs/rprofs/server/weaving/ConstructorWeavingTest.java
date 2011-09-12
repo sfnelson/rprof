@@ -2,8 +2,8 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DataSetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.asm.*;
@@ -17,14 +17,13 @@ import static org.objectweb.asm.Opcodes.*;
 public class ConstructorWeavingTest {
 
 	private TestingClassLoader loader;
-	private Dataset dataset;
 	private Clazz clazz;
 
 	@Before
 	public void setUp() throws Exception {
 		loader = new TestingClassLoader();
-		dataset = new Dataset(new DataSetId((short) 1), "foo", new Date());
-		clazz = new Clazz(dataset, ClassId.create(dataset, 1), "foobar", null, 0);
+		Dataset dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
+		clazz = new Clazz(ClazzId.create(dataset, 1), "foobar", null, null, 0);
 	}
 
 	@Test
@@ -33,7 +32,7 @@ public class ConstructorWeavingTest {
 		loader.loadClass("TestInput", pre).newInstance();
 
 		byte[] post = generateMinimalClass("TestOutput");
-		Weaver w = new Weaver(clazz);
+		Weaver w = new Weaver(clazz.getId());
 		post = w.weave(post);
 		//print(post);
 		loader.loadClass("TestOutput", post).newInstance();

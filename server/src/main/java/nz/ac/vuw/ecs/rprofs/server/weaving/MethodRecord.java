@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 
 public class MethodRecord implements AttributeRecord {
@@ -31,9 +31,9 @@ public class MethodRecord implements AttributeRecord {
 	}
 
 	public Method toAttribute(Clazz cls) {
-		ClassId cid = cls.getId();
+		ClazzId cid = cls.getId();
 		MethodId mid = new MethodId(cid.datasetValue(), cid.indexValue(), id);
-		return new Method(mid, name, cls, description, access);
+		return new Method(mid, name, cls.getId(), cls.getName(), description, access);
 	}
 
 	public boolean isNative() {

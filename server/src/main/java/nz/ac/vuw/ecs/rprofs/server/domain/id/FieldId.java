@@ -4,11 +4,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 
-import javax.persistence.Embeddable;
-
-@SuppressWarnings("serial")
-@Embeddable
-public class FieldId extends AttributeId<Field> {
+public class FieldId extends AttributeId<FieldId, Field> {
 
 	public FieldId() {
 	}
@@ -21,11 +17,15 @@ public class FieldId extends AttributeId<Field> {
 		super(id);
 	}
 
+	public Class<Field> getTargetClass() {
+		return Field.class;
+	}
+
 	public static FieldId create(Dataset ds, Clazz type, short fnum) {
 		return new FieldId(ds.getId().indexValue(), type.getId().indexValue(), fnum);
 	}
 
-	public static FieldId create(Dataset ds, ClassId type, short fnum) {
+	public static FieldId create(Dataset ds, ClazzId type, short fnum) {
 		return new FieldId(ds.getId().indexValue(), type.indexValue(), fnum);
 	}
 }

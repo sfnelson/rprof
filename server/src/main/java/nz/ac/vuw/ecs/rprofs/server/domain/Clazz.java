@@ -76,6 +76,10 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 		return parent;
 	}
 
+	public void setParentName(@Nullable String parentName) {
+		this.parentName = parentName;
+	}
+
 	@Nullable
 	public String getParentName() {
 		return parentName;

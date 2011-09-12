@@ -22,6 +22,8 @@ public class ClassManager {
 
 		ClassBuilder setParent(ClazzId parent);
 
+		ClassBuilder setParentName(String name);
+
 		ClassBuilder setProperties(int properties);
 
 		ClazzId store();

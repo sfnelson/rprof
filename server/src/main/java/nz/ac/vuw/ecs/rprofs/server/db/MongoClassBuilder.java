@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
@@ -16,7 +17,8 @@ import javax.validation.constraints.NotNull;
 public abstract class MongoClassBuilder
 		implements ClassManager.ClassBuilder, EntityBuilder<Clazz> {
 
-	private BasicDBObject b;
+	@VisibleForTesting
+	BasicDBObject b;
 
 	public MongoClassBuilder() {
 		b = new BasicDBObject();
@@ -30,7 +32,7 @@ public abstract class MongoClassBuilder
 
 	@Override
 	public MongoClassBuilder setName(String name) {
-		b.put("fqname", name);
+		b.put("name", name);
 		b.put("package", Clazz.getPackageName(name));
 		b.put("short", Clazz.getSimpleName(name));
 		return this;
@@ -39,6 +41,12 @@ public abstract class MongoClassBuilder
 	@Override
 	public MongoClassBuilder setParent(ClazzId parent) {
 		b.put("parent", parent.longValue());
+		return this;
+	}
+
+	@Override
+	public MongoClassBuilder setParentName(String parentName) {
+		b.put("parentName", parentName);
 		return this;
 	}
 
@@ -66,16 +74,19 @@ public abstract class MongoClassBuilder
 	public Clazz get() {
 		ClazzId id = new ClazzId((Long) b.get("_id"));
 		int properties = (Integer) b.get("properties");
-		Clazz clazz = new Clazz(id, null, null, null, 0);
-		if (b.containsField("fqname")) {
-			clazz.setName((String) b.get("fqname"));
+		Clazz clazz = new Clazz(id, null, null, null, properties);
+		if (b.containsField("name")) {
+			clazz.setName((String) b.get("name"));
 		}
 		if (b.containsField("parent")) {
 			Long parentRaw = (Long) b.get("parent");
 			if (parentRaw != null) {
-				ClazzId parent = new ClazzId();
+				ClazzId parent = new ClazzId(parentRaw);
 				clazz.setParent(parent);
 			}
+		}
+		if (b.containsField("parentName")) {
+			clazz.setParentName((String) b.get("parentName"));
 		}
 		b = new BasicDBObject();
 		return clazz;

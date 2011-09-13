@@ -60,8 +60,9 @@ abstract class MongoDatasetBuilder implements DatasetBuilder, EntityBuilder<Data
 	@NotNull
 	public DatasetId store() {
 		short id = _getId();
-		b.append("_id", Long.valueOf(id));
-		validate();
+		if (id != 0) {
+			b.append("_id", Long.valueOf(id));
+		}
 		_store(b);
 		b = new BasicDBObject();
 		return new DatasetId(id);
@@ -70,7 +71,6 @@ abstract class MongoDatasetBuilder implements DatasetBuilder, EntityBuilder<Data
 	@Override
 	@NotNull
 	public Dataset get() {
-		validate();
 		DatasetId id = new DatasetId(((Long) b.get("_id")).shortValue());
 		String handle = (String) b.get("handle");
 		Date started = (Date) b.get("started");
@@ -83,12 +83,6 @@ abstract class MongoDatasetBuilder implements DatasetBuilder, EntityBuilder<Data
 		}
 		b = new BasicDBObject();
 		return dataset;
-	}
-
-	private void validate() {
-		assert (b.get("_id") != null);
-		assert (b.get("handle") != null);
-		assert (b.get("started") != null);
 	}
 
 	public abstract short _getId();

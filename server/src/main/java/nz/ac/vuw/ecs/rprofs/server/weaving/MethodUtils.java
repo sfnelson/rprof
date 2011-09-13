@@ -15,11 +15,11 @@ public class MethodUtils {
 	}
 
 	public static boolean isInit(Method method) {
-		return method.getName().equals("<init>");
+		return "<init>".equals(method.getName());
 	}
 
 	public static boolean isCLInit(Method method) {
-		return method.getName().equals("<clinit>");
+		return "<clinit>".equals(method.getName());
 	}
 
 	public static boolean isEquals(Method method) {

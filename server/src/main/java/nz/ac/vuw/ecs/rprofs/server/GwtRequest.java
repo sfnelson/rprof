@@ -17,11 +17,11 @@ public class GwtRequest implements Filter {
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(GwtRequest.class);
 
 	@VisibleForTesting
-	@Autowired(required = true)
+	@Autowired
 	DatasetManager datasets;
 
 	@VisibleForTesting
-	@Autowired(required = true)
+	@Autowired
 	Context context;
 
 	@Override

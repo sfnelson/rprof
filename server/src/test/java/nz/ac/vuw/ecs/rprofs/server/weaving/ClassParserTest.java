@@ -98,7 +98,7 @@ public class ClassParserTest {
 		expect(fbuilder.setAccess(15)).andReturn(fbuilder);
 		expect(fbuilder.setName("baz")).andReturn(fbuilder);
 		expect(fbuilder.setDescription("I")).andReturn(fbuilder);
-		expect(fbuilder.store()).andReturn(null);
+		fbuilder.store();
 
 		replay(builder, mbuilder, fbuilder);
 
@@ -114,7 +114,7 @@ public class ClassParserTest {
 		expect(mbuilder.setAccess(15)).andReturn(mbuilder);
 		expect(mbuilder.setName("foobar")).andReturn(mbuilder);
 		expect(mbuilder.setDescription("(Lorg.foo.Bar;I)I")).andReturn(mbuilder);
-		expect(mbuilder.store()).andReturn(null);
+		mbuilder.store();
 
 		replay(builder, mbuilder, fbuilder);
 

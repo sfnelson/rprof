@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@SuppressWarnings("serial")
 @Configurable(autowire = Autowire.BY_TYPE)
 public class Start extends HttpServlet {
 

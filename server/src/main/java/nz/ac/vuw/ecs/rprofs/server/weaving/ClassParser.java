@@ -3,6 +3,9 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import org.objectweb.asm.*;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 13/09/11
@@ -11,50 +14,53 @@ public class ClassParser extends ClassAdapter {
 
 	private final ClassManager.ClassBuilder builder;
 
-	public ClassParser(ClassManager.ClassBuilder builder) {
+	public ClassParser(@NotNull ClassManager.ClassBuilder builder) {
 		super(null);
 		this.builder = builder;
 	}
 
-	public ClassManager.ClassBuilder read(byte[] classfile) {
+	public ClassManager.ClassBuilder read(@NotNull byte[] classfile) {
 		new org.objectweb.asm.ClassReader(classfile)
 				.accept(this, org.objectweb.asm.ClassReader.SKIP_CODE);
 		return builder;
 	}
 
 	@Override
-	public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+	public void visit(int version, int access, @NotNull String name, @Nullable String signature,
+					  @Nullable String superName, @Nullable String[] interfaces) {
 		builder.setName(name);
 		builder.setParentName(superName);
 	}
 
 	@Override
-	public void visitSource(String source, String debug) {
+	public void visitSource(@Nullable String source, @Nullable String debug) {
 		// nothing to do.
 	}
 
 	@Override
-	public void visitOuterClass(String owner, String name, String desc) {
+	public void visitOuterClass(@Nullable String owner, @Nullable String name, @Nullable String desc) {
 		// nothing to do.
 	}
 
 	@Override
-	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+	public AnnotationVisitor visitAnnotation(@Nullable String desc, boolean visible) {
 		return null; // nothing to do.
 	}
 
 	@Override
-	public void visitAttribute(Attribute attr) {
+	public void visitAttribute(@Nullable Attribute attr) {
 		// nothing to do.
 	}
 
 	@Override
-	public void visitInnerClass(String name, String outerName, String innerName, int access) {
+	public void visitInnerClass(@Nullable String name, @Nullable String outerName,
+								@Nullable String innerName, int access) {
 		// nothing to do.
 	}
 
 	@Override
-	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
+	public FieldVisitor visitField(int access, @NotNull String name, @NotNull String desc,
+								   @Nullable String signature, @Nullable Object value) {
 		builder.addField()
 				.setName(name)
 				.setDescription(desc)
@@ -64,7 +70,8 @@ public class ClassParser extends ClassAdapter {
 	}
 
 	@Override
-	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+	public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String desc,
+									 @Nullable String signature, @Nullable String[] exceptions) {
 		builder.addMethod()
 				.setName(name)
 				.setDescription(desc)

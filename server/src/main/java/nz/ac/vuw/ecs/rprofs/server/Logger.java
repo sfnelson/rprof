@@ -29,15 +29,15 @@ public class Logger extends HttpServlet {
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Logger.class);
 
 	@VisibleForTesting
-	@Autowired(required = true)
+	@Autowired
 	DatasetManager datasets;
 
 	@VisibleForTesting
-	@Autowired(required = true)
+	@Autowired
 	EventManager events;
 
 	@VisibleForTesting
-	@Autowired(required = true)
+	@Autowired
 	Context context;
 
 	@Override
@@ -72,7 +72,9 @@ public class Logger extends HttpServlet {
 		EventBuilder b = events.getBuilder();
 
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
-			b.setId(EventId.create(ds, dis.readLong()));
+			long id = dis.readLong();
+			log.info("received event {}", id);
+			b.setId(EventId.create(ds, id));
 			b.setThread(parseObjectId(ds, dis.readLong()));
 
 			int type = dis.readInt();

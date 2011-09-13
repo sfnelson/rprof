@@ -31,15 +31,15 @@ public class Weave extends HttpServlet {
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Weave.class);
 
 	@VisibleForTesting
-	@Autowired(required = true)
+	@Autowired
 	ClassManager classes;
 
 	@VisibleForTesting
-	@Autowired(required = true)
+	@Autowired
 	DatasetManager datasets;
 
 	@VisibleForTesting
-	@Autowired(required = true)
+	@Autowired
 	Context context;
 
 	@Override

@@ -8,8 +8,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -43,7 +41,7 @@ public class ClassManager {
 
 		FieldBuilder setAccess(int access);
 
-		FieldId store();
+		void store();
 
 		Field get();
 	}
@@ -55,7 +53,7 @@ public class ClassManager {
 
 		MethodBuilder setAccess(int access);
 
-		MethodId store();
+		void store();
 
 		Method get();
 	}

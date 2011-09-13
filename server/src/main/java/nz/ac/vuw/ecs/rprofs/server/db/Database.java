@@ -9,6 +9,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,15 +40,17 @@ public class Database {
 
 	public DatasetManager.DatasetBuilder getDatasetUpdater(final Dataset dataset) {
 		final DBCollection properties = getCollection(dataset, Dataset.class);
+		final DatasetId id = dataset.getId();
 		return new MongoDatasetBuilder() {
 			@Override
 			public short _getId() {
-				return dataset.getId().indexValue();
+				return 0;
 			}
 
 			@Override
 			public void _store(DBObject dataset) {
-				properties.update(new BasicDBObject("_id", _getId()), dataset);
+				properties.update(new BasicDBObject("_id", id.longValue()),
+						new BasicDBObject("$set", dataset));
 			}
 		};
 	}
@@ -61,12 +64,23 @@ public class Database {
 		return new MongoClassBuilder() {
 			@Override
 			long _nextId() {
-				return id.longValue();
+				return 0;
 			}
 
 			@Override
-			void _store(DBObject data) {
-				classes.update(new BasicDBObject("_id", id.longValue()), data);
+			void _storeClass(DBObject data) {
+				classes.update(new BasicDBObject("_id", id.longValue()),
+						new BasicDBObject("$set", data));
+			}
+
+			@Override
+			void _storeField(DBObject data) {
+				throw new RuntimeException("can't add fields during update");
+			}
+
+			@Override
+			void _storeMethod(DBObject data) {
+				throw new RuntimeException("can't add methods during update");
 			}
 		};
 	}
@@ -111,6 +125,33 @@ public class Database {
 				}
 			} else {
 				return (List<T>) datasets;
+			}
+		}
+		if (type == Method.class) {
+			if (queryParams.length == 1 && queryParams[0].getClass() == ClazzId.class) {
+				ClazzId clazzId = (ClazzId) queryParams[0];
+				Clazz clazz = findEntity(clazzId);
+				DBCollection methods = getCollection(Method.class);
+				DBCursor o = methods.find(new BasicDBObject("owner", clazzId.longValue()));
+				List<Method> result = Lists.newArrayList();
+				MongoMethodBuilder m = new MongoMethodBuilder();
+				while (o.hasNext()) {
+					result.add(m.init(o.next()).get());
+				}
+				return (List<T>) result;
+			}
+		}
+		if (type == Field.class) {
+			if (queryParams.length == 1 && queryParams[0].getClass() == ClazzId.class) {
+				ClazzId clazzId = (ClazzId) queryParams[0];
+				DBCollection fields = getCollection(Field.class);
+				DBCursor o = fields.find(new BasicDBObject("owner", clazzId.longValue()));
+				List<Field> result = Lists.newArrayList();
+				MongoFieldBuilder f = new MongoFieldBuilder();
+				while (o.hasNext()) {
+					result.add(f.init(o.next()).get());
+				}
+				return (List<T>) result;
 			}
 		}
 		return null;
@@ -219,6 +260,12 @@ public class Database {
 			return EntityBuilder.class.cast(createDatasetBuilder());
 		} else if (type.equals(Event.class)) {
 			return EntityBuilder.class.cast(createEventBuilder());
+		} else if (type.equals(Clazz.class)) {
+			return EntityBuilder.class.cast(createClassBuilder());
+		} else if (type.equals(Field.class)) {
+			return EntityBuilder.class.cast(new MongoFieldBuilder());
+		} else if (type.equals(Method.class)) {
+			return EntityBuilder.class.cast(new MongoMethodBuilder());
 		}
 		return null;
 	}
@@ -263,6 +310,8 @@ public class Database {
 	private MongoClassBuilder createClassBuilder() {
 		return new MongoClassBuilder() {
 			DBCollection classes = getCollection(Clazz.class);
+			DBCollection methods = getCollection(Method.class);
+			DBCollection fields = getCollection(Field.class);
 
 			@Override
 			long _nextId() {
@@ -271,8 +320,18 @@ public class Database {
 			}
 
 			@Override
-			void _store(DBObject data) {
+			void _storeClass(DBObject data) {
 				classes.insert(data);
+			}
+
+			@Override
+			void _storeField(DBObject data) {
+				fields.insert(data);
+			}
+
+			@Override
+			void _storeMethod(DBObject data) {
+				methods.insert(data);
 			}
 		};
 	}

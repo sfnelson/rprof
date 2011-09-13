@@ -57,7 +57,7 @@ public class ClassParser extends ClassAdapter {
 	public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
 		builder.addField()
 				.setName(name)
-				.setDescription(name)
+				.setDescription(desc)
 				.setAccess(access)
 				.store();
 		return null;

@@ -1,18 +1,22 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
+import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Field;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
-import nz.ac.vuw.ecs.rprofs.server.weaving.ClassRecord;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ConstructorWeavingTest;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
+import org.objectweb.asm.Opcodes;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,9 +35,13 @@ public class WeaveTest {
 	private Weave weave;
 	private Dataset dataset;
 	private Clazz clazz;
+	private Method method;
 
 	private DatasetManager manager;
 	private ClassManager classes;
+	private ClassManager.ClassBuilder builder;
+	private ClassManager.MethodBuilder mbuilder;
+	private ClassManager.FieldBuilder fbuilder;
 	private Context context;
 	private HttpServletRequest request;
 	private HttpServletResponse response;
@@ -45,9 +53,14 @@ public class WeaveTest {
 		context = createMock(Context.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
+		builder = createMock(ClassManager.ClassBuilder.class);
+		mbuilder = createMock(ClassManager.MethodBuilder.class);
+		fbuilder = createMock(ClassManager.FieldBuilder.class);
 
 		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
 		clazz = new Clazz(ClazzId.create(dataset, 1), "org.foo.Bar", null, null, 0);
+		method = new Method(MethodId.create(dataset, clazz, (short) 1),
+				"<init>", clazz.getId(), clazz.getName(), "()V", Opcodes.ACC_PUBLIC);
 
 		weave = new Weave();
 		weave.classes = classes;
@@ -62,24 +75,42 @@ public class WeaveTest {
 		data.content = ConstructorWeavingTest.generateMinimalClass("org.foo.Bar");
 		Capture<Integer> responseLength = new Capture<Integer>();
 
+		// get properties
 		expect(request.getHeader("Dataset")).andReturn("foobar");
 		expect(manager.findDataset("foobar")).andReturn(dataset);
 		context.setDataset(dataset);
 		expect(request.getContentLength()).andReturn(data.content.length);
 		expect(request.getInputStream()).andReturn(data);
-		expect(classes.createClass()).andReturn(clazz.getId());
-		expect(classes.storeClass(EasyMock.anyObject(ClassRecord.class))).andReturn(clazz);
+
+		// init class
+		expect(classes.createClass()).andReturn(builder);
+		expect(builder.setName("org.foo.Bar")).andReturn(builder);
+		expect(builder.setParentName("java/lang/Object")).andReturn(builder);
+		expect(builder.addMethod()).andReturn(mbuilder);
+		expect(mbuilder.setAccess(Opcodes.ACC_PUBLIC)).andReturn(mbuilder);
+		expect(mbuilder.setName("<init>")).andReturn(mbuilder);
+		expect(mbuilder.setDescription("()V")).andReturn(mbuilder);
+		expect(mbuilder.store()).andReturn(method.getId());
+		expect(builder.store()).andReturn(clazz.getId());
+
+		expect(classes.findClass(clazz.getId())).andReturn(clazz);
+		expect(classes.findMethods(clazz.getId())).andReturn(Lists.<Method>newArrayList(method));
+		expect(classes.findFields(clazz.getId())).andReturn(Lists.<Field>newArrayList());
+
+		classes.setProperties(clazz.getId(), 0);
+
+		// return
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentLength(EasyMock.capture(responseLength));
 		response.setContentType("application/rprof");
 		expect(response.getOutputStream()).andReturn(output);
 		context.clear();
 
-		replay(request, response, context, classes, manager);
+		replay(request, response, context, classes, manager, builder, mbuilder, fbuilder);
 
 		weave.doPost(request, response);
 
-		verify(request, response, context, classes, manager);
+		verify(request, response, context, classes, manager, builder, mbuilder, fbuilder);
 
 		assertEquals(data.content.length, data.count); // ensure whole class was read.
 		assertEquals(responseLength.getValue().intValue(), output.count); // ensure whole class was written

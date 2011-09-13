@@ -4,6 +4,7 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -46,41 +47,43 @@ public class GenericClassWeaver extends ClassAdapter {
 		//int minor = (version >> 16) & 0xFFFF;
 		if (major < 49) {
 			version = 49;
-			cr.setProperties(cr.properties | Clazz.CLASS_VERSION_UPDATED);
+			cr.setProperties(cr.getProperties() | Clazz.CLASS_VERSION_UPDATED);
 		}
-		cr.init(version, access, name, signature, superName, interfaces);
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
 	@Override
 	public MethodVisitor visitMethod(int access, @NotNull String name, @NotNull String desc,
 									 @Nullable String signature, @Nullable String[] exceptions) {
-		//MethodVisitor mv = new AnalyzerAdapter(cr.name, access, name, desc,
-		//		super.visitMethod(access, name, desc, signature, exceptions));
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		MethodRecord mr = cr.weaver.createMethodRecord(name);
-		mr.init(access, desc, signature, exceptions);
+
+		Method method = cr.getMethod(name, desc);
+
+		if (method == null) {
+			// we added it, so skip...
+			return mv;
+		}
 
 		// check for: public static void main(String[])
-		if (mr.isMain()) {
-			mv = new MainMethodWeaver(mv, mr);
+		if (MethodUtils.isMain(method)) {
+			mv = new MainMethodWeaver(cr, method, mv);
 		}
 		// check for <init>(..)
-		else if (mr.isInit()) {
-			mv = new InitMethodWeaver(mv, mr);
+		else if (MethodUtils.isInit(method)) {
+			mv = new InitMethodWeaver(cr, method, mv);
 		}
 		// check for: public boolean equals(Object)
-		else if (mr.isEquals()) {
-			mv = new EqualsMethodWeaver(mv, mr);
+		else if (MethodUtils.isEquals(method)) {
+			mv = new EqualsMethodWeaver(cr, method, mv);
 		}
 		// check for: public int hashCode()
-		else if (mr.isHashCode()) {
-			mv = new HashCodeMethodWeaver(mv, mr);
+		else if (MethodUtils.isHashCode(method)) {
+			mv = new HashCodeMethodWeaver(cr, method, mv);
 		}
 		// check for: <clinit>()
-		else if (mr.isCLInit()) {
+		else if (MethodUtils.isCLInit(method)) {
 			visitedCLInit = true;
-			mv = new CLInitMethodWeaver(mv, mr);
+			mv = new CLInitMethodWeaver(cr, method, mv);
 		}
 		return mv;
 	}

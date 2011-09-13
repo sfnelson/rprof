@@ -8,6 +8,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,21 @@ public class Database {
 
 	public ClassManager.ClassBuilder getClassBuilder() {
 		return createClassBuilder();
+	}
+
+	public ClassManager.ClassBuilder getClassUpdater(final ClazzId id) {
+		final DBCollection classes = getCollection(Clazz.class);
+		return new MongoClassBuilder() {
+			@Override
+			long _nextId() {
+				return id.longValue();
+			}
+
+			@Override
+			void _store(DBObject data) {
+				classes.update(new BasicDBObject("_id", id.longValue()), data);
+			}
+		};
 	}
 
 	public EventManager.EventBuilder getEventBuilder() {

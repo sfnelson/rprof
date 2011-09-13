@@ -3,6 +3,8 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import nz.ac.vuw.ecs.rprofs.server.domain.Field;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -13,16 +15,16 @@ import java.util.Collection;
  */
 public class CLInitMethodWeaver extends MethodWeaver {
 
-	public CLInitMethodWeaver(MethodVisitor mv, MethodRecord mr) {
-		super(mv, mr);
+	public CLInitMethodWeaver(ClassRecord cr, Method m, MethodVisitor mv) {
+		super(cr, m, mv);
 	}
 
 	@Override
 	public void visitCode() {
-		visitLdcInsn(Type.getType("L" + record.parent.name + ";"));
-		push(record.parent.id.indexValue());		// stack: cls, cid
+		visitLdcInsn(Type.getType("L" + record.getName() + ";"));
+		push(record.getId().indexValue());		// stack: cls, cid
 
-		Collection<FieldRecord> watches = record.parent.watches;
+		Collection<Field> watches = record.getWatches();
 		if (watches.isEmpty()) {
 			visitInsn(ACONST_NULL);				// stack: cls, cid, null
 			setStack(3);
@@ -32,10 +34,10 @@ public class CLInitMethodWeaver extends MethodWeaver {
 			setStack(3);
 
 			int i = 0;
-			for (FieldRecord f : watches) {
+			for (Field f : watches) {
 				dup();							// stack: cls, cid, fields, fields
 				push(i);						// stack: cls, cid, fields, fields, i
-				push(f.id);						// stack: cls, cid, fields, fields, i, id
+				push(f.getId().attributeValue());// stack: cls, cid, fields, fields, i, id
 				visitInsn(IASTORE);				// stack: cls, cid, fields
 				i++;
 				setStack(6);

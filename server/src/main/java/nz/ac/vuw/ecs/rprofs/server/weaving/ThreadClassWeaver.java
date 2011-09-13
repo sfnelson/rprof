@@ -20,27 +20,27 @@ public class ThreadClassWeaver extends ClassAdapter {
 	}
 
 	@Override
-	public void visit(int version, int access, String name, String signature,
-					  String superName, String[] interfaces) {
-		cr.init(version, access, name, signature, superName, interfaces);
-		super.visit(version, access, name, signature, superName, interfaces);
-	}
-
-	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
 									 String signature, String[] exceptions) {
-		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-		MethodRecord mr = cr.weaver.createMethodRecord(name);
-		mr.init(access, desc, signature, exceptions);
+		MethodVisitor visitor = super.visitMethod(access, name, desc, signature, exceptions);
+
+		nz.ac.vuw.ecs.rprofs.server.domain.Method method = null;
+		for (nz.ac.vuw.ecs.rprofs.server.domain.Method m : cr.getMethods().values()) {
+			if (m.getName().equals(name)
+					&& m.getDescription().equals(desc)
+					&& m.getAccess() == access) {
+				method = m;
+			}
+		}
 
 		// check for <init>(..)
-		if (mr.isInit()) {
-			mv = new ThreadInitMethodWeaver(mv, mr);
+		if (MethodUtils.isInit(method)) {
+			visitor = new ThreadInitMethodWeaver(cr, method, visitor);
 		}
-		if (mr.isCLInit()) {
-			mv = new CLInitMethodWeaver(mv, mr);
+		if (MethodUtils.isCLInit(method)) {
+			visitor = new CLInitMethodWeaver(cr, method, visitor);
 		}
-		return mv;
+		return visitor;
 	}
 
 	@Override
@@ -58,8 +58,10 @@ public class ThreadClassWeaver extends ClassAdapter {
 
 		private boolean doOnce = true;
 
-		public ThreadInitMethodWeaver(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr);
+		public ThreadInitMethodWeaver(ClassRecord record,
+									  nz.ac.vuw.ecs.rprofs.server.domain.Method method,
+									  MethodVisitor visitor) {
+			super(record, method, visitor);
 		}
 
 		@Override

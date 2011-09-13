@@ -3,13 +3,13 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Test;
 
 import java.util.Date;
 
 import static org.easymock.EasyMock.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -40,13 +40,14 @@ public class ClassManagerTest {
 	public void testCreateClass() throws Exception {
 
 		expect(database.getClassBuilder()).andReturn(builder);
-		expect(builder.store()).andReturn(null);
 
 		replay(context, database, builder);
 
-		ClazzId result = cm.createClass();
+		ClassManager.ClassBuilder result = cm.createClass();
 
 		verify(context, database, builder);
+
+		assertEquals(builder, result);
 	}
 
 	@Test

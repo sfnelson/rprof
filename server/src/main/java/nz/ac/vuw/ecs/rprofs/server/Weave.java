@@ -4,7 +4,11 @@ import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.weaving.ClassParser;
+import nz.ac.vuw.ecs.rprofs.server.weaving.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
@@ -57,16 +61,25 @@ public class Weave extends HttpServlet {
 			i += is.read(buffer, i, buffer.length - i);
 		}
 
-		Weaver weaver = new Weaver(classes.createClass());
-		result = weaver.weave(buffer);
-		cname = classes.storeClass(weaver.getClassRecord()).getName();
+		ClazzId clazzId = new ClassParser(classes.createClass())
+				.read(buffer)
+				.store();
+		Clazz newClazz = classes.findClass(clazzId);
+
+		ClassRecord cr = new ClassRecord(newClazz);
+		cr.addFields(classes.findFields(clazzId));
+		cr.addMethods(classes.findMethods(clazzId));
+
+		result = new Weaver(cr).weave(buffer);
+
+		classes.setProperties(clazzId, cr.getProperties());
 
 		resp.setStatus(200);
 		resp.setContentLength(result.length);
 		resp.setContentType("application/rprof");
 		resp.getOutputStream().write(result);
 
-		log.info(cname);
+		log.info(newClazz.getName());
 		log.debug("returning {} bytes", new Object[]{result.length});
 
 		context.clear();

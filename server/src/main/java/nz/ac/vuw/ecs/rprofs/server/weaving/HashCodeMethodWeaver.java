@@ -1,35 +1,34 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class HashCodeMethodWeaver extends ExceptionHandlingMethodWeaver {
 
-	public HashCodeMethodWeaver(MethodVisitor mv, MethodRecord mr) {
-		super(mv, mr);
+	public HashCodeMethodWeaver(ClassRecord record, Method method, MethodVisitor visitor) {
+		super(record, method, visitor);
 	}
 
 	@Override
 	public void visitCode() {
 		super.visitCode();
 
-		push(record.parent.id.indexValue());		// stack: cid
-		push(record.id);			// stack: cid, mid
-		push(1);					// stack: cid, mid, 1
+		pushMethodReference(method);			// stack: cid, mid
+		push(1);								// stack: cid, mid, 1
 		visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));
 		// stack: cid, mid, args
 		// store this
-		visitInsn(DUP);				// stack: cid, mid, args, args
-		push(0);					// stack: cid, mid, args, args, 0
-		visitVarInsn(ALOAD, 0);		// stack: cid, mid, args, args, 0, this
-		visitInsn(AASTORE);			// stack: cid, mid, args
+		visitInsn(DUP);							// stack: cid, mid, args, args
+		push(0);								// stack: cid, mid, args, args, 0
+		visitVarInsn(ALOAD, 0);					// stack: cid, mid, args, args, 0, this
+		visitInsn(AASTORE);						// stack: cid, mid, args
 
 		visitTrackerMethod(Tracker.enter);
 
@@ -39,8 +38,7 @@ public class HashCodeMethodWeaver extends ExceptionHandlingMethodWeaver {
 	@Override
 	public void visitInsn(int code) {
 		if (code == IRETURN) {
-			push(record.parent.id.indexValue());
-			push(record.id);
+			pushMethodReference(method);
 			visitIntInsn(ALOAD, 0);
 			visitTrackerMethod(Tracker.exit);
 

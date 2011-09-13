@@ -57,6 +57,16 @@ public abstract class MongoClassBuilder
 	}
 
 	@Override
+	public MongoFieldBuilder addField() {
+		return null;
+	}
+
+	@Override
+	public MongoMethodBuilder addMethod() {
+		return null;
+	}
+
+	@Override
 	public ClazzId store() {
 		long id;
 		if (!b.containsField("_id")) {

@@ -16,16 +16,21 @@ import java.util.List;
 
 public class MethodWeaver extends MethodAdapter implements Opcodes {
 
-	protected final MethodRecord record;
-	private final GeneratorAdapter ga;
+	protected final ClassRecord record;
+	protected final nz.ac.vuw.ecs.rprofs.server.domain.Method method;
 
 	protected int maxStack = 0;
 	protected int maxLocals = 0;
 
-	public MethodWeaver(MethodVisitor mv, MethodRecord mr) {
+	private final GeneratorAdapter ga;
+
+	public MethodWeaver(ClassRecord record,
+						nz.ac.vuw.ecs.rprofs.server.domain.Method method,
+						MethodVisitor mv) {
 		super(mv);
-		this.record = mr;
-		this.ga = new GeneratorAdapter(mv, mr.access, mr.name, mr.description);
+		this.record = record;
+		this.method = method;
+		this.ga = new GeneratorAdapter(mv, method.getAccess(), method.getName(), method.getDescription());
 	}
 
 	protected void setStack(int stack) {
@@ -34,6 +39,11 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 
 	protected void setLocals(int locals) {
 		maxLocals = Math.max(maxLocals, locals);
+	}
+
+	protected void pushMethodReference(nz.ac.vuw.ecs.rprofs.server.domain.Method m) {
+		ga.push(m.getId().typeValue());
+		ga.push(m.getId().attributeValue());
 	}
 
 	protected void push(int value) {
@@ -51,7 +61,7 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 		super.visitMaxs(maxStack, maxLocals);
 	}
 
-	protected void visitTrackerMethod(Method m) {
+	protected void visitTrackerMethod(java.lang.reflect.Method m) {
 		visitMethodInsn(INVOKESTATIC, Tracker.getName(), m.getName(), Type.getMethodDescriptor(m));
 	}
 
@@ -63,7 +73,7 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 		useful.add(0);
 		argIndex++;
 
-		String desc = record.description;
+		String desc = method.getDescription();
 		outer:
 		for (int i = 0; i < desc.length(); i++) {
 			switch (desc.charAt(i)) {
@@ -96,14 +106,14 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 
 	protected static class Tracker {
 		public static final Class<HeapTracker> cls = HeapTracker.class;
-		public static final Method enter = getTrackerMethod("enter");
-		public static final Method exit = getTrackerMethod("exit");
-		public static final Method except = getTrackerMethod("except");
-		public static final Method newarr = getTrackerMethod("newarr");
-		public static final Method newobj = getTrackerMethod("newobj");
-		public static final Method newcls = getTrackerMethod("newcls");
-		public static final Method main = getTrackerMethod("main");
-		public static final Method create = getTrackerMethod("create");
+		public static final java.lang.reflect.Method enter = getTrackerMethod("enter");
+		public static final java.lang.reflect.Method exit = getTrackerMethod("exit");
+		public static final java.lang.reflect.Method except = getTrackerMethod("except");
+		public static final java.lang.reflect.Method newarr = getTrackerMethod("newarr");
+		public static final java.lang.reflect.Method newobj = getTrackerMethod("newobj");
+		public static final java.lang.reflect.Method newcls = getTrackerMethod("newcls");
+		public static final java.lang.reflect.Method main = getTrackerMethod("main");
+		public static final java.lang.reflect.Method create = getTrackerMethod("create");
 
 		public static String getName() {
 			return Type.getInternalName(cls);
@@ -112,10 +122,10 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 
 	private static Method getTrackerMethod(String name) {
 		try {
-			Method[] methods = Tracker.cls.getMethods();
-			Method e = null;
-			for (Method m : methods) {
-				if (m.getName() == name) {
+			java.lang.reflect.Method[] methods = Tracker.cls.getMethods();
+			java.lang.reflect.Method e = null;
+			for (java.lang.reflect.Method m : methods) {
+				if (m.getName().equals(name)) {
 					e = m;
 					break;
 				}

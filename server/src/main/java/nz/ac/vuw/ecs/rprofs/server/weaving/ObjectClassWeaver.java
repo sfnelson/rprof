@@ -1,14 +1,14 @@
 /**
- * 
+ *
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
- *
  */
 public class ObjectClassWeaver extends GenericClassWeaver {
 
@@ -17,26 +17,19 @@ public class ObjectClassWeaver extends GenericClassWeaver {
 	}
 
 	@Override
-	public void visit(int version, int access, String name, String signature,
-			String superName, String[] interfaces) {
-		super.visit(version, access, name, signature, superName, interfaces);
-	}
-
-	@Override
 	public MethodVisitor visitMethod(int access, String name, String desc,
-			String signature, String[] exceptions) {
+									 String signature, String[] exceptions) {
 		MethodVisitor mv = super.visitMethodRaw(access, name, desc, signature, exceptions);
-		MethodRecord mr = cr.weaver.createMethodRecord(name);
-		mr.init(access, desc, signature, exceptions);
+		Method method = cr.getMethod(name, desc);
 
 		// check for <init>(..)
-		if (mr.isInit()) {
-			mv = new ObjectInitWeaver(mv, mr);
+		if (MethodUtils.isInit(method)) {
+			mv = new ObjectInitWeaver(cr, method, mv);
 		}
 		// check for: <clinit>()
-		else if (mr.isCLInit()) {
+		else if (MethodUtils.isCLInit(method)) {
 			super.visitedCLInit = true;
-			mv = new CLInitMethodWeaver(mv, mr);
+			mv = new CLInitMethodWeaver(cr, method, mv);
 		}
 
 		return mv;
@@ -44,8 +37,8 @@ public class ObjectClassWeaver extends GenericClassWeaver {
 
 	private static class ObjectInitWeaver extends InitMethodWeaver {
 
-		public ObjectInitWeaver(MethodVisitor mv, MethodRecord mr) {
-			super(mv, mr);
+		public ObjectInitWeaver(ClassRecord cr, Method m, MethodVisitor mv) {
+			super(cr, m, mv);
 		}
 
 		@Override

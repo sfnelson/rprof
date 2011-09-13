@@ -1,79 +1,96 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import com.google.common.collect.Maps;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
+import nz.ac.vuw.ecs.rprofs.server.domain.Field;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import org.objectweb.asm.Opcodes;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class ClassRecord {
 
-	final Weaver weaver;
-	final ClazzId id;
+	private final Clazz clazz;
 
-	String name;
-	String superName;
-	int version;
-	int access;
-	int properties;
-	String signature;
-	String[] interfaces;
-	Set<FieldRecord> watches = Collections.newSet();
+	private String name;
+	private int properties;
+	private Set<Field> watches = Collections.newSet();
 
-	Map<Short, MethodRecord> methods = Collections.newMap();
-	Map<Short, FieldRecord> fields = Collections.newMap();
+	private Map<Short, Method> methods = Maps.newHashMap();
+	private Map<Short, Field> fields = Maps.newHashMap();
 
-	ClassRecord(Weaver weaver, ClazzId id) {
-		this.weaver = weaver;
-		this.id = id;
+	public ClassRecord(Clazz clazz) {
+		this.clazz = clazz;
 	}
 
-	void init(int version, int access, String name, String signature,
-			  String superName, String[] interfaces) {
-		this.name = name;
-		this.version = version;
-		this.access = access;
-		this.signature = signature;
-		this.superName = superName;
-		this.interfaces = interfaces;
+	public Clazz getClazz() {
+		return clazz;
 	}
 
-	void addMethod(MethodRecord method) {
-		methods.put(method.id, method);
+	public ClazzId getId() {
+		return clazz.getId();
 	}
 
-	void addField(FieldRecord field) {
-		fields.put(field.id, field);
+	public String getName() {
+		return clazz.getName();
+	}
+
+	public void addMethods(List<Method> methods) {
+		for (Method m : methods) {
+			this.methods.put(m.getId().attributeValue(), m);
+		}
+	}
+
+	public void addFields(List<Field> fields) {
+		for (Field f : fields) {
+			this.fields.put(f.getId().attributeValue(), f);
+			if ((Opcodes.ACC_STATIC & f.getAccess()) == 0) {
+				watches.add(f);
+			}
+		}
+	}
+
+	public int getProperties() {
+		return properties;
 	}
 
 	void setProperties(int properties) {
 		this.properties = properties;
 	}
 
-	public Clazz toClass() {
-		return new Clazz(id, name, null, superName, properties);
+	Map<Short, Method> getMethods() {
+		return methods;
 	}
 
-	public FieldRecord getField(String name, String desc) {
-		for (FieldRecord fr : fields.values()) {
-			if (name.equals(fr.name) && desc.equals(fr.description)) {
-				return fr;
+	Method getMethod(String name, String desc) {
+		for (Method m : methods.values()) {
+			if (m.getName().equals(name) && m.getDescription().equals(desc)) {
+				return m;
 			}
 		}
 
 		return null;
 	}
 
-	public Map<Short, MethodRecord> getMethods() {
-		return methods;
-	}
-
-	public Map<Short, FieldRecord> getFields() {
+	Map<Short, Field> getFields() {
 		return fields;
 	}
 
-	public String getSuperName() {
-		return superName;
+	Field getField(String name, String desc) {
+		for (Field f : fields.values()) {
+			if (name.equals(f.getName()) && desc.equals(f.getDescription())) {
+				return f;
+			}
+		}
+
+		return null;
+	}
+
+	Set<Field> getWatches() {
+		return watches;
 	}
 }

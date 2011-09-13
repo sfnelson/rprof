@@ -32,7 +32,7 @@ public class ConstructorWeavingTest {
 		loader.loadClass("TestInput", pre).newInstance();
 
 		byte[] post = generateMinimalClass("TestOutput");
-		Weaver w = new Weaver(clazz.getId());
+		Weaver w = new Weaver(new ClassRecord(clazz));
 		post = w.weave(post);
 		//print(post);
 		loader.loadClass("TestOutput", post).newInstance();

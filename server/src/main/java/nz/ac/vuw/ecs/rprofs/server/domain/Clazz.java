@@ -14,8 +14,6 @@ import javax.validation.constraints.NotNull;
  */
 public class Clazz implements DataObject<ClazzId, Clazz> {
 
-	public static final java.lang.Class<Clazz> TYPE = Clazz.class;
-
 	public static final int CLASS_VERSION_UPDATED = 0x1;
 	public static final int CLASS_IGNORED_PACKAGE_FILTER = 0x2;
 	public static final int SPECIAL_CLASS_WEAVER = 0x4;

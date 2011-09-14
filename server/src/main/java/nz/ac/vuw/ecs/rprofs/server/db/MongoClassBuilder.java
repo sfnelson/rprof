@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.*;
+import nz.ac.vuw.ecs.rprofs.server.data.util.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 

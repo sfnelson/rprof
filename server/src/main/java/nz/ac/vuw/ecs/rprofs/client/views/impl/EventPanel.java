@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -17,7 +19,6 @@ import nz.ac.vuw.ecs.rprofs.client.Resources;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.id.InstanceIdProxy;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.ui.EventCell;
 import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
@@ -194,11 +195,11 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	@UiField
 	Anchor objectFreed;
 
-	private List<Anchor> filters = Collections.newList();
+	private List<Anchor> filters = Lists.newArrayList();
 
 	private EventStyle eventStyle;
 	private Presenter presenter;
-	private Map<InstanceIdProxy, Integer> threads = Collections.newMap();
+	private Map<InstanceIdProxy, Integer> threads = Maps.newHashMap();
 
 	public EventPanel() {
 		Resources res = GWT.create(Resources.class);

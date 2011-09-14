@@ -1,14 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import com.google.common.collect.Lists;
+import nz.ac.vuw.ecs.rprofs.server.data.util.*;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Test;
 
 import java.util.Date;
 
-import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -17,36 +22,231 @@ import static org.easymock.EasyMock.createMock;
 public class ClassManagerTest {
 
 	ClassManager cm;
-	Context context;
 	Dataset dataset;
 	Database database;
-	ClassManager.ClazzCreator builder;
+	ClazzCreator creator;
+	ClazzUpdater updater;
+	ClazzQuery query;
+	FieldQuery fQuery;
+	MethodQuery mQuery;
 
 	@org.junit.Before
 	public void setup() {
-		context = createMock(Context.class);
 		database = createMock(Database.class);
-		builder = createMock(ClassManager.ClazzCreator.class);
+		creator = createMock(ClazzCreator.class);
+		updater = createMock(ClazzUpdater.class);
+		query = createMock(ClazzQuery.class);
+		fQuery = createMock(FieldQuery.class);
+		mQuery = createMock(MethodQuery.class);
 
-		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
+		dataset = new Dataset(new DatasetId(1l), "foo", new Date());
 
 		cm = new ClassManager();
-		cm.context = context;
 		cm.database = database;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
-	public void testCreateClass() throws Exception {
+	public void testCreateClazz() {
 
+		expect(database.getClazzCreator()).andReturn(creator);
+
+		replay(database, creator);
+
+		ClazzCreator c = cm.createClazz();
+
+		verify(database, creator);
 	}
 
 	@Test
-	public void testUpdateClass() throws Exception {
+	public void testGetClazzById() {
+		ClazzId id = new ClazzId(1l);
+		Clazz clazz = new Clazz(id, "foo", null, null, 0);
 
+		expect(database.findEntity(id)).andReturn(clazz);
+
+		replay(database);
+
+		Clazz returned = cm.getClazz(id);
+
+		verify(database);
+
+		assertSame(returned, clazz);
 	}
 
 	@Test
-	public void testStoreClass() throws Exception {
+	public void testGetClazzByIdNotFound() {
+		ClazzId id = new ClazzId(1l);
 
+		expect(database.findEntity(id)).andReturn(null);
+
+		replay(database);
+
+		Clazz returned = cm.getClazz(id);
+
+		verify(database);
+
+		assertNull(returned);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testGetClazzByName() {
+		ClazzId id = new ClazzId(1l);
+		Clazz clazz = new Clazz(id, "foo", null, null, 0);
+
+		expect(database.getClazzQuery()).andReturn(query);
+		expect(query.setName("foo")).andReturn(query);
+		expect(query.find()).andReturn(Lists.newArrayList(clazz));
+
+		replay(database, query);
+
+		Clazz returned = cm.getClazz("foo");
+
+		verify(database, query);
+
+		assertSame(returned, clazz);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testGetClazzByNameNotFound() {
+		ClazzId id = new ClazzId(1l);
+
+		expect(database.getClazzQuery()).andReturn(query);
+		expect(query.setName("foo")).andReturn(query);
+		expect(query.find()).andReturn(Lists.newArrayList());
+
+		replay(database, query);
+
+		Clazz returned = cm.getClazz("foo");
+
+		verify(database, query);
+
+		assertNull(returned);
+	}
+
+	@Test
+	public void testFindPackages() {
+		expect(database.findPackages()).andReturn(Lists.<String>newArrayList());
+
+		replay(database);
+
+		cm.findPackages();
+
+		verify(database);
+	}
+
+	@Test
+	public void testFindNumPackages() {
+		expect(database.countPackages()).andReturn(15l);
+
+		replay(database);
+
+		cm.findNumPackages();
+
+		verify(database);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFindClasses() {
+		expect(database.getClazzQuery()).andReturn(query);
+		expect(query.find()).andReturn(Lists.newArrayList());
+
+		replay(database, query);
+
+		cm.findClasses();
+
+		verify(database, query);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFindClassesInPackage() {
+		expect(database.getClazzQuery()).andReturn(query);
+		expect(query.setPackageName("foobar")).andReturn(query);
+		expect(query.find()).andReturn(Lists.newArrayList());
+
+		replay(database, query);
+
+		cm.findClasses("foobar");
+
+		verify(database, query);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFindNumClasses() {
+		expect(database.getClazzQuery()).andReturn(query);
+		expect(query.count()).andReturn(15l);
+
+		replay(database, query);
+
+		cm.findNumClasses();
+
+		verify(database, query);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFindNumClassesInPackage() {
+		expect(database.getClazzQuery()).andReturn(query);
+		expect(query.setPackageName("foobar")).andReturn(query);
+		expect(query.count()).andReturn(15l);
+
+		replay(database, query);
+
+		cm.findNumClasses("foobar");
+
+		verify(database, query);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFindFields() {
+		ClazzId id = new ClazzId(1l);
+
+		expect(database.getFieldQuery()).andReturn(fQuery);
+		expect(fQuery.setOwner(id)).andReturn(fQuery);
+		expect(fQuery.find()).andReturn(Lists.newArrayList());
+
+		replay(database, fQuery);
+
+		cm.findFields(id);
+
+		verify(database, fQuery);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFindMethods() {
+		ClazzId id = new ClazzId(1l);
+
+		expect(database.getMethodQuery()).andReturn(mQuery);
+		expect(mQuery.setOwner(id)).andReturn(mQuery);
+		expect(mQuery.find()).andReturn(Lists.newArrayList());
+
+		replay(database, mQuery);
+
+		cm.findMethods(id);
+
+		verify(database, mQuery);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testSetProperties() {
+		ClazzId id = new ClazzId(1l);
+
+		expect(database.getClazzUpdater()).andReturn(updater);
+		expect(updater.setProperties(15)).andReturn(updater);
+		updater.update(id);
+
+		replay(database, updater);
+
+		cm.setProperties(id, 15);
+
+		verify(database, updater);
 	}
 }

@@ -1,8 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodCreator;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodQuery;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodUpdater;
+import nz.ac.vuw.ecs.rprofs.server.data.util.MethodCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.MethodQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.util.MethodUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;

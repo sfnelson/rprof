@@ -1,6 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.domain.id;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 
@@ -13,16 +12,12 @@ public class FieldId extends AttributeId<FieldId, Field> {
 		super(dataset, type, index);
 	}
 
-	public FieldId(Long id) {
+	public FieldId(long id) {
 		super(id);
 	}
 
 	public Class<Field> getTargetClass() {
 		return Field.class;
-	}
-
-	public static FieldId create(Dataset ds, Clazz type, short fnum) {
-		return new FieldId(ds.getId().indexValue(), type.getId().indexValue(), fnum);
 	}
 
 	public static FieldId create(Dataset ds, ClazzId type, short fnum) {

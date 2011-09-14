@@ -14,8 +14,6 @@ import javax.validation.constraints.NotNull;
  */
 public class Field implements Attribute<FieldId, Field> {
 
-	public static final java.lang.Class<Field> TYPE = Field.class;
-
 	@NotNull
 	private FieldId id;
 

@@ -1,7 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import com.google.common.collect.Maps;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
+import com.google.common.collect.Sets;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
@@ -16,9 +16,8 @@ public class ClassRecord {
 
 	private final Clazz clazz;
 
-	private String name;
 	private int properties;
-	private Set<Field> watches = Collections.newSet();
+	private Set<Field> watches = Sets.newHashSet();
 
 	private Map<Short, Method> methods = Maps.newHashMap();
 	private Map<Short, Field> fields = Maps.newHashMap();

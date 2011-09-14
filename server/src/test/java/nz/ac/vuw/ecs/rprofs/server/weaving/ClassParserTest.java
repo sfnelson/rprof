@@ -1,8 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.ClazzCreator;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldCreator;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.FieldCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.MethodCreator;
 import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.asm.Opcodes;

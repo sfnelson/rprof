@@ -1,8 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetCreator;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetQuery;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetUpdater;
+import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 

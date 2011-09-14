@@ -4,6 +4,9 @@ import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.FieldCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.MethodCreator;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
@@ -39,9 +42,9 @@ public class WeaveTest {
 
 	private DatasetManager manager;
 	private ClassManager classes;
-	private ClassManager.ClazzCreator builder;
-	private ClassManager.MethodCreator mbuilder;
-	private ClassManager.FieldCreator fbuilder;
+	private ClazzCreator builder;
+	private MethodCreator mbuilder;
+	private FieldCreator fbuilder;
 	private Context context;
 	private HttpServletRequest request;
 	private HttpServletResponse response;
@@ -53,9 +56,9 @@ public class WeaveTest {
 		context = createMock(Context.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
-		builder = createMock(ClassManager.ClazzCreator.class);
-		mbuilder = createMock(ClassManager.MethodCreator.class);
-		fbuilder = createMock(ClassManager.FieldCreator.class);
+		builder = createMock(ClazzCreator.class);
+		mbuilder = createMock(MethodCreator.class);
+		fbuilder = createMock(FieldCreator.class);
 
 		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
 		clazz = new Clazz(ClazzId.create(dataset, 1), "org.foo.Bar", null, null, 0);

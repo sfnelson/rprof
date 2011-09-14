@@ -46,7 +46,6 @@ public class Weave extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		byte[] buffer, result;
-		String cname;
 
 		Dataset ds = datasets.findDataset(req.getHeader("Dataset"));
 		context.setDataset(ds);

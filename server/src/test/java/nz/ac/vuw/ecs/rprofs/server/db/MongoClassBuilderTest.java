@@ -1,7 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.mongodb.*;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
+import nz.ac.vuw.ecs.rprofs.server.data.util.FieldCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.MethodCreator;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import org.junit.Before;
@@ -57,12 +58,12 @@ public class MongoClassBuilderTest {
 			}
 
 			@Override
-			public ClassManager.FieldCreator addField() {
+			public FieldCreator addField() {
 				return fBuilder;
 			}
 
 			@Override
-			public ClassManager.MethodCreator addMethod() {
+			public MethodCreator addMethod() {
 				return mBuilder;
 			}
 
@@ -98,8 +99,22 @@ public class MongoClassBuilderTest {
 
 	@Test
 	public void testSetName() throws Exception {
-		builder.setName("foobar");
-		assertEquals("foobar", builder.b.get("name"));
+		builder.setName("org/foo/Bar$Baz");
+		assertEquals("org/foo/Bar$Baz", builder.b.get("name"));
+		assertEquals("org.foo", builder.b.get("package"));
+		assertEquals("Bar$Baz", builder.b.get("short"));
+	}
+
+	@Test
+	public void testSetPackageName() throws Exception {
+		builder.setPackageName("foobar");
+		assertEquals("foobar", builder.b.get("package"));
+	}
+
+	@Test
+	public void testSetSimpleName() throws Exception {
+		builder.setSimpleName("foobar");
+		assertEquals("foobar", builder.b.get("short"));
 	}
 
 	@Test
@@ -145,6 +160,54 @@ public class MongoClassBuilderTest {
 		assertEquals(15l, stored.get("_id"));
 		assertEquals("org.foo.Bar", stored.get("name"));
 		assertEquals(new BasicDBObjectBuilder().add("parentName", "org.foo.Bar").get(), query);
+	}
+
+	@Test
+	public void testSetParentFromName() throws Exception {
+		ClazzId id = new ClazzId(15l);
+		ClazzId pid = new ClazzId(16l);
+
+		expect(cursor.hasNext()).andReturn(true);
+		expect(cursor.next()).andReturn(new BasicDBObject("_id", 16l));
+		cursor.close();
+		expect(cursor.hasNext()).andReturn(false);
+		cursor.close();
+
+		replay(cursor);
+
+		builder.setName("org.foo.Bar");
+		builder.setParentName("org.Foo");
+		nextId = 15l;
+		builder.store();
+
+		verify(cursor);
+
+		assertNotNull(stored);
+		assertEquals(16l, stored.get("parent"));
+		assertEquals("org.Foo", stored.get("parentName"));
+	}
+
+	@Test
+	public void testUpdateChildren() throws Exception {
+		ClazzId id = new ClazzId(15l);
+		ClazzId pid = new ClazzId(16l);
+
+		expect(cursor.hasNext()).andReturn(true);
+		expect(cursor.next()).andReturn(new BasicDBObject("_id", 16l));
+		expect(cursor.hasNext()).andReturn(false);
+		cursor.close();
+
+		replay(cursor);
+
+		builder.setName("org.foo.Bar");
+		nextId = 15l;
+		builder.store();
+
+		verify(cursor);
+
+		assertEquals(new BasicDBObject("parentName", "org.foo.Bar"), query);
+		assertEquals(new BasicDBObject("_id", 16l), ref);
+		assertEquals(new BasicDBObject("parent", 15l), update);
 	}
 
 	@Test

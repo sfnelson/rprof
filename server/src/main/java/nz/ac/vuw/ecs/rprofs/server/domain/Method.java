@@ -14,8 +14,6 @@ import javax.validation.constraints.NotNull;
  */
 public class Method implements Attribute<MethodId, Method> {
 
-	public static final java.lang.Class<Method> TYPE = Method.class;
-
 	@NotNull
 	private MethodId mid;
 
@@ -80,42 +78,6 @@ public class Method implements Attribute<MethodId, Method> {
 	@NotNull
 	public String toString() {
 		return ownerName + "." + name + ":" + description;
-	}
-
-	public boolean isNative() {
-		return (0x800 & access) != 0;
-	}
-
-	public boolean isMain() {
-		return "main".equals(getName()) && "([Ljava/lang/String;)V".equals(getDescription())
-				&& (0x1 | 0x8) == getAccess(); // public, static
-	}
-
-	public boolean isInit() {
-		return getName().equals("<init>");
-	}
-
-	public boolean isCLInit() {
-		return getName().equals("<clinit>");
-	}
-
-	public boolean isEquals() {
-		return "equals".equals(getName()) && "(Ljava/lang/Object;)Z".equals(getDescription())
-				&& 0x1 == getAccess(); // public
-	}
-
-	public boolean isHashCode() {
-		return "hashCode".equals(getName()) && "()I".equals(getDescription())
-				&& 0x1 == getAccess(); // public
-	}
-
-	public boolean isStatic() {
-		return (0x8 & getAccess()) != 0; // static
-	}
-
-	@NotNull
-	public String toMethodString() {
-		return getName() + ":" + getDescription();
 	}
 
 	@Override

@@ -1,9 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.annotations.VisibleForTesting;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldCreator;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldQuery;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldUpdater;
+import nz.ac.vuw.ecs.rprofs.server.data.util.FieldCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.FieldQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.util.FieldUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;

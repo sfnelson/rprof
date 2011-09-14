@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
+import com.google.common.collect.Maps;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.shared.EventBus;
@@ -13,7 +14,6 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.*;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceBuilder;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout;
 import nz.ac.vuw.ecs.rprofs.client.ui.PlaceAnchor;
 import nz.ac.vuw.ecs.rprofs.client.ui.UIButton;
@@ -52,7 +52,7 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 	private final FrameLayout parent;
 	private final PlaceController pc;
 
-	private final Map<String, PlaceAnchor<ReportPlace<?>>> buttons = Collections.newMap();
+	private final Map<String, PlaceAnchor<ReportPlace<?>>> buttons = Maps.newHashMap();
 
 	private PlaceAnchor<ReportPlace<?>> selected;
 

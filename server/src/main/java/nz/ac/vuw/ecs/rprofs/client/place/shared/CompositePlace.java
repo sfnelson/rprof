@@ -1,15 +1,15 @@
 package nz.ac.vuw.ecs.rprofs.client.place.shared;
 
+import com.google.common.collect.Maps;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
 public abstract class CompositePlace<P extends CompositePlace<P>> extends Place {
 
-	protected final Map<String, String> parameters = Collections.newMap();
+	protected final Map<String, String> parameters = Maps.newHashMap();
 
 	public CompositePlace() {
 	}

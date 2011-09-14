@@ -16,8 +16,6 @@ import javax.validation.constraints.NotNull;
  */
 public class Instance implements DataObject<InstanceId, Instance> {
 
-	public static final java.lang.Class<Instance> TYPE = Instance.class;
-
 	@NotNull
 	private InstanceId id;
 

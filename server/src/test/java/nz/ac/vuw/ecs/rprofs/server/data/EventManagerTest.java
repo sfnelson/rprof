@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import org.junit.Test;
 
@@ -21,9 +22,10 @@ public class EventManagerTest {
 		manager.database = database;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetBuilder() throws Exception {
-		EventManager.EventCreator builder = createMock(EventManager.EventCreator.class);
+		EventCreator builder = createMock(EventCreator.class);
 
 		expect(database.getEventCreater()).andReturn(builder);
 

@@ -9,10 +9,6 @@ public class ClazzId extends Id<ClazzId, Clazz> {
 		return new ClazzId(dataset.getId().indexValue(), cnum);
 	}
 
-	public static final Class<ClazzId> TYPE = ClazzId.class;
-
-	private static final long mask = 0xFFFFFFFF;
-
 	public ClazzId() {
 	}
 

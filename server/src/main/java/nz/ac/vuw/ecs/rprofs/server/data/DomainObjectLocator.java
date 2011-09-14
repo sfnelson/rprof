@@ -38,7 +38,7 @@ public class DomainObjectLocator<I extends Id<I, T>, T extends DataObject<I, T>>
 		if (Clazz.class.equals(clazz)) {
 			realid = (Id<?, T>) new ClazzId(id);
 		} else if (Dataset.class.equals(clazz)) {
-			realid = (Id<?, T>) new DatasetId(id.shortValue());
+			realid = (Id<?, T>) new DatasetId(id);
 		} else if (Event.class.equals(clazz)) {
 			realid = (Id<?, T>) new EventId(id);
 		} else if (Field.class.equals(clazz)) {

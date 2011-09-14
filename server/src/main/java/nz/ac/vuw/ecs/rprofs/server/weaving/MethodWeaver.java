@@ -95,7 +95,8 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 					useful.add(argIndex++);
 					while (desc.charAt(i) == '[') i++;
 					if (desc.charAt(i) == 'L') {
-						while (desc.charAt(++i) != ';') ;
+						while (desc.charAt(i) != ';') i++;
+						i++;
 					}
 					break;
 			}

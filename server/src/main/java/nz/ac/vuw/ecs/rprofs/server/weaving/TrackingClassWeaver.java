@@ -34,9 +34,9 @@ public class TrackingClassWeaver extends ClassAdapter {
 		if (method == null) throw new RuntimeException("method was not found");
 
 		if (name.equals("_getTracker")) {
-			visitor = new GetTrackerGenerator(record, method, visitor);
+			visitor = new GetTrackerGenerator(method, visitor);
 		} else if (name.equals("_setTracker")) {
-			visitor = new SetTrackerGenerator(record, method, visitor);
+			visitor = new SetTrackerGenerator(method, visitor);
 		}
 		return visitor;
 	}
@@ -54,7 +54,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 
 	private static class GetTrackerGenerator extends GeneratorAdapter implements Opcodes {
 
-		public GetTrackerGenerator(ClassRecord record, Method method, MethodVisitor visitor) {
+		public GetTrackerGenerator(Method method, MethodVisitor visitor) {
 			super(visitor, method.getAccess(), method.getName(), method.getDescription());
 		}
 
@@ -88,7 +88,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 
 	private static class SetTrackerGenerator extends GeneratorAdapter implements Opcodes {
 
-		public SetTrackerGenerator(ClassRecord record, Method method, MethodVisitor visitor) {
+		public SetTrackerGenerator(Method method, MethodVisitor visitor) {
 			super(visitor, method.getAccess(), method.getName(), method.getDescription());
 		}
 

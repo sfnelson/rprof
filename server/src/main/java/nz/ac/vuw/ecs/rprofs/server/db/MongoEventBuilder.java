@@ -1,9 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
-import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventCreator;
-import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventQuery;
-import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventUpdater;
+import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.EventQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.util.EventUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 

@@ -1,8 +1,9 @@
-package nz.ac.vuw.ecs.rprofs.server.data;
+package nz.ac.vuw.ecs.rprofs.server.data.util;
 
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
@@ -12,5 +13,6 @@ import java.util.List;
 public interface Query<I extends Id<I, T>, T extends DataObject<I, T>> {
 	long count();
 
+	@NotNull
 	List<? extends T> find();
 }

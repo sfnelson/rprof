@@ -30,6 +30,10 @@ public class ServiceLocator implements com.google.web.bindery.requestfactory.sha
 			return classes;
 		} else if (clazz == EventService.class) {
 			return events;
+		} else if (clazz == MethodService.class) {
+			return classes;
+		} else if (clazz == FieldService.class) {
+			return classes;
 		}
 
 		log.warn("don't know how to locate a {}", clazz.getName());

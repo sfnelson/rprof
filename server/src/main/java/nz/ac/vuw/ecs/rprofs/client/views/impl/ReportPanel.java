@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -10,7 +12,6 @@ import nz.ac.vuw.ecs.rprofs.client.request.ClazzProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
 import java.util.List;
@@ -28,11 +29,11 @@ public class ReportPanel extends Composite implements ReportView {
 
 	private Presenter presenter;
 
-	private List<ReportWidget> available = Collections.newList();
-	private Map<ReportWidget, Object> widgetMap = Collections.newMap();
-	private Map<Object, ReportWidget> objectMap = Collections.newMap();
+	private List<ReportWidget> available = Lists.newArrayList();
+	private Map<ReportWidget, Object> widgetMap = Maps.newHashMap();
+	private Map<Object, ReportWidget> objectMap = Maps.newHashMap();
 
-	private List<ReportWidget> packages = Collections.newList();
+	private List<ReportWidget> packages = Lists.newArrayList();
 
 	@UiField
 	HasWidgets children;

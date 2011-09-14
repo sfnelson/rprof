@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
+import com.google.common.collect.Lists;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.resources.client.CssResource;
@@ -11,7 +12,6 @@ import nz.ac.vuw.ecs.rprofs.client.request.ClazzProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.FieldProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.MethodProxy;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.client.ui.ActivePanel;
 
 import java.util.List;
@@ -56,11 +56,11 @@ public class ReportWidget extends Composite {
 
 	public ReportWidget(ReportPanel parent) {
 		this.parent = parent;
-		widgets = Collections.newList();
+		widgets = Lists.newArrayList();
 
 		initWidget(uiBinder.createAndBindUi(this));
 
-		fields = Collections.newList();
+		fields = Lists.newArrayList();
 		for (int i = 0; i < MAX_WIDGETS; i++) {
 			HTML field = new InlineHTML();
 			fields.add(field);
@@ -193,7 +193,7 @@ public class ReportWidget extends Composite {
 
 	public List<ReportWidget> clear() {
 		List<ReportWidget> widgets = this.widgets;
-		this.widgets = Collections.newList();
+		this.widgets = Lists.newArrayList();
 		return widgets;
 	}
 

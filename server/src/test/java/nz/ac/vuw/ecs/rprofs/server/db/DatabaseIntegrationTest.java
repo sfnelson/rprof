@@ -2,16 +2,12 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
 import com.mongodb.Mongo;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.*;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static org.junit.Assert.*;
 

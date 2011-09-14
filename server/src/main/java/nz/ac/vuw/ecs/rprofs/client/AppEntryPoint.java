@@ -29,7 +29,7 @@ public class AppEntryPoint implements EntryPoint {
 			public void setWidget(IsWidget child) {
 				RootPanel.get().add(child);
 			}
-		}, (com.google.gwt.event.shared.EventBus) eventBus);
+		}, eventBus);
 
 		hh.handleCurrentHistory();
 	}

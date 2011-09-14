@@ -1,9 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.client.activity.shared;
 
+import com.google.common.collect.Lists;
 import com.google.gwt.activity.shared.AbstractActivity;
 import com.google.web.bindery.requestfactory.shared.Receiver;
 import com.google.web.bindery.requestfactory.shared.Request;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public abstract class AbstractListActivity<E> extends AbstractActivity {
 	private boolean stopped = false;
 
 	public AbstractListActivity() {
-		current = Collections.newList();
+		current = Lists.newArrayList();
 	}
 
 	protected void refresh(Request<List<E>> request) {
@@ -29,8 +29,8 @@ public abstract class AbstractListActivity<E> extends AbstractActivity {
 	}
 
 	private void update(List<E> list) {
-		List<E> toRemove = Collections.newList();
-		List<E> toAdd = Collections.newList();
+		List<E> toRemove = Lists.newArrayList();
+		List<E> toAdd = Lists.newArrayList();
 
 		toRemove.addAll(current);
 		toRemove.removeAll(list);

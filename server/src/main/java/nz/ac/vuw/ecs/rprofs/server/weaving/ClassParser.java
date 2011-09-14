@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.ClazzCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
 import org.objectweb.asm.*;
 
 import javax.annotation.Nullable;

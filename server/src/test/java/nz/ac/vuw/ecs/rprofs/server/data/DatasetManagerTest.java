@@ -1,6 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
 import com.google.common.collect.Lists;
+import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetUpdater;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
@@ -29,12 +32,13 @@ public class DatasetManagerTest {
 		manager.database = database;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testCreateDataset() throws Exception {
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
-		DatasetManager.DatasetCreator builder = createMock(DatasetManager.DatasetCreator.class);
+		DatasetCreator builder = createMock(DatasetCreator.class);
 
 		expect(database.getDatasetCreator()).andReturn(builder);
 		expect(builder.setHandle(anyObject(String.class))).andReturn(builder);
@@ -50,10 +54,11 @@ public class DatasetManagerTest {
 		assertSame(dataset, returned);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testFindAllDatasets() throws Exception {
 
-		DatasetManager.DatasetQuery query = createMock(DatasetManager.DatasetQuery.class);
+		DatasetQuery query = createMock(DatasetQuery.class);
 
 		List<? extends Dataset> datasets = Lists.newArrayList();
 
@@ -68,10 +73,11 @@ public class DatasetManagerTest {
 		assertSame(returned, datasets);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
-	public void testFindDataset() throws Exception {
+	public void testFindDatasetByName() throws Exception {
 
-		DatasetManager.DatasetQuery query = createMock(DatasetManager.DatasetQuery.class);
+		DatasetQuery query = createMock(DatasetQuery.class);
 
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
@@ -89,10 +95,27 @@ public class DatasetManagerTest {
 		assertSame(dataset, returned);
 	}
 
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testFindDatasetById() throws Exception {
+		DatasetId id = new DatasetId((short) 1);
+		Dataset dataset = new Dataset(id, "foobar", new Date());
+
+		expect(database.findEntity(id)).andReturn(dataset);
+
+		replay(database);
+
+		Dataset returned = manager.findDataset(id);
+
+		verify(database);
+		assertSame(returned, dataset);
+	}
+
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testStopDataset() throws Exception {
 
-		DatasetManager.DatasetUpdater b = createMock(DatasetManager.DatasetUpdater.class);
+		DatasetUpdater b = createMock(DatasetUpdater.class);
 
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
@@ -108,10 +131,11 @@ public class DatasetManagerTest {
 		verify(database, b);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testSetProgram() throws Exception {
 
-		DatasetManager.DatasetUpdater b = createMock(DatasetManager.DatasetUpdater.class);
+		DatasetUpdater b = createMock(DatasetUpdater.class);
 
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
@@ -127,6 +151,7 @@ public class DatasetManagerTest {
 		verify(database, b);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testDeleteDataset() throws Exception {
 		DatasetId id = new DatasetId((short) 1);

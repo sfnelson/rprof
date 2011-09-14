@@ -17,8 +17,6 @@ import java.util.List;
  */
 public class Event implements DataObject<EventId, Event> {
 
-	public static final java.lang.Class<Event> TYPE = Event.class;
-
 	public static final int OBJECT_ALLOCATED = 0x1;
 	public static final int ARRAY_ALLOCATED = 0x2;
 	public static final int METHOD_ENTER = 0x4;
@@ -72,11 +70,6 @@ public class Event implements DataObject<EventId, Event> {
 		return id;
 	}
 
-	@NotNull
-	public Integer getVersion() {
-		return 0;
-	}
-
 	@Nullable
 	public InstanceId getThread() {
 		return thread;
@@ -110,11 +103,6 @@ public class Event implements DataObject<EventId, Event> {
 		return method;
 	}
 
-	@Nullable
-	public AttributeId<?, ?> getAttribute() {
-		return (method == null) ? field : method;
-	}
-
 	public void setAttribute(@NotNull AttributeId<?, ?> attribute) {
 		if (attribute instanceof MethodId) {
 			method = (MethodId) attribute;
@@ -142,10 +130,8 @@ public class Event implements DataObject<EventId, Event> {
 		return null;
 	}
 
-	@NotNull
-	public Event setArgs(@Nullable List<InstanceId> args) {
+	public void setArgs(@Nullable List<InstanceId> args) {
 		this.args = args;
-		return this;
 	}
 
 	public void visit(EventVisitor visitor) {

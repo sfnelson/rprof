@@ -31,7 +31,7 @@ public abstract class ClassVisitorDispatcher implements ClassVisitor {
 
 	/**
 	 * Classes defining this method should create an appropriate class visitor,
-	 * set it using the {@link #setClassVisitor} method, then call {@link #visit}
+	 * set it using the {@link #setClassVisitor} method, then call this method
 	 * on the new visitor.
 	 */
 	@Override

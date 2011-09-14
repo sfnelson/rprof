@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
+import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
@@ -34,7 +35,7 @@ public class LoggerTest {
 	EventManager events;
 	HttpServletRequest request;
 	HttpServletResponse response;
-	EventManager.EventCreator builder;
+	EventCreator builder;
 
 
 	@Before
@@ -46,7 +47,7 @@ public class LoggerTest {
 		events = createMock(EventManager.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
-		builder = createMock(EventManager.EventCreator.class);
+		builder = createMock(EventCreator.class);
 
 		logger = new Logger();
 		logger.context = context;

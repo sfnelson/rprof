@@ -1,17 +1,17 @@
 package nz.ac.vuw.ecs.rprofs.client.place.shared;
 
+import com.google.common.collect.Maps;
 import com.google.gwt.place.shared.Place;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseClasses;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseEvents;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseFields;
 import nz.ac.vuw.ecs.rprofs.client.place.BrowseInstances;
-import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
 
 import java.util.Map;
 
 public abstract class ReportPlace<P extends ReportPlace<P>> extends CompositePlace<P> implements HasDataset {
 
-	private static final Map<String, CompositeTokenizer<? extends ReportPlace<?>>> types = Collections.newMap();
+	private static final Map<String, CompositeTokenizer<? extends ReportPlace<?>>> types = Maps.newHashMap();
 
 	static {
 		register(BrowseClasses.TYPE, BrowseClasses.TOKENIZER);
@@ -29,7 +29,7 @@ public abstract class ReportPlace<P extends ReportPlace<P>> extends CompositePla
 		if (current instanceof CompositePlace) {
 			params = ((CompositePlace<?>) current).parameters;
 		} else {
-			params = Collections.newMap();
+			params = Maps.newHashMap();
 		}
 		CompositeTokenizer<? extends ReportPlace<?>> tok = types.get(report);
 		if (tok == null) {

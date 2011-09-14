@@ -66,6 +66,8 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 
 	/**
 	 * Provided for {@link MongoFieldBuilder} to insert itself when store is called.
+	 *
+	 * @param field the field builder to hold until store
 	 */
 	void addField(MongoFieldBuilder field) {
 		if (fields == null) {
@@ -79,6 +81,8 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 
 	/**
 	 * Provided for {@link MongoMethodBuilder} to insert itself when store is called.
+	 *
+	 * @param method the method builder to hold until store
 	 */
 	void addMethod(MongoMethodBuilder method) {
 		if (methods == null) {
@@ -109,7 +113,7 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 		ClazzId id = super.store();
 
 		// find any classes which specify this class as the parent and update them
-		c = _query(new BasicDBObject("name", name));
+		c = _query(new BasicDBObject("parentName", name));
 		while (c.hasNext()) {
 			_update(c.next(), new BasicDBObject("parent", id.longValue()));
 		}

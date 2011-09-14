@@ -1,9 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import com.mongodb.*;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
@@ -37,7 +34,8 @@ public class MongoClassBuilderTest {
 		builder = new MongoClassBuilder() {
 			@Override
 			void _store(DBObject toStore) {
-				stored = (BasicDBObject) toStore;
+				stored = new BasicDBObject();
+				stored.putAll(toStore);
 			}
 
 			@Override
@@ -130,8 +128,10 @@ public class MongoClassBuilderTest {
 
 		expect(mBuilder.store(id, "org.foo.Bar")).andReturn(null);
 		expect(fBuilder.store(id, "org.foo.Bar")).andReturn(null);
+		expect(cursor.hasNext()).andReturn(false); // get children
+		cursor.close();
 
-		replay(fBuilder, mBuilder);
+		replay(fBuilder, mBuilder, cursor);
 
 		builder.setName("org.foo.Bar");
 		builder.addMethod(mBuilder);
@@ -139,30 +139,28 @@ public class MongoClassBuilderTest {
 		nextId = 15;
 		builder.store();
 
+		verify(fBuilder, mBuilder, cursor);
+
 		assertNotNull(stored);
 		assertEquals(15l, stored.get("_id"));
 		assertEquals("org.foo.Bar", stored.get("name"));
-
-		verify(fBuilder, mBuilder);
+		assertEquals(new BasicDBObjectBuilder().add("parentName", "org.foo.Bar").get(), query);
 	}
 
 	@Test
 	public void testGet() throws Exception {
-		ClazzId parent = new ClazzId(1);
-		builder.setName("org.foo.Bar");
-		builder.setParent(parent);
-		builder.setParentName("org.Foo");
-		builder.setProperties(2);
-		nextId = 3l;
-
-		builder.store();
-		builder.b = stored;
+		builder.init(new BasicDBObjectBuilder()
+				.add("_id", 1l)
+				.add("name", "org.foo.Bar")
+				.add("parent", 2l)
+				.add("parentName", "org.Foo")
+				.add("properties", 3).get());
 		Clazz result = builder.get();
 
-		assertEquals(3l, result.getId().longValue());
+		assertEquals(1l, result.getId().longValue());
 		assertEquals("org.foo.Bar", result.getName());
-		assertEquals(parent, result.getParent());
+		assertEquals(new ClazzId(2l), result.getParent());
 		assertEquals("org.Foo", result.getParentName());
-		assertEquals(2, result.getProperties());
+		assertEquals(3, result.getProperties());
 	}
 }

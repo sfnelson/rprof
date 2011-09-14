@@ -1,6 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
@@ -19,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 public class MongoDatasetBuilderTest {
 
 	MongoDatasetBuilder builder;
-	short toReturn;
+	long toReturn;
 	BasicDBObject stored;
 
 	@Before
@@ -32,7 +33,8 @@ public class MongoDatasetBuilderTest {
 
 			@Override
 			public void _store(DBObject dataset) {
-				stored = (BasicDBObject) dataset;
+				stored = new BasicDBObject();
+				stored.putAll(dataset);
 			}
 
 			@Override
@@ -40,6 +42,9 @@ public class MongoDatasetBuilderTest {
 				throw new RuntimeException("not implemented");
 			}
 		};
+
+		toReturn = 0;
+		stored = null;
 	}
 
 	@Test
@@ -71,7 +76,8 @@ public class MongoDatasetBuilderTest {
 	@Test
 	public void testStore() throws Exception {
 		toReturn = 15;
-		builder.store();
+		DatasetId id = builder.store();
+		assertEquals(15l, id.longValue());
 		assertEquals(15l, stored.get("_id"));
 	}
 
@@ -79,14 +85,14 @@ public class MongoDatasetBuilderTest {
 	public void testGet() throws Exception {
 		Date started = new Date();
 		Date stopped = new Date();
-		toReturn = 1;
-		builder.setHandle("foobar");
-		builder.setStarted(started);
-		builder.setStopped(stopped);
-		builder.setProgram("prog");
 
-		builder.store();
-		builder.b = stored;
+		builder.init(new BasicDBObjectBuilder()
+				.add("_id", 1l)
+				.add("handle", "foobar")
+				.add("started", started)
+				.add("stopped", stopped)
+				.add("program", "prog")
+				.get());
 		Dataset ds = builder.get();
 
 		assertEquals(1l, ds.getId().longValue());

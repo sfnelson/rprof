@@ -54,6 +54,7 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public MongoEventBuilder addArg(InstanceId arg) {
 		List<Long> args;
 		if (b.containsField("args")) {
@@ -106,8 +107,8 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 			if (in != null && !in.isEmpty()) {
 				List<InstanceId> out = Lists.newArrayList();
 				for (Long arg : in) {
-					if (arg != null) out.add(new InstanceId(arg));
-					else out.add(null);
+					if (arg == null || arg == 0) out.add(null);
+					else out.add(new InstanceId(arg));
 				}
 				event.setArgs(out);
 			}

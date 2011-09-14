@@ -2,6 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
@@ -11,7 +12,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -44,9 +44,12 @@ public class MongoEventBuilderTest {
 
 			@Override
 			void _store(DBObject data) {
-				result = (BasicDBObject) data;
+				result = new BasicDBObject();
+				result.putAll(data);
 			}
 		};
+
+		result = null;
 	}
 
 	@Test
@@ -109,7 +112,7 @@ public class MongoEventBuilderTest {
 		InstanceId y = null;
 		InstanceId z = InstanceId.create(ds, 8);
 
-		assertTrue(((List<Long>) b.b.get("args")).isEmpty());
+		assertFalse(b.b.containsField("args"));
 
 		b.addArg(x);
 		b.addArg(y);
@@ -163,18 +166,15 @@ public class MongoEventBuilderTest {
 		InstanceId y = null;
 		InstanceId z = InstanceId.create(ds, 8);
 
-		b.setId(id);
-		b.setThread(thread);
-		b.setEvent(Event.METHOD_EXCEPTION);
-		b.setClazz(clazz);
-		b.setMethod(method);
-		b.setField(field);
-		b.addArg(x);
-		b.addArg(y);
-		b.addArg(z);
-
-		b.store();
-		b.b = result;
+		b.init(new BasicDBObjectBuilder()
+				.add("_id", id.longValue())
+				.add("thread", thread.longValue())
+				.add("class", clazz.longValue())
+				.add("event", Event.METHOD_EXCEPTION)
+				.add("method", method.longValue())
+				.add("field", field.longValue())
+				.add("args", Lists.newArrayList(x.longValue(), 0l, z.longValue()))
+				.get());
 		Event result = b.get();
 
 		assertEquals(id, result.getId());

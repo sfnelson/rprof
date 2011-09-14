@@ -68,6 +68,7 @@ public class WeaveTest {
 		weave.datasets = manager;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void testDoPost() throws Exception {
 		ServletInputStream data = new ServletInputStream();
@@ -90,8 +91,8 @@ public class WeaveTest {
 		expect(mbuilder.setAccess(Opcodes.ACC_PUBLIC)).andReturn(mbuilder);
 		expect(mbuilder.setName("<init>")).andReturn(mbuilder);
 		expect(mbuilder.setDescription("()V")).andReturn(mbuilder);
+		expect(mbuilder.store()).andReturn(null);
 		expect(builder.store()).andReturn(clazz.getId());
-		mbuilder.store();
 
 		expect(classes.getClazz(clazz.getId())).andReturn(clazz);
 		expect(classes.findMethods(clazz.getId())).andReturn((List) Lists.newArrayList(method));

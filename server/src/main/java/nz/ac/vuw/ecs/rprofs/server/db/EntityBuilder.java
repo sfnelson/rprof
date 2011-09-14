@@ -23,6 +23,10 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 
 	protected BasicDBObject b;
 
+	public EntityBuilder() {
+		b = new BasicDBObject();
+	}
+
 	@Override
 	public I store() {
 		I id = _createId();
@@ -63,6 +67,7 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 		b.clear();
 	}
 
+	@SuppressWarnings("unchecked")
 	B init(@NotNull BSONObject init) {
 		b.putAll(init);
 		return (B) this;

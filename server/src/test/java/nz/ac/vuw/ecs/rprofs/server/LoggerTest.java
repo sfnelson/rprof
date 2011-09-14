@@ -138,7 +138,7 @@ public class LoggerTest {
 		for (InstanceId arg : args) {
 			expect(builder.addArg(arg)).andReturn(builder);
 		}
-		builder.store();
+		expect(builder.store()).andReturn(null);
 
 		replay(datasets, context, events, builder);
 
@@ -197,7 +197,7 @@ public class LoggerTest {
 		for (InstanceId arg : args) {
 			expect(builder.addArg(arg)).andReturn(builder);
 		}
-		builder.store();
+		expect(builder.store()).andReturn(null);
 
 		replay(datasets, context, events, builder);
 
@@ -279,13 +279,13 @@ public class LoggerTest {
 		for (InstanceId arg : args) {
 			expect(builder.addArg(arg)).andReturn(builder);
 		}
-		builder.store();
+		expect(builder.store()).andReturn(null);
 
 		expect(builder.setId(eq(id))).andReturn(builder);
 		expect(builder.setThread(thread)).andReturn(builder);
 		expect(builder.setEvent(event2)).andReturn(builder);
 		expect(builder.setClazz(clazz)).andReturn(builder);
-		builder.store();
+		expect(builder.store()).andReturn(null);
 
 		replay(datasets, context, events, builder);
 

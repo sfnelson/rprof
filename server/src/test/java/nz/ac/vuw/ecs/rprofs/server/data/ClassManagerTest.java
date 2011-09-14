@@ -8,8 +8,7 @@ import org.junit.Test;
 
 import java.util.Date;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertEquals;
+import static org.easymock.EasyMock.createMock;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -21,13 +20,13 @@ public class ClassManagerTest {
 	Context context;
 	Dataset dataset;
 	Database database;
-	ClassManager.ClassBuilder builder;
+	ClassManager.ClazzCreator builder;
 
 	@org.junit.Before
 	public void setup() {
 		context = createMock(Context.class);
 		database = createMock(Database.class);
-		builder = createMock(ClassManager.ClassBuilder.class);
+		builder = createMock(ClassManager.ClazzCreator.class);
 
 		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
 
@@ -39,15 +38,6 @@ public class ClassManagerTest {
 	@Test
 	public void testCreateClass() throws Exception {
 
-		expect(database.getClassBuilder()).andReturn(builder);
-
-		replay(context, database, builder);
-
-		ClassManager.ClassBuilder result = cm.createClass();
-
-		verify(context, database, builder);
-
-		assertEquals(builder, result);
 	}
 
 	@Test

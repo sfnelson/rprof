@@ -13,16 +13,23 @@ import java.util.List;
 
 public class DatasetManager implements DatasetService {
 
-	public interface DatasetBuilder {
-		DatasetBuilder setHandle(String handle);
+	public interface DatasetBuilder<D extends DatasetBuilder<D>> {
+		D setHandle(String handle);
 
-		DatasetBuilder setStarted(Date date);
+		D setStarted(Date date);
 
-		DatasetBuilder setStopped(Date date);
+		D setStopped(Date date);
 
-		DatasetBuilder setProgram(String program);
+		D setProgram(String program);
+	}
 
-		DatasetId store();
+	public interface DatasetCreator<D extends DatasetCreator<D>> extends DatasetBuilder<D>, Creator<DatasetId, Dataset> {
+	}
+
+	public interface DatasetQuery<D extends DatasetQuery<D>> extends DatasetBuilder<D>, Query<DatasetId, Dataset> {
+	}
+
+	public interface DatasetUpdater<D extends DatasetUpdater<D>> extends DatasetBuilder<D>, Updater<DatasetId, Dataset> {
 	}
 
 	@VisibleForTesting
@@ -39,22 +46,22 @@ public class DatasetManager implements DatasetService {
 				now.get(Calendar.MINUTE),
 				now.get(Calendar.SECOND));
 
-		DatasetBuilder builder = database.getDatasetBuilder();
-		builder.setHandle(handle);
-		builder.setStarted(now.getTime());
-		DatasetId id = builder.store();
+		DatasetId id = database.getDatasetCreator()
+				.setHandle(handle)
+				.setStarted(now.getTime())
+				.store();
 
 		return database.findEntity(id);
 	}
 
 	@Override
-	public List<Dataset> findAllDatasets() {
-		return database.findEntities(Dataset.class);
+	public List<? extends Dataset> findAllDatasets() {
+		return database.getDatasetQuery().find();
 	}
 
 	@Override
 	public Dataset findDataset(String handle) {
-		List<Dataset> ds = database.findEntities(Dataset.class, handle);
+		List<? extends Dataset> ds = database.getDatasetQuery().setHandle(handle).find();
 		assert (ds.size() == 1);
 		return ds.get(0);
 	}
@@ -66,16 +73,16 @@ public class DatasetManager implements DatasetService {
 
 	@Override
 	public void stopDataset(Dataset dataset) {
-		DatasetBuilder builder = database.getDatasetUpdater(dataset);
+		DatasetUpdater builder = database.getDatasetUpdater();
 		builder.setStopped(Calendar.getInstance().getTime());
-		builder.store();
+		builder.update(dataset.getId());
 	}
 
 	@Override
 	public void setProgram(Dataset dataset, String program) {
-		DatasetBuilder builder = database.getDatasetUpdater(dataset);
+		DatasetUpdater builder = database.getDatasetUpdater();
 		builder.setProgram(program);
-		builder.store();
+		builder.update(dataset.getId());
 	}
 
 	@Override

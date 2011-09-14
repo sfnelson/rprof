@@ -11,7 +11,7 @@ public interface DatasetService {
 
 	Dataset findDataset(String handle);
 
-	List<Dataset> findAllDatasets();
+	List<? extends Dataset> findAllDatasets();
 
 	void stopDataset(Dataset dataset);
 

@@ -4,7 +4,6 @@ import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
-import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventBuilder;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
@@ -69,7 +68,7 @@ public class Logger extends HttpServlet {
 		final int MAX_PARAMETERS = 16;
 		final int RECORD_LENGTH = 8 + 8 + 4 + 4 + 4 + 4 + MAX_PARAMETERS * 8;
 
-		EventBuilder b = events.getBuilder();
+		EventManager.EventCreator<?> b = events.createEvent();
 
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long id = dis.readLong();

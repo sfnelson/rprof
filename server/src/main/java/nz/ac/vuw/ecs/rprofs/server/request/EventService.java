@@ -8,11 +8,11 @@ import java.util.List;
 
 public interface EventService {
 
-	List<? extends Event> findEvents(Integer start, Integer length, Integer filter);
+	List<Event> findEvents(Integer start, Integer length, Integer filter);
 
 	Long findIndexOf(EventId eventId, Integer filter);
 
-	List<? extends Event> findEventsByInstance(Long instanceId);
+	List<Event> findEventsByInstance(Long instanceId);
 
 	Long findNumEvents(Integer filter);
 

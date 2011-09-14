@@ -1,8 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,13 +26,18 @@ public class MongoDatasetBuilderTest {
 	public void setUp() throws Exception {
 		builder = new MongoDatasetBuilder() {
 			@Override
-			public short _getId() {
-				return toReturn;
+			public DatasetId _createId() {
+				return new DatasetId(toReturn);
 			}
 
 			@Override
 			public void _store(DBObject dataset) {
 				stored = (BasicDBObject) dataset;
+			}
+
+			@Override
+			DBCollection _getCollection() {
+				throw new RuntimeException("not implemented");
 			}
 		};
 	}

@@ -1,37 +1,60 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.mongodb.BasicDBObject;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldBuilder;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import org.bson.BSONObject;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 13/09/11
  */
-public class MongoFieldBuilder implements FieldBuilder {
-
-	@VisibleForTesting
-	BasicDBObject b;
+abstract class MongoFieldBuilder extends MongoBuilder<MongoFieldBuilder, FieldId, Field>
+		implements FieldCreator<MongoFieldBuilder>, FieldUpdater<MongoFieldBuilder>, FieldQuery<MongoFieldBuilder> {
 
 	@VisibleForTesting
 	MongoClassBuilder parent;
 
+	@VisibleForTesting
+	FieldId id;
+
 	MongoFieldBuilder(MongoClassBuilder parent) {
 		this.parent = parent;
-		b = new BasicDBObject();
 	}
 
-	MongoFieldBuilder() {
-		b = new BasicDBObject();
+	/*
+	 * We can't assign a field id until the owning class has an id, so delay the real store until the owning class has
+	 * been stored. Return an placeholder id which will become valid when the class has been stored.
+	 */
+	@Override
+	public FieldId store() {
+		id = new FieldId(0l);
+		parent.addField(this);
+		return id; // will be set later.
 	}
 
-	MongoFieldBuilder init(BSONObject data) {
-		b.putAll(data);
-		return this;
+	/**
+	 * Provided for {@link MongoClassBuilder} to store this field once it has obtained an id.
+	 *
+	 * @param owner	 the id that this field's owner class has been assigned
+	 * @param ownerName the name of the owning class
+	 * @return the updated field id
+	 */
+	FieldId store(ClazzId owner, String ownerName) {
+		FieldId id = this.id;
+		setOwner(owner);
+		setOwnerName(ownerName);
+		id.setValue(super.store().longValue());
+		return id;
+	}
+
+	@Override
+	protected void reset() {
+		super.reset();
+		id = null;
 	}
 
 	@Override
@@ -53,9 +76,15 @@ public class MongoFieldBuilder implements FieldBuilder {
 	}
 
 	@Override
-	public void store() {
-		parent.addField(b);
-		b = new BasicDBObject();
+	public MongoFieldBuilder setOwner(ClazzId owner) {
+		b.put("owner", owner.longValue());
+		return this;
+	}
+
+	@Override
+	public MongoFieldBuilder setOwnerName(String ownerName) {
+		b.put("ownerName", ownerName);
+		return this;
 	}
 
 	@Override

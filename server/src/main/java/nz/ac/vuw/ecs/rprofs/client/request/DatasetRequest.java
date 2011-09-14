@@ -4,8 +4,8 @@ import com.google.web.bindery.requestfactory.shared.Request;
 import com.google.web.bindery.requestfactory.shared.RequestContext;
 import com.google.web.bindery.requestfactory.shared.Service;
 import nz.ac.vuw.ecs.rprofs.client.request.id.DatasetIdProxy;
-import nz.ac.vuw.ecs.rprofs.server.data.ServiceLocator;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
+import nz.ac.vuw.ecs.rprofs.server.request.ServiceLocator;
 
 import java.util.List;
 

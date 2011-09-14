@@ -1,13 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventBuilder;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
-import org.bson.BSONObject;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -16,24 +14,8 @@ import java.util.List;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 11/09/11
  */
-abstract class MongoEventBuilder implements EventBuilder, EntityBuilder<Event> {
-
-	@VisibleForTesting
-	BasicDBObject b;
-
-	@VisibleForTesting
-	List<Long> args;
-
-	MongoEventBuilder() {
-		b = new BasicDBObject();
-		args = Lists.newArrayList();
-	}
-
-	@Override
-	public MongoEventBuilder init(BSONObject values) {
-		b.putAll(values);
-		return this;
-	}
+abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId, Event>
+		implements EventCreator<MongoEventBuilder>, EventUpdater<MongoEventBuilder>, EventQuery<MongoEventBuilder> {
 
 	@Override
 	public MongoEventBuilder setId(@NotNull EventId id) {
@@ -73,20 +55,16 @@ abstract class MongoEventBuilder implements EventBuilder, EntityBuilder<Event> {
 
 	@Override
 	public MongoEventBuilder addArg(InstanceId arg) {
-		args.add(arg == null ? null : arg.longValue());
-		return this;
-	}
-
-	@Override
-	public void store() {
-		if (!args.isEmpty()) {
-			b.append("args", Lists.newArrayList(args));
+		List<Long> args;
+		if (b.containsField("args")) {
+			args = (List<Long>) b.get("args");
+		} else {
+			args = Lists.newArrayList();
 		}
-
-		_store(b);
-
-		b = new BasicDBObject();
-		args.clear();
+		List<Long> newArgs = Lists.newArrayList(args);
+		newArgs.add(arg == null ? null : arg.longValue());
+		b.put("args", newArgs);
+		return this;
 	}
 
 	@Override
@@ -136,6 +114,4 @@ abstract class MongoEventBuilder implements EventBuilder, EntityBuilder<Event> {
 		}
 		return event;
 	}
-
-	abstract void _store(DBObject event);
 }

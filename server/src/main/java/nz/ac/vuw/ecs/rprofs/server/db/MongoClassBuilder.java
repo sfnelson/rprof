@@ -3,48 +3,43 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
+import com.mongodb.DBCursor;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
-import org.bson.BSONObject;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 12/09/11
  */
-public abstract class MongoClassBuilder
-		implements ClassManager.ClassBuilder, EntityBuilder<Clazz> {
+public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, ClazzId, Clazz>
+		implements ClazzCreator<MongoClassBuilder>, ClazzUpdater<MongoClassBuilder>, ClazzQuery<MongoClassBuilder> {
 
 	@VisibleForTesting
-	BasicDBObject b;
+	List<MongoFieldBuilder> fields;
 
 	@VisibleForTesting
-	List<BasicDBObject> fields;
-
-	@VisibleForTesting
-	List<BasicDBObject> methods;
-
-	MongoClassBuilder() {
-		b = new BasicDBObject();
-	}
-
-	@Override
-	public MongoClassBuilder init(@NotNull BSONObject init) {
-		b.putAll(init);
-		return this;
-	}
+	List<MongoMethodBuilder> methods;
 
 	@Override
 	public MongoClassBuilder setName(String name) {
 		b.put("name", name);
 		b.put("package", Clazz.getPackageName(name));
 		b.put("short", Clazz.getSimpleName(name));
+		return this;
+	}
+
+	@Override
+	public MongoClassBuilder setPackageName(String name) {
+		b.put("package", name);
+		return this;
+	}
+
+	@Override
+	public MongoClassBuilder setSimpleName(String name) {
+		b.put("short", name);
 		return this;
 	}
 
@@ -67,11 +62,12 @@ public abstract class MongoClassBuilder
 	}
 
 	@Override
-	public MongoFieldBuilder addField() {
-		return new MongoFieldBuilder(this);
-	}
+	public abstract FieldCreator<?> addField();
 
-	void addField(BasicDBObject field) {
+	/**
+	 * Provided for {@link MongoFieldBuilder} to insert itself when store is called.
+	 */
+	void addField(MongoFieldBuilder field) {
 		if (fields == null) {
 			fields = Lists.newArrayList();
 		}
@@ -79,11 +75,12 @@ public abstract class MongoClassBuilder
 	}
 
 	@Override
-	public MongoMethodBuilder addMethod() {
-		return new MongoMethodBuilder(this);
-	}
+	public abstract MethodCreator<?> addMethod();
 
-	void addMethod(BasicDBObject method) {
+	/**
+	 * Provided for {@link MongoMethodBuilder} to insert itself when store is called.
+	 */
+	void addMethod(MongoMethodBuilder method) {
 		if (methods == null) {
 			methods = Lists.newArrayList();
 		}
@@ -92,42 +89,46 @@ public abstract class MongoClassBuilder
 
 	@Override
 	public ClazzId store() {
-		ClazzId id;
-		if (!b.containsField("_id")) {
-			id = new ClazzId(_nextId());
-			if (id.longValue() != 0) {
-				b.put("_id", id.longValue());
-			}
-		} else {
-			id = new ClazzId((Long) b.get("_id"));
-		}
-		_storeClass(b);
+		DBCursor c;
 
+		// set parent using parent class retrieved from the database
+		if (b.containsField("parentName")) {
+			c = _query(new BasicDBObject("name", b.get("parentName")));
+			if (c.hasNext()) {
+				b.put("parent", c.next().get("_id"));
+			}
+			c.close();
+		}
+
+		// save some state, after calling super.store() all object state is lost.
+		String name = (String) b.get("name");
+		List<MongoMethodBuilder> methods = this.methods;
+		List<MongoFieldBuilder> fields = this.fields;
+
+		// store class into the database.
+		ClazzId id = super.store();
+
+		// find any classes which specify this class as the parent and update them
+		c = _query(new BasicDBObject("name", name));
+		while (c.hasNext()) {
+			_update(c.next(), new BasicDBObject("parent", id.longValue()));
+		}
+		c.close();
+
+		// store any methods associated with this class
 		if (methods != null) {
 			for (short i = 1; i <= methods.size(); i++) {
-				BasicDBObject m = methods.get(i - 1);
-				MethodId mid = new MethodId(id.datasetValue(), id.indexValue(), i);
-				m.put("_id", mid.longValue());
-				m.put("owner", id.longValue());
-				m.put("ownerName", b.get("name"));
-				_storeMethod(m);
+				methods.get(i - 1).store(id, name);
 			}
 		}
 
+		// store any fields associated with this class
 		if (fields != null) {
 			for (short i = 1; i <= fields.size(); i++) {
-				BasicDBObject f = fields.get(i - 1);
-				FieldId fid = new FieldId(id.datasetValue(), id.indexValue(), i);
-				f.put("_id", fid.longValue());
-				f.put("owner", id.longValue());
-				f.put("ownerName", b.get("name"));
-				_storeField(f);
+				fields.get(i - 1).store(id, name);
 			}
 		}
 
-		b = new BasicDBObject();
-		methods = null;
-		fields = null;
 		return id;
 	}
 
@@ -156,11 +157,12 @@ public abstract class MongoClassBuilder
 		return clazz;
 	}
 
-	abstract long _nextId();
+	@Override
+	protected void reset() {
+		super.reset();
 
-	abstract void _storeClass(DBObject data);
-
-	abstract void _storeField(DBObject data);
-
-	abstract void _storeMethod(DBObject data);
+		// don't clear, these lists are still needed.
+		fields = null;
+		methods = null;
+	}
 }

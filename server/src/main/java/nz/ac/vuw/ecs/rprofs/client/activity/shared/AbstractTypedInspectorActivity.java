@@ -47,16 +47,16 @@ public abstract class AbstractTypedInspectorActivity<T extends ReportPlace<T>>
 	}
 
 	protected void findClassesByPackage(final String pkg) {
-		cr.get().findClassesInPackage(pkg)
-				.fire(new Receiver<List<ClazzProxy>>() {
+		cr.get().findClasses(pkg)
+				.fire(new Receiver<List<? extends ClazzProxy>>() {
 					@Override
-					public void onSuccess(List<ClazzProxy> response) {
+					public void onSuccess(List<? extends ClazzProxy> response) {
 						classesAvailable(pkg, response);
 					}
 				});
 	}
 
-	protected void classesAvailable(String pkg, List<ClazzProxy> classes) {
+	protected void classesAvailable(String pkg, List<? extends ClazzProxy> classes) {
 	}
 
 	@Override
@@ -64,17 +64,17 @@ public abstract class AbstractTypedInspectorActivity<T extends ReportPlace<T>>
 	}
 
 	protected void findFieldsByClass(final ClazzProxy cls) {
-		fr.get().findFields(cls)
+		fr.get().findFields(cls.getId())
 				.with("owner")
-				.fire(new Receiver<List<FieldProxy>>() {
+				.fire(new Receiver<List<? extends FieldProxy>>() {
 					@Override
-					public void onSuccess(List<FieldProxy> response) {
+					public void onSuccess(List<? extends FieldProxy> response) {
 						fieldsAvailable(cls, response);
 					}
 				});
 	}
 
-	protected void fieldsAvailable(ClazzProxy cls, List<FieldProxy> fields) {
+	protected void fieldsAvailable(ClazzProxy cls, List<? extends FieldProxy> fields) {
 	}
 
 	@Override
@@ -82,17 +82,17 @@ public abstract class AbstractTypedInspectorActivity<T extends ReportPlace<T>>
 	}
 
 	protected void findMethodsByClass(final ClazzProxy cls) {
-		mr.get().findMethods(cls)
+		mr.get().findMethods(cls.getId())
 				.with("owner")
-				.fire(new Receiver<List<MethodProxy>>() {
+				.fire(new Receiver<List<? extends MethodProxy>>() {
 					@Override
-					public void onSuccess(List<MethodProxy> response) {
+					public void onSuccess(List<? extends MethodProxy> response) {
 						methodsAvailable(cls, response);
 					}
 				});
 	}
 
-	protected void methodsAvailable(ClazzProxy cls, List<MethodProxy> methods) {
+	protected void methodsAvailable(ClazzProxy cls, List<? extends MethodProxy> methods) {
 	}
 
 	@Override
@@ -102,15 +102,15 @@ public abstract class AbstractTypedInspectorActivity<T extends ReportPlace<T>>
 	protected void findInstancesByClass(final ClazzProxy cls) {
 		ir.get().findInstancesForClass(cls)
 				.with("type", "constructor")
-				.fire(new Receiver<List<InstanceProxy>>() {
+				.fire(new Receiver<List<? extends InstanceProxy>>() {
 					@Override
-					public void onSuccess(List<InstanceProxy> response) {
+					public void onSuccess(List<? extends InstanceProxy> response) {
 						instancesAvailable(cls, response);
 					}
 				});
 	}
 
-	protected void instancesAvailable(ClazzProxy cls, List<InstanceProxy> instances) {
+	protected void instancesAvailable(ClazzProxy cls, List<? extends InstanceProxy> instances) {
 	}
 
 	@Override

@@ -1,61 +1,86 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.mongodb.BasicDBObject;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodBuilder;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
-import org.bson.BSONObject;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 13/09/11
  */
-public class MongoMethodBuilder implements MethodBuilder, EntityBuilder<Method> {
+abstract class MongoMethodBuilder extends MongoBuilder<MongoMethodBuilder, MethodId, Method>
+		implements MethodCreator<MongoMethodBuilder>, MethodUpdater<MongoMethodBuilder>, MethodQuery<MongoMethodBuilder> {
 
-	@VisibleForTesting
 	MongoClassBuilder parent;
+	MethodId id;
 
-	@VisibleForTesting
-	BasicDBObject b;
-
-	MongoMethodBuilder(MongoClassBuilder parent) {
+	public MongoMethodBuilder(MongoClassBuilder parent) {
 		this.parent = parent;
-		b = new BasicDBObject();
 	}
 
-	MongoMethodBuilder() {
-		b = new BasicDBObject();
+	/*
+	 * We can't assign a method id until the owning class has an id, so delay the real store until the owning class has
+	 * been stored. Return an placeholder id which will become valid when the class has been stored.
+	 */
+	@Override
+	public MethodId store() {
+		id = new MethodId(0l);
+		parent.addMethod(this);
+		return id; // will be set later.
 	}
 
-	public MongoMethodBuilder init(BSONObject data) {
-		b.putAll(data);
-		return this;
+	/**
+	 * Provided for {@link MongoClassBuilder} to store this method once it has obtained an id.
+	 *
+	 * @param owner	 the id that this method's owner class has been assigned
+	 * @param ownerName the name of the owning class
+	 * @return the updated method id
+	 */
+	MethodId store(ClazzId owner, String ownerName) {
+		MethodId id = this.id;
+		setOwner(owner);
+		setOwnerName(ownerName);
+		id.setValue(super.store().longValue());
+		return id;
 	}
 
 	@Override
-	public MethodBuilder setName(String name) {
+	protected void reset() {
+		super.reset();
+		id = null;
+	}
+
+	@Override
+	public MongoMethodBuilder setName(String name) {
 		b.put("name", name);
 		return this;
 	}
 
 	@Override
-	public MethodBuilder setDescription(String desc) {
+	public MongoMethodBuilder setDescription(String desc) {
 		b.put("description", desc);
 		return this;
 	}
 
 	@Override
-	public MethodBuilder setAccess(int access) {
+	public MongoMethodBuilder setAccess(int access) {
 		b.put("access", access);
 		return this;
 	}
 
 	@Override
-	public void store() {
-		parent.addMethod(b);
-		b = new BasicDBObject();
+	public MongoMethodBuilder setOwner(ClazzId owner) {
+		b.put("owner", owner.longValue());
+		return this;
+	}
+
+	@Override
+	public MongoMethodBuilder setOwnerName(String ownerName) {
+		b.put("ownerName", ownerName);
+		return this;
 	}
 
 	@Override

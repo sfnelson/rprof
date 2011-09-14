@@ -39,13 +39,13 @@ public class ClassRecord {
 		return clazz.getName();
 	}
 
-	public void addMethods(List<Method> methods) {
+	public void addMethods(List<? extends Method> methods) {
 		for (Method m : methods) {
 			this.methods.put(m.getId().attributeValue(), m);
 		}
 	}
 
-	public void addFields(List<Field> fields) {
+	public void addFields(List<? extends Field> fields) {
 		for (Field f : fields) {
 			this.fields.put(f.getId().attributeValue(), f);
 			if ((Opcodes.ACC_STATIC & f.getAccess()) == 0) {

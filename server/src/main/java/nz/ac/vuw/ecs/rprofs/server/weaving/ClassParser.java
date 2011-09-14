@@ -1,6 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.ClazzCreator;
 import org.objectweb.asm.*;
 
 import javax.annotation.Nullable;
@@ -12,14 +12,14 @@ import javax.validation.constraints.NotNull;
  */
 public class ClassParser extends ClassAdapter {
 
-	private final ClassManager.ClassBuilder builder;
+	private final ClazzCreator<?> builder;
 
-	public ClassParser(@NotNull ClassManager.ClassBuilder builder) {
+	public ClassParser(@NotNull ClazzCreator<?> builder) {
 		super(null);
 		this.builder = builder;
 	}
 
-	public ClassManager.ClassBuilder read(@NotNull byte[] classfile) {
+	public ClazzCreator<?> read(@NotNull byte[] classfile) {
 		new org.objectweb.asm.ClassReader(classfile)
 				.accept(this, org.objectweb.asm.ClassReader.SKIP_CODE);
 		return builder;

@@ -8,7 +8,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
  */
 public class DatasetId extends Id<DatasetId, Dataset> {
 
-	public DatasetId(short id) {
+	public DatasetId(long id) {
 		super(id);
 	}
 

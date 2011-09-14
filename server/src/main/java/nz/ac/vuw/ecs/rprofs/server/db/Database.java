@@ -4,14 +4,19 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.mongodb.*;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
-import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.*;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetUpdater;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager.EventUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Nullable;
@@ -24,6 +29,8 @@ import java.util.List;
  */
 public class Database {
 
+	private final Logger log = LoggerFactory.getLogger(Database.class);
+
 	@NotNull
 	private final Mongo mongo;
 
@@ -34,59 +41,59 @@ public class Database {
 		this.mongo = mongo;
 	}
 
-	public DatasetManager.DatasetBuilder getDatasetBuilder() {
+	public DatasetCreator<?> getDatasetCreator() {
 		return createDatasetBuilder();
 	}
 
-	public DatasetManager.DatasetBuilder getDatasetUpdater(final Dataset dataset) {
-		final DBCollection properties = getCollection(dataset, Dataset.class);
-		final DatasetId id = dataset.getId();
-		return new MongoDatasetBuilder() {
-			@Override
-			public short _getId() {
-				return 0;
-			}
-
-			@Override
-			public void _store(DBObject dataset) {
-				properties.update(new BasicDBObject("_id", id.longValue()),
-						new BasicDBObject("$set", dataset));
-			}
-		};
+	public DatasetUpdater<?> getDatasetUpdater() {
+		return createDatasetBuilder();
 	}
 
-	public ClassManager.ClassBuilder getClassBuilder() {
+	public DatasetQuery<?> getDatasetQuery() {
+		return createDatasetBuilder();
+	}
+
+	public ClazzCreator<?> getClazzCreator() {
 		return createClassBuilder();
 	}
 
-	public ClassManager.ClassBuilder getClassUpdater(final ClazzId id) {
-		final DBCollection classes = getCollection(Clazz.class);
-		return new MongoClassBuilder() {
-			@Override
-			long _nextId() {
-				return 0;
-			}
-
-			@Override
-			void _storeClass(DBObject data) {
-				classes.update(new BasicDBObject("_id", id.longValue()),
-						new BasicDBObject("$set", data));
-			}
-
-			@Override
-			void _storeField(DBObject data) {
-				throw new RuntimeException("can't add fields during update");
-			}
-
-			@Override
-			void _storeMethod(DBObject data) {
-				throw new RuntimeException("can't add methods during update");
-			}
-		};
+	public ClazzUpdater<?> getClazzUpdater() {
+		return createClassBuilder();
 	}
 
-	public EventManager.EventBuilder getEventBuilder() {
+	public ClazzQuery<?> getClazzQuery() {
+		return createClassBuilder();
+	}
+
+	public EventCreator<?> getEventCreater() {
 		return createEventBuilder();
+	}
+
+	public EventUpdater<?> getEventUpdater() {
+		return createEventBuilder();
+	}
+
+	public EventQuery<?> getEventQuery() {
+		return createEventBuilder();
+	}
+
+	public FieldQuery<?> getFieldQuery() {
+		return createFieldQuery();
+	}
+
+	public MethodQuery<?> getMethodQuery() {
+		return createMethodQuery();
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> findPackages() {
+		DBCollection classes = getCollection(Clazz.class);
+		return (List<String>) classes.distinct("package");
+	}
+
+	public long countPackages() {
+		DBCollection classes = getCollection(Clazz.class);
+		return classes.distinct("package").size();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -108,53 +115,6 @@ public class Database {
 			DBObject data = collection.findOne(new BasicDBObject("_id", id.longValue()));
 			return getBuilder(id.getTargetClass()).init(data).get();
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T extends DataObject> List<T> findEntities(Class<T> type, Object... queryParams) {
-		if (type == Dataset.class) {
-			List<Dataset> datasets = getDatasets();
-			if (queryParams.length > 0) {
-				assert (queryParams.length == 1);
-				assert (queryParams[0].getClass() == String.class);
-				String handle = (String) queryParams[0];
-				for (Dataset ds : datasets) {
-					if (ds.getHandle().equals(handle)) {
-						return (List<T>) Lists.newArrayList(ds);
-					}
-				}
-			} else {
-				return (List<T>) datasets;
-			}
-		}
-		if (type == Method.class) {
-			if (queryParams.length == 1 && queryParams[0].getClass() == ClazzId.class) {
-				ClazzId clazzId = (ClazzId) queryParams[0];
-				Clazz clazz = findEntity(clazzId);
-				DBCollection methods = getCollection(Method.class);
-				DBCursor o = methods.find(new BasicDBObject("owner", clazzId.longValue()));
-				List<Method> result = Lists.newArrayList();
-				MongoMethodBuilder m = new MongoMethodBuilder();
-				while (o.hasNext()) {
-					result.add(m.init(o.next()).get());
-				}
-				return (List<T>) result;
-			}
-		}
-		if (type == Field.class) {
-			if (queryParams.length == 1 && queryParams[0].getClass() == ClazzId.class) {
-				ClazzId clazzId = (ClazzId) queryParams[0];
-				DBCollection fields = getCollection(Field.class);
-				DBCursor o = fields.find(new BasicDBObject("owner", clazzId.longValue()));
-				List<Field> result = Lists.newArrayList();
-				MongoFieldBuilder f = new MongoFieldBuilder();
-				while (o.hasNext()) {
-					result.add(f.init(o.next()).get());
-				}
-				return (List<T>) result;
-			}
-		}
-		return null;
 	}
 
 	public <T extends DataObject> boolean deleteEntity(T entity) {
@@ -236,26 +196,12 @@ public class Database {
 	}
 
 	@VisibleForTesting
-	short getNextId() {
-		short max = 0;
-		for (String dbname : mongo.getDatabaseNames()) {
-			if (dbname.startsWith("rprof")) {
-				DB db = mongo.getDB(dbname);
-				DBObject properties = db.getCollection("properties").findOne();
-				short id = ((Long) properties.get("_id")).shortValue();
-				if (id > max) max = id;
-			}
-		}
-		return ++max;
-	}
-
-	@VisibleForTesting
 	String getDBName(Dataset dataset) {
 		return "rprof_" + dataset.getHandle() + "_" + dataset.getId().indexValue();
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends DataObject<?, T>> EntityBuilder<T> getBuilder(@NotNull Class<T> type) {
+	private <T extends DataObject<?, T>> EntityBuilder<?, ?, T> getBuilder(@NotNull Class<T> type) {
 		if (type.equals(Dataset.class)) {
 			return EntityBuilder.class.cast(createDatasetBuilder());
 		} else if (type.equals(Event.class)) {
@@ -263,35 +209,70 @@ public class Database {
 		} else if (type.equals(Clazz.class)) {
 			return EntityBuilder.class.cast(createClassBuilder());
 		} else if (type.equals(Field.class)) {
-			return EntityBuilder.class.cast(new MongoFieldBuilder());
+			return EntityBuilder.class.cast(createFieldQuery());
 		} else if (type.equals(Method.class)) {
-			return EntityBuilder.class.cast(new MongoMethodBuilder());
+			return EntityBuilder.class.cast(createMethodQuery());
+		} else {
+			log.error("request for unavaible builder: {}", type);
+			return null;
 		}
-		return null;
 	}
 
 	private MongoDatasetBuilder createDatasetBuilder() {
 		return new MongoDatasetBuilder() {
 			@Override
-			public short _getId() {
-				short max = 0;
-				for (String dbname : mongo.getDatabaseNames()) {
-					if (dbname.startsWith("rprof")) {
-						DB db = mongo.getDB(dbname);
-						DBObject properties = db.getCollection("properties").findOne();
-						short id = ((Long) properties.get("_id")).shortValue();
-						if (id > max) max = id;
+			DatasetId _createId() {
+				if (b.containsField("_id")) {
+					return new DatasetId((Long) b.get("_id"));
+				} else {
+					long max = 0;
+					for (String dbname : mongo.getDatabaseNames()) {
+						if (dbname.startsWith("rprof")) {
+							DB db = mongo.getDB(dbname);
+							DBObject properties = db.getCollection("properties").findOne();
+							short id = ((Long) properties.get("_id")).shortValue();
+							if (id > max) max = id;
+						}
 					}
+					return new DatasetId(++max);
 				}
-				return ++max;
 			}
 
 			@Override
-			public void _store(DBObject dataset) {
+			DBCollection _getCollection() {
+				return getCollection(Dataset.class);
+			}
+
+			@Override
+			public void update(DatasetId id) {
+				context.setDataset(findEntity(id));
+				super.update(id);
+				context.clear();
+			}
+
+			@Override
+			void _store(DBObject dataset) {
 				String dbname = "rprof_" + dataset.get("handle") + "_" + dataset.get("_id");
 				DB db = mongo.getDB(dbname);
-				DBCollection properties = db.getCollection("properties");
-				properties.insert(dataset);
+				db.getCollection("properties").insert(dataset);
+			}
+
+			@Override
+			public List<Dataset> find() {
+				List<Dataset> result = Lists.newArrayList();
+				for (Dataset ds : getDatasets()) {
+					DBCursor c = getCollection(ds, Dataset.class).find(b);
+					if (c.hasNext()) {
+						result.add(ds);
+					}
+					c.close();
+				}
+				return result;
+			}
+
+			@Override
+			long _count(DBObject query) {
+				return find().size();
 			}
 		};
 	}
@@ -299,6 +280,16 @@ public class Database {
 	private MongoEventBuilder createEventBuilder() {
 		return new MongoEventBuilder() {
 			final DBCollection events = getCollection(Event.class);
+
+			@Override
+			DBCollection _getCollection() {
+				return events;
+			}
+
+			@Override
+			EventId _createId() {
+				return new EventId((Long) b.get("_id"));
+			}
 
 			@Override
 			void _store(DBObject event) {
@@ -309,29 +300,100 @@ public class Database {
 
 	private MongoClassBuilder createClassBuilder() {
 		return new MongoClassBuilder() {
-			DBCollection classes = getCollection(Clazz.class);
-			DBCollection methods = getCollection(Method.class);
-			DBCollection fields = getCollection(Field.class);
+			private short methods = 0;
+			private short fields = 0;
 
 			@Override
-			long _nextId() {
-				// TODO this is not thread-safe!
-				return classes.count() + 1;
+			public FieldCreator addField() {
+				return createFieldCreator(this, ++fields);
 			}
 
 			@Override
-			void _storeClass(DBObject data) {
-				classes.insert(data);
+			public MethodCreator addMethod() {
+				return createMethodCreator(this, ++methods);
 			}
 
 			@Override
-			void _storeField(DBObject data) {
-				fields.insert(data);
+			DBCollection _getCollection() {
+				return getCollection(Clazz.class);
 			}
 
 			@Override
-			void _storeMethod(DBObject data) {
-				methods.insert(data);
+			ClazzId _createId() {
+				if (b.containsField("_id")) {
+					return new ClazzId((Long) b.get("_id"));
+				} else {
+					// TODO this is not thread-safe!
+					Dataset ds = context.getDataset();
+					return ClazzId.create(ds, (int) _getCollection().count() + 1);
+				}
+			}
+
+			@Override
+			protected void reset() {
+				super.reset();
+				methods = 0;
+				fields = 0;
+			}
+		};
+	}
+
+	private MongoFieldBuilder createFieldQuery() {
+		return new MongoFieldBuilder(null) {
+			@Override
+			DBCollection _getCollection() {
+				return getCollection(Field.class);
+			}
+
+			@Override
+			FieldId _createId() {
+				return new FieldId((Long) b.get("_id"));
+			}
+		};
+	}
+
+	private MongoFieldBuilder createFieldCreator(MongoClassBuilder classBuilder, final short index) {
+		return new MongoFieldBuilder(classBuilder) {
+			@Override
+			DBCollection _getCollection() {
+				return getCollection(Field.class);
+			}
+
+			@Override
+			FieldId _createId() {
+				Dataset ds = context.getDataset();
+				ClazzId owner = new ClazzId((Long) b.get("owner"));
+				return FieldId.create(ds, owner, index);
+			}
+		};
+	}
+
+	private MongoMethodBuilder createMethodQuery() {
+		return new MongoMethodBuilder(null) {
+			@Override
+			DBCollection _getCollection() {
+				return getCollection(Method.class);
+			}
+
+			@Override
+			MethodId _createId() {
+				return new MethodId((Long) b.get("_id"));
+			}
+		};
+	}
+
+	private MongoMethodBuilder createMethodCreator(MongoClassBuilder classBuilder, final short index) {
+		return new MongoMethodBuilder(classBuilder) {
+			@Override
+			DBCollection _getCollection() {
+				return getCollection(Method.class);
+			}
+
+			@Override
+			MethodId _createId() {
+				Dataset ds = context.getDataset();
+				ClazzId owner = new ClazzId((Long) b.get("owner"));
+				return MethodId.create(ds, owner, index);
 			}
 		};
 	}

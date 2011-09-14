@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class EventManager {
 
-	public interface EventBuilder {
+	public interface EventBuilder<E extends EventBuilder<E>> {
 		EventBuilder setId(EventId id);
 
 		EventBuilder setThread(InstanceId thread);
@@ -26,17 +26,22 @@ public class EventManager {
 		EventBuilder setField(FieldId field);
 
 		EventBuilder addArg(InstanceId arg);
+	}
 
-		void store();
+	public interface EventCreator<E extends EventCreator<E>> extends EventBuilder<E>, Creator<EventId, Event> {
+	}
 
-		Event get();
+	public interface EventUpdater<E extends EventUpdater<E>> extends EventBuilder<E>, Updater<EventId, Event> {
+	}
+
+	public interface EventQuery<E extends EventQuery<E>> extends EventBuilder<E>, Query<EventId, Event> {
 	}
 
 	@VisibleForTesting
 	@Autowired(required = true)
 	Database database;
 
-	public EventBuilder getBuilder() {
-		return database.getEventBuilder();
+	public EventCreator createEvent() {
+		return database.getEventCreater();
 	}
 }

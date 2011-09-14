@@ -2,6 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
@@ -10,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -30,8 +32,19 @@ public class MongoEventBuilderTest {
 	public void createBuilder() {
 		ds = new Dataset(new DatasetId(DS), "foo", new Date());
 		b = new MongoEventBuilder() {
-			void _store(DBObject toStore) {
-				result = (BasicDBObject) toStore;
+			@Override
+			DBCollection _getCollection() {
+				return null;
+			}
+
+			@Override
+			EventId _createId() {
+				return new EventId((Long) b.get("_id"));
+			}
+
+			@Override
+			void _store(DBObject data) {
+				result = (BasicDBObject) data;
 			}
 		};
 	}
@@ -96,13 +109,13 @@ public class MongoEventBuilderTest {
 		InstanceId y = null;
 		InstanceId z = InstanceId.create(ds, 8);
 
-		assertTrue(b.args.isEmpty());
+		assertTrue(((List<Long>) b.b.get("args")).isEmpty());
 
 		b.addArg(x);
 		b.addArg(y);
 		b.addArg(z);
 
-		assertEquals(Lists.newArrayList(x.longValue(), null, z.longValue()), b.args);
+		assertEquals(Lists.newArrayList(x.longValue(), null, z.longValue()), b.b.get("args"));
 	}
 
 	@Test

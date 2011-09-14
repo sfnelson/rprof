@@ -1,6 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.ClazzCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.FieldCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager.MethodCreator;
 import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.asm.Opcodes;
@@ -13,17 +15,17 @@ import static org.easymock.EasyMock.*;
  */
 public class ClassParserTest {
 
-	ClassManager.ClassBuilder builder;
-	ClassManager.MethodBuilder mbuilder;
-	ClassManager.FieldBuilder fbuilder;
+	ClazzCreator builder;
+	MethodCreator mbuilder;
+	FieldCreator fbuilder;
 
 	ClassParser parser;
 
 	@Before
 	public void setUp() throws Exception {
-		builder = createMock(ClassManager.ClassBuilder.class);
-		mbuilder = createMock(ClassManager.MethodBuilder.class);
-		fbuilder = createMock(ClassManager.FieldBuilder.class);
+		builder = createMock(ClazzCreator.class);
+		mbuilder = createMock(MethodCreator.class);
+		fbuilder = createMock(FieldCreator.class);
 
 		parser = new ClassParser(builder);
 	}

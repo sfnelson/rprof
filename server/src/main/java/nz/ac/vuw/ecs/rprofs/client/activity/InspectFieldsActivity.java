@@ -49,7 +49,7 @@ public class InspectFieldsActivity
 	}
 
 	@Override
-	protected void classesAvailable(String pkg, List<ClazzProxy> classes) {
+	protected void classesAvailable(String pkg, List<? extends ClazzProxy> classes) {
 		view.clear(pkg);
 		view.showClasses(pkg, classes);
 	}
@@ -60,7 +60,7 @@ public class InspectFieldsActivity
 	}
 
 	@Override
-	protected void fieldsAvailable(ClazzProxy cls, List<FieldProxy> fields) {
+	protected void fieldsAvailable(ClazzProxy cls, List<? extends FieldProxy> fields) {
 		view.clear(cls);
 		view.showFields(cls, fields);
 	}

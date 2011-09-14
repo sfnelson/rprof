@@ -34,7 +34,7 @@ public class LoggerTest {
 	EventManager events;
 	HttpServletRequest request;
 	HttpServletResponse response;
-	EventManager.EventBuilder builder;
+	EventManager.EventCreator builder;
 
 
 	@Before
@@ -46,7 +46,7 @@ public class LoggerTest {
 		events = createMock(EventManager.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
-		builder = createMock(EventManager.EventBuilder.class);
+		builder = createMock(EventManager.EventCreator.class);
 
 		logger = new Logger();
 		logger.context = context;
@@ -63,7 +63,7 @@ public class LoggerTest {
 
 		expect(request.getContentLength()).andReturn(0);
 		expect(request.getInputStream()).andReturn(null);
-		expect(events.getBuilder()).andReturn(null);
+		expect(events.createEvent()).andReturn(null);
 		response.setStatus(HttpServletResponse.SC_CREATED);
 		context.clear();
 
@@ -78,9 +78,8 @@ public class LoggerTest {
 	public void testParseNoEvents() throws Exception {
 		ServletInputStream in = new ServletInputStream();
 		in.content = new byte[]{};
-		EventManager.EventBuilder builder = createMock(EventManager.EventBuilder.class);
 
-		expect(events.getBuilder()).andReturn(builder);
+		expect(events.createEvent()).andReturn(builder);
 
 		replay(datasets, context, events, builder);
 
@@ -130,7 +129,7 @@ public class LoggerTest {
 				InstanceId.create(ds, 12)
 		);
 
-		expect(events.getBuilder()).andReturn(builder);
+		expect(events.createEvent()).andReturn(builder);
 		expect(builder.setId(eq(id))).andReturn(builder);
 		expect(builder.setThread(thread)).andReturn(builder);
 		expect(builder.setEvent(event)).andReturn(builder);
@@ -189,7 +188,7 @@ public class LoggerTest {
 				InstanceId.create(ds, 2)
 		);
 
-		expect(events.getBuilder()).andReturn(builder);
+		expect(events.createEvent()).andReturn(builder);
 		expect(builder.setId(eq(id))).andReturn(builder);
 		expect(builder.setThread(thread)).andReturn(builder);
 		expect(builder.setEvent(event)).andReturn(builder);
@@ -273,7 +272,7 @@ public class LoggerTest {
 				null, null, null, null
 		);
 
-		expect(events.getBuilder()).andReturn(builder);
+		expect(events.createEvent()).andReturn(builder);
 		expect(builder.setId(eq(id))).andReturn(builder);
 		expect(builder.setThread(thread)).andReturn(builder);
 		expect(builder.setEvent(event1)).andReturn(builder);

@@ -1,7 +1,8 @@
-package nz.ac.vuw.ecs.rprofs.server.data;
+package nz.ac.vuw.ecs.rprofs.server.request;
 
-import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
-import nz.ac.vuw.ecs.rprofs.server.request.EventService;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +17,17 @@ public class ServiceLocator implements com.google.web.bindery.requestfactory.sha
 	private DatasetManager datasets;
 
 	@Autowired
+	private ClassManager classes;
+
+	@Autowired
 	private EventManager events;
 
 	@Override
 	public Object getInstance(Class<?> clazz) {
 		if (clazz == DatasetService.class) {
 			return datasets;
+		} else if (clazz == ClazzService.class) {
+			return classes;
 		} else if (clazz == EventService.class) {
 			return events;
 		}

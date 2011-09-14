@@ -64,7 +64,7 @@ public class ReportPanel extends Composite implements ReportView {
 	}
 
 	@Override
-	public void showClasses(Object parent, List<ClazzProxy> classes) {
+	public void showClasses(Object parent, List<? extends ClazzProxy> classes) {
 		ReportWidget p = objectMap.get(parent);
 		if (p == null || classes == null) return;
 
@@ -82,7 +82,7 @@ public class ReportPanel extends Composite implements ReportView {
 	}
 
 	@Override
-	public void showMethods(Object parent, List<MethodProxy> methods) {
+	public void showMethods(Object parent, List<? extends MethodProxy> methods) {
 		ReportWidget p = objectMap.get(parent);
 		if (p == null || methods == null) return;
 
@@ -102,7 +102,7 @@ public class ReportPanel extends Composite implements ReportView {
 	}
 
 	@Override
-	public void showFields(Object parent, List<FieldProxy> fields) {
+	public void showFields(Object parent, List<? extends FieldProxy> fields) {
 		ReportWidget p = objectMap.get(parent);
 		if (p == null || fields == null) return;
 
@@ -122,7 +122,7 @@ public class ReportPanel extends Composite implements ReportView {
 	}
 
 	@Override
-	public void showInstances(Object parent, List<InstanceProxy> instances) {
+	public void showInstances(Object parent, List<? extends InstanceProxy> instances) {
 		ReportWidget p = objectMap.get(parent);
 		if (p == null || instances == null) return;
 

@@ -3,7 +3,6 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 import com.google.common.collect.Lists;
 import com.mongodb.Mongo;
 import nz.ac.vuw.ecs.rprofs.client.shared.Collections;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.*;
@@ -70,13 +69,11 @@ public class DatabaseIntegrationTest {
 
 	private Database database;
 	private Mongo mongo;
-	private DatasetManager.DatasetBuilder builder;
 
 	@Before
 	public void createMongo() throws Exception {
 		mongo = new Mongo("127.0.0.1", 27018);
 		database = new Database(mongo);
-		builder = database.getDatasetBuilder();
 	}
 
 	@Test
@@ -87,7 +84,7 @@ public class DatabaseIntegrationTest {
 		dbs.remove("test");
 		assertEquals(Lists.<String>newArrayList(), dbs);
 
-		DatasetId id = database.getDatasetBuilder()
+		DatasetId id = database.getDatasetCreator()
 				.setHandle("foobar")
 				.setStarted(new Date())
 				.store();
@@ -119,22 +116,13 @@ public class DatabaseIntegrationTest {
 	}
 
 	@Test
-	public void testGetNextId() throws Exception {
-		assertEquals((short) 1, database.getNextId());
-		builder.setHandle("foo").setStarted(new Date()).store();
-		assertEquals((short) 2, database.getNextId());
-		builder.setHandle("bar").setStarted(new Date()).store();
-		assertEquals((short) 3, database.getNextId());
-	}
-
-	@Test
 	public void testGetDatasets() throws Exception {
-		assertEquals(new ArrayList<Dataset>(), database.findEntities(Dataset.class));
-		DatasetId id1 = builder.setHandle("foo").setStarted(new Date()).store();
-		assertEquals(id1, database.findEntities(Dataset.class).get(0).getId());
-		DatasetId id2 = builder.setHandle("foo").setStarted(new Date()).store();
+		assertEquals(new ArrayList<Dataset>(), database.getDatasetQuery().find());
+		DatasetId id1 = database.getDatasetCreator().setHandle("foo").setStarted(new Date()).store();
+		assertEquals(id1, database.getDatasetQuery().find().get(0).getId());
+		DatasetId id2 = database.getDatasetCreator().setHandle("foo").setStarted(new Date()).store();
 
-		List<Dataset> result = database.findEntities(Dataset.class);
+		List<? extends Dataset> result = database.getDatasetQuery().find();
 		Collections.sort(result);
 		assertEquals(id1, result.get(0).getId());
 		assertEquals(id2, result.get(1).getId());
@@ -142,7 +130,7 @@ public class DatabaseIntegrationTest {
 
 	@Test
 	public void testGetDatasetDatasetId() throws Exception {
-		DatasetId in = builder.setHandle("foobar").setStarted(new Date()).store();
+		DatasetId in = database.getDatasetCreator().setHandle("foobar").setStarted(new Date()).store();
 		assertEquals("foobar", database.findEntity(in).getHandle());
 
 		assertNull(database.findEntity(new DatasetId((short) 0)));
@@ -150,12 +138,12 @@ public class DatabaseIntegrationTest {
 
 	@Test
 	public void testDropDataset() throws Exception {
-		DatasetId in = builder.setHandle("foobar").setStarted(new Date()).store();
-		List<Dataset> datasets = database.findEntities(Dataset.class);
+		DatasetId in = database.getDatasetCreator().setHandle("foobar").setStarted(new Date()).store();
+		List<? extends Dataset> datasets = database.getDatasetQuery().find();
 		assertEquals(1, datasets.size());
 		assertEquals(in, datasets.get(0).getId());
 		database.deleteEntity(database.findEntity(in));
-		assertEquals(new ArrayList<Dataset>(), database.findEntities(Dataset.class));
+		assertEquals(new ArrayList<Dataset>(), database.getDatasetQuery().find());
 
 		assertNull(database.findEntity(in));
 	}

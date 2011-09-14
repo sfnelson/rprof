@@ -34,9 +34,9 @@ public class DatasetManagerTest {
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
-		DatasetManager.DatasetBuilder builder = createMock(DatasetManager.DatasetBuilder.class);
+		DatasetManager.DatasetCreator builder = createMock(DatasetManager.DatasetCreator.class);
 
-		expect(database.getDatasetBuilder()).andReturn(builder);
+		expect(database.getDatasetCreator()).andReturn(builder);
 		expect(builder.setHandle(anyObject(String.class))).andReturn(builder);
 		expect(builder.setStarted(anyObject(Date.class))).andReturn(builder);
 		expect(builder.store()).andReturn(id);
@@ -53,67 +53,78 @@ public class DatasetManagerTest {
 	@Test
 	public void testFindAllDatasets() throws Exception {
 
-		List<Dataset> datasets = Lists.newArrayList();
+		DatasetManager.DatasetQuery query = createMock(DatasetManager.DatasetQuery.class);
 
-		expect(database.findEntities(Dataset.class)).andReturn(datasets);
+		List<? extends Dataset> datasets = Lists.newArrayList();
 
-		replay(database);
+		expect(database.getDatasetQuery()).andReturn(query);
+		expect(query.find()).andReturn(datasets);
 
-		List<Dataset> returned = manager.findAllDatasets();
+		replay(database, query);
 
-		verify(database);
+		List<? extends Dataset> returned = manager.findAllDatasets();
+
+		verify(database, query);
 		assertSame(returned, datasets);
 	}
 
 	@Test
 	public void testFindDataset() throws Exception {
 
+		DatasetManager.DatasetQuery query = createMock(DatasetManager.DatasetQuery.class);
+
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 		List<Dataset> list = Lists.newArrayList(dataset);
 
-		expect(database.findEntities(Dataset.class, "foobar")).andReturn(list);
+		expect(database.getDatasetQuery()).andReturn(query);
+		expect(query.setHandle("foobar")).andReturn(query);
+		expect(query.find()).andReturn(list);
 
-		replay(database);
+		replay(database, query);
 
 		Dataset returned = manager.findDataset("foobar");
 
-		verify(database);
+		verify(database, query);
 		assertSame(dataset, returned);
 	}
 
 	@Test
 	public void testStopDataset() throws Exception {
+
+		DatasetManager.DatasetUpdater b = createMock(DatasetManager.DatasetUpdater.class);
+
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
-		DatasetManager.DatasetBuilder builder = createMock(DatasetManager.DatasetBuilder.class);
-		expect(database.getDatasetUpdater(dataset)).andReturn(builder);
-		expect(builder.setStopped(anyObject(Date.class))).andReturn(builder);
-		expect(builder.store()).andReturn(id);
+		expect(database.getDatasetUpdater()).andReturn(b);
+		expect(b.setStopped(anyObject(Date.class))).andReturn(b);
+		b.update(id);
 
-		replay(database, builder);
+		replay(database, b);
 
 		manager.stopDataset(dataset);
 
-		verify(database, builder);
+		verify(database, b);
 	}
 
 	@Test
 	public void testSetProgram() throws Exception {
+
+		DatasetManager.DatasetUpdater b = createMock(DatasetManager.DatasetUpdater.class);
+
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
-		DatasetManager.DatasetBuilder builder = createMock(DatasetManager.DatasetBuilder.class);
-		expect(database.getDatasetUpdater(dataset)).andReturn(builder);
-		expect(builder.setProgram("PROG")).andReturn(builder);
-		expect(builder.store()).andReturn(id);
+		expect(database.getDatasetUpdater()).andReturn(b);
+		expect(b.setProgram("PROG")).andReturn(b);
+		b.update(id);
 
-		replay(database, builder);
+		replay(database, b);
 
 		manager.setProgram(dataset, "PROG");
 
-		verify(database, builder);
+		verify(database, b);
 	}
 
 	@Test

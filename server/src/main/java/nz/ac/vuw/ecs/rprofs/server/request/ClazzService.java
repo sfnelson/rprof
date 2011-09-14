@@ -7,18 +7,20 @@ import java.util.List;
 
 public interface ClazzService {
 
-	Integer findNumPackages();
+	long findNumPackages();
 
 	List<String> findPackages();
 
-	Integer findNumClassesInPackage(String pkg);
+	long findNumClasses();
 
-	List<? extends Clazz> findClassesInPackage(String pkg);
-
-	Integer findNumClasses();
+	long findNumClasses(String pkg);
 
 	List<? extends Clazz> findClasses();
 
-	Clazz findClass(ClazzId id);
+	List<? extends Clazz> findClasses(String pkg);
+
+	Clazz getClazz(ClazzId id);
+
+	Clazz getClazz(String className);
 
 }

@@ -61,10 +61,10 @@ public class Weave extends HttpServlet {
 			i += is.read(buffer, i, buffer.length - i);
 		}
 
-		ClazzId clazzId = new ClassParser(classes.createClass())
+		ClazzId clazzId = new ClassParser(classes.createClazz())
 				.read(buffer)
 				.store();
-		Clazz newClazz = classes.findClass(clazzId);
+		Clazz newClazz = classes.getClazz(clazzId);
 
 		ClassRecord cr = new ClassRecord(newClazz);
 		cr.addFields(classes.findFields(clazzId));

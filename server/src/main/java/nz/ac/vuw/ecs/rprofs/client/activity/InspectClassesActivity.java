@@ -54,7 +54,7 @@ public class InspectClassesActivity
 	}
 
 	@Override
-	protected void classesAvailable(String pkg, List<ClazzProxy> classes) {
+	protected void classesAvailable(String pkg, List<? extends ClazzProxy> classes) {
 		view.clear(pkg);
 		view.showClasses(pkg, classes);
 	}
@@ -68,12 +68,12 @@ public class InspectClassesActivity
 	}
 
 	@Override
-	protected void fieldsAvailable(ClazzProxy cls, List<FieldProxy> fields) {
+	protected void fieldsAvailable(ClazzProxy cls, List<? extends FieldProxy> fields) {
 		view.showFields(cls, fields);
 	}
 
 	@Override
-	protected void methodsAvailable(ClazzProxy cls, List<MethodProxy> methods) {
+	protected void methodsAvailable(ClazzProxy cls, List<? extends MethodProxy> methods) {
 		view.showMethods(cls, methods);
 	}
 

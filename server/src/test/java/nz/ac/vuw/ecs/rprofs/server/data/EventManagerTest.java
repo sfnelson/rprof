@@ -23,13 +23,13 @@ public class EventManagerTest {
 
 	@Test
 	public void testGetBuilder() throws Exception {
-		EventManager.EventBuilder builder = createMock(EventManager.EventBuilder.class);
+		EventManager.EventCreator builder = createMock(EventManager.EventCreator.class);
 
-		expect(database.getEventBuilder()).andReturn(builder);
+		expect(database.getEventCreater()).andReturn(builder);
 
 		replay(database, builder);
 
-		manager.getBuilder();
+		manager.createEvent();
 
 		verify(database, builder);
 	}

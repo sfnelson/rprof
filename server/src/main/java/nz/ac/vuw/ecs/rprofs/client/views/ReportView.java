@@ -14,13 +14,13 @@ public interface ReportView extends IsWidget {
 
 	public void showPackages(List<String> packages);
 
-	public void showClasses(Object parent, List<ClazzProxy> classes);
+	public void showClasses(Object parent, List<? extends ClazzProxy> classes);
 
-	public void showMethods(Object parent, List<MethodProxy> methods);
+	public void showMethods(Object parent, List<? extends MethodProxy> methods);
 
-	public void showFields(Object parent, List<FieldProxy> fields);
+	public void showFields(Object parent, List<? extends FieldProxy> fields);
 
-	public void showInstances(Object parent, List<InstanceProxy> instances);
+	public void showInstances(Object parent, List<? extends InstanceProxy> instances);
 
 	public void clearAll();
 

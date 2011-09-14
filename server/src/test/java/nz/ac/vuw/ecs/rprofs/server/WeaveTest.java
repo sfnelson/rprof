@@ -6,7 +6,6 @@ import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
@@ -22,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
@@ -39,9 +39,9 @@ public class WeaveTest {
 
 	private DatasetManager manager;
 	private ClassManager classes;
-	private ClassManager.ClassBuilder builder;
-	private ClassManager.MethodBuilder mbuilder;
-	private ClassManager.FieldBuilder fbuilder;
+	private ClassManager.ClazzCreator builder;
+	private ClassManager.MethodCreator mbuilder;
+	private ClassManager.FieldCreator fbuilder;
 	private Context context;
 	private HttpServletRequest request;
 	private HttpServletResponse response;
@@ -53,9 +53,9 @@ public class WeaveTest {
 		context = createMock(Context.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
-		builder = createMock(ClassManager.ClassBuilder.class);
-		mbuilder = createMock(ClassManager.MethodBuilder.class);
-		fbuilder = createMock(ClassManager.FieldBuilder.class);
+		builder = createMock(ClassManager.ClazzCreator.class);
+		mbuilder = createMock(ClassManager.MethodCreator.class);
+		fbuilder = createMock(ClassManager.FieldCreator.class);
 
 		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
 		clazz = new Clazz(ClazzId.create(dataset, 1), "org.foo.Bar", null, null, 0);
@@ -83,7 +83,7 @@ public class WeaveTest {
 		expect(request.getInputStream()).andReturn(data);
 
 		// init class
-		expect(classes.createClass()).andReturn(builder);
+		expect(classes.createClazz()).andReturn(builder);
 		expect(builder.setName("org.foo.Bar")).andReturn(builder);
 		expect(builder.setParentName("java/lang/Object")).andReturn(builder);
 		expect(builder.addMethod()).andReturn(mbuilder);
@@ -93,9 +93,9 @@ public class WeaveTest {
 		expect(builder.store()).andReturn(clazz.getId());
 		mbuilder.store();
 
-		expect(classes.findClass(clazz.getId())).andReturn(clazz);
-		expect(classes.findMethods(clazz.getId())).andReturn(Lists.<Method>newArrayList(method));
-		expect(classes.findFields(clazz.getId())).andReturn(Lists.<Field>newArrayList());
+		expect(classes.getClazz(clazz.getId())).andReturn(clazz);
+		expect(classes.findMethods(clazz.getId())).andReturn((List) Lists.newArrayList(method));
+		expect(classes.findFields(clazz.getId())).andReturn((List) Lists.newArrayList());
 
 		classes.setProperties(clazz.getId(), 0);
 

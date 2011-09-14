@@ -3,24 +3,29 @@ package nz.ac.vuw.ecs.rprofs.client.request;
 import com.google.web.bindery.requestfactory.shared.Request;
 import com.google.web.bindery.requestfactory.shared.RequestContext;
 import com.google.web.bindery.requestfactory.shared.Service;
-import nz.ac.vuw.ecs.rprofs.server.data.ServiceLocator;
+import nz.ac.vuw.ecs.rprofs.client.request.id.ClazzIdProxy;
 import nz.ac.vuw.ecs.rprofs.server.request.ClazzService;
+import nz.ac.vuw.ecs.rprofs.server.request.ServiceLocator;
 
 import java.util.List;
 
 @Service(value = ClazzService.class, locator = ServiceLocator.class)
 public interface ClazzRequest extends RequestContext {
 
-	Request<Integer> findNumPackages();
+	Request<Long> findNumPackages();
 
 	Request<List<String>> findPackages();
 
-	Request<Integer> findNumClasses();
+	Request<Long> findNumClasses();
 
-	Request<List<ClazzProxy>> findClasses();
+	Request<Long> findNumClasses(String packageName);
 
-	Request<Integer> findNumClassesInPackage(String pkg);
+	Request<List<? extends ClazzProxy>> findClasses();
 
-	Request<List<ClazzProxy>> findClassesInPackage(String pkg);
+	Request<List<? extends ClazzProxy>> findClasses(String packageName);
+
+	Request<ClazzProxy> getClazz(ClazzIdProxy id);
+
+	Request<ClazzProxy> getClazz(String className);
 
 }

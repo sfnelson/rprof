@@ -1,11 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetBuilder;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager.DatasetUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
-import org.bson.BSONObject;
 
 import javax.validation.constraints.NotNull;
 import java.util.Date;
@@ -14,19 +13,8 @@ import java.util.Date;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 12/09/11
  */
-abstract class MongoDatasetBuilder implements DatasetBuilder, EntityBuilder<Dataset> {
-
-	BasicDBObject b;
-
-	MongoDatasetBuilder() {
-		b = new BasicDBObject();
-	}
-
-	@Override
-	public MongoDatasetBuilder init(BSONObject init) {
-		b.putAll(init);
-		return this;
-	}
+abstract class MongoDatasetBuilder extends MongoBuilder<MongoDatasetBuilder, DatasetId, Dataset>
+		implements DatasetCreator<MongoDatasetBuilder>, DatasetUpdater<MongoDatasetBuilder>, DatasetQuery<MongoDatasetBuilder> {
 
 	@Override
 	@NotNull
@@ -58,18 +46,6 @@ abstract class MongoDatasetBuilder implements DatasetBuilder, EntityBuilder<Data
 
 	@Override
 	@NotNull
-	public DatasetId store() {
-		short id = _getId();
-		if (id != 0) {
-			b.append("_id", Long.valueOf(id));
-		}
-		_store(b);
-		b = new BasicDBObject();
-		return new DatasetId(id);
-	}
-
-	@Override
-	@NotNull
 	public Dataset get() {
 		DatasetId id = new DatasetId(((Long) b.get("_id")).shortValue());
 		String handle = (String) b.get("handle");
@@ -81,11 +57,7 @@ abstract class MongoDatasetBuilder implements DatasetBuilder, EntityBuilder<Data
 		if (b.containsField("program")) {
 			dataset.setProgram((String) b.get("program"));
 		}
-		b = new BasicDBObject();
+		reset();
 		return dataset;
 	}
-
-	public abstract short _getId();
-
-	public abstract void _store(DBObject dataset);
 }

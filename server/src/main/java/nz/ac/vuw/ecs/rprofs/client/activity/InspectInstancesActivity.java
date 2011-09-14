@@ -61,7 +61,7 @@ public class InspectInstancesActivity extends AbstractTypedInspectorActivity<Bro
 	}
 
 	@Override
-	protected void classesAvailable(String pkg, List<ClazzProxy> classes) {
+	protected void classesAvailable(String pkg, List<? extends ClazzProxy> classes) {
 		view.showClasses(pkg, classes);
 	}
 
@@ -72,7 +72,7 @@ public class InspectInstancesActivity extends AbstractTypedInspectorActivity<Bro
 	}
 
 	@Override
-	protected void instancesAvailable(ClazzProxy cls, List<InstanceProxy> instances) {
+	protected void instancesAvailable(ClazzProxy cls, List<? extends InstanceProxy> instances) {
 		view.showInstances(cls, instances);
 	}
 

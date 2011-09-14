@@ -2,22 +2,25 @@ package nz.ac.vuw.ecs.rprofs.server.data.util;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 14/09/11
  */
 public interface EventBuilder<E extends EventBuilder<E>> {
-	EventBuilder setId(EventId id);
+	E setId(@NotNull EventId id);
 
-	EventBuilder setThread(InstanceId thread);
+	E setThread(@Nullable InstanceId thread);
 
-	EventBuilder setEvent(int event);
+	E setEvent(int event);
 
-	EventBuilder setClazz(ClazzId clazz);
+	E setClazz(@Nullable ClazzId clazz);
 
-	EventBuilder setMethod(MethodId method);
+	E setMethod(@Nullable MethodId method);
 
-	EventBuilder setField(FieldId field);
+	E setField(@Nullable FieldId field);
 
-	EventBuilder addArg(InstanceId arg);
+	E addArg(@Nullable InstanceId arg);
 }

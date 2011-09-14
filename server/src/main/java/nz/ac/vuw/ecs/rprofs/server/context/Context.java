@@ -1,6 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.context;
 
-import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,14 +9,18 @@ import javax.validation.constraints.NotNull;
 
 public class Context {
 
-	@VisibleForTesting
 	@Autowired
-	Database db;
+	private Database db;
 
 	private ThreadLocal<Dataset> dataset;
 
 	public Context() {
 		dataset = new ThreadLocal<Dataset>();
+	}
+
+	public Context(Database db) {
+		this();
+		this.db = db;
 	}
 
 	public void setDataset(@NotNull Dataset dataset) {

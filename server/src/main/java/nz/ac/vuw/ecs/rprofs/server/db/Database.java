@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -28,8 +27,9 @@ public class Database {
 	@NotNull
 	private final Mongo mongo;
 
+	@VisibleForTesting
 	@Autowired(required = true)
-	private Context context;
+	Context context;
 
 	public Database(@NotNull Mongo mongo) {
 		this.mongo = mongo;
@@ -91,10 +91,7 @@ public class Database {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends DataObject<?, T>> T findEntity(@Nullable Id<?, T> id) {
-		if (id == null) {
-			return null;
-		}
+	public <T extends DataObject<?, T>> T findEntity(@NotNull Id<?, T> id) {
 		if (Dataset.class.equals(id.getTargetClass())) {
 			for (Dataset ds : getDatasets()) {
 				if (ds.getId().equals(id)) {

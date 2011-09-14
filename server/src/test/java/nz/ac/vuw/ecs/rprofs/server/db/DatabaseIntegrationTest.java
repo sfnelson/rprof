@@ -2,8 +2,10 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
 import com.mongodb.Mongo;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
+import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
+import nz.ac.vuw.ecs.rprofs.server.domain.*;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import org.junit.*;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +72,7 @@ public class DatabaseIntegrationTest {
 	public void createMongo() throws Exception {
 		mongo = new Mongo("127.0.0.1", 27018);
 		database = new Database(mongo);
+		database.context = new Context(database);
 	}
 
 	@Test
@@ -142,6 +145,142 @@ public class DatabaseIntegrationTest {
 		assertEquals(new ArrayList<Dataset>(), database.getDatasetQuery().find());
 
 		assertNull(database.findEntity(in));
+	}
+
+	@Test
+	public void testDatasets() throws Exception {
+		Date now = new Date();
+		String handle = "foobar";
+		String program = "baz";
+		DatasetId id = database.getDatasetCreator()
+				.setHandle(handle)
+				.setStarted(now)
+				.store();
+
+		Dataset ds = database.findEntity(id);
+
+		assertEquals(handle, ds.getHandle());
+		assertEquals(now, ds.getStarted());
+
+		database.getDatasetUpdater()
+				.setProgram(program)
+				.setStopped(now)
+				.update(id);
+
+		ds = database.findEntity(id);
+
+		assertEquals(handle, ds.getHandle());
+		assertEquals(now, ds.getStarted());
+		assertEquals(now, ds.getStopped());
+		assertEquals(program, ds.getProgram());
+
+		assertEquals(1,
+				database.getDatasetQuery().setProgram("baz").count());
+		assertEquals(Lists.newArrayList(ds),
+				database.getDatasetQuery().setProgram("baz").find());
+	}
+
+	@Test
+	public void testClasses() throws Exception {
+		DatasetId id = database.getDatasetCreator()
+				.setStarted(new Date())
+				.setHandle("foobar")
+				.store();
+		Dataset ds = database.findEntity(id);
+		database.context.setDataset(ds);
+
+		ClazzCreator<?> c = database.getClazzCreator()
+				.setName("org/foo/Bar")
+				.setParentName("org/Foo");
+
+		c.addField().setName("a").setDescription("I").setAccess(1).store();
+		c.addMethod().setName("b").setDescription("()V").setAccess(4).store();
+
+		ClazzId barId = c.store();
+
+		Clazz bar = database.findEntity(barId);
+		assertEquals("org/foo/Bar", bar.getName());
+		assertEquals("org/Foo", bar.getParentName());
+		assertEquals(null, bar.getParent());
+		assertEquals(0, bar.getProperties());
+
+		ClazzId fooId = database.getClazzCreator().setName("org/Foo").store();
+
+		bar = database.getClazzQuery().setPackageName("org.foo").find().get(0);
+		assertEquals(barId, bar.getId());
+		assertEquals(fooId, bar.getParent());
+
+		database.getClazzUpdater().setProperties(15).update(barId);
+
+		bar = database.findEntity(barId);
+
+		assertEquals(15, bar.getProperties());
+
+		assertEquals(2, database.getClazzQuery().count());
+
+		Field f = database.getFieldQuery().find().get(0);
+		assertEquals("a", f.getName());
+		assertEquals("I", f.getDescription());
+		assertEquals(1, f.getAccess());
+		assertEquals(barId, f.getOwner());
+		assertEquals("org/foo/Bar", f.getOwnerName());
+		assertEquals(f.getId(), database.findEntity(f.getId()).getId());
+
+		Method m = database.getMethodQuery().find().get(0);
+		assertEquals("b", m.getName());
+		assertEquals("()V", m.getDescription());
+		assertEquals(4, m.getAccess());
+		assertEquals(barId, m.getOwner());
+		assertEquals("org/foo/Bar", m.getOwnerName());
+		assertEquals(m.getId(), database.findEntity(m.getId()).getId());
+
+
+		assertEquals(2, database.countPackages());
+		List<String> packages = database.findPackages();
+		Collections.sort(packages);
+		assertEquals(Lists.newArrayList("org", "org.foo"), packages);
+
+		database.deleteEntity(bar);
+
+		assertEquals(1, database.countPackages());
+
+		database.context.clear();
+	}
+
+	@Test
+	public void testEvents() throws Exception {
+		DatasetId id = database.getDatasetCreator()
+				.setStarted(new Date())
+				.setHandle("foobar")
+				.store();
+		Dataset ds = database.findEntity(id);
+		database.context.setDataset(ds);
+
+		EventId eventId = new EventId(1);
+		ClazzId clazzId = new ClazzId(2);
+		FieldId fieldId = new FieldId(3);
+		InstanceId instance = new InstanceId(4);
+		EventId eid = database.getEventCreater()
+				.setId(eventId)
+				.setThread(null)
+				.setEvent(Event.FIELD_READ)
+				.setClazz(clazzId)
+				.setField(fieldId)
+				.addArg(instance)
+				.addArg(null)
+				.store();
+
+		assertEquals(eventId, eid);
+
+		Event e = database.getEventQuery().setEvent(Event.FIELD_READ).find().get(0);
+
+		assertEquals(clazzId, e.getClazz());
+		assertEquals(fieldId, e.getField());
+		assertEquals(eventId, e.getId());
+		assertEquals(Event.FIELD_READ, e.getEvent());
+		assertEquals(Lists.newArrayList(instance, null), e.getArgs());
+
+		database.context.clear();
 	}
 
 	@After

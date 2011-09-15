@@ -73,7 +73,6 @@ public class Logger extends HttpServlet {
 
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long id = dis.readLong();
-			log.info("received event {}", id);
 			b.setId(EventId.create(ds, id));
 			b.setThread(parseObjectId(ds, dis.readLong()));
 

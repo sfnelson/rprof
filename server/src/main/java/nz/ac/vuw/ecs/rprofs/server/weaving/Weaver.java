@@ -33,6 +33,7 @@ public class Weaver {
 			.add("java/lang/reflect/.*")
 			.add("java/nio/charset/CharsetDecoder")
 			.add("java/nio/charset/CharsetEncoder")
+			.add("java/util/zip/ZipFile")
 			.get();
 
 	public byte[] weave(ClassRecord record, byte[] classfile) {

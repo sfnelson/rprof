@@ -6,21 +6,27 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import org.objectweb.asm.Opcodes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class ClassRecord {
 
+	private static final Logger log = LoggerFactory.getLogger(ClassRecord.class);
+
 	private final Clazz clazz;
 
-	private int properties;
-	private Set<Field> watches = Sets.newHashSet();
+	private final Set<Field> watches = Sets.newHashSet();
 
-	private Map<Short, Method> methods = Maps.newHashMap();
-	private Map<Short, Field> fields = Maps.newHashMap();
+	private final Map<String, Method> methods = Maps.newHashMap();
+	private final Map<String, Field> fields = Maps.newHashMap();
 
 	public ClassRecord(Clazz clazz) {
 		this.clazz = clazz;
@@ -40,53 +46,50 @@ public class ClassRecord {
 
 	public void addMethods(List<? extends Method> methods) {
 		for (Method m : methods) {
-			this.methods.put(m.getId().attributeValue(), m);
+			this.methods.put(m.getName() + m.getDescription(), m);
 		}
 	}
 
 	public void addFields(List<? extends Field> fields) {
 		for (Field f : fields) {
-			this.fields.put(f.getId().attributeValue(), f);
+			this.fields.put(f.getName() + f.getDescription(), f);
 			if ((Opcodes.ACC_STATIC & f.getAccess()) == 0) {
 				watches.add(f);
 			}
 		}
 	}
 
+	public void generateMethod(String name, String desc, int access) {
+		Method m = new Method(new MethodId(clazz.getId().datasetValue(),
+				clazz.getId().indexValue(), (short) 0),
+				name, clazz.getId(), clazz.getName(), desc, access);
+		methods.put(name + desc, m); // TODO do we want to store this?
+	}
+
 	public int getProperties() {
-		return properties;
+		return clazz.getProperties();
 	}
 
 	void setProperties(int properties) {
-		this.properties = properties;
+		clazz.setProperties(properties);
 	}
 
-	Map<Short, Method> getMethods() {
-		return methods;
-	}
-
-	Method getMethod(String name, String desc) {
-		for (Method m : methods.values()) {
-			if (m.getName().equals(name) && m.getDescription().equals(desc)) {
-				return m;
-			}
+	@Nullable
+	Method getMethod(@NotNull String name, @NotNull String desc) {
+		Method result = methods.get(name + desc);
+		if (result == null) {
+			log.warn("method not found: {}{}", name, desc);
 		}
-
-		return null;
+		return result;
 	}
 
-	Map<Short, Field> getFields() {
-		return fields;
-	}
-
+	@Nullable
 	Field getField(String name, String desc) {
-		for (Field f : fields.values()) {
-			if (name.equals(f.getName()) && desc.equals(f.getDescription())) {
-				return f;
-			}
+		Field result = fields.get(name + desc);
+		if (result == null) {
+			log.warn("field not found: {}{} ({})", new Object[]{name, desc, fields});
 		}
-
-		return null;
+		return result;
 	}
 
 	Set<Field> getWatches() {

@@ -7,6 +7,7 @@
     <inherits name='com.google.gwt.activity.Activity'/>
     <inherits name='com.google.gwt.uibinder.UiBinder'/>
     <inherits name='com.google.gwt.inject.Inject'/>
+    <inherits name='com.google.common.collect.Collect'/>
 
     <set-configuration-property name="UiBinder.useSafeHtmlTemplates" value="true"/>
 

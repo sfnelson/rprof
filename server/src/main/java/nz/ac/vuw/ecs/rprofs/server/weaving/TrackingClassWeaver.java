@@ -8,6 +8,8 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
+import static org.objectweb.asm.Opcodes.*;
+
 public class TrackingClassWeaver extends ClassAdapter {
 
 	private final ClassRecord record;
@@ -23,14 +25,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 									 String signature, String[] exceptions) {
 		MethodVisitor visitor = super.visitMethod(access, name, desc, signature, exceptions);
 
-		Method method = null;
-		for (Method m : record.getMethods().values()) {
-			if (m.getName().equals(name)
-					&& m.getDescription().equals(desc)
-					&& m.getAccess() == access) {
-				method = m;
-			}
-		}
+		Method method = record.getMethod(name, desc);
 		if (method == null) throw new RuntimeException("method was not found");
 
 		if (name.equals("_getTracker")) {
@@ -52,74 +47,80 @@ public class TrackingClassWeaver extends ClassAdapter {
 		}
 	}
 
-	private static class GetTrackerGenerator extends GeneratorAdapter implements Opcodes {
+	private static class GetTrackerGenerator extends NoopMethodVisitor {
+
+		private final GeneratorAdapter visitor;
 
 		public GetTrackerGenerator(Method method, MethodVisitor visitor) {
-			super(visitor, method.getAccess(), method.getName(), method.getDescription());
+			this.visitor = new GeneratorAdapter(visitor, method.getAccess(), method.getName(), method.getDescription());
 		}
 
 		@Override
 		public void visitCode() {
-			super.visitCode();
+			visitor.visitCode();
 
 			//return Thread.currentThread()._rprof;
 
 			// locals: [thread]
 			// stack:  []
 
-			super.visitVarInsn(ALOAD, 0);
+			visitor.visitVarInsn(ALOAD, 0);
 
 			// locals: [thread]
 			// stack:  [thread]
 
 			Type t = Type.getType(HeapTracker.class);
-			super.visitFieldInsn(GETFIELD, Type.getInternalName(Thread.class), "_rprof", t.getDescriptor());
+			visitor.visitFieldInsn(GETFIELD, Type.getInternalName(Thread.class), "_rprof", t.getDescriptor());
 
 			// locals: [thread]
 			// stack:  [tracker]
 
-			super.visitInsn(ARETURN);
+			visitor.visitInsn(ARETURN);
 
-			super.visitMaxs(1, 1);
+			visitor.visitMaxs(1, 1);
 
-			super.visitEnd();
+			visitor.visitEnd();
 		}
 	}
 
-	private static class SetTrackerGenerator extends GeneratorAdapter implements Opcodes {
+	private static class SetTrackerGenerator extends NoopMethodVisitor {
+
+		private final GeneratorAdapter visitor;
 
 		public SetTrackerGenerator(Method method, MethodVisitor visitor) {
-			super(visitor, method.getAccess(), method.getName(), method.getDescription());
+			this.visitor = new GeneratorAdapter(visitor, method.getAccess(), method.getName(), method.getDescription());
 		}
 
 		@Override
 		public void visitCode() {
-			super.visitCode();
+			visitor.visitCode();
 
 			// Thread.currentThread()._rprof = c; // c is first argument
 
 			// locals: [thread, tracker]
 			// stack:  []
 
-			super.visitVarInsn(ALOAD, 0);
+			visitor.visitVarInsn(ALOAD, 0);
 
 			// locals: [thread, tracker]
 			// stack:  [thread]
 
-			super.visitVarInsn(ALOAD, 1);
+			visitor.visitVarInsn(ALOAD, 1);
 
 			// locals: [thread, tracker]
 			// stack:  [thread, tracker]
 
 			Type t = Type.getType(HeapTracker.class);
-			super.visitFieldInsn(PUTFIELD, Type.getInternalName(Thread.class), "_rprof", t.getDescriptor());
+			visitor.visitFieldInsn(PUTFIELD, Type.getInternalName(Thread.class), "_rprof", t.getDescriptor());
 
 			// locals: [thread, tracker]
 			// stack:  []
 
-			super.visitMaxs(2, 2);
+			visitor.visitInsn(RETURN);
 
-			super.visitEnd();
+			visitor.visitMaxs(2, 2);
+
+			visitor.visitEnd();
 		}
 	}
 }

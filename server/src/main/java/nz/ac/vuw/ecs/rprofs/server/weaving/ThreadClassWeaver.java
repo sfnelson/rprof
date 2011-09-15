@@ -24,14 +24,7 @@ public class ThreadClassWeaver extends ClassAdapter {
 									 String signature, String[] exceptions) {
 		MethodVisitor visitor = super.visitMethod(access, name, desc, signature, exceptions);
 
-		nz.ac.vuw.ecs.rprofs.server.domain.Method method = null;
-		for (nz.ac.vuw.ecs.rprofs.server.domain.Method m : cr.getMethods().values()) {
-			if (m.getName().equals(name)
-					&& m.getDescription().equals(desc)
-					&& m.getAccess() == access) {
-				method = m;
-			}
-		}
+		nz.ac.vuw.ecs.rprofs.server.domain.Method method = cr.getMethod(name, desc);
 
 		// check for <init>(..)
 		if (MethodUtils.isInit(method)) {

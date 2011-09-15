@@ -101,7 +101,7 @@ public class WeaveTest {
 		expect(classes.findMethods(clazz.getId())).andReturn((List) Lists.newArrayList(method));
 		expect(classes.findFields(clazz.getId())).andReturn((List) Lists.newArrayList());
 
-		classes.setProperties(clazz.getId(), 0);
+		classes.setProperties(clazz.getId(), Clazz.CLASS_INCLUDE_MATCHED);
 
 		// return
 		response.setStatus(HttpServletResponse.SC_OK);

@@ -65,13 +65,13 @@ public class Weave extends HttpServlet {
 				.store();
 		Clazz newClazz = classes.getClazz(clazzId);
 
-		ClassRecord cr = new ClassRecord(newClazz);
-		cr.addFields(classes.findFields(clazzId));
-		cr.addMethods(classes.findMethods(clazzId));
+		ClassRecord record = new ClassRecord(newClazz);
+		record.addFields(classes.findFields(clazzId));
+		record.addMethods(classes.findMethods(clazzId));
 
-		result = new Weaver(cr).weave(buffer);
+		result = new Weaver().weave(record, buffer);
 
-		classes.setProperties(clazzId, cr.getProperties());
+		classes.setProperties(clazzId, newClazz.getProperties());
 
 		resp.setStatus(200);
 		resp.setContentLength(result.length);

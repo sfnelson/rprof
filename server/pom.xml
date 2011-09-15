@@ -110,6 +110,13 @@
             <version>r09</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>r09</version>
+            <classifier>gwt</classifier>
+        </dependency>
+
         <!-- annotation validation -->
 
         <dependency>

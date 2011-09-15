@@ -8,10 +8,12 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static org.objectweb.asm.Opcodes.RETURN;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -31,9 +33,10 @@ public class GenericClassWeaver extends ClassAdapter {
 	@Override
 	public void visitEnd() {
 		if (!visitedCLInit) {
-			MethodVisitor mv = visitMethod(0, "<clinit>", "()V", null, null);
+			cr.generateMethod("<clinit>", "()V", ACC_STATIC);
+			MethodVisitor mv = visitMethod(ACC_STATIC, "<clinit>", "()V", null, null);
 			mv.visitCode();
-			mv.visitInsn(Opcodes.RETURN);
+			mv.visitInsn(RETURN);
 			mv.visitMaxs(0, 0);
 			mv.visitEnd();
 		}

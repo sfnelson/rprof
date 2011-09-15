@@ -15,8 +15,9 @@ import javax.validation.constraints.NotNull;
 public class Clazz implements DataObject<ClazzId, Clazz> {
 
 	public static final int CLASS_VERSION_UPDATED = 0x1;
-	public static final int CLASS_IGNORED_PACKAGE_FILTER = 0x2;
-	public static final int SPECIAL_CLASS_WEAVER = 0x4;
+	public static final int SPECIAL_CLASS_WEAVER = 0x2;
+	public static final int CLASS_INCLUDE_MATCHED = 0x4;
+	public static final int CLASS_EXCLUDE_MATCHED = 0x8;
 
 	@NotNull
 	private ClazzId id;
@@ -94,6 +95,10 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 
 	public int getProperties() {
 		return properties;
+	}
+
+	public void setProperties(int properties) {
+		this.properties = properties;
 	}
 
 	public static String getPackageName(String fqname) {

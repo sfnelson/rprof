@@ -6,51 +6,34 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
-import org.objectweb.asm.*;
-import org.objectweb.asm.util.ASMifierClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
-import java.io.PrintWriter;
 import java.util.Date;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class ConstructorWeavingTest {
+public class ConstructorWeavingTest extends WeaverTestBase {
 
-	private TestingClassLoader loader;
 	private Clazz clazz;
 
 	@Before
 	public void setUp() throws Exception {
-		loader = new TestingClassLoader();
 		Dataset dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
-		clazz = new Clazz(ClazzId.create(dataset, 1), "foobar", null, null, 0);
+		clazz = new Clazz(ClazzId.create(dataset, 1), "TestOutput", null, null, 0);
 	}
 
 	@Test
 	public void test() throws InstantiationException, IllegalAccessException {
 		byte[] pre = generateMinimalClass("TestInput");
-		loader.loadClass("TestInput", pre).newInstance();
+		loadClass("TestInput", pre).newInstance();
 
 		byte[] post = generateMinimalClass("TestOutput");
-		Weaver w = new Weaver(new ClassRecord(clazz));
-		post = w.weave(post);
+		post = new Weaver().weave(new ClassRecord(clazz), post);
 		//print(post);
-		loader.loadClass("TestOutput", post).newInstance();
-	}
-
-	@SuppressWarnings("unused")
-	private static void print(byte[] cls) {
-		ClassReader r = new ClassReader(cls);
-		ClassVisitor w = new ASMifierClassVisitor(new PrintWriter(System.out));
-		r.accept(w, 2);
-	}
-
-	private class TestingClassLoader extends ClassLoader {
-
-		@SuppressWarnings("unchecked")
-		public <T> Class<T> loadClass(String name, byte[] data) {
-			return (Class<T>) defineClass(name, data, 0, data.length);
-		}
+		loadClass("TestOutput", post).newInstance();
 	}
 
 	public static byte[] generateMinimalClass(String name) {

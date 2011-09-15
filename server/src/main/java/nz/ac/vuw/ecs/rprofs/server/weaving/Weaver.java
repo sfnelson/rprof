@@ -2,78 +2,99 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class Weaver extends ClassVisitorDispatcher {
+import java.util.regex.Pattern;
 
-	private ClassVisitor cv;
-	private ClassRecord cr;
+public class Weaver {
 
-	public Weaver(ClassRecord classRecord) {
-		this.cr = classRecord;
-	}
+	private static final Logger log = LoggerFactory.getLogger(Weaver.class);
 
-	public byte[] weave(byte[] classfile) {
+	public static final Pattern includes = new PatternBuilder()
+			.add(".*")
+			.get();
+
+	public static final Pattern excludes = new PatternBuilder()
+			.add("sun/reflect/.*")	// jhotdraw crashes in this package
+			.add("java/awt/.*")		// jhotdraw has font problems if this packages is included
+			.add("com/sun/.*")
+			.add("sun/.*")
+			.add("apple/.*")
+			.add("com/apple/.*")		// might help jhotdraw?
+			.add("java/lang/IncompatibleClassChangeError")	// gc blows up if this is woven
+			.add("java/lang/LinkageError")					// gc blows up if this is woven
+			.add("java/lang/NullPointerException")			// something blows up - null pointers appear as runtime exceptions with this change
+			.add("java/util/concurrent/.*")					// SIGSEGV/SIGBUS in pmd
+			.add("java/lang/reflect/.*")
+			.add("java/nio/charset/CharsetDecoder")
+			.add("java/nio/charset/CharsetEncoder")
+			.get();
+
+	public byte[] weave(ClassRecord record, byte[] classfile) {
 
 		ClassReader reader = new ClassReader(classfile);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 
-		cv = writer;
-		reader.accept(this, 0);
+		int flags = record.getProperties();
+
+		ClassVisitor visitor;
+		if (Type.getInternalName(HeapTracker.class).equals(record.getName())) {
+			flags |= Clazz.SPECIAL_CLASS_WEAVER;
+			visitor = new TrackingClassWeaver(writer, record);
+		} else if (Type.getInternalName(Thread.class).equals(record.getName())) {
+			flags |= Clazz.SPECIAL_CLASS_WEAVER;
+			visitor = new ThreadClassWeaver(writer, record);
+		} else if (Type.getInternalName(Throwable.class).equals(record.getName())) {
+			flags |= Clazz.SPECIAL_CLASS_WEAVER;
+			visitor = new ThrowableClassWeaver(writer, record);
+		} else if (Type.getInternalName(Object.class).equals(record.getName())) {
+			flags |= Clazz.SPECIAL_CLASS_WEAVER;
+			visitor = new ObjectClassWeaver(writer, record);
+		} else {
+			if (includes.matcher(record.getName()).find()) {
+				flags |= Clazz.CLASS_INCLUDE_MATCHED;
+				if (excludes.matcher(record.getName()).find()) {
+					flags |= Clazz.CLASS_EXCLUDE_MATCHED;
+					visitor = writer;
+				} else {
+					visitor = new GenericClassWeaver(writer, record);
+				}
+			} else {
+				visitor = writer;
+			}
+		}
+
+		record.setProperties(flags);
+
+		reader.accept(visitor, 0);
 
 		return writer.toByteArray();
 	}
 
-	@Override
-	public void visit(int version, int access, String name,
-					  String signature, String superName, String[] interfaces) {
+	private static class PatternBuilder {
+		StringBuilder pattern = null;
 
-		ClassVisitor cv = null;
-
-
-		String[] filters = new String[]{
-				"sun/reflect/.*",	// jhotdraw crashes in this package
-				"java/awt/.*",		// jhotdraw has font problems if this packages is included
-				"com/sun/.*",
-				"sun/.*",
-				"apple/.*",
-				"com/apple/.*",		// might help jhotdraw?
-				"java/lang/IncompatibleClassChangeError",	// gc blows up if this is woven
-				"java/lang/LinkageError",					// gc blows up if this is woven
-				"java/lang/NullPointerException",			// something blows up - null pointers appear as runtime exceptions with this change
-				"java/util/concurrent/.*"					// SIGSEGV/SIGBUS in pmd
-		};
-
-		int flags = cr.getProperties();
-
-		if (Type.getInternalName(HeapTracker.class).equals(name)) {
-			flags |= Clazz.SPECIAL_CLASS_WEAVER;
-			cv = new TrackingClassWeaver(this.cv, cr);
-		} else if (Type.getInternalName(Thread.class).equals(name)) {
-			flags |= Clazz.SPECIAL_CLASS_WEAVER;
-			cv = new ThreadClassWeaver(this.cv, cr);
-		} else if (Type.getInternalName(Throwable.class).equals(name)) {
-			flags |= Clazz.SPECIAL_CLASS_WEAVER;
-			cv = new ThrowableClassWeaver(this.cv, cr);
-		} else if (Type.getInternalName(Object.class).equals(name)) {
-			flags |= Clazz.SPECIAL_CLASS_WEAVER;
-			cv = new ObjectClassWeaver(this.cv, cr);
-		} else {
-			for (String filter : filters) {
-				if (name.matches(filter)) {
-					flags |= Clazz.CLASS_IGNORED_PACKAGE_FILTER;
-					cv = new ClassAdapter(this.cv);
-				}
+		public PatternBuilder add(String pattern) {
+			if (this.pattern == null) {
+				this.pattern = new StringBuilder("^");
+			} else {
+				this.pattern.append('|');
 			}
+			this.pattern.append('(');
+			this.pattern.append(pattern);
+			this.pattern.append(')');
+			return this;
 		}
 
-		cr.setProperties(flags);
-
-		if (cv == null) {
-			cv = new GenericClassWeaver(this.cv, cr);
+		public Pattern get() {
+			String pattern = this.pattern.append("$").toString();
+			log.info(pattern);
+			return Pattern.compile(pattern);
 		}
-
-		setClassVisitor(cv);
-		cv.visit(version, access, name, signature, superName, interfaces);
 	}
 }

@@ -21,6 +21,8 @@ public class CLInitMethodWeaver extends MethodWeaver {
 
 	@Override
 	public void visitCode() {
+		super.visitCode();
+
 		visitLdcInsn(Type.getType("L" + record.getName() + ";"));
 		push(record.getId().indexValue());		// stack: cls, cid
 

@@ -24,7 +24,7 @@ public class CLInitMethodWeaver extends MethodWeaver {
 		super.visitCode();
 
 		visitLdcInsn(Type.getType("L" + record.getName() + ";"));
-		push(record.getId().indexValue());		// stack: cls, cid
+		push(record.getId().getClassIndex());		// stack: cls, cid
 
 		Collection<Field> watches = record.getWatches();
 		if (watches.isEmpty()) {
@@ -39,7 +39,7 @@ public class CLInitMethodWeaver extends MethodWeaver {
 			for (Field f : watches) {
 				dup();							// stack: cls, cid, fields, fields
 				push(i);						// stack: cls, cid, fields, fields, i
-				push(f.getId().attributeValue());// stack: cls, cid, fields, fields, i, id
+				push(f.getId().getAttributeIndex());// stack: cls, cid, fields, fields, i, id
 				visitInsn(IASTORE);				// stack: cls, cid, fields
 				i++;
 				setStack(6);

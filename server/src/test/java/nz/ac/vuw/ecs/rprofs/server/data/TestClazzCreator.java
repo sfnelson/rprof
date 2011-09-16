@@ -36,14 +36,14 @@ public class TestClazzCreator implements ClazzCreator<TestClazzCreator> {
 	@Override
 	public FieldCreator<?> addField() {
 		return new TestFieldCreator(this,
-				new FieldId(c.getId().datasetValue(), c.getId().indexValue(),
+				new FieldId(c.getId().getDatasetIndex(), c.getId().getClassIndex(),
 						(short) (fields.size() + 1)));
 	}
 
 	@Override
 	public MethodCreator<?> addMethod() {
 		return new TestMethodCreator(this,
-				new MethodId(c.getId().datasetValue(), c.getId().indexValue(),
+				new MethodId(c.getId().getDatasetIndex(), c.getId().getClassIndex(),
 						(short) (methods.size() + 1)));
 	}
 

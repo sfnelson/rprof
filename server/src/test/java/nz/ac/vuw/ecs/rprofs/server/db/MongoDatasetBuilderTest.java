@@ -77,7 +77,7 @@ public class MongoDatasetBuilderTest {
 	public void testStore() throws Exception {
 		toReturn = 15;
 		DatasetId id = builder.store();
-		assertEquals(15l, id.longValue());
+		assertEquals(15l, id.getValue());
 		assertEquals(15l, stored.get("_id"));
 	}
 
@@ -95,7 +95,7 @@ public class MongoDatasetBuilderTest {
 				.get());
 		Dataset ds = builder.get();
 
-		assertEquals(1l, ds.getId().longValue());
+		assertEquals(1l, ds.getId().getValue());
 		assertEquals("foobar", ds.getHandle());
 		assertEquals(started, ds.getStarted());
 		assertEquals(stopped, ds.getStopped());

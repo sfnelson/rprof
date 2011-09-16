@@ -40,7 +40,7 @@ public class StopTest {
 
 		expect(request.getHeader("Dataset")).andReturn("foo");
 		expect(manager.findDataset("foo")).andReturn(dataset);
-		manager.stopDataset(dataset);
+		manager.stopDataset(dataset.getId());
 		expect(manager.findDataset("foo")).andReturn(dataset);
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 

@@ -13,7 +13,7 @@ public class MethodId extends AttributeId<MethodId, Method> {
 		super(dataset, type, attribute);
 	}
 
-	public MethodId(Long id) {
+	public MethodId(long id) {
 		super(id);
 	}
 
@@ -22,10 +22,10 @@ public class MethodId extends AttributeId<MethodId, Method> {
 	}
 
 	public static MethodId create(Dataset ds, Clazz type, short mnum) {
-		return new MethodId(ds.getId().indexValue(), type.getId().indexValue(), mnum);
+		return new MethodId(ds.getId().getDatasetIndex(), type.getId().getClassIndex(), mnum);
 	}
 
 	public static MethodId create(Dataset ds, ClazzId type, short mnum) {
-		return new MethodId(ds.getId().indexValue(), type.indexValue(), mnum);
+		return new MethodId(ds.getId().getDatasetIndex(), type.getClassIndex(), mnum);
 	}
 }

@@ -89,7 +89,7 @@ public class MongoFieldBuilderTest {
 	public void testSetOwner() throws Exception {
 		ClazzId id = new ClazzId(15);
 		fb.setOwner(id);
-		assertEquals(id.longValue(), fb.b.get("owner"));
+		assertEquals(id.getValue(), fb.b.get("owner"));
 	}
 
 	@Test
@@ -139,11 +139,11 @@ public class MongoFieldBuilderTest {
 		String cname = "org/foo/Bar";
 
 		fb.init(new BasicDBObjectBuilder()
-				.add("_id", fieldId.longValue())
+				.add("_id", fieldId.getValue())
 				.add("name", name)
 				.add("description", desc)
 				.add("access", access)
-				.add("owner", clazzId.longValue())
+				.add("owner", clazzId.getValue())
 				.add("ownerName", cname)
 				.get());
 

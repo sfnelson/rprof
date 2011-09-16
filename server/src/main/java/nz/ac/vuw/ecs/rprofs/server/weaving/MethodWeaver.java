@@ -42,8 +42,8 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 	}
 
 	protected void pushMethodReference(nz.ac.vuw.ecs.rprofs.server.domain.Method m) {
-		ga.push(m.getId().typeValue());
-		ga.push(m.getId().attributeValue());
+		ga.push(m.getId().getClassIndex());
+		ga.push(m.getId().getAttributeIndex());
 	}
 
 	protected void push(int value) {

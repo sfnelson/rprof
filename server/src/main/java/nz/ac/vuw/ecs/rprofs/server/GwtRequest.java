@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,9 +34,9 @@ public class GwtRequest implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse rsp, FilterChain chain)
 			throws IOException, ServletException {
 
-		String handle = getDataset(req);
-		if (handle != null) {
-			Dataset dataset = datasets.findDataset(handle);
+		DatasetId id = getDataset(req);
+		if (id != null) {
+			Dataset dataset = datasets.findDataset(id);
 			if (dataset != null) {
 				context.setDataset(dataset);
 			}
@@ -57,16 +58,17 @@ public class GwtRequest implements Filter {
 		}
 	}
 
-	private String getDataset(ServletRequest req) {
+	private DatasetId getDataset(ServletRequest req) {
 		StringTokenizer tokenizer = new StringTokenizer(((HttpServletRequest) req).getRequestURI(), "/");
 		String dataset = null;
 		while (tokenizer.hasMoreTokens()) {
 			dataset = tokenizer.nextToken();
 		}
-		if ("gwtRequest".equals(dataset)) {
-			dataset = null;
+		if (dataset == null || !dataset.matches("^[0-9]*$")) {
+			return null;
+		} else {
+			return new DatasetId(Long.parseLong(dataset));
 		}
-		return dataset;
 	}
 
 	@Override

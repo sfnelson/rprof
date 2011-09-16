@@ -3,17 +3,20 @@ package nz.ac.vuw.ecs.rprofs.client.views.impl;
 import com.google.common.collect.Maps;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.place.shared.PlaceController;
+import com.google.gwt.place.shared.PlaceHistoryMapper;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.*;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.web.bindery.event.shared.EventBus;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.HasView;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceBuilder;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
 import nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout;
 import nz.ac.vuw.ecs.rprofs.client.ui.PlaceAnchor;
 import nz.ac.vuw.ecs.rprofs.client.ui.UIButton;
@@ -28,16 +31,24 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 	interface ReportSelectionPanelUiBinder extends UiBinder<Widget, ReportSelectionPanel> {
 	}
 
-	@UiField
-	Style style;
-
 	interface Style extends CssResource {
-		String button();
-
 		String selected();
 
-		String hidden();
+		String menu();
+
+		String content();
+
+		String menuWrapper();
+
+		String closed();
+
+		String button();
+
+		String closeButton();
 	}
+
+	@UiField
+	Style style;
 
 	@UiField
 	Panel panel;
@@ -49,26 +60,31 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 	@UiField
 	UIButton close;
 
-	private final FrameLayout parent;
+	private final Provider<FrameLayout> parent;
 	private final PlaceController pc;
+	private final PlaceHistoryMapper mapper;
 
-	private final Map<String, PlaceAnchor<ReportPlace<?>>> buttons = Maps.newHashMap();
+	private final Map<String, PlaceAnchor> buttons = Maps.newHashMap();
 
-	private PlaceAnchor<ReportPlace<?>> selected;
+	private PlaceAnchor selected;
 
 	private boolean closed = false;
 
-	public ReportSelectionPanel(PlaceController pc, EventBus bus, FrameLayout parent) {
+	@Inject
+	public ReportSelectionPanel(PlaceController pc, EventBus bus, PlaceHistoryMapper mapper,
+								Provider<FrameLayout> parent) {
 		this.parent = parent;
 		this.pc = pc;
+		this.mapper = mapper;
 
 		initWidget(uiBinder.createAndBindUi(this));
 
 		bus.addHandler(PlaceChangeEvent.TYPE, new PlaceChangeEvent.Handler() {
 			@Override
 			public void onPlaceChange(PlaceChangeEvent event) {
-				if (event.getNewPlace() instanceof ReportPlace) {
-					setSelected(((ReportPlace<?>) event.getNewPlace()).getType());
+				if (event.getNewPlace() instanceof HasView) {
+					HasView place = (HasView) event.getNewPlace();
+					setSelected(place.getView());
 				}
 			}
 		});
@@ -90,31 +106,25 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 	@UiHandler("close")
 	void closeClicked(ClickEvent e) {
 		if (!closed) {
-			parent.showTop(false);
+			parent.get().showTop(false);
 			close.setHTML("<span>&raquo;</span>");
 		} else {
-			parent.showTop(true);
+			parent.get().showTop(true);
 			close.setHTML("<span>&laquo;</span>");
 		}
 		closed = !closed;
 	}
 
 	@UiFactory
-	PlaceAnchor<ReportPlace<?>> createAnchor(String reference, String title, String description) {
-		PlaceAnchor<ReportPlace<?>> anchor = new PlaceAnchor<ReportPlace<?>>(pc);
+	PlaceAnchor createAnchor(String view, String title, String description) {
+		PlaceAnchor anchor = new PlaceAnchor(mapper, pc);
 
-		final String report = reference;
-		anchor.setTarget(new PlaceBuilder<ReportPlace<?>>() {
-			@Override
-			public ReportPlace<?> getPlace() {
-				return ReportPlace.create(report, pc.getWhere());
-			}
-		});
+		anchor.setBuilder(PlaceBuilder.create().setView(view));
 
 		anchor.setText(title);
 		anchor.setTitle(description);
 
-		buttons.put(reference, anchor);
+		buttons.put(view, anchor);
 
 		return anchor;
 	}

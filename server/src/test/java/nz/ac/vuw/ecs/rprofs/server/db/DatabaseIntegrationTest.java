@@ -92,11 +92,11 @@ public class DatabaseIntegrationTest {
 		assertNotNull(dataset);
 		assertNotNull(id);
 		assertEquals(id, dataset.getId());
-		assertTrue(id.indexValue() > 0);
+		assertTrue(id.getDatasetIndex() > 0);
 		assertNotNull(dataset.getHandle());
 		assertFalse(dataset.getHandle().isEmpty());
 		assertNotNull(dataset.getId());
-		assertEquals(dataset.getId().indexValue(), dataset.getId().indexValue());
+		assertEquals(dataset.getId().getDatasetIndex(), dataset.getId().getDatasetIndex());
 
 		dbs = mongo.getDatabaseNames();
 		dbs.remove("admin");

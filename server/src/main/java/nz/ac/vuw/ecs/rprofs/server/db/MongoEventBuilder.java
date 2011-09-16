@@ -19,13 +19,13 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 
 	@Override
 	public MongoEventBuilder setId(@NotNull EventId id) {
-		b.append("_id", id.longValue());
+		b.append("_id", id.getValue());
 		return this;
 	}
 
 	@Override
 	public MongoEventBuilder setThread(InstanceId thread) {
-		if (thread != null) b.append("thread", thread.longValue());
+		if (thread != null) b.append("thread", thread.getValue());
 		return this;
 	}
 
@@ -37,19 +37,19 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 
 	@Override
 	public MongoEventBuilder setClazz(ClazzId clazz) {
-		if (clazz != null) b.append("class", clazz.longValue());
+		if (clazz != null) b.append("class", clazz.getValue());
 		return this;
 	}
 
 	@Override
 	public MongoEventBuilder setMethod(MethodId method) {
-		if (method != null) b.append("method", method.longValue());
+		if (method != null) b.append("method", method.getValue());
 		return this;
 	}
 
 	@Override
 	public MongoEventBuilder setField(FieldId field) {
-		if (field != null) b.append("field", field.longValue());
+		if (field != null) b.append("field", field.getValue());
 		return this;
 	}
 
@@ -63,7 +63,7 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 			args = Lists.newArrayList();
 		}
 		List<Long> newArgs = Lists.newArrayList(args);
-		newArgs.add(arg == null ? null : arg.longValue());
+		newArgs.add(arg == null ? null : arg.getValue());
 		b.put("args", newArgs);
 		return this;
 	}

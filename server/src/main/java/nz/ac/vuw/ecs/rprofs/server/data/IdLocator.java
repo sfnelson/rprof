@@ -34,7 +34,7 @@ public class IdLocator extends Locator<Id, Long> {
 
 	@Override
 	public Long getId(Id id) {
-		return id.longValue();
+		return id.getValue();
 	}
 
 	@Override

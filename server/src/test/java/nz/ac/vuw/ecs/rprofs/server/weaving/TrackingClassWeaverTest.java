@@ -485,7 +485,7 @@ public class TrackingClassWeaverTest extends WeaverTestBase {
 			fv.visitEnd();
 		}
 		{
-			fv = cw.visitField(ACC_PRIVATE + ACC_STATIC, "cnum", "I", null, record.getId().indexValue());
+			fv = cw.visitField(ACC_PRIVATE + ACC_STATIC, "cnum", "I", null, record.getId().getClassIndex());
 			fv.visitEnd();
 		}
 		{

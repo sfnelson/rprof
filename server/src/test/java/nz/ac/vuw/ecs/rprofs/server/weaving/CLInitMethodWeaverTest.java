@@ -66,11 +66,11 @@ public class CLInitMethodWeaverTest {
 	public void testWeaveCLInitCreateWithFields() {
 
 		List<Field> fields = Lists.newArrayList(
-				new Field(new FieldId(id.datasetValue(), id.indexValue(), (short) 4), "foo",
+				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 4), "foo",
 						id, clazz.getName(), "I", ACC_PRIVATE),
-				new Field(new FieldId(id.datasetValue(), id.indexValue(), (short) 8), "bar",
+				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 8), "bar",
 						id, clazz.getName(), "I", ACC_PUBLIC),
-				new Field(new FieldId(id.datasetValue(), id.indexValue(), (short) 12), "baz",
+				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 12), "baz",
 						id, clazz.getName(), "I", ACC_PUBLIC | ACC_FINAL | ACC_STATIC)
 		);
 		record.addFields(fields);

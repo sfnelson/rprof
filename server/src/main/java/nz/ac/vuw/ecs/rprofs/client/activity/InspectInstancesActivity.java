@@ -1,20 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.client.activity;
 
 import com.google.gwt.event.shared.EventBus;
-import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractTypedInspectorActivity;
-import nz.ac.vuw.ecs.rprofs.client.place.BrowseInstances;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.CompositePlace;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceBuilder;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.ProfilerPlace;
 import nz.ac.vuw.ecs.rprofs.client.request.*;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
 import java.util.List;
 
-public class InspectInstancesActivity extends AbstractTypedInspectorActivity<BrowseInstances>
+public class InspectInstancesActivity extends AbstractTypedInspectorActivity
 		implements ReportView.Presenter {
 
 	private final ReportView view;
@@ -78,12 +77,9 @@ public class InspectInstancesActivity extends AbstractTypedInspectorActivity<Bro
 
 	@Override
 	public void selectInstance(InstanceProxy instance) {
-		Place current = pc.getWhere();
-		if (current instanceof CompositePlace) {
-			CompositePlace<?> c = (CompositePlace<?>) current;
-			c = c.clonePlace();
-			c.setParameter("i", String.valueOf(instance.stableId()));
-			pc.goTo(c);
-		}
+		ProfilerPlace newPlace = PlaceBuilder.create()
+				.setInstance(instance.getId())
+				.get(pc.getWhere());
+		pc.goTo(newPlace);
 	}
 }

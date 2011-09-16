@@ -60,8 +60,8 @@ public class ClassRecord {
 	}
 
 	public void generateMethod(String name, String desc, int access) {
-		Method m = new Method(new MethodId(clazz.getId().datasetValue(),
-				clazz.getId().indexValue(), (short) 0),
+		Method m = new Method(new MethodId(clazz.getId().getDatasetIndex(),
+				clazz.getId().getClassIndex(), (short) 0),
 				name, clazz.getId(), clazz.getName(), desc, access);
 		methods.put(name + desc, m); // TODO do we want to store this?
 	}

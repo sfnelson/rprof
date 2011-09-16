@@ -121,7 +121,7 @@ public class MongoClassBuilderTest {
 	public void testSetParent() throws Exception {
 		ClazzId id = new ClazzId(1);
 		builder.setParent(id);
-		assertEquals(id.longValue(), builder.b.get("parent"));
+		assertEquals(id.getValue(), builder.b.get("parent"));
 	}
 
 	@Test
@@ -220,7 +220,7 @@ public class MongoClassBuilderTest {
 				.add("properties", 3).get());
 		Clazz result = builder.get();
 
-		assertEquals(1l, result.getId().longValue());
+		assertEquals(1l, result.getId().getValue());
 		assertEquals("org.foo.Bar", result.getName());
 		assertEquals(new ClazzId(2l), result.getParent());
 		assertEquals("org.Foo", result.getParentName());

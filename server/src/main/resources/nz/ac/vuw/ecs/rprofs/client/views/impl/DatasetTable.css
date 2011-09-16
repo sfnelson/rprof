@@ -1,0 +1,101 @@
+@def keyboardcolor #98dffc;
+@def keyboardborder #98dffc;
+@def hovercolor #98dffc;
+@def hoverborder #98dffc;
+@def selectioncolor #87ceeb;
+@def selectionborder #87ceeb;
+
+.cellTableWidget {
+    width: 100%;
+}
+
+.cellTableFirstColumn {
+}
+
+.cellTableLastColumn {
+    text-align: right;
+}
+
+.cellTableFooter {
+}
+
+.cellTableHeader {
+}
+
+.cellTableCell {
+    padding: 2px 15px;
+    overflow: hidden;
+}
+
+.cellTableFirstColumnFooter {
+}
+
+.cellTableFirstColumnHeader {
+}
+
+.cellTableLastColumnFooter {
+}
+
+.cellTableLastColumnHeader {
+}
+
+.cellTableSortableHeader {
+}
+
+.cellTableSortableHeader:hover {
+}
+
+.cellTableSortedHeaderAscending {
+}
+
+.cellTableSortedHeaderDescending {
+}
+
+.cellTableEvenRow {
+    background: white;
+}
+
+.cellTableEvenRowCell {
+    border-top: solid 1px white;
+    border-bottom: solid 1px white;
+}
+
+.cellTableOddRow {
+    background: #fcfcfc;
+}
+
+.cellTableOddRowCell {
+    border-top: solid 1px #fcfcfc;
+    border-bottom: solid 1px #fcfcfc;
+}
+
+.cellTableHoveredRow {
+}
+
+.cellTableHoveredRowCell {
+    background-color: hovercolor;
+    border-color: hoverborder;
+}
+
+.cellTableKeyboardSelectedRow {
+}
+
+.cellTableKeyboardSelectedRowCell {
+    background-color: keyboardcolor;
+    border-color: keyboardborder;
+}
+
+.cellTableSelectedRow {
+}
+
+.cellTableSelectedRowCell {
+    background-color: selectioncolor;
+    border-color: selectionborder;
+}
+
+.cellTableKeyboardSelectedCell {
+}
+
+.cellTableLoading {
+    margin: 30px;
+}

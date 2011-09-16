@@ -62,7 +62,7 @@ public class DomainObjectLocator<I extends Id<I, T>, T extends DataObject<I, T>>
 
 	@Override
 	public Long getId(T object) {
-		return object.getId().longValue();
+		return object.getId().getValue();
 	}
 
 	@Override

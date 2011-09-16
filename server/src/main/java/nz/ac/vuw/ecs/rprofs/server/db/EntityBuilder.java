@@ -30,7 +30,7 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 	@Override
 	public I store() {
 		I id = _createId();
-		b.put("_id", id.longValue());
+		b.put("_id", id.getValue());
 		_store(b);
 		reset();
 		return id;
@@ -58,7 +58,7 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 
 	@Override
 	public void update(I toUpdate) {
-		Long id = toUpdate.longValue();
+		Long id = toUpdate.getValue();
 		_update(new BasicDBObject("_id", id), b);
 		reset();
 	}

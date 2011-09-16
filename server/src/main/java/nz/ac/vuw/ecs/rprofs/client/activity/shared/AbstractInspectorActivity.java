@@ -2,21 +2,21 @@ package nz.ac.vuw.ecs.rprofs.client.activity.shared;
 
 import com.google.gwt.activity.shared.AbstractActivity;
 import com.google.gwt.activity.shared.Activity;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.HasView;
 
-public abstract class AbstractInspectorActivity<T extends ReportPlace<T>> extends AbstractActivity {
+public abstract class AbstractInspectorActivity extends AbstractActivity {
 
-	private T place;
+	private HasView place;
 
 	public AbstractInspectorActivity() {
 	}
 
-	public Activity setPlace(T place) {
+	public Activity setPlace(HasView place) {
 		this.place = place;
 		return this;
 	}
 
-	protected T getPlace() {
+	protected HasView getPlace() {
 		return place;
 	}
 
@@ -26,7 +26,7 @@ public abstract class AbstractInspectorActivity<T extends ReportPlace<T>> extend
 		if (obj == null) return false;
 		if (!(this.getClass() == obj.getClass())) return false;
 
-		AbstractInspectorActivity<?> a = (AbstractInspectorActivity<?>) obj;
+		AbstractInspectorActivity a = (AbstractInspectorActivity) obj;
 
 		return place.equals(a.place);
 	}

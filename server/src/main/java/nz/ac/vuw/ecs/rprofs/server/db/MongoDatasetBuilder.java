@@ -48,9 +48,10 @@ abstract class MongoDatasetBuilder extends MongoBuilder<MongoDatasetBuilder, Dat
 	@NotNull
 	public Dataset get() {
 		DatasetId id = new DatasetId(((Long) b.get("_id")).shortValue());
+		Integer version = (Integer) b.get("version");
 		String handle = (String) b.get("handle");
 		Date started = (Date) b.get("started");
-		Dataset dataset = new Dataset(id, handle, started);
+		Dataset dataset = new Dataset(id, version, handle, started);
 		if (b.containsField("stopped")) {
 			dataset.setStopped((Date) b.get("stopped"));
 		}

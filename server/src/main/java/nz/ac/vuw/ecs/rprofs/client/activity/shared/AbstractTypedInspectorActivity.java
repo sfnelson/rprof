@@ -3,14 +3,13 @@ package nz.ac.vuw.ecs.rprofs.client.activity.shared;
 import com.google.gwt.core.client.GWT;
 import com.google.inject.Provider;
 import com.google.web.bindery.requestfactory.shared.Receiver;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ReportPlace;
 import nz.ac.vuw.ecs.rprofs.client.request.*;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
 import java.util.List;
 
-public abstract class AbstractTypedInspectorActivity<T extends ReportPlace<T>>
-		extends AbstractInspectorActivity<T>
+public abstract class AbstractTypedInspectorActivity
+		extends AbstractInspectorActivity
 		implements ReportView.Presenter {
 
 	private final Provider<ClazzRequest> cr;

@@ -45,7 +45,7 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 
 	@Override
 	public MongoClassBuilder setParent(ClazzId parent) {
-		b.put("parent", parent.longValue());
+		b.put("parent", parent.getValue());
 		return this;
 	}
 
@@ -115,7 +115,7 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 		// find any classes which specify this class as the parent and update them
 		c = _query(new BasicDBObject("parentName", name));
 		while (c.hasNext()) {
-			_update(c.next(), new BasicDBObject("parent", id.longValue()));
+			_update(c.next(), new BasicDBObject("parent", id.getValue()));
 		}
 		c.close();
 

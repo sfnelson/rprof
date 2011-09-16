@@ -13,9 +13,9 @@ public interface DatasetService {
 
 	List<? extends Dataset> findAllDatasets();
 
-	void stopDataset(Dataset dataset);
+	void stopDataset(DatasetId dataset);
 
-	void deleteDataset(Dataset dataset);
+	void deleteDataset(DatasetId dataset);
 
-	void setProgram(Dataset dataset, String program);
+	void setProgram(DatasetId dataset, String program);
 }

@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.web.bindery.requestfactory.shared.Receiver;
 import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractInspectorActivity;
-import nz.ac.vuw.ecs.rprofs.client.place.BrowseEvents;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.EventRequest;
 import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
@@ -18,8 +17,7 @@ import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 
 import java.util.List;
 
-public class InspectEventsActivity
-		extends AbstractInspectorActivity<BrowseEvents>
+public class InspectEventsActivity extends AbstractInspectorActivity
 		implements EventView.Presenter {
 
 	private final AsyncDataProvider<EventProxy> provider;

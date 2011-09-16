@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -126,7 +126,7 @@ public class DatasetManagerTest {
 
 		replay(database, b);
 
-		manager.stopDataset(dataset);
+		manager.stopDataset(id);
 
 		verify(database, b);
 	}
@@ -146,7 +146,7 @@ public class DatasetManagerTest {
 
 		replay(database, b);
 
-		manager.setProgram(dataset, "PROG");
+		manager.setProgram(id, "PROG");
 
 		verify(database, b);
 	}
@@ -157,12 +157,58 @@ public class DatasetManagerTest {
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "foobar", new Date());
 
+		expect(database.findEntity(id)).andReturn(dataset);
 		expect(database.deleteEntity(dataset)).andReturn(true);
 
 		replay(database);
 
-		manager.deleteDataset(dataset);
+		manager.deleteDataset(id);
 
 		verify(database);
+	}
+
+	@Test
+	public void testCreate() {
+		assertNotNull(manager.create(Dataset.class));
+	}
+
+	@Test
+	public void testGetDomainType() {
+		assertEquals(Dataset.class, manager.getDomainType());
+	}
+
+	@Test
+	public void testGetIdType() {
+		assertEquals(DatasetId.class, manager.getIdType());
+	}
+
+	@Test
+	public void testGetId() {
+		DatasetId id = new DatasetId((short) 1);
+		Dataset dataset = new Dataset(id, "foobar", new Date());
+
+		assertEquals(id, manager.getId(dataset));
+	}
+
+	@Test
+	public void testFind() {
+		DatasetId id = new DatasetId((short) 1);
+		Dataset dataset = new Dataset(id, "foobar", new Date());
+
+		expect(database.findEntity(id)).andReturn(dataset);
+
+		replay(database);
+
+		manager.find(Dataset.class, id);
+
+		verify(database);
+	}
+
+	@Test
+	public void testGetVersion() {
+		DatasetId id = new DatasetId((short) 1);
+		Dataset dataset = new Dataset(id, "foobar", new Date());
+
+		assertEquals(dataset.getVersion(), manager.getVersion(dataset));
 	}
 }

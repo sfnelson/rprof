@@ -2,13 +2,15 @@ package nz.ac.vuw.ecs.rprofs.client.activity;
 
 import com.google.gwt.activity.shared.AbstractActivity;
 import com.google.gwt.event.shared.EventBus;
+import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.web.bindery.requestfactory.shared.EntityProxyChange;
 import com.google.web.bindery.requestfactory.shared.Receiver;
-import nz.ac.vuw.ecs.rprofs.client.place.ShowDataset;
 import nz.ac.vuw.ecs.rprofs.client.place.shared.HasDataset;
+import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceBuilder;
 import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.DatasetRequest;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetListView;
@@ -16,7 +18,8 @@ import nz.ac.vuw.ecs.rprofs.client.views.DatasetListView;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class SelectDatasetActivity extends AbstractActivity implements DatasetListView.Presenter {
+public class SelectDatasetActivity extends AbstractActivity
+		implements DatasetListView.Presenter, EntityProxyChange.Handler<DatasetProxy> {
 
 	private final DatasetListView view;
 	private final PlaceController pc;
@@ -32,13 +35,14 @@ public class SelectDatasetActivity extends AbstractActivity implements DatasetLi
 		this.rf = rf;
 	}
 
+	@Override
+	public void onProxyChange(EntityProxyChange<DatasetProxy> event) {
+		refresh();
+	}
+
 	public SelectDatasetActivity setPlace(@Nullable HasDataset place) {
 		this.place = place;
 		return this;
-	}
-
-	public void setSelected(@Nullable HasDataset place) {
-		this.place = place;
 	}
 
 	@Override
@@ -48,17 +52,21 @@ public class SelectDatasetActivity extends AbstractActivity implements DatasetLi
 		panel.setWidget(view);
 
 		refresh();
+
+		EntityProxyChange.registerForProxyType(eventBus, DatasetProxy.class, this);
 	}
 
 	@Override
 	public void selectDataset(DatasetProxy dataset) {
-		ShowDataset newPlace = new ShowDataset(dataset.getHandle());
+		Place newPlace = PlaceBuilder.create()
+				.setDataset(dataset.getId())
+				.get(pc.getWhere());
 		pc.goTo(newPlace);
 	}
 
 	@Override
 	public void stopDataset(DatasetProxy dataset) {
-		rf.get().stopDataset(dataset).fire(new Receiver<Void>() {
+		rf.get().stopDataset(dataset.getId()).fire(new Receiver<Void>() {
 			@Override
 			public void onSuccess(Void response) {
 				refresh();
@@ -68,7 +76,7 @@ public class SelectDatasetActivity extends AbstractActivity implements DatasetLi
 
 	@Override
 	public void deleteDataset(DatasetProxy dataset) {
-		rf.get().deleteDataset(dataset).fire(new Receiver<Void>() {
+		rf.get().deleteDataset(dataset.getId()).fire(new Receiver<Void>() {
 			@Override
 			public void onSuccess(Void response) {
 				refresh();
@@ -77,12 +85,13 @@ public class SelectDatasetActivity extends AbstractActivity implements DatasetLi
 	}
 
 	private void refresh() {
-		rf.get().findAllDatasets().fire(new Receiver<List<DatasetProxy>>() {
-			@Override
-			public void onSuccess(List<DatasetProxy> response) {
-				refresh(response);
-			}
-		});
+		rf.get().findAllDatasets().with("id")
+				.fire(new Receiver<List<DatasetProxy>>() {
+					@Override
+					public void onSuccess(List<DatasetProxy> response) {
+						refresh(response);
+					}
+				});
 	}
 
 	private void refresh(List<DatasetProxy> datasets) {
@@ -90,9 +99,9 @@ public class SelectDatasetActivity extends AbstractActivity implements DatasetLi
 		view.setDatasets(datasets);
 
 		HasDataset place = this.place;
-		if (place != null) {
+		if (place != null && place.getDatasetId() != null) {
 			for (DatasetProxy d : datasets) {
-				if (place.getDatasetHandle().equals(d.getHandle())) {
+				if (place.getDatasetId().getValue() == d.getId().getValue()) {
 					view.setSelected(d);
 				}
 			}

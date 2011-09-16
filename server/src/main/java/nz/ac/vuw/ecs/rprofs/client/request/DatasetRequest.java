@@ -18,7 +18,7 @@ public interface DatasetRequest extends RequestContext {
 
 	Request<List<DatasetProxy>> findAllDatasets();
 
-	Request<Void> stopDataset(DatasetProxy dataset);
+	Request<Void> stopDataset(DatasetIdProxy dataset);
 
-	Request<Void> deleteDataset(DatasetProxy dataset);
+	Request<Void> deleteDataset(DatasetIdProxy dataset);
 }

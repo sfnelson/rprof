@@ -13,6 +13,9 @@ public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Datas
 	private DatasetId id;
 
 	@NotNull
+	private Integer version;
+
+	@NotNull
 	private String handle;
 
 	@Nullable
@@ -29,6 +32,14 @@ public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Datas
 
 	public Dataset(@NotNull DatasetId id, @NotNull String handle, @NotNull Date started) {
 		this.id = id;
+		this.version = 0;
+		this.handle = handle;
+		this.started = started;
+	}
+
+	public Dataset(@NotNull DatasetId id, @NotNull Integer version, @NotNull String handle, @NotNull Date started) {
+		this.id = id;
+		this.version = version;
 		this.handle = handle;
 		this.started = started;
 	}
@@ -37,6 +48,10 @@ public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Datas
 	@Override
 	public DatasetId getId() {
 		return id;
+	}
+
+	public Integer getVersion() {
+		return version;
 	}
 
 	@NotNull

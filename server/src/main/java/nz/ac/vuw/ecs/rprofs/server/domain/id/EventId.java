@@ -9,7 +9,7 @@ public class EventId extends Id<EventId, Event> {
 
 	@NotNull
 	public static EventId create(Dataset ds, long id) {
-		return new EventId(ds.getId().indexValue(), id);
+		return new EventId(ds.getId().getDatasetIndex(), id);
 	}
 
 	private static final long mask = 0xFFFFFFFFFFFFl; // 48 bit mask
@@ -30,24 +30,24 @@ public class EventId extends Id<EventId, Event> {
 		super((((long) dataset) << 48) | (event & mask));
 	}
 
-	public short datasetValue() {
-		return (short) (longValue() >>> 48);
+	public short getDatasetIndex() {
+		return (short) (getValue() >>> 48);
 	}
 
-	public long eventValue() {
-		return longValue() & mask;
+	public long getEventIndex() {
+		return getValue() & mask;
 	}
 
-	public short upperValue() {
-		return (short) ((eventValue() >>> 32) & 0xFFFF);
+	public short getEventUpper() {
+		return (short) ((getEventIndex() >>> 32) & 0xFFFF);
 	}
 
-	public int lowerValue() {
-		return (int) (eventValue() & 0xFFFFFFFFl);
+	public int getEventLower() {
+		return (int) (getEventIndex() & 0xFFFFFFFFl);
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%d:%d", datasetValue(), eventValue());
+		return String.format("%d:%d.%d", getDatasetIndex(), getEventUpper(), getEventLower());
 	}
 }

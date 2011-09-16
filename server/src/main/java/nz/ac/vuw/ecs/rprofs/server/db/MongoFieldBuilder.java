@@ -47,7 +47,7 @@ abstract class MongoFieldBuilder extends MongoBuilder<MongoFieldBuilder, FieldId
 		FieldId id = this.id;
 		setOwner(owner);
 		setOwnerName(ownerName);
-		id.setValue(super.store().longValue());
+		id.setValue(super.store().getValue());
 		return id;
 	}
 
@@ -77,7 +77,7 @@ abstract class MongoFieldBuilder extends MongoBuilder<MongoFieldBuilder, FieldId
 
 	@Override
 	public MongoFieldBuilder setOwner(ClazzId owner) {
-		b.put("owner", owner.longValue());
+		b.put("owner", owner.getValue());
 		return this;
 	}
 

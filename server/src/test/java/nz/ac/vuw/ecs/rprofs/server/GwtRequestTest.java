@@ -61,8 +61,8 @@ public class GwtRequestTest {
 		DatasetId id = new DatasetId((short) 1);
 		Dataset dataset = new Dataset(id, "dataset_id", new Date());
 
-		expect(req.getRequestURI()).andReturn("/gwtRequest/dataset_id");
-		expect(datasets.findDataset("dataset_id")).andReturn(dataset);
+		expect(req.getRequestURI()).andReturn("/gwtRequest/1");
+		expect(datasets.findDataset(id)).andReturn(dataset);
 		context.setDataset(dataset);
 		chain.doFilter(req, rsp);
 		context.clear();

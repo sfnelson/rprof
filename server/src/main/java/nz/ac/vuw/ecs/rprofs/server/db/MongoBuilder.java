@@ -16,12 +16,14 @@ public abstract class MongoBuilder<B extends EntityBuilder<B, I, T>, I extends I
 
 	@Override
 	void _store(DBObject toStore) {
+		toStore.put("version", 1);
 		_getCollection().insert(toStore);
 	}
 
 	@Override
 	void _update(DBObject ref, DBObject update) {
-		_getCollection().update(ref, new BasicDBObject("$set", update));
+		_getCollection().update(ref, new BasicDBObject("$set", update)
+				.append("$inc", new BasicDBObject("version", 1)));
 	}
 
 	@Override

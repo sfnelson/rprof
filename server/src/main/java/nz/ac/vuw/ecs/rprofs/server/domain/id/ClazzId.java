@@ -6,7 +6,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 public class ClazzId extends Id<ClazzId, Clazz> {
 
 	public static ClazzId create(Dataset dataset, int cnum) {
-		return new ClazzId(dataset.getId().indexValue(), cnum);
+		return new ClazzId(dataset.getId().getDatasetIndex(), cnum);
 	}
 
 	public ClazzId() {
@@ -24,16 +24,16 @@ public class ClazzId extends Id<ClazzId, Clazz> {
 		super(classId);
 	}
 
-	public short datasetValue() {
-		return (short) ((longValue() >>> 48) & 0xFFFF);
+	public short getDatasetIndex() {
+		return (short) ((getValue() >>> 48) & 0xFFFF);
 	}
 
-	public int indexValue() {
-		return (int) longValue();
+	public int getClassIndex() {
+		return (int) getValue();
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%d.%d", datasetValue(), indexValue());
+		return String.format("%d.%d", getDatasetIndex(), getClassIndex());
 	}
 }

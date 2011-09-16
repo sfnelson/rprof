@@ -9,7 +9,7 @@ public class InstanceId extends Id<InstanceId, Instance> {
 		if (id == 0) {
 			return null;
 		}
-		return new InstanceId(dataset.getId().indexValue(), id);
+		return new InstanceId(dataset.getId().getDatasetIndex(), id);
 	}
 
 	private static final long mask = 0xFFFFFFFFFFFFl;
@@ -33,20 +33,20 @@ public class InstanceId extends Id<InstanceId, Instance> {
 		return Instance.class;
 	}
 
-	public short datasetValue() {
-		return (short) ((longValue() >>> 48) & 0xFFFF);
+	public short getDatasetIndex() {
+		return (short) ((getValue() >>> 48) & 0xFFFF);
 	}
 
-	public short threadValue() {
-		return (short) (longValue() >>> 32);
+	public short getThreadIndex() {
+		return (short) (getValue() >>> 32);
 	}
 
-	public int indexValue() {
-		return (int) longValue();
+	public int getInstanceIndex() {
+		return (int) getValue();
 	}
 
 	@Override
 	public String toString() {
-		return String.format("%d:%d.%d", datasetValue(), threadValue(), indexValue());
+		return String.format("%d:%d.%d", getDatasetIndex(), getThreadIndex(), getInstanceIndex());
 	}
 }

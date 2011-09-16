@@ -58,7 +58,7 @@ public class MongoEventBuilderTest {
 
 		assertNull(b.b.get("_id"));
 		assertSame(b, b.setId(id));
-		assertEquals(id.longValue(), b.b.get("_id"));
+		assertEquals(id.getValue(), b.b.get("_id"));
 	}
 
 	@Test
@@ -67,7 +67,7 @@ public class MongoEventBuilderTest {
 
 		assertNull(b.b.get("thread"));
 		assertEquals(b, b.setThread(thread));
-		assertEquals(thread.longValue(), b.b.get("thread"));
+		assertEquals(thread.getValue(), b.b.get("thread"));
 	}
 
 	@Test
@@ -83,7 +83,7 @@ public class MongoEventBuilderTest {
 
 		assertNull(b.b.get("class"));
 		assertEquals(b, b.setClazz(clazz));
-		assertEquals(clazz.longValue(), b.b.get("class"));
+		assertEquals(clazz.getValue(), b.b.get("class"));
 	}
 
 	@Test
@@ -93,7 +93,7 @@ public class MongoEventBuilderTest {
 
 		assertNull(b.b.get("method"));
 		assertEquals(b, b.setMethod(method));
-		assertEquals(method.longValue(), b.b.get("method"));
+		assertEquals(method.getValue(), b.b.get("method"));
 	}
 
 	@Test
@@ -103,7 +103,7 @@ public class MongoEventBuilderTest {
 
 		assertNull(b.b.get("field"));
 		assertEquals(b, b.setField(field));
-		assertEquals(field.longValue(), b.b.get("field"));
+		assertEquals(field.getValue(), b.b.get("field"));
 	}
 
 	@Test
@@ -118,7 +118,7 @@ public class MongoEventBuilderTest {
 		b.addArg(y);
 		b.addArg(z);
 
-		assertEquals(Lists.newArrayList(x.longValue(), null, z.longValue()), b.b.get("args"));
+		assertEquals(Lists.newArrayList(x.getValue(), null, z.getValue()), b.b.get("args"));
 	}
 
 	@Test
@@ -146,13 +146,13 @@ public class MongoEventBuilderTest {
 
 		assertTrue(b.b.isEmpty());
 
-		assertEquals(id.longValue(), result.get("_id"));
-		assertEquals(thread.longValue(), result.get("thread"));
+		assertEquals(id.getValue(), result.get("_id"));
+		assertEquals(thread.getValue(), result.get("thread"));
 		assertEquals(3, result.get("event"));
-		assertEquals(clazz.longValue(), result.get("class"));
-		assertEquals(method.longValue(), result.get("method"));
-		assertEquals(field.longValue(), result.get("field"));
-		assertEquals(Lists.newArrayList(x.longValue(), null, z.longValue()), result.get("args"));
+		assertEquals(clazz.getValue(), result.get("class"));
+		assertEquals(method.getValue(), result.get("method"));
+		assertEquals(field.getValue(), result.get("field"));
+		assertEquals(Lists.newArrayList(x.getValue(), null, z.getValue()), result.get("args"));
 	}
 
 	@Test
@@ -167,13 +167,13 @@ public class MongoEventBuilderTest {
 		InstanceId z = InstanceId.create(ds, 8);
 
 		b.init(new BasicDBObjectBuilder()
-				.add("_id", id.longValue())
-				.add("thread", thread.longValue())
-				.add("class", clazz.longValue())
+				.add("_id", id.getValue())
+				.add("thread", thread.getValue())
+				.add("class", clazz.getValue())
 				.add("event", Event.METHOD_EXCEPTION)
-				.add("method", method.longValue())
-				.add("field", field.longValue())
-				.add("args", Lists.newArrayList(x.longValue(), 0l, z.longValue()))
+				.add("method", method.getValue())
+				.add("field", field.getValue())
+				.add("args", Lists.newArrayList(x.getValue(), 0l, z.getValue()))
 				.get());
 		Event result = b.get();
 

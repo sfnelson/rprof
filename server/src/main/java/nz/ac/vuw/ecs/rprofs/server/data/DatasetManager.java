@@ -1,16 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.web.bindery.requestfactory.shared.Locator;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
 
 import java.util.Calendar;
 import java.util.List;
 
-public class DatasetManager implements DatasetService {
+@Configurable
+public class DatasetManager extends Locator<Dataset, DatasetId> implements DatasetService {
 
 	@VisibleForTesting
 	@Autowired(required = true)
@@ -35,6 +38,36 @@ public class DatasetManager implements DatasetService {
 	}
 
 	@Override
+	public Dataset create(Class<? extends Dataset> type) {
+		return new Dataset();
+	}
+
+	@Override
+	public Class<Dataset> getDomainType() {
+		return Dataset.class;
+	}
+
+	@Override
+	public Class<DatasetId> getIdType() {
+		return DatasetId.class;
+	}
+
+	@Override
+	public DatasetId getId(Dataset dataset) {
+		return dataset.getId();
+	}
+
+	@Override
+	public Dataset find(Class<? extends Dataset> type, DatasetId id) {
+		return findDataset(id);
+	}
+
+	@Override
+	public Integer getVersion(Dataset dataset) {
+		return dataset.getVersion();
+	}
+
+	@Override
 	public List<? extends Dataset> findAllDatasets() {
 		return database.getDatasetQuery().find();
 	}
@@ -52,21 +85,22 @@ public class DatasetManager implements DatasetService {
 	}
 
 	@Override
-	public void stopDataset(Dataset dataset) {
+	public void stopDataset(DatasetId dataset) {
 		database.getDatasetUpdater()
 				.setStopped(Calendar.getInstance().getTime())
-				.update(dataset.getId());
+				.update(dataset);
 	}
 
 	@Override
-	public void setProgram(Dataset dataset, String program) {
+	public void setProgram(DatasetId dataset, String program) {
 		database.getDatasetUpdater()
 				.setProgram(program)
-				.update(dataset.getId());
+				.update(dataset);
 	}
 
 	@Override
-	public void deleteDataset(Dataset dataset) {
+	public void deleteDataset(DatasetId id) {
+		Dataset dataset = database.findEntity(id);
 		database.deleteEntity(dataset);
 	}
 }

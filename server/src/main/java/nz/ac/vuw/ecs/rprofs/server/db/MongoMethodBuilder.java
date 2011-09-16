@@ -43,7 +43,7 @@ abstract class MongoMethodBuilder extends MongoBuilder<MongoMethodBuilder, Metho
 		MethodId id = this.id;
 		setOwner(owner);
 		setOwnerName(ownerName);
-		id.setValue(super.store().longValue());
+		id.setValue(super.store().getValue());
 		return id;
 	}
 
@@ -73,7 +73,7 @@ abstract class MongoMethodBuilder extends MongoBuilder<MongoMethodBuilder, Metho
 
 	@Override
 	public MongoMethodBuilder setOwner(ClazzId owner) {
-		b.put("owner", owner.longValue());
+		b.put("owner", owner.getValue());
 		return this;
 	}
 

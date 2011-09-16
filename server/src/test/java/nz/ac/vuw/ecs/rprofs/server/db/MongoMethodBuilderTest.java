@@ -89,7 +89,7 @@ public class MongoMethodBuilderTest {
 	public void testSetOwner() throws Exception {
 		ClazzId id = new ClazzId(15);
 		mb.setOwner(id);
-		assertEquals(id.longValue(), mb.b.get("owner"));
+		assertEquals(id.getValue(), mb.b.get("owner"));
 	}
 
 	@Test
@@ -139,11 +139,11 @@ public class MongoMethodBuilderTest {
 		String cname = "org/foo/Bar";
 
 		mb.init(new BasicDBObjectBuilder()
-				.add("_id", methodId.longValue())
+				.add("_id", methodId.getValue())
 				.add("name", name)
 				.add("description", desc)
 				.add("access", access)
-				.add("owner", clazzId.longValue())
+				.add("owner", clazzId.getValue())
 				.add("ownerName", cname)
 				.get());
 

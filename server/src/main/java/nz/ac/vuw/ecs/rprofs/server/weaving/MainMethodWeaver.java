@@ -32,8 +32,8 @@ class MainMethodWeaver extends ExceptionHandlingMethodWeaver {
 			case ARETURN:
 				setStack(4);
 			case RETURN:
-				push(record.getId().indexValue());
-				push(method.getId().attributeValue());
+				push(record.getId().getClassIndex());
+				push(method.getId().getAttributeIndex());
 				visitInsn(ACONST_NULL);
 				visitTrackerMethod(Tracker.exit);
 				setStack(3);

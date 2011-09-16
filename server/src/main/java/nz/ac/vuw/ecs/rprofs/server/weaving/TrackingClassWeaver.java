@@ -41,7 +41,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 								   String signature, Object value) {
 		if (name.equals("cnum")) {
 			return super.visitField(access, name, desc, signature,
-					new Integer(record.getId().indexValue()));
+					new Integer(record.getId().getClassIndex()));
 		} else {
 			return super.visitField(access, name, desc, signature, value);
 		}

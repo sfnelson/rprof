@@ -103,7 +103,7 @@ public class Database {
 			Dataset current = context.getDataset();
 			DB db = getDatabase(current);
 			DBCollection collection = getCollection(db, id.getTargetClass());
-			DBObject data = collection.findOne(new BasicDBObject("_id", id.longValue()));
+			DBObject data = collection.findOne(new BasicDBObject("_id", id.getValue()));
 			return getBuilder(id.getTargetClass()).init(data).get();
 		}
 	}
@@ -124,7 +124,7 @@ public class Database {
 		if (database == null) throw new RuntimeException("invalid dataset provided");
 
 		DBCollection collection = getCollection(database, entity.getClass());
-		collection.remove(new BasicDBObject("_id", entity.getId().longValue()));
+		collection.remove(new BasicDBObject("_id", entity.getId().getValue()));
 
 		if (entity.getClass() == Dataset.class) {
 			mongo.dropDatabase(getDBName((Dataset) entity));
@@ -188,7 +188,7 @@ public class Database {
 
 	@VisibleForTesting
 	String getDBName(Dataset dataset) {
-		return "rprof_" + dataset.getHandle() + "_" + dataset.getId().indexValue();
+		return "rprof_" + dataset.getHandle() + "_" + dataset.getId().getDatasetIndex();
 	}
 
 	@SuppressWarnings("unchecked")

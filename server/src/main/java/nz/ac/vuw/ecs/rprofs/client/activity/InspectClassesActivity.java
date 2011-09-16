@@ -5,14 +5,12 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractTypedInspectorActivity;
-import nz.ac.vuw.ecs.rprofs.client.place.BrowseClasses;
 import nz.ac.vuw.ecs.rprofs.client.request.*;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 
 import java.util.List;
 
-public class InspectClassesActivity
-		extends AbstractTypedInspectorActivity<BrowseClasses>
+public class InspectClassesActivity extends AbstractTypedInspectorActivity
 		implements ReportView.Presenter {
 
 	private final ReportView view;

@@ -16,7 +16,7 @@ abstract class Id<I extends Id<I, T>, T extends DataObject<I, T>>
 		this.value = value;
 	}
 
-	public long longValue() {
+	public long getValue() {
 		return value;
 	}
 

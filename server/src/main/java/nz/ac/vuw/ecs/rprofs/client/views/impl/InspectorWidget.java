@@ -27,13 +27,14 @@ public class InspectorWidget extends FrameLayout implements ProfilerAppView {
 		return getTop();
 	}
 
+
 	@Override
-	public AcceptsOneWidget getReportContainer() {
+	public AcceptsOneWidget getInspectorContainer() {
 		return view.get();
 	}
 
 	@Override
-	public AcceptsOneWidget getInspectorContainer() {
+	public AcceptsOneWidget getReportContainer() {
 		return getBottom();
 	}
 

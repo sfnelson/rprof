@@ -1,7 +1,6 @@
 bin
 objects
 classes
-tmp/pre/*
-tmp/post/*
 tmp
 target
+dacapo-20110822.jar

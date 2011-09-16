@@ -8,7 +8,7 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.web.bindery.event.shared.EventBus;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ProfilerPlace;
+import nz.ac.vuw.ecs.rprofs.client.place.ProfilerPlace;
 
 public class AppEntryPoint implements EntryPoint {
 

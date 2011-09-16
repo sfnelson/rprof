@@ -1,4 +1,4 @@
-package nz.ac.vuw.ecs.rprofs.client.place.shared;
+package nz.ac.vuw.ecs.rprofs.client.place;
 
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
@@ -54,11 +54,12 @@ public class ProfilerPlace extends Place implements HasDataset, HasView, HasInst
 		return instance;
 	}
 
-	@Override
 	@NotNull
-	public ProfilerPlace clone() {
+	public ProfilerPlace clonePlace() {
 		ProfilerPlace place = new ProfilerPlace();
 		place.dataset = dataset;
+		place.view = view;
+		place.instance = instance;
 		return place;
 	}
 

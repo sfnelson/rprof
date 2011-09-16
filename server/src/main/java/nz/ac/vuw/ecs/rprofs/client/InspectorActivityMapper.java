@@ -9,7 +9,7 @@ import nz.ac.vuw.ecs.rprofs.client.activity.InspectClassesActivity;
 import nz.ac.vuw.ecs.rprofs.client.activity.InspectEventsActivity;
 import nz.ac.vuw.ecs.rprofs.client.activity.InspectFieldsActivity;
 import nz.ac.vuw.ecs.rprofs.client.activity.InspectInstancesActivity;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.HasView;
+import nz.ac.vuw.ecs.rprofs.client.place.HasView;
 
 public class InspectorActivityMapper implements ActivityMapper {
 

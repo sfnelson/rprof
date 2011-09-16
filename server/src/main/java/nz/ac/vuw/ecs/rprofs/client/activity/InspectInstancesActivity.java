@@ -6,8 +6,8 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractTypedInspectorActivity;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceBuilder;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ProfilerPlace;
+import nz.ac.vuw.ecs.rprofs.client.place.PlaceBuilder;
+import nz.ac.vuw.ecs.rprofs.client.place.ProfilerPlace;
 import nz.ac.vuw.ecs.rprofs.client.request.*;
 import nz.ac.vuw.ecs.rprofs.client.views.ReportView;
 

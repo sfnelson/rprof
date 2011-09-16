@@ -2,7 +2,7 @@ package nz.ac.vuw.ecs.rprofs.client.activity.shared;
 
 import com.google.gwt.activity.shared.AbstractActivity;
 import com.google.gwt.activity.shared.Activity;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.HasView;
+import nz.ac.vuw.ecs.rprofs.client.place.HasView;
 
 public abstract class AbstractInspectorActivity extends AbstractActivity {
 

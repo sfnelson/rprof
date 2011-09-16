@@ -4,7 +4,7 @@ import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.requestfactory.gwt.client.DefaultRequestTransport;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.HasDataset;
+import nz.ac.vuw.ecs.rprofs.client.place.HasDataset;
 import nz.ac.vuw.ecs.rprofs.client.request.id.DatasetIdProxy;
 
 public class DatasetAwareRequestTransport extends DefaultRequestTransport implements PlaceChangeEvent.Handler {

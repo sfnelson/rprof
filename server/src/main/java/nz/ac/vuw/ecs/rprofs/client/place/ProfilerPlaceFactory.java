@@ -2,7 +2,6 @@ package nz.ac.vuw.ecs.rprofs.client.place;
 
 import com.google.gwt.place.shared.Prefix;
 import com.google.inject.Inject;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ProfilerPlace;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>

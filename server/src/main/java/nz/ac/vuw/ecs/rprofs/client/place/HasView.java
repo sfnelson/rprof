@@ -1,4 +1,4 @@
-package nz.ac.vuw.ecs.rprofs.client.place.shared;
+package nz.ac.vuw.ecs.rprofs.client.place;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>

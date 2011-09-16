@@ -1,4 +1,4 @@
-package nz.ac.vuw.ecs.rprofs.client.place.shared;
+package nz.ac.vuw.ecs.rprofs.client.place;
 
 import com.google.common.collect.Maps;
 import com.google.gwt.place.shared.Place;
@@ -47,7 +47,7 @@ public class PlaceBuilder {
 		if (current == null || !(current instanceof ProfilerPlace)) {
 			base = new ProfilerPlace();
 		} else {
-			base = ((ProfilerPlace) current).clone();
+			base = ((ProfilerPlace) current).clonePlace();
 		}
 		if (properties.containsKey("ds")) {
 			base.dataset = (DatasetIdProxy) properties.get("ds");

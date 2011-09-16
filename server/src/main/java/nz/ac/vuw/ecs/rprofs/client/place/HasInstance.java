@@ -1,4 +1,4 @@
-package nz.ac.vuw.ecs.rprofs.client.place.shared;
+package nz.ac.vuw.ecs.rprofs.client.place;
 
 import nz.ac.vuw.ecs.rprofs.client.request.id.InstanceIdProxy;
 

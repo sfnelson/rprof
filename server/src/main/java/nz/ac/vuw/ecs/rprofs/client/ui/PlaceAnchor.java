@@ -10,8 +10,8 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.inject.Inject;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.PlaceBuilder;
-import nz.ac.vuw.ecs.rprofs.client.place.shared.ProfilerPlace;
+import nz.ac.vuw.ecs.rprofs.client.place.PlaceBuilder;
+import nz.ac.vuw.ecs.rprofs.client.place.ProfilerPlace;
 
 public class PlaceAnchor extends Composite implements HasText, HasSafeHtml {
 

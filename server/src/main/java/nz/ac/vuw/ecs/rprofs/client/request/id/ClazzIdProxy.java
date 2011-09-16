@@ -9,6 +9,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
  * Date: 13/09/11
  */
 @ProxyFor(ClazzId.class)
-public interface ClazzIdProxy extends ValueProxy, HasId, HasDataset {
+public interface ClazzIdProxy extends ValueProxy, HasId, HasDataset, HasClass {
 	int getClassIndex();
 }

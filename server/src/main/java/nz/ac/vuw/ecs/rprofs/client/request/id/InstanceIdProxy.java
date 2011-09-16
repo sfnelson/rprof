@@ -10,7 +10,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
  */
 @ProxyFor(value = InstanceId.class)
 public interface InstanceIdProxy extends ValueProxy, HasId, HasDataset {
+
 	short getThreadIndex();
 
 	int getInstanceIndex();
+
 }

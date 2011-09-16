@@ -1,14 +1,20 @@
 package nz.ac.vuw.ecs.rprofs.client.request.id;
 
-import com.google.web.bindery.requestfactory.shared.EntityProxy;
 import com.google.web.bindery.requestfactory.shared.ProxyFor;
-import nz.ac.vuw.ecs.rprofs.server.data.IdLocator;
+import com.google.web.bindery.requestfactory.shared.ValueProxy;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 13/09/11
  */
-@ProxyFor(value = EventId.class, locator = IdLocator.class)
-public interface EventIdProxy extends EntityProxy {
+@ProxyFor(EventId.class)
+public interface EventIdProxy extends ValueProxy, HasId, HasDataset {
+
+	long getEventIndex();
+
+	short getEventUpper();
+
+	int getEventLower();
+
 }

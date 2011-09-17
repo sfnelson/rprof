@@ -72,20 +72,7 @@
     </ui:style>
     <g:HTMLPanel ui:field='panel'>
         <div class='{style.menu}'>
-            <g:FlowPanel styleName='{style.menuWrapper}' ui:field='menu'>
-                <r:PlaceAnchor view="classes" title="Classes"
-                               description="Browse classes encountered by the profiler."
-                               styleName="{style.button}"/>
-                <r:PlaceAnchor view="instances" title="Instances"
-                               description="Browse instances encountered by the profiler by class."
-                               styleName="{style.button}"/>
-                <r:PlaceAnchor view="fields" title="Fields"
-                               description="Browse fields encountered by the profile, examining their observed behaviour."
-                               styleName="{style.button}"/>
-                <r:PlaceAnchor view="events" title="Events"
-                               description="Browse Events."
-                               styleName="{style.button}"/>
-            </g:FlowPanel>
+            <g:FlowPanel styleName='{style.menuWrapper}' ui:field='menu'/>
             <r:UIButton addStyleNames='{style.closeButton}' ui:field='close'>
                 <span>&laquo;</span>
             </r:UIButton>

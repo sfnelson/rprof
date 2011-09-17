@@ -10,6 +10,7 @@ import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.requestfactory.gwt.client.RequestBatcher;
 import nz.ac.vuw.ecs.rprofs.client.place.ProfilerPlaceFactory;
 import nz.ac.vuw.ecs.rprofs.client.request.*;
+import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
 import nz.ac.vuw.ecs.rprofs.client.views.*;
 import nz.ac.vuw.ecs.rprofs.client.views.impl.*;
 
@@ -22,11 +23,13 @@ public class ProfilerModule extends AbstractGinModule {
 	protected void configure() {
 		bind(EventBus.class).to(SimpleEventBus.class).in(Singleton.class);
 
-		bind(ReportSelectorView.class).to(ReportSelectionPanel.class).in(Singleton.class);
+		bind(ViewListView.class).to(ReportSelectionPanel.class).in(Singleton.class);
 		bind(ProfilerAppView.class).to(InspectorWidget.class).in(Singleton.class);
 		bind(DatasetListView.class).to(DatasetPanel.class).in(Singleton.class);
 		bind(EventView.class).to(EventPanel.class).in(Singleton.class);
 		bind(ReportView.class).to(ReportPanel.class).in(Singleton.class);
+
+		bind(DataProvider.class).to(ProfilerDataCache.class).in(Singleton.class);
 	}
 
 	@Provides
@@ -41,6 +44,20 @@ public class ProfilerModule extends AbstractGinModule {
 		HistoryMapper hm = GWT.create(HistoryMapper.class);
 		hm.setFactory(factory);
 		return hm;
+	}
+
+	@Provides
+	@Singleton
+	public Resources getResources() {
+		return GWT.create(Resources.class);
+	}
+
+	@Provides
+	@Singleton
+	public EventStyle getEventStyle(Resources resources) {
+		EventStyle eventStyle = resources.eventStyle();
+		eventStyle.ensureInjected();
+		return eventStyle;
 	}
 
 	@Provides

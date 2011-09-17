@@ -15,12 +15,10 @@ import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.HasRows;
 import com.google.gwt.view.client.Range;
-import nz.ac.vuw.ecs.rprofs.client.Resources;
+import com.google.inject.Inject;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.id.InstanceIdProxy;
 import nz.ac.vuw.ecs.rprofs.client.ui.EventCell;
-import nz.ac.vuw.ecs.rprofs.client.ui.EventStyle;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 
 import java.util.List;
@@ -147,9 +145,10 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 		String enabled();
 	}
 
+	private Pager pager;
+
 	@UiField(provided = true)
 	CellList<EventProxy> list;
-	private Pager pager;
 
 	@UiField
 	Style style;
@@ -197,15 +196,12 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 
 	private List<Anchor> filters = Lists.newArrayList();
 
-	private EventStyle eventStyle;
 	private Presenter presenter;
 	private Map<InstanceIdProxy, Integer> threads = Maps.newHashMap();
 
-	public EventPanel() {
-		Resources res = GWT.create(Resources.class);
-		eventStyle = res.eventStyle();
-		eventStyle.ensureInjected();
-		list = new CellList<EventProxy>(new EventCell(eventStyle, threads));
+	@Inject
+	public EventPanel(EventCell cell) {
+		list = new CellList<EventProxy>(cell);
 
 		initWidget(uiBinder.createAndBindUi(this));
 
@@ -248,12 +244,12 @@ public class EventPanel extends Composite implements EventView, ClickHandler {
 	}
 
 	@Override
-	public void setThreads(List<InstanceProxy> threads) {
+	public void setThreads(List<? extends InstanceIdProxy> threads) {
 		this.threads.clear();
 		int i = 0;
-		for (InstanceProxy thread : threads) {
+		for (InstanceIdProxy thread : threads) {
 			if (thread != null) {
-				this.threads.put(thread.getId(), i++);
+				this.threads.put(thread, i++);
 			}
 		}
 

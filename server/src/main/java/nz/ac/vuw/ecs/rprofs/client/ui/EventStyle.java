@@ -1,49 +1,49 @@
 package nz.ac.vuw.ecs.rprofs.client.ui;
 
 import com.google.gwt.resources.client.CssResource;
-import com.google.gwt.safecss.shared.SafeStyles;
 
 public interface EventStyle extends CssResource {
-	SafeStyles objectAllocated();
 
-	SafeStyles arrayAllocated();
+	String objectAllocated();
 
-	SafeStyles methodEnter();
+	String arrayAllocated();
 
-	SafeStyles methodExit();
+	String methodEnter();
 
-	SafeStyles methodException();
+	String methodExit();
 
-	SafeStyles fieldRead();
+	String methodException();
 
-	SafeStyles fieldWrite();
+	String fieldRead();
 
-	SafeStyles classWeave();
+	String fieldWrite();
 
-	SafeStyles classInit();
+	String classWeave();
 
-	SafeStyles objectTagged();
+	String classInit();
 
-	SafeStyles objectFreed();
+	String objectTagged();
 
-	SafeStyles unknown();
+	String objectFreed();
 
-	SafeStyles eventCell();
+	String unknown();
 
-	SafeStyles thread();
+	String eventCell();
 
-	SafeStyles event();
+	String thread();
 
-	SafeStyles type();
+	String event();
 
-	SafeStyles deref();
+	String type();
 
-	SafeStyles method();
+	String deref();
 
-	SafeStyles field();
+	String method();
 
-	SafeStyles args();
+	String field();
 
-	SafeStyles hidden();
+	String args();
+
+	String hidden();
 
 }

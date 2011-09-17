@@ -3,7 +3,7 @@ package nz.ac.vuw.ecs.rprofs.client.views;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.view.client.AsyncDataProvider;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
-import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.id.InstanceIdProxy;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public interface EventView extends IsWidget {
 
 	public void setFilter(int filter);
 
-	public void setThreads(List<InstanceProxy> threads);
+	public void setThreads(List<? extends InstanceIdProxy> threads);
 
 	public interface Presenter {
 

@@ -12,7 +12,7 @@ import com.google.web.bindery.requestfactory.shared.Receiver;
 import nz.ac.vuw.ecs.rprofs.client.activity.shared.AbstractInspectorActivity;
 import nz.ac.vuw.ecs.rprofs.client.request.EventProxy;
 import nz.ac.vuw.ecs.rprofs.client.request.EventRequest;
-import nz.ac.vuw.ecs.rprofs.client.request.InstanceProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.id.InstanceIdProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.EventView;
 
 import java.util.List;
@@ -47,10 +47,9 @@ public class InspectEventsActivity extends AbstractInspectorActivity
 		panel.setWidget(view);
 
 		er.get().findThreads()
-				.with("type")
-				.fire(new Receiver<List<InstanceProxy>>() {
+				.fire(new Receiver<List<InstanceIdProxy>>() {
 					@Override
-					public void onSuccess(List<InstanceProxy> response) {
+					public void onSuccess(List<InstanceIdProxy> response) {
 						view.setThreads(response);
 					}
 				});
@@ -120,7 +119,7 @@ public class InspectEventsActivity extends AbstractInspectorActivity
 
 			GWT.log("requested events " + r.getStart() + " to " + (r.getStart() + r.getLength()));
 			er.get().findEvents(r.getStart(), r.getLength(), filter)
-					.with("thread", "type", "method", "field", "args", "args.index", "args.type")
+					.with("thread", "clazz", "method", "field", "args")
 					.fire(new Receiver<List<EventProxy>>() {
 						@Override
 						public void onSuccess(List<EventProxy> result) {

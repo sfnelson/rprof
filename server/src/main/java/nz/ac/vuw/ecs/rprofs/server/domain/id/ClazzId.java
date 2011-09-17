@@ -28,8 +28,16 @@ public class ClazzId extends Id<ClazzId, Clazz> {
 		return (short) ((getValue() >>> 48) & 0xFFFF);
 	}
 
+	public void setDatasetIndex(short datasetIndex) {
+		// noop provided for gwt
+	}
+
 	public int getClassIndex() {
 		return (int) getValue();
+	}
+
+	public void setClassIndex(int classIndex) {
+		// noop provided for gwt
 	}
 
 	@Override

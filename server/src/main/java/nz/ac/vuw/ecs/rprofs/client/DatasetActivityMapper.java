@@ -4,17 +4,17 @@ import com.google.gwt.activity.shared.Activity;
 import com.google.gwt.activity.shared.ActivityMapper;
 import com.google.gwt.place.shared.Place;
 import com.google.inject.Inject;
-import nz.ac.vuw.ecs.rprofs.client.activity.SelectDatasetActivity;
+import nz.ac.vuw.ecs.rprofs.client.activity.SelectDataset;
 import nz.ac.vuw.ecs.rprofs.client.place.HasDataset;
 
 import javax.inject.Provider;
 
 public class DatasetActivityMapper implements ActivityMapper {
 
-	private final Provider<SelectDatasetActivity> selectActivity;
+	private final Provider<SelectDataset> selectActivity;
 
 	@Inject
-	public DatasetActivityMapper(Provider<SelectDatasetActivity> selectActivity) {
+	public DatasetActivityMapper(Provider<SelectDataset> selectActivity) {
 		this.selectActivity = selectActivity;
 	}
 

@@ -283,6 +283,7 @@
                 <configuration>
                     <module>nz.ac.vuw.ecs.rprofs.profiler</module>
                     <runTarget>/index.html</runTarget>
+                    <strict>true</strict>
                     <logLevel>INFO</logLevel>
                     <style>${gwt.style}</style>
                     <copyWebapp>true</copyWebapp>

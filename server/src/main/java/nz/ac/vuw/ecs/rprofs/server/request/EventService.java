@@ -1,22 +1,22 @@
 package nz.ac.vuw.ecs.rprofs.server.request;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
-import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
 
 import java.util.List;
 
 public interface EventService {
 
-	List<Event> findEvents(Integer start, Integer length, Integer filter);
+	List<? extends Event> findEvents(int start, int length, int filter);
 
-	Long findIndexOf(EventId eventId, Integer filter);
+	long findIndexOf(EventId eventId, int filter);
 
-	List<Event> findEventsByInstance(Long instanceId);
+	List<? extends Event> findEventsByInstance(InstanceId instance);
 
-	Long findNumEvents(Integer filter);
+	long findNumEvents(int filter);
 
-	Long findNumThreads();
+	long findNumThreads();
 
-	List<Instance> findThreads();
+	List<? extends InstanceId> findThreads();
 }

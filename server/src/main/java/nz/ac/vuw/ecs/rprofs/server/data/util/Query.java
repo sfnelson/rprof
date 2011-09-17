@@ -11,8 +11,12 @@ import java.util.List;
  * Date: 14/09/11
  */
 public interface Query<I extends Id<I, T>, T extends DataObject<I, T>> {
+
 	long count();
 
 	@NotNull
 	List<? extends T> find();
+
+	@NotNull
+	List<? extends T> find(int start, int limit);
 }

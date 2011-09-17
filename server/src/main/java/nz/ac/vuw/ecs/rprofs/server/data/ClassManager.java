@@ -7,6 +7,8 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.request.ClazzService;
 import nz.ac.vuw.ecs.rprofs.server.request.FieldService;
 import nz.ac.vuw.ecs.rprofs.server.request.MethodService;
@@ -34,6 +36,16 @@ public class ClassManager implements ClazzService, MethodService, FieldService {
 		List<? extends Clazz> classes = database.getClazzQuery().setName(name).find();
 		if (classes == null || classes.isEmpty()) return null;
 		else return classes.get(0);
+	}
+
+	@Override
+	public Method getMethod(MethodId methodId) {
+		return database.findEntity(methodId);
+	}
+
+	@Override
+	public Field getField(FieldId fieldId) {
+		return database.findEntity(fieldId);
 	}
 
 	@Override

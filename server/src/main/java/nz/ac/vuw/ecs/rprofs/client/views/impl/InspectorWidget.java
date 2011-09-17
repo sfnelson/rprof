@@ -8,14 +8,14 @@ import com.google.inject.Provider;
 import com.google.web.bindery.event.shared.EventBus;
 import nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout;
 import nz.ac.vuw.ecs.rprofs.client.views.ProfilerAppView;
-import nz.ac.vuw.ecs.rprofs.client.views.ReportSelectorView;
+import nz.ac.vuw.ecs.rprofs.client.views.ViewListView;
 
 public class InspectorWidget extends FrameLayout implements ProfilerAppView {
 
-	private final Provider<ReportSelectorView> view;
+	private final Provider<ViewListView> view;
 
 	@Inject
-	public InspectorWidget(PlaceController pc, EventBus bus, Provider<ReportSelectorView> view) {
+	public InspectorWidget(PlaceController pc, EventBus bus, Provider<ViewListView> view) {
 		super(FrameLayout.MAX_HEIGHT | FrameLayout.HIDE_BOTTOM, 15, 50, Unit.PCT);
 
 		this.view = view;

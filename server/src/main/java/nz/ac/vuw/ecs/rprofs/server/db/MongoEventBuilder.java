@@ -1,6 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
+import com.mongodb.BasicDBObject;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventQuery;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventUpdater;
@@ -50,6 +51,28 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 	@Override
 	public MongoEventBuilder setField(FieldId field) {
 		if (field != null) b.append("field", field.getValue());
+		return this;
+	}
+
+	@Override
+	public MongoEventBuilder setFilter(int filter) {
+		b.append("$where", "(this.event & " + filter + ") != 0");
+		return this;
+	}
+
+	@Override
+	public MongoEventBuilder setWithArg(InstanceId instanceId) {
+		if (instanceId != null) {
+			b.append("args", instanceId.getValue());
+		}
+		return this;
+	}
+
+	@Override
+	public MongoEventBuilder setBefore(EventId eventId) {
+		if (eventId != null) {
+			b.append("_id", new BasicDBObject("$lt", eventId.getValue()));
+		}
 		return this;
 	}
 
@@ -107,7 +130,7 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 			if (in != null && !in.isEmpty()) {
 				List<InstanceId> out = Lists.newArrayList();
 				for (Long arg : in) {
-					if (arg == null || arg == 0) out.add(null);
+					if (arg == null || arg == 0) out.add(new InstanceId(0)); // todo should return null
 					else out.add(new InstanceId(arg));
 				}
 				event.setArgs(out);

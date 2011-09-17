@@ -90,6 +90,20 @@ public class Database {
 		return classes.distinct("package").size();
 	}
 
+	public List<? extends InstanceId> findThreads() {
+		DBCollection events = getCollection(Event.class);
+		List<InstanceId> instances = Lists.newArrayList();
+		for (Long id : (List<Long>) events.distinct("thread")) {
+			instances.add(new InstanceId(id));
+		}
+		return instances;
+	}
+
+	public long countThreads() {
+		DBCollection events = getCollection(Event.class);
+		return events.distinct("thread").size();
+	}
+
 	@SuppressWarnings("unchecked")
 	public <T extends DataObject<?, T>> T findEntity(@NotNull Id<?, T> id) {
 		if (Dataset.class.equals(id.getTargetClass())) {

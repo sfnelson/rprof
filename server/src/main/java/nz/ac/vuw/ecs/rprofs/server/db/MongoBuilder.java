@@ -6,6 +6,8 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -13,6 +15,8 @@ import nz.ac.vuw.ecs.rprofs.server.model.Id;
  */
 public abstract class MongoBuilder<B extends EntityBuilder<B, I, T>, I extends Id<I, T>, T extends DataObject<I, T>>
 		extends EntityBuilder<B, I, T> {
+
+	private final Logger log = LoggerFactory.getLogger(MongoBuilder.class);
 
 	@Override
 	void _store(DBObject toStore) {
@@ -28,6 +32,7 @@ public abstract class MongoBuilder<B extends EntityBuilder<B, I, T>, I extends I
 
 	@Override
 	DBCursor _query(DBObject query) {
+		log.info("{}: {}", this.getClass(), query);
 		return _getCollection().find(query);
 	}
 

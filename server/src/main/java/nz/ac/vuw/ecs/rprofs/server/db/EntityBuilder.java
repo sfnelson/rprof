@@ -45,9 +45,14 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 
 	@Override
 	public List<? extends T> find() {
+		return find(0, Integer.MAX_VALUE);
+	}
+
+	@Override
+	public List<? extends T> find(int start, int count) {
 		List<T> result = Lists.newArrayList();
-		DBCursor c = _query(b);
-		while (c.hasNext()) {
+		DBCursor c = _query(b).skip(start);
+		for (int i = 0; i < count && c.hasNext(); i++) {
 			init(c.next());
 			result.add(get());
 			reset();

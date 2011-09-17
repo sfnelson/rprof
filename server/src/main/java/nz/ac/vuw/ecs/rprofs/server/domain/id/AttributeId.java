@@ -20,12 +20,24 @@ public abstract class AttributeId<I extends AttributeId<I, T>, T extends Attribu
 		return (short) ((getValue() >>> 48) & 0xFFFF);
 	}
 
+	public void setDatasetIndex(short index) {
+		// noop provided for gwt
+	}
+
 	public int getClassIndex() {
 		return (int) ((getValue() >>> 16));
 	}
 
+	public void setClassIndex(int index) {
+		// noop provided for gwt
+	}
+
 	public short getAttributeIndex() {
 		return (short) (getValue() & 0xFFFF);
+	}
+
+	public void setAttributeIndex(short index) {
+		// noop provided for gwt
 	}
 
 	@Override

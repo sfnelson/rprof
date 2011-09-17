@@ -3,12 +3,12 @@ package nz.ac.vuw.ecs.rprofs.client.request;
 import com.google.web.bindery.requestfactory.shared.EntityProxy;
 import com.google.web.bindery.requestfactory.shared.ProxyFor;
 import nz.ac.vuw.ecs.rprofs.client.request.id.*;
-import nz.ac.vuw.ecs.rprofs.server.data.DomainObjectLocator;
+import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 
 import java.util.List;
 
-@ProxyFor(value = Event.class, locator = DomainObjectLocator.class)
+@ProxyFor(value = Event.class, locator = EventManager.class)
 public interface EventProxy extends EntityProxy {
 
 	// Copied from Event.class

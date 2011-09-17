@@ -13,6 +13,6 @@ public interface InstanceRequest extends RequestContext {
 
 	Request<InstanceProxy> findInstance(Long instanceId);
 
-	Request<List<? extends InstanceProxy>> findInstancesForClass(ClazzProxy cls);
+	Request<List<InstanceProxy>> findInstancesForClass(ClazzProxy cls);
 
 }

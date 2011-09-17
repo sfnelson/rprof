@@ -5,13 +5,12 @@ import com.google.gwt.activity.shared.ActivityMapper;
 import com.google.gwt.place.shared.Place;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import nz.ac.vuw.ecs.rprofs.client.activity.InspectClassesActivity;
-import nz.ac.vuw.ecs.rprofs.client.activity.InspectEventsActivity;
-import nz.ac.vuw.ecs.rprofs.client.activity.InspectFieldsActivity;
-import nz.ac.vuw.ecs.rprofs.client.activity.InspectInstancesActivity;
+import nz.ac.vuw.ecs.rprofs.client.activity.*;
 import nz.ac.vuw.ecs.rprofs.client.place.HasView;
 
 public class InspectorActivityMapper implements ActivityMapper {
+
+	private final SelectView selectView;
 
 	private final Provider<InspectClassesActivity> inspectClasses;
 	private final Provider<InspectInstancesActivity> inspectInstances;
@@ -19,14 +18,19 @@ public class InspectorActivityMapper implements ActivityMapper {
 	private final Provider<InspectEventsActivity> inspectEvents;
 
 	@Inject
-	public InspectorActivityMapper(Provider<InspectClassesActivity> inspectClasses,
+	public InspectorActivityMapper(SelectView selectView,
+								   Provider<InspectClassesActivity> inspectClasses,
 								   Provider<InspectInstancesActivity> inspectInstances,
 								   Provider<InspectFieldsActivity> inspectFields,
 								   Provider<InspectEventsActivity> inspectEvents) {
+		this.selectView = selectView;
+
 		this.inspectClasses = inspectClasses;
 		this.inspectInstances = inspectInstances;
 		this.inspectFields = inspectFields;
 		this.inspectEvents = inspectEvents;
+
+		selectView.start(null, null);
 	}
 
 	@Override
@@ -34,6 +38,8 @@ public class InspectorActivityMapper implements ActivityMapper {
 		if (place instanceof HasView) {
 			HasView p = (HasView) place;
 			String view = p.getView();
+
+			selectView.setPlace(p);
 
 			if ("classes".equals(view)) {
 				return inspectClasses.get().setPlace(p);

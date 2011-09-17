@@ -20,9 +20,9 @@ public interface ClazzRequest extends RequestContext {
 
 	Request<Long> findNumClasses(String packageName);
 
-	Request<List<? extends ClazzProxy>> findClasses();
+	Request<List<ClazzProxy>> findClasses();
 
-	Request<List<? extends ClazzProxy>> findClasses(String packageName);
+	Request<List<ClazzProxy>> findClasses(String packageName);
 
 	Request<ClazzProxy> getClazz(ClazzIdProxy id);
 

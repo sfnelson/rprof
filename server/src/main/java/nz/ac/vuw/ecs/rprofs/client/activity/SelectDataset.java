@@ -19,7 +19,7 @@ import nz.ac.vuw.ecs.rprofs.client.views.DatasetListView;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class SelectDatasetActivity extends AbstractActivity
+public class SelectDataset extends AbstractActivity
 		implements DatasetListView.Presenter, EntityProxyChange.Handler<DatasetProxy> {
 
 	private final DatasetListView view;
@@ -30,7 +30,7 @@ public class SelectDatasetActivity extends AbstractActivity
 	private HasDataset place;
 
 	@Inject
-	public SelectDatasetActivity(DatasetListView view, PlaceController pc, Provider<DatasetRequest> rf) {
+	public SelectDataset(DatasetListView view, PlaceController pc, Provider<DatasetRequest> rf) {
 		this.view = view;
 		this.pc = pc;
 		this.rf = rf;
@@ -39,10 +39,10 @@ public class SelectDatasetActivity extends AbstractActivity
 	@Override
 	public void onProxyChange(EntityProxyChange<DatasetProxy> event) {
 		GWT.log("dataset changed, refreshing list");
-		refresh();
+		refreshDatasetList();
 	}
 
-	public SelectDatasetActivity setPlace(@Nullable HasDataset place) {
+	public SelectDataset setPlace(@Nullable HasDataset place) {
 		this.place = place;
 		return this;
 	}
@@ -53,7 +53,7 @@ public class SelectDatasetActivity extends AbstractActivity
 
 		panel.setWidget(view);
 
-		refresh();
+		refreshDatasetList();
 
 		EntityProxyChange.registerForProxyType(eventBus, DatasetProxy.class, this);
 	}
@@ -71,7 +71,7 @@ public class SelectDatasetActivity extends AbstractActivity
 		rf.get().stopDataset(dataset.getId()).fire(new Receiver<Void>() {
 			@Override
 			public void onSuccess(Void response) {
-				refresh();
+				refreshDatasetList();
 			}
 		});
 	}
@@ -81,22 +81,22 @@ public class SelectDatasetActivity extends AbstractActivity
 		rf.get().deleteDataset(dataset.getId()).fire(new Receiver<Void>() {
 			@Override
 			public void onSuccess(Void response) {
-				refresh();
+				refreshDatasetList();
 			}
 		});
 	}
 
-	private void refresh() {
+	private void refreshDatasetList() {
 		rf.get().findAllDatasets().with("id")
 				.fire(new Receiver<List<DatasetProxy>>() {
 					@Override
 					public void onSuccess(List<DatasetProxy> response) {
-						refresh(response);
+						showDatasets(response);
 					}
 				});
 	}
 
-	private void refresh(List<DatasetProxy> datasets) {
+	private void showDatasets(List<DatasetProxy> datasets) {
 		view.setNumDatasets(datasets.size());
 		view.setDatasets(datasets);
 

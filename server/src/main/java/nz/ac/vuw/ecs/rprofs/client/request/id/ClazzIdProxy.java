@@ -2,6 +2,7 @@ package nz.ac.vuw.ecs.rprofs.client.request.id;
 
 import com.google.web.bindery.requestfactory.shared.ProxyFor;
 import com.google.web.bindery.requestfactory.shared.ValueProxy;
+import nz.ac.vuw.ecs.rprofs.client.request.ClazzProxy;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 
 /**
@@ -9,6 +10,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
  * Date: 13/09/11
  */
 @ProxyFor(ClazzId.class)
-public interface ClazzIdProxy extends ValueProxy, HasId, HasDataset, HasClass {
+public interface ClazzIdProxy extends ValueProxy, HasId<ClazzProxy>, HasDataset, HasClass {
 	int getClassIndex();
 }

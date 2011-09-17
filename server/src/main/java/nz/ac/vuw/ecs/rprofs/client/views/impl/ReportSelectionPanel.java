@@ -3,28 +3,51 @@ package nz.ac.vuw.ecs.rprofs.client.views.impl;
 import com.google.common.collect.Maps;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.place.shared.PlaceChangeEvent;
-import com.google.gwt.place.shared.PlaceController;
-import com.google.gwt.place.shared.PlaceHistoryMapper;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.CssResource;
+import com.google.gwt.safehtml.client.SafeHtmlTemplates;
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.uibinder.client.UiBinder;
-import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.*;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.web.bindery.event.shared.EventBus;
-import nz.ac.vuw.ecs.rprofs.client.place.HasView;
-import nz.ac.vuw.ecs.rprofs.client.place.PlaceBuilder;
 import nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout;
 import nz.ac.vuw.ecs.rprofs.client.ui.PlaceAnchor;
 import nz.ac.vuw.ecs.rprofs.client.ui.UIButton;
-import nz.ac.vuw.ecs.rprofs.client.views.ReportSelectorView;
+import nz.ac.vuw.ecs.rprofs.client.views.ViewListView;
 
 import java.util.Map;
 
-public class ReportSelectionPanel extends Composite implements ReportSelectorView {
+public class ReportSelectionPanel extends Composite implements ViewListView {
+
+	public interface Templates extends SafeHtmlTemplates {
+		@Template("Classes")
+		SafeHtml classesCaption();
+
+		@Template("Browse Classes.")
+		SafeHtml classesTitle();
+
+		@Template("Instances")
+		SafeHtml instancesCaption();
+
+		@Template("Browse Instances.")
+		SafeHtml instancesTitle();
+
+		@Template("Events")
+		SafeHtml eventsCaption();
+
+		@Template("Browse Events.")
+		SafeHtml eventsTitle();
+
+		@Template("Fields")
+		SafeHtml fieldsCaption();
+
+		@Template("Browse Fields.")
+		SafeHtml fieldsTitle();
+	}
 
 	private static ReportSelectionPanelUiBinder uiBinder = GWT.create(ReportSelectionPanelUiBinder.class);
 
@@ -47,6 +70,8 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 		String closeButton();
 	}
 
+	private final Templates templates = GWT.create(Templates.class);
+
 	@UiField
 	Style style;
 
@@ -61,8 +86,6 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 	UIButton close;
 
 	private final Provider<FrameLayout> parent;
-	private final PlaceController pc;
-	private final PlaceHistoryMapper mapper;
 
 	private final Map<String, PlaceAnchor> buttons = Maps.newHashMap();
 
@@ -70,24 +93,18 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 
 	private boolean closed = false;
 
+	private Presenter presenter;
+
 	@Inject
-	public ReportSelectionPanel(PlaceController pc, EventBus bus, PlaceHistoryMapper mapper,
-								Provider<FrameLayout> parent) {
+	public ReportSelectionPanel(Provider<FrameLayout> parent) {
 		this.parent = parent;
-		this.pc = pc;
-		this.mapper = mapper;
 
 		initWidget(uiBinder.createAndBindUi(this));
+	}
 
-		bus.addHandler(PlaceChangeEvent.TYPE, new PlaceChangeEvent.Handler() {
-			@Override
-			public void onPlaceChange(PlaceChangeEvent event) {
-				if (event.getNewPlace() instanceof HasView) {
-					HasView place = (HasView) event.getNewPlace();
-					setSelected(place.getView());
-				}
-			}
-		});
+	@Override
+	public void setPresenter(Presenter presenter) {
+		this.presenter = presenter;
 	}
 
 	@Override
@@ -103,6 +120,39 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 		}
 	}
 
+	@Override
+	public void addPlace(final String view, Provider<String> url) {
+		SafeHtml html;
+		String title;
+		if (view.equals("classes")) {
+			html = templates.classesCaption();
+			title = templates.classesTitle().asString();
+		} else if (view.equals("instances")) {
+			html = templates.instancesCaption();
+			title = templates.instancesTitle().asString();
+		} else if (view.equals("fields")) {
+			html = templates.fieldsCaption();
+			title = templates.fieldsTitle().asString();
+		} else if (view.equals("events")) {
+			html = templates.eventsCaption();
+			title = templates.eventsTitle().asString();
+		} else {
+			html = new SafeHtmlBuilder().appendEscaped(view).toSafeHtml();
+			title = view;
+		}
+
+		PlaceAnchor anchor = new PlaceAnchor(url, html, title);
+		anchor.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				presenter.selectView(view);
+			}
+		});
+		anchor.setStyleName(style.button());
+		buttons.put(view, anchor);
+		menu.add(anchor);
+	}
+
 	@UiHandler("close")
 	void closeClicked(ClickEvent e) {
 		if (!closed) {
@@ -113,20 +163,6 @@ public class ReportSelectionPanel extends Composite implements ReportSelectorVie
 			close.setHTML("<span>&laquo;</span>");
 		}
 		closed = !closed;
-	}
-
-	@UiFactory
-	PlaceAnchor createAnchor(String view, String title, String description) {
-		PlaceAnchor anchor = new PlaceAnchor(mapper, pc);
-
-		anchor.setBuilder(PlaceBuilder.create().setView(view));
-
-		anchor.setText(title);
-		anchor.setTitle(description);
-
-		buttons.put(view, anchor);
-
-		return anchor;
 	}
 
 	@Override

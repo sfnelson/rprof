@@ -63,6 +63,28 @@ public class ProfilerPlace extends Place implements HasDataset, HasView, HasInst
 		return place;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		ProfilerPlace that = (ProfilerPlace) o;
+
+		if (dataset != null ? !dataset.equals(that.dataset) : that.dataset != null) return false;
+		if (instance != null ? !instance.equals(that.instance) : that.instance != null) return false;
+		if (view != null ? !view.equals(that.view) : that.view != null) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = dataset != null ? dataset.hashCode() : 0;
+		result = 31 * result + (view != null ? view.hashCode() : 0);
+		result = 31 * result + (instance != null ? instance.hashCode() : 0);
+		return result;
+	}
+
 	public static class Tokenizer implements PlaceTokenizer<ProfilerPlace> {
 
 		private final Provider<DatasetRequest> requestContext;

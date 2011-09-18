@@ -163,7 +163,7 @@ public class MongoEventBuilderTest {
 		MethodId method = MethodId.create(ds, clazz, (short) 5);
 		FieldId field = FieldId.create(ds, clazz, (short) 6);
 		InstanceId x = InstanceId.create(ds, 7);
-		InstanceId y = null;
+		InstanceId y = new InstanceId(0); // todo should be null, but gwt has a bug
 		InstanceId z = InstanceId.create(ds, 8);
 
 		b.init(new BasicDBObjectBuilder()

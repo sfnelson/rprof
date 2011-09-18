@@ -161,6 +161,7 @@ public class DatabaseIntegrationTest {
 
 		assertEquals(handle, ds.getHandle());
 		assertEquals(now, ds.getStarted());
+		assertEquals(1, ds.getVersion().intValue());
 
 		database.getDatasetUpdater()
 				.setProgram(program)

@@ -259,6 +259,7 @@ public class Database {
 			void _store(DBObject dataset) {
 				String dbname = "rprof_" + dataset.get("handle") + "_" + dataset.get("_id");
 				DB db = mongo.getDB(dbname);
+				dataset.put("version", 1);
 				db.getCollection("properties").insert(dataset);
 			}
 

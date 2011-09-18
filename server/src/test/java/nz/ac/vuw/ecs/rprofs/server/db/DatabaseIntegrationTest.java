@@ -29,7 +29,7 @@ public class DatabaseIntegrationTest {
 	@BeforeClass
 	public static void createDatabase() throws Exception {
 		ProcessBuilder pb = new ProcessBuilder();
-		pb.environment().put("PATH", "/bin:/usr/bin:/usr/local/bin:~/bin");
+		pb.environment().put("PATH", "/bin:/usr/bin:/usr/local/bin:~/bin:~/workspace/mongodb/bin");
 		pb.command("/usr/bin/which", "mongod");
 		Scanner in = new Scanner(pb.start().getInputStream());
 		Assert.assertTrue(in.hasNextLine());

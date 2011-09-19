@@ -23,4 +23,8 @@ public class DatasetId extends Id<DatasetId, Dataset> {
 	public short getDatasetIndex() {
 		return (short) getValue();
 	}
+
+	public void setDatasetIndex(short index) {
+		// noop provided for GWT.
+	}
 }

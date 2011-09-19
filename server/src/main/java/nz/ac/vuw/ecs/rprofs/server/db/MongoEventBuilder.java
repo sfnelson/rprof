@@ -9,6 +9,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,7 +57,13 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 
 	@Override
 	public MongoEventBuilder setFilter(int filter) {
-		b.append("$where", "(this.event & " + filter + ") != 0");
+		ArrayList<Integer> types = Lists.newArrayList();
+		for (int i = 1; i > 0 && i < Integer.MAX_VALUE; i *= 2) {
+			if ((i & filter) != 0) {
+				types.add(i);
+			}
+		}
+		b.append("event", new BasicDBObject("$in", types.toArray(new Integer[0])));
 		return this;
 	}
 

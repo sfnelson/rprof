@@ -2,6 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.mongodb.*;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.util.*;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -31,8 +33,11 @@ public class Database {
 	@Autowired(required = true)
 	Context context;
 
+	private Map<DatasetId, Dataset> datasets;
+
 	public Database(@NotNull Mongo mongo) {
 		this.mongo = mongo;
+		this.datasets = Maps.newHashMap();
 	}
 
 	public DatasetCreator<?> getDatasetCreator() {
@@ -107,6 +112,11 @@ public class Database {
 	@SuppressWarnings("unchecked")
 	public <T extends DataObject<?, T>> T findEntity(@NotNull Id<?, T> id) {
 		if (Dataset.class.equals(id.getTargetClass())) {
+			if (datasets.containsKey(id)) {
+				Dataset ds = datasets.get(id);
+				ds = updateDataset(ds);
+				return id.getTargetClass().cast(ds);
+			}
 			for (Dataset ds : getDatasets()) {
 				if (ds.getId().equals(id)) {
 					return id.getTargetClass().cast(ds);
@@ -142,6 +152,7 @@ public class Database {
 
 		if (entity.getClass() == Dataset.class) {
 			mongo.dropDatabase(getDBName((Dataset) entity));
+			datasets.remove(entity.getId());
 		}
 
 		return true;
@@ -197,7 +208,17 @@ public class Database {
 				result.add(builder.init(properties).get());
 			}
 		}
+		Map<DatasetId, Dataset> newDatasets = Maps.newHashMap();
+		for (Dataset ds : result) {
+			newDatasets.put(ds.getId(), ds);
+		}
+		this.datasets = newDatasets;
 		return result;
+	}
+
+	private Dataset updateDataset(Dataset dataset) {
+		DBObject properties = mongo.getDB(getDBName(dataset)).getCollection("properties").findOne();
+		return createDatasetBuilder().init(properties).get();
 	}
 
 	@VisibleForTesting

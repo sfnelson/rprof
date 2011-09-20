@@ -137,6 +137,7 @@ public class Database {
 		Dataset dataset;
 		if (entity.getClass() == Dataset.class) {
 			dataset = (Dataset) entity;
+			datasets.remove(entity.getId());
 		} else {
 			dataset = context.getDataset();
 		}
@@ -151,9 +152,8 @@ public class Database {
 		collection.remove(new BasicDBObject("_id", entity.getId().getValue()));
 
 		if (entity.getClass() == Dataset.class) {
+			log.info("deleting database {}", getDBName((Dataset) entity));
 			mongo.dropDatabase(getDBName((Dataset) entity));
-			datasets.remove(entity.getId());
-			log.info("deleted database {}", getDBName((Dataset) entity));
 		}
 
 		return true;

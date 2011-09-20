@@ -153,6 +153,7 @@ public class Database {
 		if (entity.getClass() == Dataset.class) {
 			mongo.dropDatabase(getDBName((Dataset) entity));
 			datasets.remove(entity.getId());
+			log.info("deleted database {}", getDBName((Dataset) entity));
 		}
 
 		return true;

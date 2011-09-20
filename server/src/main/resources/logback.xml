@@ -19,12 +19,12 @@
         </encoder>
     </appender>
 
-    <logger name="nz.ac.vuw.ecs.rprofs" level="DEBUG">
+    <logger level="DEBUG">
         <appender-ref ref="DEBUGFILE"/>
+        <appender-ref ref="STDOUT"/>
     </logger>
 
     <root level="INFO">
         <appender-ref ref="INFOFILE"/>
-        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

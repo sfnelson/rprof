@@ -257,8 +257,10 @@ public class Database {
 						if (dbname.startsWith("rprof")) {
 							DB db = mongo.getDB(dbname);
 							DBObject properties = db.getCollection("properties").findOne();
-							short id = ((Long) properties.get("_id")).shortValue();
-							if (id > max) max = id;
+							if (properties.containsField("_id")) {
+								short id = ((Long) properties.get("_id")).shortValue();
+								if (id > max) max = id;
+							}
 						}
 					}
 					return new DatasetId(++max);

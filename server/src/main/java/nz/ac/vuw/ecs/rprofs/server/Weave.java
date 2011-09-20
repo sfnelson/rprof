@@ -78,7 +78,7 @@ public class Weave extends HttpServlet {
 		resp.setContentType("application/rprof");
 		resp.getOutputStream().write(result);
 
-		log.info(newClazz.getName());
+		log.debug("class {} woven successfully", newClazz.getName());
 		log.debug("returning {} bytes", new Object[]{result.length});
 
 		context.clear();

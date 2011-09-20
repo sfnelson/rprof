@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
 
 @SuppressWarnings("serial")
 @Configurable(autowire = Autowire.BY_TYPE)
@@ -71,6 +72,9 @@ public class Logger extends HttpServlet {
 
 		EventCreator<?> b = events.createEvent();
 
+		log.debug("storing {} events", length / RECORD_LENGTH);
+		long started = Calendar.getInstance().getTime().getTime();
+
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long id = dis.readLong();
 			b.setId(EventId.create(ds, id));
@@ -110,6 +114,10 @@ public class Logger extends HttpServlet {
 
 			b.store();
 		}
+
+		long finished = Calendar.getInstance().getTime().getTime();
+		log.debug("{} events stored successfully in {} seconds",
+				length / RECORD_LENGTH, (finished - started) / 1000);
 	}
 
 	@Nullable

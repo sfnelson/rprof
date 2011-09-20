@@ -47,14 +47,14 @@ public class DatabaseIntegrationTest {
 		sysout = new Thread() {
 			public void run() {
 				for (Scanner sc = new Scanner(process.getInputStream()); sc.hasNextLine(); ) {
-					log.info(sc.nextLine());
+					log.debug(sc.nextLine());
 				}
 			}
 		};
 		syserr = new Thread() {
 			public void run() {
 				for (Scanner sc = new Scanner(process.getErrorStream()); sc.hasNextLine(); ) {
-					log.error(sc.nextLine());
+					log.debug(sc.nextLine());
 				}
 			}
 		};

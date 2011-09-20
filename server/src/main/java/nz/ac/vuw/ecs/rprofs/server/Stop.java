@@ -35,7 +35,7 @@ public class Stop extends HttpServlet {
 
 		Dataset ds = datasets.findDataset(handle);
 
-		log.info("profiler run stopped at {}", ds.getStopped());
+		log.info("profiler run stopped");
 
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}

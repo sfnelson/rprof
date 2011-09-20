@@ -94,7 +94,7 @@ public class Weaver {
 
 		public Pattern get() {
 			String pattern = this.pattern.append("$").toString();
-			log.info(pattern);
+			log.trace("using pattern: {}", pattern);
 			return Pattern.compile(pattern);
 		}
 	}

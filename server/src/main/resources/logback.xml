@@ -1,14 +1,30 @@
 <configuration>
-        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-                <encoder>
-                        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-                </encoder>
-        </appender>
+    <appender name="INFOFILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/server-info.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="DEBUGFILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/server-debug.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
-        <logger name="nz.ac.vuw.ecs.rprofs" level="INFO" />
-        <logger name="org.hibernate" level="WARN" />
-        
-        <root level="INFO">
-                <appender-ref ref="STDOUT" />
-        </root>
+    <logger name="nz.ac.vuw.ecs.rprofs" level="DEBUG">
+        <appender-ref ref="DEBUGFILE"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="INFOFILE"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
 </configuration>

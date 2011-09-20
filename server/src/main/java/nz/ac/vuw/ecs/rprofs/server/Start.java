@@ -29,7 +29,7 @@ public class Start extends HttpServlet {
 
 		Dataset dataset = datasets.createDataset();
 
-		log.info("profiler run started at {}", dataset.getStarted());
+		log.info("profiler run started");
 
 		resp.addHeader("Dataset", dataset.getHandle());
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);

@@ -5,6 +5,7 @@ import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
@@ -40,6 +41,10 @@ public class Logger extends HttpServlet {
 	@VisibleForTesting
 	@Autowired
 	Context context;
+
+	@VisibleForTesting
+	@Autowired
+	Database database;
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -115,9 +120,13 @@ public class Logger extends HttpServlet {
 			b.store();
 		}
 
+		long flushing = Calendar.getInstance().getTime().getTime();
+		log.debug("finshed storing in {}ms, flushing to disk", flushing - started);
+		database.flush();
+
 		long finished = Calendar.getInstance().getTime().getTime();
-		log.debug("{} events stored successfully in {} seconds",
-				length / RECORD_LENGTH, (finished - started) / 1000);
+		log.debug("{} events stored successfully in {}ms",
+				length / RECORD_LENGTH, finished - started);
 	}
 
 	@Nullable

@@ -159,6 +159,10 @@ public class Database {
 		return true;
 	}
 
+	public void flush() {
+		mongo.fsync(false);
+	}
+
 	private DB getDatabase() {
 		Dataset current = context.getDataset();
 		if (current != null) return getDatabase(current);

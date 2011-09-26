@@ -156,6 +156,8 @@ JNIEXPORT void JNICALL log_profiler_started()
 	
 	struct curl_slist *headers=NULL;
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
+	headers = curl_slist_append(headers, "Connection: Keep-Alive");
+	headers = curl_slist_append(headers, "Keep-Alive: 600");
 
 	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
@@ -189,6 +191,8 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 	struct curl_slist *headers=NULL;
 	headers = curl_slist_append(headers, cdata->dataset);
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
+	headers = curl_slist_append(headers, "Connection: Keep-Alive");
+	headers = curl_slist_append(headers, "Keep-Alive: 600");
 
 	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
 
@@ -254,11 +258,12 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 	sprintf(host, "http://%s/logger", cdata->host);
 
 	curl_easy_setopt(handle, CURLOPT_URL, host);
-	curl_easy_setopt(handle, CURLOPT_TIMEOUT, 600);
 
 	struct curl_slist *headers=NULL;
 	headers = curl_slist_append(headers, cdata->dataset);
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
+	headers = curl_slist_append(headers, "Connection: Keep-Alive");
+	headers = curl_slist_append(headers, "Keep-Alive: 600");
 
 	enterCriticalSection(); {
 		/* post binary data */
@@ -314,11 +319,12 @@ JNIEXPORT void JNICALL weave_classfile(
 	curl_easy_setopt(handle, CURLOPT_WRITEHEADER, &r);
 	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, read_response);
 	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &r);
-	curl_easy_setopt(handle, CURLOPT_TIMEOUT, 300);
 
 	struct curl_slist *headers=NULL;
 	headers = curl_slist_append(headers, cdata->dataset);
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
+	headers = curl_slist_append(headers, "Connection: Keep-Alive");
+	headers = curl_slist_append(headers, "Keep-Alive: 600");
 
 	/* post binary data */
 	curl_easy_setopt(handle, CURLOPT_POSTFIELDS, class_data);

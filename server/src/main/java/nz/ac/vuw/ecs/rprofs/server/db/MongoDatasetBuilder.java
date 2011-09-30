@@ -18,6 +18,22 @@ abstract class MongoDatasetBuilder extends MongoBuilder<MongoDatasetBuilder, Dat
 
 	@Override
 	@NotNull
+	public MongoDatasetBuilder init(Dataset dataset) {
+		b.append("_id", dataset.getId());
+		b.append("version", dataset.getVersion());
+		setHandle(dataset.getHandle());
+		setStarted(dataset.getStarted());
+		if (dataset.getProgram() != null) {
+			setProgram(dataset.getProgram());
+		}
+		if (dataset.getStopped() != null) {
+			setStopped(dataset.getStopped());
+		}
+		return this;
+	}
+
+	@Override
+	@NotNull
 	public MongoDatasetBuilder setHandle(String handle) {
 		b.append("handle", handle);
 		return this;

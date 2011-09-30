@@ -46,6 +46,14 @@ public class EventId extends Id<EventId, Event> {
 		return (int) (getEventIndex() & 0xFFFFFFFFl);
 	}
 
+	public boolean before(EventId other) {
+		return getValue() < other.getValue();
+	}
+
+	public boolean after(EventId other) {
+		return getValue() > other.getValue();
+	}
+
 	@Override
 	public String toString() {
 		return String.format("%d:%d.%d", getDatasetIndex(), getEventUpper(), getEventLower());

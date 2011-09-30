@@ -24,6 +24,16 @@ public class TestFieldCreator implements FieldCreator<TestFieldCreator> {
 	}
 
 	@Override
+	public TestFieldCreator init() {
+		return this;
+	}
+
+	@Override
+	public TestFieldCreator init(Field value) {
+		return this;
+	}
+
+	@Override
 	public TestFieldCreator setName(String name) {
 		return this;
 	}

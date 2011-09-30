@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface EventService {
 
-	List<? extends Event> findEvents(int start, int length, int filter);
+	List<? extends Event> findEvents(long start, long length, int filter);
 
 	long findIndexOf(EventId eventId, int filter);
 

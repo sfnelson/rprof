@@ -4,7 +4,7 @@ import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
+import java.util.Iterator;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -12,11 +12,17 @@ import java.util.List;
  */
 public interface Query<I extends Id<I, T>, T extends DataObject<I, T>> {
 
+	interface Cursor<T extends DataObject<?, T>> extends Iterator<T> {
+		int count();
+
+		void close();
+	}
+
 	long count();
 
 	@NotNull
-	List<? extends T> find();
+	Cursor<? extends T> find();
 
 	@NotNull
-	List<? extends T> find(int start, int limit);
+	Cursor<? extends T> find(long start, long limit);
 }

@@ -34,6 +34,7 @@
     <bean id="start" class="nz.ac.vuw.ecs.rprofs.server.Start"/>
     <bean id="stop" class="nz.ac.vuw.ecs.rprofs.server.Stop"/>
     <bean id="weave" class="nz.ac.vuw.ecs.rprofs.server.Weave"/>
+    <bean id="process" class="nz.ac.vuw.ecs.rprofs.server.Process"/>
 
     <bean id="mongo" class="com.mongodb.Mongo">
         <constructor-arg type="java.lang.String" value="#{systemProperties['mongo']}"/>

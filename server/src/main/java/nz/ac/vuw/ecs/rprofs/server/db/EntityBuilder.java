@@ -1,9 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import nz.ac.vuw.ecs.rprofs.server.data.util.Builder;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Creator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Updater;
@@ -12,19 +12,25 @@ import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import org.bson.BSONObject;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 14/09/11
  */
 public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends Id<I, T>, T extends DataObject<I, T>>
-		implements Creator<I, T>, Updater<I, T>, Query<I, T> {
+		implements Creator<B, I, T>, Updater<I, T>, Query<I, T>, Builder<B, I, T> {
 
 	protected BasicDBObject b;
 
 	public EntityBuilder() {
 		b = new BasicDBObject();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public B init() {
+		reset();
+		return (B) this;
 	}
 
 	@Override
@@ -44,21 +50,45 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 	}
 
 	@Override
-	public List<? extends T> find() {
+	public Cursor<? extends T> find() {
 		return find(0, Integer.MAX_VALUE);
 	}
 
 	@Override
-	public List<? extends T> find(int start, int count) {
-		List<T> result = Lists.newArrayList();
-		DBCursor c = _query(b).skip(start);
-		for (int i = 0; i < count && c.hasNext(); i++) {
-			init(c.next());
-			result.add(get());
-			reset();
-		}
-		c.close();
-		return result;
+	public Cursor<? extends T> find(final long start, final long max) {
+		final DBCursor c = _query(b).skip((int) start);
+		return new Cursor<T>() {
+			int count = 0;
+
+			@Override
+			public boolean hasNext() {
+				return c.hasNext() && count < max;
+			}
+
+			@Override
+			public T next() {
+				assert (hasNext());
+				count++;
+				reset();
+				init(c.next());
+				return get();
+			}
+
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException("not implemented");
+			}
+
+			@Override
+			public int count() {
+				return c.count();
+			}
+
+			@Override
+			public void close() {
+				c.close();
+			}
+		};
 	}
 
 	@Override
@@ -69,11 +99,12 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 	}
 
 	protected void reset() {
-		b.clear();
+		b = new BasicDBObject();
 	}
 
 	@SuppressWarnings("unchecked")
 	B init(@NotNull BSONObject init) {
+		reset();
 		b.putAll(init);
 		return (B) this;
 	}

@@ -24,6 +24,16 @@ public class TestMethodCreator implements MethodCreator<TestMethodCreator> {
 	}
 
 	@Override
+	public TestMethodCreator init() {
+		return this;
+	}
+
+	@Override
+	public TestMethodCreator init(Method value) {
+		return this;
+	}
+
+	@Override
 	public TestMethodCreator setName(String name) {
 		return this;
 	}

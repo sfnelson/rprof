@@ -10,11 +10,13 @@ import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
+import nz.ac.vuw.ecs.rprofs.server.reports.MapReduce;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.constraints.NotNull;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -84,6 +86,18 @@ public class Database {
 		return createMethodQuery();
 	}
 
+	public InstanceCreator<?> getInstanceCreator() {
+		return createInstanceBuilder();
+	}
+
+	public InstanceQuery<?> getInstanceQuery() {
+		return createInstanceBuilder();
+	}
+
+	public InstanceUpdater<?> getInstanceUpdater() {
+		return createInstanceBuilder();
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<String> findPackages() {
 		DBCollection classes = getCollection(Clazz.class);
@@ -95,6 +109,7 @@ public class Database {
 		return classes.distinct("package").size();
 	}
 
+	@SuppressWarnings("unchecked")
 	public List<? extends InstanceId> findThreads() {
 		DBCollection events = getCollection(Event.class);
 		List<InstanceId> instances = Lists.newArrayList();
@@ -159,11 +174,56 @@ public class Database {
 		return true;
 	}
 
+	public <Input extends DataObject<?, Input>> Runnable
+	createInstanceMapReduce(Query<?, Input> input, MapReduce<Input, InstanceId, Instance> mr, boolean replace) {
+		DB db = getDatabase();
+		final DBCollection tmp = db.getCollection("tmp.mapreduce");
+		final MongoInstanceBuilder tmpBuilder = new MongoInstanceBuilder() {
+			@Override
+			DBCollection _getCollection() {
+				return tmp;
+			}
+
+			@Override
+			void _store(DBObject toStore) {
+				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
+						.append("value", toStore));
+			}
+
+			@Override
+			Instance get() {
+				init((DBObject) b.get("value"));
+				return super.get();
+			}
+
+			@Override
+			InstanceId _createId() {
+				return new InstanceId((Long) b.get("_id"));
+			}
+		};
+
+		if (replace) {
+			getCollection(Instance.class).drop();
+		}
+
+		return new MongoMapReduce<Input, InstanceId, Instance, MongoInstanceBuilder>(input, getInstanceCreator(), mr) {
+			@Override
+			protected MongoInstanceBuilder getTmpBuilder() {
+				return tmpBuilder;
+			}
+
+			@Override
+			protected DBCollection getTmpCollection() {
+				return tmp;
+			}
+		};
+	}
+
 	public void flush() {
 		mongo.fsync(false);
 	}
 
-	private DB getDatabase() {
+	DB getDatabase() {
 		Dataset current = context.getDataset();
 		if (current != null) return getDatabase(current);
 		else return null;
@@ -173,7 +233,7 @@ public class Database {
 		return mongo.getDB(getDBName(dataset));
 	}
 
-	private DBCollection getCollection(Class<? extends DataObject> type) {
+	DBCollection getCollection(Class<? extends DataObject> type) {
 		DB root = getDatabase();
 		if (root != null) return getCollection(root, type);
 		else return null;
@@ -195,7 +255,7 @@ public class Database {
 		} else if (type == Field.class) {
 			return root.getCollection("fields");
 		} else if (type == Instance.class) {
-			return root.getCollection("objects");
+			return root.getCollection("instances");
 		} else if (type == Event.class) {
 			return root.getCollection("events");
 		} else {
@@ -226,6 +286,11 @@ public class Database {
 		return createDatasetBuilder().init(properties).get();
 	}
 
+	DBCollection getRawCollection(String name) {
+		DB db = getDatabase();
+		return db.getCollection(name);
+	}
+
 	@VisibleForTesting
 	String getDBName(Dataset dataset) {
 		return "rprof_" + dataset.getHandle() + "_" + dataset.getId().getDatasetIndex();
@@ -243,6 +308,8 @@ public class Database {
 			return EntityBuilder.class.cast(createFieldQuery());
 		} else if (type.equals(Method.class)) {
 			return EntityBuilder.class.cast(createMethodQuery());
+		} else if (type.equals(Instance.class)) {
+			return EntityBuilder.class.cast(createInstanceBuilder());
 		} else {
 			log.error("request for unavaible builder: {}", type);
 			return null;
@@ -292,8 +359,8 @@ public class Database {
 			}
 
 			@Override
-			public List<Dataset> find() {
-				List<Dataset> result = Lists.newArrayList();
+			public Cursor<? extends Dataset> find() {
+				final List<Dataset> result = Lists.newArrayList();
 				for (Dataset ds : getDatasets()) {
 					DBCursor c = getCollection(ds, Dataset.class).find(b);
 					if (c.hasNext()) {
@@ -301,20 +368,46 @@ public class Database {
 					}
 					c.close();
 				}
-				return result;
+				return new Cursor<Dataset>() {
+					final Iterator<Dataset> iterator = result.iterator();
+
+					@Override
+					public int count() {
+						return result.size();
+					}
+
+					@Override
+					public void close() {
+						// nothing to do.
+					}
+
+					@Override
+					public boolean hasNext() {
+						return iterator.hasNext();
+					}
+
+					@Override
+					public Dataset next() {
+						return iterator.next();
+					}
+
+					@Override
+					public void remove() {
+						throw new UnsupportedOperationException("not implemented");
+					}
+				};
 			}
 
 			@Override
 			long _count(DBObject query) {
-				return find().size();
+				return find().count();
 			}
 		};
 	}
 
 	private MongoEventBuilder createEventBuilder() {
+		final DBCollection events = getCollection(Event.class);
 		return new MongoEventBuilder() {
-			final DBCollection events = getCollection(Event.class);
-
 			@Override
 			DBCollection _getCollection() {
 				return events;
@@ -333,6 +426,7 @@ public class Database {
 	}
 
 	private MongoClassBuilder createClassBuilder() {
+		final DBCollection clazzes = getCollection(Clazz.class);
 		return new MongoClassBuilder() {
 			private short methods = 0;
 			private short fields = 0;
@@ -349,7 +443,7 @@ public class Database {
 
 			@Override
 			DBCollection _getCollection() {
-				return getCollection(Clazz.class);
+				return clazzes;
 			}
 
 			@Override
@@ -373,10 +467,11 @@ public class Database {
 	}
 
 	private MongoFieldBuilder createFieldQuery() {
+		final DBCollection fields = getCollection(Field.class);
 		return new MongoFieldBuilder(null) {
 			@Override
 			DBCollection _getCollection() {
-				return getCollection(Field.class);
+				return fields;
 			}
 
 			@Override
@@ -387,10 +482,11 @@ public class Database {
 	}
 
 	private MongoFieldBuilder createFieldCreator(MongoClassBuilder classBuilder, final short index) {
+		final DBCollection fields = getCollection(Field.class);
 		return new MongoFieldBuilder(classBuilder) {
 			@Override
 			DBCollection _getCollection() {
-				return getCollection(Field.class);
+				return fields;
 			}
 
 			@Override
@@ -403,10 +499,11 @@ public class Database {
 	}
 
 	private MongoMethodBuilder createMethodQuery() {
+		final DBCollection methods = getCollection(Method.class);
 		return new MongoMethodBuilder(null) {
 			@Override
 			DBCollection _getCollection() {
-				return getCollection(Method.class);
+				return methods;
 			}
 
 			@Override
@@ -417,10 +514,11 @@ public class Database {
 	}
 
 	private MongoMethodBuilder createMethodCreator(MongoClassBuilder classBuilder, final short index) {
+		final DBCollection methods = getCollection(Method.class);
 		return new MongoMethodBuilder(classBuilder) {
 			@Override
 			DBCollection _getCollection() {
-				return getCollection(Method.class);
+				return methods;
 			}
 
 			@Override
@@ -428,6 +526,21 @@ public class Database {
 				Dataset ds = context.getDataset();
 				ClazzId owner = new ClazzId((Long) b.get("owner"));
 				return MethodId.create(ds, owner, index);
+			}
+		};
+	}
+
+	private MongoInstanceBuilder createInstanceBuilder() {
+		final DBCollection instances = getCollection(Instance.class);
+		return new MongoInstanceBuilder() {
+			@Override
+			InstanceId _createId() {
+				return new InstanceId((Long) b.get("_id"));
+			}
+
+			@Override
+			DBCollection _getCollection() {
+				return instances;
 			}
 		};
 	}

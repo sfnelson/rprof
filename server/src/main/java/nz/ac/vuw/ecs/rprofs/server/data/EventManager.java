@@ -1,8 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.web.bindery.requestfactory.shared.Locator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
@@ -29,8 +31,14 @@ public class EventManager extends Locator<Event, EventId> implements EventServic
 	}
 
 	@Override
-	public List<? extends Event> findEvents(int start, int length, int filter) {
-		return database.getEventQuery().setFilter(filter).find(start, length);
+	public List<? extends Event> findEvents(long start, long length, int filter) {
+		List<Event> result = Lists.newArrayList();
+		Query.Cursor<? extends Event> cursor = database.getEventQuery().setFilter(filter).find(start, length);
+		while (cursor.hasNext()) {
+			result.add(cursor.next());
+		}
+		cursor.close();
+		return result;
 	}
 
 	@Override
@@ -40,7 +48,13 @@ public class EventManager extends Locator<Event, EventId> implements EventServic
 
 	@Override
 	public List<? extends Event> findEventsByInstance(InstanceId instance) {
-		return database.getEventQuery().setWithArg(instance).find();
+		List<Event> result = Lists.newArrayList();
+		Query.Cursor<? extends Event> cursor = database.getEventQuery().setWithArg(instance).find();
+		while (cursor.hasNext()) {
+			result.add(cursor.next());
+		}
+		cursor.close();
+		return result;
 	}
 
 	@Override

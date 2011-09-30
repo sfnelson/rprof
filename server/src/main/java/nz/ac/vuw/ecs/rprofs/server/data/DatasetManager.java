@@ -1,7 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import com.google.web.bindery.requestfactory.shared.Locator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
@@ -69,14 +71,24 @@ public class DatasetManager extends Locator<Dataset, DatasetId> implements Datas
 
 	@Override
 	public List<? extends Dataset> findAllDatasets() {
-		return database.getDatasetQuery().find();
+		List<Dataset> result = Lists.newArrayList();
+		Query.Cursor<? extends Dataset> cursor = database.getDatasetQuery().find();
+		while (cursor.hasNext()) {
+			result.add(cursor.next());
+		}
+		cursor.close();
+		return result;
 	}
 
 	@Override
 	public Dataset findDataset(String handle) {
-		List<? extends Dataset> ds = database.getDatasetQuery().setHandle(handle).find();
-		assert (ds.size() == 1);
-		return ds.get(0);
+		Dataset result = null;
+		Query.Cursor<? extends Dataset> cursor = database.getDatasetQuery().setHandle(handle).find();
+		if (cursor.hasNext()) {
+			result = cursor.next();
+		}
+		cursor.close();
+		return result;
 	}
 
 	@Override

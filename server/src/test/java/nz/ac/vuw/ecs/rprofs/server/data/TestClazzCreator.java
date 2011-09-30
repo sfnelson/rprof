@@ -34,6 +34,17 @@ public class TestClazzCreator implements ClazzCreator<TestClazzCreator> {
 	}
 
 	@Override
+	public TestClazzCreator init() {
+		return this;
+	}
+
+	@Override
+	public TestClazzCreator init(Clazz value) {
+		this.c = value;
+		return this;
+	}
+
+	@Override
 	public FieldCreator<?> addField() {
 		return new TestFieldCreator(this,
 				new FieldId(c.getId().getDatasetIndex(), c.getId().getClassIndex(),

@@ -24,6 +24,20 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 	List<MongoMethodBuilder> methods;
 
 	@Override
+	public MongoClassBuilder init(Clazz value) {
+		reset();
+		b.put("_id", value.getId().getValue());
+		if (value.getProperties() != 0) {
+			setProperties(value.getProperties());
+		}
+		if (value.getName() != null) setName(value.getName());
+		if (value.getParent() != null) setParent(value.getParent());
+		if (value.getParentName() != null) setParentName(value.getParentName());
+
+		return this;
+	}
+
+	@Override
 	public MongoClassBuilder setName(String name) {
 		b.put("name", name);
 		b.put("package", Clazz.getPackageName(name));

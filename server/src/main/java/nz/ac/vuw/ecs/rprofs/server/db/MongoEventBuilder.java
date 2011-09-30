@@ -20,6 +20,23 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 		implements EventCreator<MongoEventBuilder>, EventUpdater<MongoEventBuilder>, EventQuery<MongoEventBuilder> {
 
 	@Override
+	public MongoEventBuilder init(Event value) {
+		setId(value.getId());
+		setEvent(value.getEvent());
+		if (value.getThread() != null) setThread(value.getThread());
+		if (value.getClazz() != null) setClazz(value.getClazz());
+		if (value.getField() != null) setField(value.getField());
+		if (value.getMethod() != null) setMethod(value.getMethod());
+		if (value.getArgs() != null) {
+			for (InstanceId arg : value.getArgs()) {
+				addArg(arg);
+			}
+		}
+
+		return this;
+	}
+
+	@Override
 	public MongoEventBuilder setId(@NotNull EventId id) {
 		b.append("_id", id.getValue());
 		return this;
@@ -57,13 +74,15 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 
 	@Override
 	public MongoEventBuilder setFilter(int filter) {
-		ArrayList<Integer> types = Lists.newArrayList();
-		for (int i = 1; i > 0 && i < Integer.MAX_VALUE; i *= 2) {
-			if ((i & filter) != 0) {
-				types.add(i);
+		if (filter != 0) {
+			ArrayList<Integer> types = Lists.newArrayList();
+			for (int i = 1; i > 0 && i < Integer.MAX_VALUE; i *= 2) {
+				if ((i & filter) != 0) {
+					types.add(i);
+				}
 			}
+			b.append("event", new BasicDBObject("$in", types.toArray(new Integer[types.size()])));
 		}
-		b.append("event", new BasicDBObject("$in", types.toArray(new Integer[0])));
 		return this;
 	}
 

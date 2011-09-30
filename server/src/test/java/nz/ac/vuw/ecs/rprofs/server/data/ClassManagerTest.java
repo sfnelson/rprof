@@ -12,8 +12,7 @@ import org.junit.Test;
 import java.util.Date;
 
 import static org.easymock.EasyMock.*;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -29,6 +28,7 @@ public class ClassManagerTest {
 	ClazzQuery query;
 	FieldQuery fQuery;
 	MethodQuery mQuery;
+	Query.Cursor cursor;
 
 	@org.junit.Before
 	public void setup() {
@@ -38,6 +38,7 @@ public class ClassManagerTest {
 		query = createMock(ClazzQuery.class);
 		fQuery = createMock(FieldQuery.class);
 		mQuery = createMock(MethodQuery.class);
+		cursor = createMock(Query.Cursor.class);
 
 		dataset = new Dataset(new DatasetId(1l), "foo", new Date());
 
@@ -97,13 +98,16 @@ public class ClassManagerTest {
 
 		expect(database.getClazzQuery()).andReturn(query);
 		expect(query.setName("foo")).andReturn(query);
-		expect(query.find()).andReturn(Lists.newArrayList(clazz));
+		expect(query.find()).andReturn(cursor);
+		expect(cursor.hasNext()).andReturn(true);
+		expect(cursor.next()).andReturn(clazz);
+		cursor.close();
 
-		replay(database, query);
+		replay(database, query, cursor);
 
 		Clazz returned = cm.getClazz("foo");
 
-		verify(database, query);
+		verify(database, query, cursor);
 
 		assertSame(returned, clazz);
 	}
@@ -115,13 +119,15 @@ public class ClassManagerTest {
 
 		expect(database.getClazzQuery()).andReturn(query);
 		expect(query.setName("foo")).andReturn(query);
-		expect(query.find()).andReturn(Lists.newArrayList());
+		expect(query.find()).andReturn(cursor);
+		expect(cursor.hasNext()).andReturn(false);
+		cursor.close();
 
-		replay(database, query);
+		replay(database, query, cursor);
 
 		Clazz returned = cm.getClazz("foo");
 
-		verify(database, query);
+		verify(database, query, cursor);
 
 		assertNull(returned);
 	}
@@ -152,13 +158,15 @@ public class ClassManagerTest {
 	@Test
 	public void testFindClasses() {
 		expect(database.getClazzQuery()).andReturn(query);
-		expect(query.find()).andReturn(Lists.newArrayList());
+		expect(query.find()).andReturn(cursor);
+		expect(cursor.hasNext()).andReturn(false);
+		cursor.close();
 
-		replay(database, query);
+		replay(database, query, cursor);
 
-		cm.findClasses();
+		assertEquals(Lists.newArrayList(), cm.findClasses());
 
-		verify(database, query);
+		verify(database, query, cursor);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -166,13 +174,15 @@ public class ClassManagerTest {
 	public void testFindClassesInPackage() {
 		expect(database.getClazzQuery()).andReturn(query);
 		expect(query.setPackageName("foobar")).andReturn(query);
-		expect(query.find()).andReturn(Lists.newArrayList());
+		expect(query.find()).andReturn(cursor);
+		expect(cursor.hasNext()).andReturn(false);
+		cursor.close();
 
-		replay(database, query);
+		replay(database, query, cursor);
 
-		cm.findClasses("foobar");
+		assertEquals(Lists.newArrayList(), cm.findClasses("foobar"));
 
-		verify(database, query);
+		verify(database, query, cursor);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -209,13 +219,15 @@ public class ClassManagerTest {
 
 		expect(database.getFieldQuery()).andReturn(fQuery);
 		expect(fQuery.setOwner(id)).andReturn(fQuery);
-		expect(fQuery.find()).andReturn(Lists.newArrayList());
+		expect(fQuery.find()).andReturn(cursor);
+		expect(cursor.hasNext()).andReturn(false);
+		cursor.close();
 
-		replay(database, fQuery);
+		replay(database, fQuery, cursor);
 
-		cm.findFields(id);
+		assertEquals(Lists.newArrayList(), cm.findFields(id));
 
-		verify(database, fQuery);
+		verify(database, fQuery, cursor);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -225,13 +237,15 @@ public class ClassManagerTest {
 
 		expect(database.getMethodQuery()).andReturn(mQuery);
 		expect(mQuery.setOwner(id)).andReturn(mQuery);
-		expect(mQuery.find()).andReturn(Lists.newArrayList());
+		expect(mQuery.find()).andReturn(cursor);
+		expect(cursor.hasNext()).andReturn(false);
+		cursor.close();
 
-		replay(database, mQuery);
+		replay(database, mQuery, cursor);
 
-		cm.findMethods(id);
+		assertEquals(Lists.newArrayList(), cm.findMethods(id));
 
-		verify(database, mQuery);
+		verify(database, mQuery, cursor);
 	}
 
 	@SuppressWarnings("unchecked")

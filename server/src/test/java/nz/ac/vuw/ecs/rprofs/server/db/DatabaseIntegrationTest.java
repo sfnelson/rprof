@@ -4,12 +4,16 @@ import com.google.common.collect.Lists;
 import com.mongodb.Mongo;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import org.junit.*;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
 
 import static org.junit.Assert.*;
 
@@ -116,15 +120,15 @@ public class DatabaseIntegrationTest {
 
 	@Test
 	public void testGetDatasets() throws Exception {
-		assertEquals(new ArrayList<Dataset>(), database.getDatasetQuery().find());
+		assertFalse(database.getDatasetQuery().find().hasNext());
 		DatasetId id1 = database.getDatasetCreator().setHandle("foo").setStarted(new Date()).store();
-		assertEquals(id1, database.getDatasetQuery().find().get(0).getId());
+		assertEquals(id1, database.getDatasetQuery().find().next().getId());
 		DatasetId id2 = database.getDatasetCreator().setHandle("foo").setStarted(new Date()).store();
 
-		List<? extends Dataset> result = database.getDatasetQuery().find();
-		Collections.sort(result);
-		assertEquals(id1, result.get(0).getId());
-		assertEquals(id2, result.get(1).getId());
+		Query.Cursor<? extends Dataset> result = database.getDatasetQuery().find();
+		assertEquals(id1, result.next().getId());
+		assertEquals(id2, result.next().getId());
+		result.close();
 	}
 
 	@Test
@@ -138,11 +142,10 @@ public class DatabaseIntegrationTest {
 	@Test
 	public void testDropDataset() throws Exception {
 		DatasetId in = database.getDatasetCreator().setHandle("foobar").setStarted(new Date()).store();
-		List<? extends Dataset> datasets = database.getDatasetQuery().find();
-		assertEquals(1, datasets.size());
-		assertEquals(in, datasets.get(0).getId());
+		Query.Cursor<? extends Dataset> datasets = database.getDatasetQuery().find();
+		assertEquals(1, database.getDatasetQuery().find().count());
 		database.deleteEntity(database.findEntity(in));
-		assertEquals(new ArrayList<Dataset>(), database.getDatasetQuery().find());
+		assertEquals(0, database.getDatasetQuery().find().count());
 
 		assertNull(database.findEntity(in));
 	}
@@ -175,10 +178,8 @@ public class DatabaseIntegrationTest {
 		assertEquals(now, ds.getStopped());
 		assertEquals(program, ds.getProgram());
 
-		assertEquals(1,
-				database.getDatasetQuery().setProgram("baz").count());
-		assertEquals(Lists.newArrayList(ds),
-				database.getDatasetQuery().setProgram("baz").find());
+		assertEquals(1, database.getDatasetQuery().setProgram("baz").count());
+		assertEquals(ds, database.getDatasetQuery().setProgram("baz").find().next());
 	}
 
 	@Test
@@ -207,7 +208,7 @@ public class DatabaseIntegrationTest {
 
 		ClazzId fooId = database.getClazzCreator().setName("org/Foo").store();
 
-		bar = database.getClazzQuery().setPackageName("org.foo").find().get(0);
+		bar = database.getClazzQuery().setPackageName("org.foo").find().next();
 		assertEquals(barId, bar.getId());
 		assertEquals(fooId, bar.getParent());
 
@@ -219,7 +220,7 @@ public class DatabaseIntegrationTest {
 
 		assertEquals(2, database.getClazzQuery().count());
 
-		Field f = database.getFieldQuery().find().get(0);
+		Field f = database.getFieldQuery().find().next();
 		assertEquals("a", f.getName());
 		assertEquals("I", f.getDescription());
 		assertEquals(1, f.getAccess());
@@ -227,7 +228,7 @@ public class DatabaseIntegrationTest {
 		assertEquals("org/foo/Bar", f.getOwnerName());
 		assertEquals(f.getId(), database.findEntity(f.getId()).getId());
 
-		Method m = database.getMethodQuery().find().get(0);
+		Method m = database.getMethodQuery().find().next();
 		assertEquals("b", m.getName());
 		assertEquals("()V", m.getDescription());
 		assertEquals(4, m.getAccess());
@@ -273,7 +274,7 @@ public class DatabaseIntegrationTest {
 
 		assertEquals(eventId, eid);
 
-		Event e = database.getEventQuery().setEvent(Event.FIELD_READ).find().get(0);
+		Event e = database.getEventQuery().setEvent(Event.FIELD_READ).find().next();
 
 		assertEquals(clazzId, e.getClazz());
 		assertEquals(fieldId, e.getField());

@@ -5,6 +5,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetQuery;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetUpdater;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.db.TestCursor;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
@@ -63,14 +64,14 @@ public class DatasetManagerTest {
 		List<? extends Dataset> datasets = Lists.newArrayList();
 
 		expect(database.getDatasetQuery()).andReturn(query);
-		expect(query.find()).andReturn(datasets);
+		expect(query.find()).andReturn(new TestCursor(datasets));
 
 		replay(database, query);
 
 		List<? extends Dataset> returned = manager.findAllDatasets();
 
 		verify(database, query);
-		assertSame(returned, datasets);
+		assertEquals(returned, datasets);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -85,14 +86,14 @@ public class DatasetManagerTest {
 
 		expect(database.getDatasetQuery()).andReturn(query);
 		expect(query.setHandle("foobar")).andReturn(query);
-		expect(query.find()).andReturn(list);
+		expect(query.find()).andReturn(new TestCursor(list));
 
 		replay(database, query);
 
 		Dataset returned = manager.findDataset("foobar");
 
 		verify(database, query);
-		assertSame(dataset, returned);
+		assertEquals(dataset, returned);
 	}
 
 	@SuppressWarnings("unchecked")

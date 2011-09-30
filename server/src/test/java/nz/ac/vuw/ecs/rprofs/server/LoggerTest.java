@@ -5,6 +5,7 @@ import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
@@ -30,6 +31,7 @@ public class LoggerTest {
 
 	Logger logger;
 
+	Database database;
 	DatasetManager datasets;
 	Context context;
 	EventManager events;
@@ -42,6 +44,7 @@ public class LoggerTest {
 	public void setup() {
 		ds = new Dataset(new DatasetId((short) 1), "foobar", new Date());
 
+		database = createMock(Database.class);
 		datasets = createMock(DatasetManager.class);
 		context = createMock(Context.class);
 		events = createMock(EventManager.class);
@@ -50,6 +53,7 @@ public class LoggerTest {
 		builder = createMock(EventCreator.class);
 
 		logger = new Logger();
+		logger.database = database;
 		logger.context = context;
 		logger.datasets = datasets;
 		logger.events = events;
@@ -65,14 +69,15 @@ public class LoggerTest {
 		expect(request.getContentLength()).andReturn(0);
 		expect(request.getInputStream()).andReturn(null);
 		expect(events.createEvent()).andReturn(null);
+		database.flush();
 		response.setStatus(HttpServletResponse.SC_CREATED);
 		context.clear();
 
-		replay(datasets, context, events, request, response);
+		replay(datasets, context, events, request, response, database);
 
 		logger.doPost(request, response);
 
-		verify(datasets, context, events, request, response);
+		verify(datasets, context, events, request, response, database);
 	}
 
 	@Test
@@ -81,12 +86,13 @@ public class LoggerTest {
 		in.content = new byte[]{};
 
 		expect(events.createEvent()).andReturn(builder);
+		database.flush();
 
-		replay(datasets, context, events, builder);
+		replay(datasets, context, events, builder, database);
 
 		logger.parseEvents(ds, 0, in);
 
-		verify(datasets, context, events, builder);
+		verify(datasets, context, events, builder, database);
 	}
 
 	@Test
@@ -140,12 +146,13 @@ public class LoggerTest {
 			expect(builder.addArg(arg)).andReturn(builder);
 		}
 		expect(builder.store()).andReturn(null);
+		database.flush();
 
-		replay(datasets, context, events, builder);
+		replay(datasets, context, events, builder, database);
 
 		logger.parseEvents(ds, in.content.length, in);
 
-		verify(datasets, context, events, builder);
+		verify(datasets, context, events, builder, database);
 		assertEquals(in.content.length, in.count);
 	}
 
@@ -199,12 +206,13 @@ public class LoggerTest {
 			expect(builder.addArg(arg)).andReturn(builder);
 		}
 		expect(builder.store()).andReturn(null);
+		database.flush();
 
-		replay(datasets, context, events, builder);
+		replay(datasets, context, events, builder, database);
 
 		logger.parseEvents(ds, in.content.length, in);
 
-		verify(datasets, context, events, builder);
+		verify(datasets, context, events, builder, database);
 		assertEquals(in.content.length, in.count);
 	}
 
@@ -287,12 +295,13 @@ public class LoggerTest {
 		expect(builder.setEvent(event2)).andReturn(builder);
 		expect(builder.setClazz(clazz)).andReturn(builder);
 		expect(builder.store()).andReturn(null);
+		database.flush();
 
-		replay(datasets, context, events, builder);
+		replay(datasets, context, events, builder, database);
 
 		logger.parseEvents(ds, in.content.length, in);
 
-		verify(datasets, context, events, builder);
+		verify(datasets, context, events, builder, database);
 		assertEquals(in.content.length, in.count);
 	}
 

@@ -1,7 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
@@ -33,9 +35,13 @@ public class ClassManager implements ClazzService, MethodService, FieldService {
 
 	@Override
 	public Clazz getClazz(String name) {
-		List<? extends Clazz> classes = database.getClazzQuery().setName(name).find();
-		if (classes == null || classes.isEmpty()) return null;
-		else return classes.get(0);
+		Query.Cursor<? extends Clazz> classes = database.getClazzQuery().setName(name).find();
+		Clazz result = null;
+		if (classes.hasNext()) {
+			result = classes.next();
+		}
+		classes.close();
+		return result;
 	}
 
 	@Override
@@ -60,11 +66,23 @@ public class ClassManager implements ClazzService, MethodService, FieldService {
 
 	@Override
 	public List<? extends Clazz> findClasses() {
-		return database.getClazzQuery().find();
+		List<Clazz> result = Lists.newArrayList();
+		Query.Cursor<? extends Clazz> cursor = database.getClazzQuery().find();
+		while (cursor.hasNext()) {
+			result.add(cursor.next());
+		}
+		cursor.close();
+		return result;
 	}
 
 	public List<? extends Clazz> findClasses(String packageName) {
-		return database.getClazzQuery().setPackageName(packageName).find();
+		List<Clazz> result = Lists.newArrayList();
+		Query.Cursor<? extends Clazz> cursor = database.getClazzQuery().setPackageName(packageName).find();
+		while (cursor.hasNext()) {
+			result.add(cursor.next());
+		}
+		cursor.close();
+		return result;
 	}
 
 	@Override
@@ -79,12 +97,24 @@ public class ClassManager implements ClazzService, MethodService, FieldService {
 
 	@Override
 	public List<? extends Field> findFields(ClazzId id) {
-		return database.getFieldQuery().setOwner(id).find();
+		List<Field> result = Lists.newArrayList();
+		Query.Cursor<? extends Field> cursor = database.getFieldQuery().setOwner(id).find();
+		while (cursor.hasNext()) {
+			result.add(cursor.next());
+		}
+		cursor.close();
+		return result;
 	}
 
 	@Override
 	public List<? extends Method> findMethods(ClazzId id) {
-		return database.getMethodQuery().setOwner(id).find();
+		List<Method> result = Lists.newArrayList();
+		Query.Cursor<? extends Method> cursor = database.getMethodQuery().setOwner(id).find();
+		while (cursor.hasNext()) {
+			result.add(cursor.next());
+		}
+		cursor.close();
+		return result;
 	}
 
 	public void setProperties(ClazzId clazzId, int properties) {

@@ -25,10 +25,22 @@ abstract class MongoFieldBuilder extends MongoBuilder<MongoFieldBuilder, FieldId
 		this.parent = parent;
 	}
 
+	@Override
+	public MongoFieldBuilder init(Field value) {
+		b.append("_id", value.getId());
+		if (value.getName() != null) setName(value.getName());
+		if (value.getDescription() != null) setDescription(value.getDescription());
+		if (value.getAccess() != 0) setAccess(value.getAccess());
+		if (value.getOwner() != null) setOwner(value.getOwner());
+		if (value.getOwnerName() != null) setOwnerName(value.getOwnerName());
+
+		return this;
+	}
+
 	/*
-	 * We can't assign a field id until the owning class has an id, so delay the real store until the owning class has
-	 * been stored. Return an placeholder id which will become valid when the class has been stored.
-	 */
+		 * We can't assign a field id until the owning class has an id, so delay the real store until the owning class has
+		 * been stored. Return an placeholder id which will become valid when the class has been stored.
+		 */
 	@Override
 	public FieldId store() {
 		id = new FieldId(0l);

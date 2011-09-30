@@ -18,6 +18,9 @@ function mapInstances() {
     result.constructorReturn = event._id;
   }
   emit( this.args[0], result );
+  if (this.args[1] && event.name == "equals") {
+    emit( this.args[1], result );
+  }
 }
 function reduceInstances(instance, entries) {
   var result = { events : [] };

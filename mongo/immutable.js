@@ -1,28 +1,13 @@
 function mapImmutable() {
-	var read = {};
+	var equals = (this.firstHashCode || this.firstEquals) ? true : false;
 	var immutable = true;
-	var equals = false;
-	var inEquals = 0;
-	this.events.forEach(function (event) {
-		if (event.event == 0x10) { // field read
-			read[event.name] = true;
-			if (inEquals > 0) equals = true;
-		}
-		else if (event.event == 0x20) { // field write
-			if (read[event.name]) {
+	if (this.fields) {
+		this.fields.forEach(function (field) {
+			if (field.firstRead && field.lastWrite && (field.firstRead < field.lastWrite)) {
 				immutable = false;
 			}
-		}
-		else if (event.event == 0x4 && event.name == "equals") {
-			inEquals++;
-		}
-		else if (event.event == 0x8 && event.name == "equals") {
-			inEquals--;
-		}
-		else if (event.event == 0x400 && event.name == "equals") {
-			inEquals--;
-		}
-	});
+		});
+	}
 	if (immutable && equals) {
 		emit("immeq",{count:1});
 	}

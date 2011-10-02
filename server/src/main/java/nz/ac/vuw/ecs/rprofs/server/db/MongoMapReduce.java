@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Creator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
@@ -93,9 +94,11 @@ abstract class MongoMapReduce<Input extends DataObject<?, Input>, OutId extends 
 
 		log.info("starting reduce...");
 		numResults = (int) tmp.count();
-		List<Long> ids = tmp.distinct("id");
 		processed = 0;
-		for (Long id : ids) {
+		while (true) {
+			DBObject one = tmp.findOne();
+			if (one == null) break;
+			Long id = (Long) one.get("id");
 			List<Output> values = Lists.newArrayList();
 			DBCursor cursor = tmp.find(new BasicDBObject("id", id));
 			Output result;
@@ -120,6 +123,7 @@ abstract class MongoMapReduce<Input extends DataObject<?, Input>, OutId extends 
 			if (result != null) {
 				output.init(result).store();
 			}
+			tmp.remove(new BasicDBObject("id", id));
 		}
 		log.info("finished reduce.");
 

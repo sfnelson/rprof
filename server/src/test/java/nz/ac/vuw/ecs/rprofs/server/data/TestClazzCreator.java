@@ -29,7 +29,7 @@ public class TestClazzCreator implements ClazzCreator<TestClazzCreator> {
 	}
 
 	public TestClazzCreator start(ClazzId id) {
-		c = new Clazz(id, null, null, null, 0);
+		c = new Clazz(id, 0, null, null, null, 0);
 		return this;
 	}
 

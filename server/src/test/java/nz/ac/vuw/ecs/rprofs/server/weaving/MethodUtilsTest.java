@@ -21,27 +21,27 @@ public class MethodUtilsTest {
 	@Test
 	public void testIsNative() throws Exception {
 		assertTrue(MethodUtils.isNative(
-				new Method(id, "foobar", owner, "foo.Bar", "()V", Opcodes.ACC_NATIVE | Opcodes.ACC_DEPRECATED)));
+				new Method(id, 0, "foobar", owner, "foo.Bar", "()V", Opcodes.ACC_NATIVE | Opcodes.ACC_DEPRECATED)));
 		assertFalse(MethodUtils.isNative(
-				new Method(id, "foobar", owner, "foo.Bar", "()V", Opcodes.ACC_PUBLIC)));
+				new Method(id, 0, "foobar", owner, "foo.Bar", "()V", Opcodes.ACC_PUBLIC)));
 	}
 
 	@Test
 	public void testIsMain() throws Exception {
 		assertTrue(MethodUtils.isMain(
-				new Method(id, "main", owner, "foo.Bar", "([Ljava/lang/String;)V",
+				new Method(id, 0, "main", owner, "foo.Bar", "([Ljava/lang/String;)V",
 						Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)));
 		assertFalse(MethodUtils.isMain(
-				new Method(id, "main", owner, "foo.Bar", "(I[Ljava/lang/String;)V",
+				new Method(id, 0, "main", owner, "foo.Bar", "(I[Ljava/lang/String;)V",
 						Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)));
 		assertFalse(MethodUtils.isMain(
-				new Method(id, "main", owner, "foo.Bar", "(I[Ljava/lang/String;)V",
+				new Method(id, 0, "main", owner, "foo.Bar", "(I[Ljava/lang/String;)V",
 						Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_NATIVE)));
 		assertFalse(MethodUtils.isMain(
-				new Method(id, "main", owner, "foo.Bar", "([Ljava/lang/String;)V",
+				new Method(id, 0, "main", owner, "foo.Bar", "([Ljava/lang/String;)V",
 						Opcodes.ACC_PUBLIC)));
 		assertFalse(MethodUtils.isMain(
-				new Method(id, "man", owner, "foo.Bar", "([Ljava/lang/String;)V",
+				new Method(id, 0, "man", owner, "foo.Bar", "([Ljava/lang/String;)V",
 						Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)));
 
 	}
@@ -49,62 +49,62 @@ public class MethodUtilsTest {
 	@Test
 	public void testIsInit() throws Exception {
 		assertTrue(MethodUtils.isInit(
-				new Method(id, "<init>", owner, "foo.Bar", "([Ljava/lang/String;)V",
+				new Method(id, 0, "<init>", owner, "foo.Bar", "([Ljava/lang/String;)V",
 						Opcodes.ACC_PUBLIC)));
 		assertFalse(MethodUtils.isInit(
-				new Method(id, "main", owner, "foo.Bar", "([Ljava/lang/String;)V",
+				new Method(id, 0, "main", owner, "foo.Bar", "([Ljava/lang/String;)V",
 						Opcodes.ACC_PUBLIC)));
 	}
 
 	@Test
 	public void testIsCLInit() throws Exception {
 		assertTrue(MethodUtils.isCLInit(
-				new Method(id, "<clinit>", owner, "foo.Bar", "()V",
+				new Method(id, 0, "<clinit>", owner, "foo.Bar", "()V",
 						Opcodes.ACC_STATIC)));
 		assertFalse(MethodUtils.isCLInit(
-				new Method(id, "main", owner, "foo.Bar", "([Ljava/lang/String;)V",
+				new Method(id, 0, "main", owner, "foo.Bar", "([Ljava/lang/String;)V",
 						Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)));
 	}
 
 	@Test
 	public void testIsEquals() throws Exception {
 		assertTrue(MethodUtils.isEquals(
-				new Method(id, "equals", owner, "foo.Bar", "(Ljava/lang/Object;)Z",
+				new Method(id, 0, "equals", owner, "foo.Bar", "(Ljava/lang/Object;)Z",
 						Opcodes.ACC_PUBLIC)));
 		assertFalse(MethodUtils.isEquals(
-				new Method(id, "equals", owner, "foo.Bar", "(Ljava/lang/Object;)V",
+				new Method(id, 0, "equals", owner, "foo.Bar", "(Ljava/lang/Object;)V",
 						Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC)));
 		assertFalse(MethodUtils.isEquals(
-				new Method(id, "equals", owner, "foo.Bar", "(Ljava/lang/Object;)V",
+				new Method(id, 0, "equals", owner, "foo.Bar", "(Ljava/lang/Object;)V",
 						Opcodes.ACC_PRIVATE)));
 		assertFalse(MethodUtils.isEquals(
-				new Method(id, "equals", owner, "foo.Bar", "()V",
+				new Method(id, 0, "equals", owner, "foo.Bar", "()V",
 						Opcodes.ACC_PUBLIC)));
 	}
 
 	@Test
 	public void testIsHashCode() throws Exception {
 		assertTrue(MethodUtils.isHashCode(
-				new Method(id, "hashCode", owner, "foo.Bar", "()I",
+				new Method(id, 0, "hashCode", owner, "foo.Bar", "()I",
 						Opcodes.ACC_PUBLIC)));
 		assertFalse(MethodUtils.isHashCode(
-				new Method(id, "hashCode", owner, "foo.Bar", "()I",
+				new Method(id, 0, "hashCode", owner, "foo.Bar", "()I",
 						Opcodes.ACC_PRIVATE)));
 		assertFalse(MethodUtils.isHashCode(
-				new Method(id, "hashCode", owner, "foo.Bar", "()Z",
+				new Method(id, 0, "hashCode", owner, "foo.Bar", "()Z",
 						Opcodes.ACC_PUBLIC)));
 		assertFalse(MethodUtils.isHashCode(
-				new Method(id, "hashcode", owner, "foo.Bar", "()I",
+				new Method(id, 0, "hashcode", owner, "foo.Bar", "()I",
 						Opcodes.ACC_PUBLIC)));
 	}
 
 	@Test
 	public void testIsStatic() throws Exception {
 		assertTrue(MethodUtils.isStatic(
-				new Method(id, "hashCode", owner, "foo.Bar", "()I",
+				new Method(id, 0, "hashCode", owner, "foo.Bar", "()I",
 						Opcodes.ACC_STATIC | Opcodes.ACC_PROTECTED)));
 		assertFalse(MethodUtils.isStatic(
-				new Method(id, "hashCode", owner, "foo.Bar", "()I",
+				new Method(id, 0, "hashCode", owner, "foo.Bar", "()I",
 						0)));
 	}
 }

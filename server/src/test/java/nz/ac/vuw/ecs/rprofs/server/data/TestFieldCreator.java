@@ -60,7 +60,7 @@ public class TestFieldCreator implements FieldCreator<TestFieldCreator> {
 
 	@Override
 	public FieldId store() {
-		clazzCreator.fields.add(new Field(id, name, owner, ownerName, desc, access));
+		clazzCreator.fields.add(new Field(id, 0, name, owner, ownerName, desc, access));
 		return id;
 	}
 }

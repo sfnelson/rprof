@@ -105,6 +105,10 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 
 		Instance i = new Instance(id);
 
+		if (b.containsField("version")) {
+			i.setVersion((Integer) b.get("version"));
+		}
+
 		if (b.containsField("type")) {
 			i.setType(new ClazzId((Long) b.get("type")));
 		}

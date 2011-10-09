@@ -60,7 +60,7 @@ public class TestMethodCreator implements MethodCreator<TestMethodCreator> {
 
 	@Override
 	public MethodId store() {
-		clazzCreator.methods.add(new Method(id, name, owner, ownerName, desc, access));
+		clazzCreator.methods.add(new Method(id, 0, name, owner, ownerName, desc, access));
 		return id;
 	}
 }

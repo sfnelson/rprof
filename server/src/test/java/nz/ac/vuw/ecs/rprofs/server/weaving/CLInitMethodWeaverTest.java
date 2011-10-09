@@ -31,7 +31,7 @@ public class CLInitMethodWeaverTest {
 	@Before
 	public void setUp() throws Exception {
 		id = new ClazzId(1l);
-		clazz = new Clazz(id, "org/foo/Bar", null, null, 0);
+		clazz = new Clazz(id, 0, "org/foo/Bar", null, null, 0);
 		record = new ClassRecord(clazz);
 		record.generateMethod("<clinit>", "()V", ACC_STATIC);
 		method = record.getMethod("<clinit>", "()V");
@@ -66,11 +66,11 @@ public class CLInitMethodWeaverTest {
 	public void testWeaveCLInitCreateWithFields() {
 
 		List<Field> fields = Lists.newArrayList(
-				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 4), "foo",
+				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 4), 0, "foo",
 						id, clazz.getName(), "I", ACC_PRIVATE),
-				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 8), "bar",
+				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 8), 0, "bar",
 						id, clazz.getName(), "I", ACC_PUBLIC),
-				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 12), "baz",
+				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 12), 0, "baz",
 						id, clazz.getName(), "I", ACC_PUBLIC | ACC_FINAL | ACC_STATIC)
 		);
 		record.addFields(fields);

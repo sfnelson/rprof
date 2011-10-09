@@ -18,6 +18,9 @@ public class Method implements Attribute<MethodId, Method> {
 	private MethodId mid;
 
 	@NotNull
+	private Integer version;
+
+	@NotNull
 	private String name;
 
 	@NotNull
@@ -34,9 +37,11 @@ public class Method implements Attribute<MethodId, Method> {
 	public Method() {
 	}
 
-	public Method(MethodId id, String name, ClazzId owner, String ownerName,
-				  String description, int access) {
+	public Method(@NotNull MethodId id, @NotNull Integer version, @NotNull String name,
+				  @NotNull ClazzId owner, @NotNull String ownerName, @NotNull String description,
+				  int access) {
 		this.mid = id;
+		this.version = version;
 		this.name = name;
 		this.owner = owner;
 		this.ownerName = ownerName;
@@ -48,6 +53,15 @@ public class Method implements Attribute<MethodId, Method> {
 	@NotNull
 	public MethodId getId() {
 		return mid;
+	}
+
+	@NotNull
+	public Integer getVersion() {
+		return version;
+	}
+
+	public void setVersion(@NotNull Integer version) {
+		this.version = version;
 	}
 
 	@NotNull

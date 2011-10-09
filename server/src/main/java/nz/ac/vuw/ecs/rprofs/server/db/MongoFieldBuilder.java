@@ -102,11 +102,12 @@ abstract class MongoFieldBuilder extends MongoBuilder<MongoFieldBuilder, FieldId
 	@Override
 	public Field get() {
 		FieldId id = new FieldId((Long) b.get("_id"));
+		Integer version = (Integer) b.get("version");
 		String name = (String) b.get("name");
 		String desc = (String) b.get("description");
 		int access = (Integer) b.get("access");
 		ClazzId cid = new ClazzId((Long) b.get("owner"));
 		String owner = (String) b.get("ownerName");
-		return new Field(id, name, cid, owner, desc, access);
+		return new Field(id, version, name, cid, owner, desc, access);
 	}
 }

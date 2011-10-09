@@ -19,6 +19,9 @@ public class Instance implements DataObject<InstanceId, Instance> {
 	@NotNull
 	private InstanceId id;
 
+	@NotNull
+	private Integer version;
+
 	@Nullable
 	private ClazzId type;
 
@@ -48,6 +51,15 @@ public class Instance implements DataObject<InstanceId, Instance> {
 	@Override
 	public InstanceId getId() {
 		return id;
+	}
+
+	@NotNull
+	public Integer getVersion() {
+		return version;
+	}
+
+	public void setVersion(@NotNull Integer version) {
+		this.version = version;
 	}
 
 	@Nullable

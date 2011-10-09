@@ -153,11 +153,12 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 	@Override
 	public Clazz get() {
 		ClazzId id = new ClazzId((Long) b.get("_id"));
+		Integer version = (Integer) b.get("version");
 		int properties = 0;
 		if (b.containsField("properties")) {
 			properties = (Integer) b.get("properties");
 		}
-		Clazz clazz = new Clazz(id, null, null, null, properties);
+		Clazz clazz = new Clazz(id, version, null, null, null, properties);
 		if (b.containsField("name")) {
 			clazz.setName((String) b.get("name"));
 		}

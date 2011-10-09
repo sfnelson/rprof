@@ -98,11 +98,12 @@ abstract class MongoMethodBuilder extends MongoBuilder<MongoMethodBuilder, Metho
 	@Override
 	public nz.ac.vuw.ecs.rprofs.server.domain.Method get() {
 		MethodId id = new MethodId((Long) b.get("_id"));
+		Integer version = (Integer) b.get("version");
 		String name = (String) b.get("name");
 		String desc = (String) b.get("description");
 		int access = (Integer) b.get("access");
 		ClazzId cid = new ClazzId((Long) b.get("owner"));
 		String owner = (String) b.get("ownerName");
-		return new Method(id, name, cid, owner, desc, access);
+		return new Method(id, version, name, cid, owner, desc, access);
 	}
 }

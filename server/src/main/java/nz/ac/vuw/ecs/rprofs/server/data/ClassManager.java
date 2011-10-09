@@ -2,6 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.google.web.bindery.requestfactory.shared.Locator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
@@ -18,7 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-public class ClassManager implements ClazzService, MethodService, FieldService {
+public class ClassManager extends Locator<Clazz, ClazzId>
+		implements ClazzService, MethodService, FieldService {
 
 	@VisibleForTesting
 	@Autowired(required = true)
@@ -119,5 +121,35 @@ public class ClassManager implements ClazzService, MethodService, FieldService {
 
 	public void setProperties(ClazzId clazzId, int properties) {
 		database.getClazzUpdater().setProperties(properties).update(clazzId);
+	}
+
+	@Override
+	public Clazz create(Class<? extends Clazz> aClass) {
+		return new Clazz();
+	}
+
+	@Override
+	public Clazz find(Class<? extends Clazz> aClass, ClazzId clazzId) {
+		return database.findEntity(clazzId);
+	}
+
+	@Override
+	public Class<Clazz> getDomainType() {
+		return Clazz.class;
+	}
+
+	@Override
+	public ClazzId getId(Clazz clazz) {
+		return clazz.getId();
+	}
+
+	@Override
+	public Class<ClazzId> getIdType() {
+		return ClazzId.class;
+	}
+
+	@Override
+	public Integer getVersion(Clazz clazz) {
+		return clazz.getVersion();
 	}
 }

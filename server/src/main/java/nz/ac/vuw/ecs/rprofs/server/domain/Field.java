@@ -18,6 +18,9 @@ public class Field implements Attribute<FieldId, Field> {
 	private FieldId id;
 
 	@NotNull
+	private Integer version;
+
+	@NotNull
 	private String name;
 
 	@NotNull
@@ -34,10 +37,11 @@ public class Field implements Attribute<FieldId, Field> {
 	public Field() {
 	}
 
-	public Field(@NotNull FieldId id, @NotNull String name,
-				 @NotNull ClazzId owner, @NotNull String ownerName,
-				 @NotNull String desc, int access) {
+	public Field(@NotNull FieldId id, @NotNull Integer version, @NotNull String name,
+				 @NotNull ClazzId owner, @NotNull String ownerName, @NotNull String desc,
+				 int access) {
 		this.id = id;
+		this.version = version;
 		this.name = name;
 		this.owner = owner;
 		this.ownerName = ownerName;
@@ -49,6 +53,15 @@ public class Field implements Attribute<FieldId, Field> {
 	@NotNull
 	public FieldId getId() {
 		return id;
+	}
+
+	@NotNull
+	public Integer getVersion() {
+		return version;
+	}
+
+	public void setVersion(@NotNull Integer version) {
+		this.version = version;
 	}
 
 	@Override

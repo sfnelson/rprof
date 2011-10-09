@@ -22,6 +22,9 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 	@NotNull
 	private ClazzId id;
 
+	@NotNull
+	private Integer version;
+
 	@Nullable
 	private String name;
 
@@ -36,10 +39,11 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 	public Clazz() {
 	}
 
-	public Clazz(@NotNull ClazzId id, @Nullable String name,
+	public Clazz(@NotNull ClazzId id, @NotNull Integer version, @Nullable String name,
 				 @Nullable ClazzId parent, @Nullable String parentName,
 				 int properties) {
 		this.id = id;
+		this.version = version;
 		this.name = name;
 		this.parent = parent;
 		this.parentName = parentName;
@@ -64,6 +68,15 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 	@NotNull
 	public ClazzId getId() {
 		return id;
+	}
+
+	@NotNull
+	public Integer getVersion() {
+		return version;
+	}
+
+	public void setVersion(@NotNull Integer version) {
+		this.version = version;
 	}
 
 	public void setParent(@Nullable ClazzId parent) {

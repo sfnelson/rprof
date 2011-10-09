@@ -25,7 +25,6 @@
     <bean id="events" class="nz.ac.vuw.ecs.rprofs.server.data.EventManager"/>
 
     <!-- requestfactory autowired @Configurables -->
-    <bean id="locator" class="nz.ac.vuw.ecs.rprofs.server.data.DomainObjectLocator"/>
     <bean id="services" class="nz.ac.vuw.ecs.rprofs.server.request.ServiceLocator"/>
 
     <!-- servlet autowired @Configurables -->

@@ -31,16 +31,6 @@ public class Start extends HttpServlet {
 
 		log.info("profiler run started");
 
-		log.debug("waiting 60 seconds to ensure a reasonable timeout available");
-
-		try {
-			Thread.sleep(60000l);
-		} catch (InterruptedException ex) {
-			throw new ServletException("interrupted");
-		}
-
-		log.debug("done waiting");
-
 		resp.addHeader("Dataset", dataset.getHandle());
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}

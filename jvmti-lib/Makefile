@@ -50,8 +50,8 @@ endif
 
 ifeq ($(OS),Linux)
 	JDK=/usr/pkg/java/sun-6
-	ifeq ($(wildcard $JDK),)
-		JDK = /usr/lib/jvm/java-6-openjdk
+	ifeq ($(wildcard /usr/pkg/java/sun-6),)
+		JDK=/usr/lib/jvm/java-6-openjdk
 	endif
 	CC=gcc
 	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux

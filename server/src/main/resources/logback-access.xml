@@ -1,0 +1,10 @@
+<configuration>
+    <appender name="ACCESSFILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/server-access.log</file>
+        <layout class="ch.qos.logback.access.PatternLayout">
+          <param name="Pattern" value="%date %server %remoteIP %clientHost %user %requestURL" />
+        </layout>
+    </appender>
+
+    <appender-ref ref="ACCESSFILE"/>
+</configuration>

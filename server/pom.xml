@@ -369,7 +369,26 @@
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
-                <version>8.0.0.M3</version>
+                <version>8.0.0.RC0</version>
+                <configuration>
+                    <connectors>
+                        <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+                            <port>8888</port>
+                            <maxIdleTime>0</maxIdleTime>
+                        </connector>
+                    </connectors>
+                    <requestLog implementation="ch.qos.logback.access.jetty.v7.RequestLogImpl">
+                        <filename>src/main/resources/logback-access.xml</filename>
+                    </requestLog>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>ch.qos.logback</groupId>
+                        <artifactId>logback-access</artifactId>
+                        <version>0.9.29</version>
+			<scope>runtime</scope>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
 

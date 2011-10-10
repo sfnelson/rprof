@@ -124,14 +124,6 @@ public class Logger extends HttpServlet {
 		log.debug("finshed storing in {}ms, flushing to disk", flushing - started);
 		database.flush();
 
-		log.debug("waiting 30 seconds to simulate a slow store...");
-
-		try {
-			Thread.sleep(30000l);
-		} catch (InterruptedException ex) {
-			ex.printStackTrace();
-		}
-
 		long finished = Calendar.getInstance().getTime().getTime();
 		log.debug("{} events stored successfully in {}ms",
 				length / RECORD_LENGTH, finished - started);

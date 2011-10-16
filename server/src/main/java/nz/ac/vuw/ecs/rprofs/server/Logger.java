@@ -120,9 +120,9 @@ public class Logger extends HttpServlet {
 			b.store();
 		}
 
-		long flushing = Calendar.getInstance().getTime().getTime();
-		log.debug("finshed storing in {}ms, flushing to disk", flushing - started);
-		database.flush();
+		//long flushing = Calendar.getInstance().getTime().getTime();
+		//log.debug("finshed storing in {}ms, flushing to disk", flushing - started);
+		//database.flush();
 
 		long finished = Calendar.getInstance().getTime().getTime();
 		log.debug("{} events stored successfully in {}ms",

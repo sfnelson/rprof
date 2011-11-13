@@ -1,9 +1,16 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.mongodb.*;
+import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.util.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
@@ -11,34 +18,28 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import nz.ac.vuw.ecs.rprofs.server.reports.MapReduce;
+import nz.ac.vuw.ecs.rprofs.server.reports.MapReduceTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.validation.constraints.NotNull;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 9 September, 2011
  */
+@Singleton
 public class Database {
 
 	private final Logger log = LoggerFactory.getLogger(Database.class);
 
-	@NotNull
 	private final Mongo mongo;
-
-	@VisibleForTesting
-	@Autowired(required = true)
-	Context context;
+	private final Context context;
 
 	private Map<DatasetId, Dataset> datasets;
 
-	public Database(@NotNull Mongo mongo) {
+	@Inject
+	Database(@NotNull Mongo mongo, Context context) {
 		this.mongo = mongo;
+		this.context = context;
 		this.datasets = Maps.newHashMap();
 	}
 
@@ -174,7 +175,7 @@ public class Database {
 		return true;
 	}
 
-	public <Input extends DataObject<?, Input>> Runnable
+	public <Input extends DataObject<?, Input>> MapReduceTask<Input>
 	createInstanceMapReduce(Query<?, Input> input, MapReduce<Input, InstanceId, Instance> mr, boolean replace) {
 		DB db = getDatabase();
 		final DBCollection tmp = db.getCollection("tmp.mapreduce");
@@ -191,7 +192,7 @@ public class Database {
 			}
 
 			@Override
-			Instance get() {
+			public Instance get() {
 				init((DBObject) b.get("value"));
 				return super.get();
 			}

@@ -1,6 +1,14 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import com.google.common.annotations.VisibleForTesting;
+import java.io.IOException;
+import java.io.InputStream;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
@@ -11,36 +19,22 @@ import nz.ac.vuw.ecs.rprofs.server.weaving.ClassParser;
 import nz.ac.vuw.ecs.rprofs.server.weaving.ClassRecord;
 import nz.ac.vuw.ecs.rprofs.server.weaving.Weaver;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.InputStream;
-
-/**
- * The server side implementation of the RPC service.
- */
-@Configurable(autowire = Autowire.BY_TYPE)
+@Singleton
 public class Weave extends HttpServlet {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Weave.class);
 
-	@VisibleForTesting
-	@Autowired
-	ClassManager classes;
+	private final ClassManager classes;
+	private final DatasetManager datasets;
+	private final Context context;
 
-	@VisibleForTesting
-	@Autowired
-	DatasetManager datasets;
-
-	@VisibleForTesting
-	@Autowired
-	Context context;
+	@Inject
+	Weave(ClassManager classes, DatasetManager datasets, Context context) {
+		this.classes = classes;
+		this.datasets = datasets;
+		this.context = context;
+	}
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)

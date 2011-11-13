@@ -1,5 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import java.util.Date;
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetQuery;
@@ -10,9 +13,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
-import java.util.List;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
@@ -29,8 +29,7 @@ public class DatasetManagerTest {
 	@Before
 	public void setUp() throws Exception {
 		database = createMock(Database.class);
-		manager = new DatasetManager();
-		manager.database = database;
+		manager = new DatasetManager(database);
 	}
 
 	@SuppressWarnings("unchecked")

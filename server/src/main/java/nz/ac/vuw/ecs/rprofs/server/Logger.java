@@ -1,7 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import com.google.common.annotations.VisibleForTesting;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Calendar;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import javax.annotation.Nullable;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
@@ -9,42 +21,29 @@ import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
+import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
+import nz.ac.vuw.ecs.rprofs.server.reports.MapReduceTask;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 
-import javax.annotation.Nullable;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Calendar;
-
-@SuppressWarnings("serial")
-@Configurable(autowire = Autowire.BY_TYPE)
+@Singleton
 public class Logger extends HttpServlet {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Logger.class);
 
-	@VisibleForTesting
-	@Autowired
-	DatasetManager datasets;
+	private final DatasetManager datasets;
+	private final EventManager events;
+	private final Context context;
+	private final Database database;
+	private final ClassManager classes;
 
-	@VisibleForTesting
-	@Autowired
-	EventManager events;
-
-	@VisibleForTesting
-	@Autowired
-	Context context;
-
-	@VisibleForTesting
-	@Autowired
-	Database database;
+	@Inject
+	Logger(DatasetManager datasets, EventManager events, Context context, Database database, ClassManager classes) {
+		this.datasets = datasets;
+		this.events = events;
+		this.context = context;
+		this.database = database;
+		this.classes = classes;
+	}
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -79,6 +78,9 @@ public class Logger extends HttpServlet {
 
 		log.debug("storing {} events", length / RECORD_LENGTH);
 		long started = Calendar.getInstance().getTime().getTime();
+
+		InstanceMapReduce mr = new InstanceMapReduce(ds, context, classes);
+		MapReduceTask<Event> task = database.createInstanceMapReduce(null, mr, false);
 
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long id = dis.readLong();
@@ -117,12 +119,11 @@ public class Logger extends HttpServlet {
 				}
 			}
 
-			b.store();
+			//b.store();
+			task.mapVolatile(b.get());
 		}
 
-		//long flushing = Calendar.getInstance().getTime().getTime();
-		//log.debug("finshed storing in {}ms, flushing to disk", flushing - started);
-		//database.flush();
+		task.flush();
 
 		long finished = Calendar.getInstance().getTime().getTime();
 		log.debug("{} events stored successfully in {}ms",

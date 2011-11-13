@@ -1,14 +1,14 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Date;
 
 import static org.easymock.EasyMock.*;
 
@@ -31,8 +31,7 @@ public class StartTest {
 		response = createMock(HttpServletResponse.class);
 
 		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
-		start = new Start();
-		start.datasets = manager;
+		start = new Start(manager);
 	}
 
 	@Test

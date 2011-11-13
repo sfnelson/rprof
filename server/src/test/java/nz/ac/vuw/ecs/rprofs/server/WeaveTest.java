@@ -1,6 +1,12 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
 import com.google.common.collect.Lists;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
@@ -19,12 +25,6 @@ import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.asm.Opcodes;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
@@ -65,10 +65,7 @@ public class WeaveTest {
 		method = new Method(MethodId.create(dataset, clazz, (short) 1),
 				0, "<init>", clazz.getId(), clazz.getName(), "()V", Opcodes.ACC_PUBLIC);
 
-		weave = new Weave();
-		weave.classes = classes;
-		weave.context = context;
-		weave.datasets = manager;
+		weave = new Weave(classes, manager, context);
 	}
 
 	@SuppressWarnings("unchecked")

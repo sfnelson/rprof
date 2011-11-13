@@ -104,6 +104,7 @@ abstract class MongoMethodBuilder extends MongoBuilder<MongoMethodBuilder, Metho
 		int access = (Integer) b.get("access");
 		ClazzId cid = new ClazzId((Long) b.get("owner"));
 		String owner = (String) b.get("ownerName");
+		reset();
 		return new Method(id, version, name, cid, owner, desc, access);
 	}
 }

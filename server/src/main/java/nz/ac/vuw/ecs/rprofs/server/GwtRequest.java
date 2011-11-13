@@ -1,29 +1,31 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import com.google.common.annotations.VisibleForTesting;
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.StringTokenizer;
-
+@Singleton
 public class GwtRequest implements Filter {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(GwtRequest.class);
 
-	@VisibleForTesting
-	@Autowired
-	DatasetManager datasets;
+	private final DatasetManager datasets;
+	private final Context context;
 
-	@VisibleForTesting
-	@Autowired
-	Context context;
+	@Inject
+	GwtRequest(DatasetManager datasets, Context context) {
+		this.datasets = datasets;
+		this.context = context;
+	}
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {

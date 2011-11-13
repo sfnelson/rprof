@@ -1,60 +1,71 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import com.google.common.annotations.VisibleForTesting;
-import nz.ac.vuw.ecs.rprofs.server.context.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
+import java.io.IOException;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
+import nz.ac.vuw.ecs.rprofs.server.reports.MapReduceTask;
+import org.slf4j.LoggerFactory;
 
-/**
- * Author: Stephen Nelson <stephen@sfnelson.org>
- * Date: 28/09/11
- */
-@Configurable(autowire = Autowire.BY_TYPE)
+@Singleton
 public class Process extends HttpServlet {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Start.class);
 
-	@VisibleForTesting
-	@Autowired
-	DatasetManager datasets;
+	private final DatasetManager datasets;
+	private final Context context;
+	private final Database db;
+	private final ClassManager classes;
 
-	@VisibleForTesting
-	@Autowired
-	Context context;
-
-	@Autowired
-	Database db;
+	@Inject
+	Process(DatasetManager datasets, Context context, Database db, ClassManager classes) {
+		this.datasets = datasets;
+		this.context = context;
+		this.db = db;
+		this.classes = classes;
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		String handle = req.getParameter("dataset");
-		String op = req.getParameter("op");
+		final String handle = req.getParameter("dataset");
+		final String op = req.getParameter("op");
 
 		Dataset dataset = datasets.findDataset(handle);
 		context.setDataset(dataset);
 
-		InstanceMapReduce mr = new InstanceMapReduce(dataset);
+		InstanceMapReduce mr = new InstanceMapReduce(dataset, context, classes);
 
-		Runnable process = db.createInstanceMapReduce(db.getEventQuery(), mr, true);
-		new Thread(process).start();
+		final MapReduceTask<Event> task = db.createInstanceMapReduce(db.getEventQuery(), mr, true);
+		new Thread() {
+			@Override
+			public void run() {
+				if (op == null) task.run();
+				else if (op.equals("map")) {
+					task.map();
+				} else if (op.equals("reduce")) {
+					task.reduce();
+				}
+			}
+		}.start();
 
 		resp.addHeader("Dataset", dataset.getHandle());
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+		resp.setContentLength(0);
 
+		resp.getOutputStream().close();
 	}
 
 }

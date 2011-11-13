@@ -1,25 +1,26 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import java.util.Calendar;
+import java.util.List;
+
 import com.google.web.bindery.requestfactory.shared.Locator;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import nz.ac.vuw.ecs.rprofs.server.request.DatasetService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 
-import java.util.Calendar;
-import java.util.List;
-
-@Configurable
 public class DatasetManager extends Locator<Dataset, DatasetId> implements DatasetService {
 
-	@VisibleForTesting
-	@Autowired(required = true)
-	Database database;
+	private final Database database;
+
+	@Inject
+	DatasetManager(Database database) {
+		this.database = database;
+	}
 
 	public Dataset createDataset() {
 		Calendar now = Calendar.getInstance();

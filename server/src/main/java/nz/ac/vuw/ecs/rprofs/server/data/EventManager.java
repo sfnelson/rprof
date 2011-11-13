@@ -1,8 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import com.google.web.bindery.requestfactory.shared.Locator;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
@@ -10,21 +13,19 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
 import nz.ac.vuw.ecs.rprofs.server.request.EventService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
-
-import java.util.List;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 11/09/11
  */
-@Configurable
 public class EventManager extends Locator<Event, EventId> implements EventService {
 
-	@VisibleForTesting
-	@Autowired(required = true)
-	Database database;
+	private final Database database;
+
+	@Inject
+	EventManager(Database database) {
+		this.database = database;
+	}
 
 	public EventCreator createEvent() {
 		return database.getEventCreater();

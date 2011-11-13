@@ -63,4 +63,9 @@ public class TestFieldCreator implements FieldCreator<TestFieldCreator> {
 		clazzCreator.fields.add(new Field(id, 0, name, owner, ownerName, desc, access));
 		return id;
 	}
+
+	@Override
+	public Field get() {
+		return new Field(id, 0, name, owner, ownerName, desc, access);
+	}
 }

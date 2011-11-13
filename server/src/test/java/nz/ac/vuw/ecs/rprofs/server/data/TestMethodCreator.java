@@ -63,4 +63,9 @@ public class TestMethodCreator implements MethodCreator<TestMethodCreator> {
 		clazzCreator.methods.add(new Method(id, 0, name, owner, ownerName, desc, access));
 		return id;
 	}
+
+	@Override
+	public Method get() {
+		return new Method(id, 0, name, owner, ownerName, desc, access);
+	}
 }

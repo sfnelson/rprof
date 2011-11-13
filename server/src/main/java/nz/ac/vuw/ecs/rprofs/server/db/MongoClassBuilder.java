@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import java.util.List;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
@@ -7,8 +9,6 @@ import com.mongodb.DBCursor;
 import nz.ac.vuw.ecs.rprofs.server.data.util.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
-
-import java.util.List;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -172,7 +172,7 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 		if (b.containsField("parentName")) {
 			clazz.setParentName((String) b.get("parentName"));
 		}
-		b = new BasicDBObject();
+		reset();
 		return clazz;
 	}
 

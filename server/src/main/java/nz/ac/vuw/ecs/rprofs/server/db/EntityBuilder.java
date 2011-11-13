@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Builder;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Creator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
@@ -10,8 +11,6 @@ import nz.ac.vuw.ecs.rprofs.server.data.util.Updater;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import org.bson.BSONObject;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -119,5 +118,5 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 
 	abstract long _count(DBObject ref);
 
-	abstract T get();
+	public abstract T get();
 }

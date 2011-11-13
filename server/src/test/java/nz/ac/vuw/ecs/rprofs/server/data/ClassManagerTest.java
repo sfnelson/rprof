@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import java.util.Date;
+
 import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.data.util.*;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
@@ -8,8 +10,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Test;
-
-import java.util.Date;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
@@ -42,8 +42,7 @@ public class ClassManagerTest {
 
 		dataset = new Dataset(new DatasetId(1l), "foo", new Date());
 
-		cm = new ClassManager();
-		cm.database = database;
+		cm = new ClassManager(database);
 	}
 
 	@SuppressWarnings("unchecked")

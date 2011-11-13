@@ -1,37 +1,31 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-import com.google.common.annotations.VisibleForTesting;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.collect.Maps;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.weaving.MethodUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 29/09/11
  */
-@Configurable
 public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance> {
 
-	@VisibleForTesting
-	@Autowired
-	Context context;
+	private final Context context;
 
-	@VisibleForTesting
-	@Autowired
-	ClassManager classes;
+	private final ClassManager classes;
 
 	private final Dataset dataset;
 
-	public InstanceMapReduce(Dataset dataset) {
+	public InstanceMapReduce(Dataset dataset, Context context, ClassManager classes) {
 		this.dataset = dataset;
+		this.context = context;
+		this.classes = classes;
 	}
 
 	@Override
@@ -69,7 +63,8 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 				break;
 			case Event.METHOD_RETURN:
 			case Event.METHOD_EXCEPTION:
-				if (MethodUtils.isInit(method)) {
+				if (method == null) ; // TODO why is it null now?
+				else if (MethodUtils.isInit(method)) {
 					result.setType(method.getOwner());
 					result.setConstructor(method.getId());
 				}
@@ -80,7 +75,8 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 				result.setType(e.getClazz());
 				break;
 			case Event.METHOD_ENTER:
-				if (MethodUtils.isEquals(method)) {
+				if (method == null) ; // TODO why is it null now?
+				else if (MethodUtils.isEquals(method)) {
 					result.setFirstEquals(e.getId());
 				} else if (MethodUtils.isHashCode(method)) {
 					result.setFirstHashCode(e.getId());

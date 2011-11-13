@@ -1,28 +1,28 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import com.google.common.annotations.VisibleForTesting;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
+import java.io.IOException;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("serial")
-@Configurable(autowire = Autowire.BY_TYPE)
+@Singleton
 public class Stop extends HttpServlet {
 
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Stop.class);
 
-	@VisibleForTesting
-	@Autowired
-	DatasetManager datasets;
+	private final DatasetManager datasets;
+
+	@Inject
+	Stop(DatasetManager datasets) {
+		this.datasets = datasets;
+	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -38,6 +38,7 @@ public class Stop extends HttpServlet {
 		log.info("profiler run stopped");
 
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
+		resp.setContentLength(0);
 	}
 
 }

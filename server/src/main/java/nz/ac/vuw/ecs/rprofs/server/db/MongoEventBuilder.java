@@ -162,6 +162,7 @@ abstract class MongoEventBuilder extends MongoBuilder<MongoEventBuilder, EventId
 				event.setArgs(out);
 			}
 		}
+		reset();
 		return event;
 	}
 }

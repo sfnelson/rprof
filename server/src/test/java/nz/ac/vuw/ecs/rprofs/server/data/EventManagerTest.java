@@ -18,8 +18,7 @@ public class EventManagerTest {
 	@org.junit.Before
 	public void setup() {
 		database = createMock(Database.class);
-		manager = new EventManager();
-		manager.database = database;
+		manager = new EventManager(database);
 	}
 
 	@SuppressWarnings("unchecked")

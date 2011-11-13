@@ -17,13 +17,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>gwt-staging</id>
-            <url>https://oss.sonatype.org/content/repositories/comgoogle-141/</url>
-        </repository>
-    </repositories>
-
     <dependencies>
 
         <!-- web app support -->
@@ -90,6 +83,18 @@
             <artifactId>gwt-user</artifactId>
             <version>${gwt.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject.extensions</groupId>
+            <artifactId>guice-servlet</artifactId>
+            <version>3.0</version>
         </dependency>
 
         <dependency>
@@ -386,7 +391,7 @@
                         <groupId>ch.qos.logback</groupId>
                         <artifactId>logback-access</artifactId>
                         <version>0.9.29</version>
-			<scope>runtime</scope>
+                        <scope>runtime</scope>
                     </dependency>
                 </dependencies>
             </plugin>

@@ -1,21 +1,28 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import java.util.List;
+
 import com.google.web.bindery.requestfactory.shared.Locator;
+
+import com.google.inject.Inject;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
+import nz.ac.vuw.ecs.rprofs.server.request.FieldService;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 10/10/11
  */
-@Configurable
-public class FieldManager extends Locator<Field, FieldId> {
+public class FieldManager extends Locator<Field, FieldId> implements FieldService {
 
-	@Autowired
-	Database database;
+	private final Database database;
+
+	@Inject
+	FieldManager(Database database) {
+		this.database = database;
+	}
 
 	@Override
 	public Field create(Class<? extends Field> aClass) {
@@ -25,6 +32,16 @@ public class FieldManager extends Locator<Field, FieldId> {
 	@Override
 	public Field find(Class<? extends Field> aClass, FieldId fieldId) {
 		return database.findEntity(fieldId);
+	}
+
+	@Override
+	public Field getField(FieldId fieldId) {
+		return database.findEntity(fieldId);
+	}
+
+	@Override
+	public List<? extends Field> findFields(ClazzId classId) {
+		return null;
 	}
 
 	@Override

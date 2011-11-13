@@ -1,14 +1,15 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.web.bindery.requestfactory.shared.Locator;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Configurable;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -17,10 +18,12 @@ import javax.validation.constraints.NotNull;
 @Configurable
 public class InstanceManager extends Locator<Instance, InstanceId> {
 
-	@VisibleForTesting
-	@NotNull
-	@Autowired
-	Database database;
+	private final Database database;
+
+	@Inject
+	InstanceManager(Database database) {
+		this.database = database;
+	}
 
 	@Override
 	public Instance create(Class<? extends Instance> aClass) {

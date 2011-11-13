@@ -1,19 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
-import nz.ac.vuw.ecs.rprofs.server.context.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
-import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
-import org.junit.Before;
-import org.junit.Test;
+import java.io.IOException;
+import java.util.Date;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Date;
+import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.fail;
@@ -44,9 +44,7 @@ public class GwtRequestTest {
 		datasets = createMock(DatasetManager.class);
 		context = createMock(Context.class);
 
-		servlet = new GwtRequest();
-		servlet.datasets = datasets;
-		servlet.context = context;
+		servlet = new GwtRequest(datasets, context);
 	}
 
 	@Test

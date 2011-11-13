@@ -1,5 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
+
 import com.google.common.collect.Lists;
 import com.mongodb.Mongo;
 import nz.ac.vuw.ecs.rprofs.server.context.Context;
@@ -9,11 +14,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import org.junit.*;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
 
 import static org.junit.Assert.*;
 
@@ -70,13 +70,14 @@ public class DatabaseIntegrationTest {
 	}
 
 	private Database database;
+	private Context context;
 	private Mongo mongo;
 
 	@Before
 	public void createMongo() throws Exception {
 		mongo = new Mongo("127.0.0.1", 27018);
-		database = new Database(mongo);
-		database.context = new Context(database);
+		context = new Context();
+		database = new Database(mongo, context);
 	}
 
 	@Test
@@ -189,7 +190,7 @@ public class DatabaseIntegrationTest {
 				.setHandle("foobar")
 				.store();
 		Dataset ds = database.findEntity(id);
-		database.context.setDataset(ds);
+		context.setDataset(ds);
 
 		ClazzCreator<?> c = database.getClazzCreator()
 				.setName("org/foo/Bar")
@@ -246,7 +247,7 @@ public class DatabaseIntegrationTest {
 
 		assertEquals(1, database.countPackages());
 
-		database.context.clear();
+		context.clear();
 	}
 
 	@Test
@@ -256,7 +257,7 @@ public class DatabaseIntegrationTest {
 				.setHandle("foobar")
 				.store();
 		Dataset ds = database.findEntity(id);
-		database.context.setDataset(ds);
+		context.setDataset(ds);
 
 		EventId eventId = new EventId(1);
 		ClazzId clazzId = new ClazzId(2);
@@ -284,7 +285,7 @@ public class DatabaseIntegrationTest {
 		// todo second arg should be null but gwt has a bug
 		assertEquals(Lists.newArrayList(instance, new InstanceId(0)), e.getArgs());
 
-		database.context.clear();
+		context.clear();
 	}
 
 	@After

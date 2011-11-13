@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -8,8 +10,6 @@ import nz.ac.vuw.ecs.rprofs.server.data.util.InstanceQuery;
 import nz.ac.vuw.ecs.rprofs.server.data.util.InstanceUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
-
-import java.util.List;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -99,7 +99,7 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 
 	@Override
 	@SuppressWarnings("unchecked")
-	Instance get() {
+	public Instance get() {
 		assert (b.containsField("_id"));
 		InstanceId id = new InstanceId((Long) b.get("_id"));
 
@@ -148,6 +148,7 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 			}
 		}
 
+		reset();
 		return i;
 	}
 }

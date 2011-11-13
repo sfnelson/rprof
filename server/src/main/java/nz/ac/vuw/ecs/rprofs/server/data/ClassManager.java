@@ -1,8 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import com.google.web.bindery.requestfactory.shared.Locator;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
@@ -15,16 +18,16 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.request.ClazzService;
 import nz.ac.vuw.ecs.rprofs.server.request.FieldService;
 import nz.ac.vuw.ecs.rprofs.server.request.MethodService;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 public class ClassManager extends Locator<Clazz, ClazzId>
 		implements ClazzService, MethodService, FieldService {
 
-	@VisibleForTesting
-	@Autowired(required = true)
-	Database database;
+	private final Database database;
+
+	@Inject
+	ClassManager(Database database) {
+		this.database = database;
+	}
 
 	public ClazzCreator createClazz() {
 		return database.getClazzCreator();

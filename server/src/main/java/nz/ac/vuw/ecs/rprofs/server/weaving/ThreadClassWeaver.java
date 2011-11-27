@@ -4,6 +4,7 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
+import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import org.objectweb.asm.*;
 
 /**

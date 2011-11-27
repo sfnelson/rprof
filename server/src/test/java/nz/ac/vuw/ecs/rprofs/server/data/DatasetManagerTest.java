@@ -8,7 +8,6 @@ import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetQuery;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetUpdater;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
-import nz.ac.vuw.ecs.rprofs.server.db.TestCursor;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;

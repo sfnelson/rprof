@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import java.util.regex.Pattern;
+
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import org.objectweb.asm.ClassReader;
@@ -8,8 +10,6 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.regex.Pattern;
 
 public class Weaver {
 

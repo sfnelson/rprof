@@ -7,7 +7,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.data.util.EventCreator;
@@ -52,7 +52,7 @@ public class LoggerTest {
 		response = createMock(HttpServletResponse.class);
 		builder = createMock(EventCreator.class);
 
-		logger = new Logger(datasets, events, context, database, null);
+		logger = new Logger(null);
 	}
 
 	//@Test
@@ -74,21 +74,6 @@ public class LoggerTest {
 		logger.doPost(request, response);
 
 		verify(datasets, context, events, request, response, database);
-	}
-
-	//@Test
-	public void testParseNoEvents() throws Exception {
-		ServletInputStream in = new ServletInputStream();
-		in.content = new byte[]{};
-
-		expect(events.createEvent()).andReturn(builder);
-		database.flush();
-
-		replay(datasets, context, events, builder, database);
-
-		logger.parseEvents(ds, 0, in);
-
-		verify(datasets, context, events, builder, database);
 	}
 
 	//@Test
@@ -146,7 +131,7 @@ public class LoggerTest {
 
 		replay(datasets, context, events, builder, database);
 
-		logger.parseEvents(ds, in.content.length, in);
+		//logger.parseEvents(ds, in.content.length, in);
 
 		verify(datasets, context, events, builder, database);
 		assertEquals(in.content.length, in.count);
@@ -206,7 +191,7 @@ public class LoggerTest {
 
 		replay(datasets, context, events, builder, database);
 
-		logger.parseEvents(ds, in.content.length, in);
+		//logger.parseEvents(ds, in.content.length, in);
 
 		verify(datasets, context, events, builder, database);
 		assertEquals(in.content.length, in.count);
@@ -295,7 +280,7 @@ public class LoggerTest {
 
 		replay(datasets, context, events, builder, database);
 
-		logger.parseEvents(ds, in.content.length, in);
+		//logger.parseEvents(ds, in.content.length, in);
 
 		verify(datasets, context, events, builder, database);
 		assertEquals(in.content.length, in.count);

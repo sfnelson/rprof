@@ -8,7 +8,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import nz.ac.vuw.ecs.rprofs.server.context.Context;
+import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
@@ -46,7 +46,7 @@ public class Process extends HttpServlet {
 		Dataset dataset = datasets.findDataset(handle);
 		context.setDataset(dataset);
 
-		InstanceMapReduce mr = new InstanceMapReduce(dataset, context, classes);
+		InstanceMapReduce mr = new InstanceMapReduce(dataset, db);
 
 		final MapReduceTask<Event> task = db.createInstanceMapReduce(db.getEventQuery(), mr, true);
 		new Thread() {

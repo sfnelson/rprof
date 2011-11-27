@@ -3,6 +3,7 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;

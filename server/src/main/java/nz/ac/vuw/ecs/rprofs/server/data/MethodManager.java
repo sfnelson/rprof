@@ -10,13 +10,11 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import nz.ac.vuw.ecs.rprofs.server.request.MethodService;
-import org.springframework.beans.factory.annotation.Configurable;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 10/10/11
  */
-@Configurable
 public class MethodManager extends Locator<Method, MethodId> implements MethodService {
 
 	private final Database database;

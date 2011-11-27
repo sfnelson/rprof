@@ -2,20 +2,15 @@ package nz.ac.vuw.ecs.rprofs.server.data;
 
 import com.google.web.bindery.requestfactory.shared.Locator;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Configurable;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 29/09/11
  */
-@Configurable
 public class InstanceManager extends Locator<Instance, InstanceId> {
 
 	private final Database database;

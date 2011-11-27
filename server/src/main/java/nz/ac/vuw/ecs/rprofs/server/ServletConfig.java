@@ -18,6 +18,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.request.*;
+import org.eclipse.jetty.continuation.ContinuationFilter;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -30,6 +31,8 @@ public class ServletConfig extends GuiceServletContextListener {
 		return Guice.createInjector(new ServletModule() {
 			@Override
 			protected void configureServlets() {
+				bind(ContinuationFilter.class).in(Singleton.class);
+
 				filter("/gwtRequest*").through(GwtRequest.class);
 
 				serve("/gwtRequest*").with(RequestFactoryServlet.class);
@@ -38,6 +41,8 @@ public class ServletConfig extends GuiceServletContextListener {
 				serve("/start").with(Start.class);
 				serve("/stop").with(Stop.class);
 				serve("/weaver").with(Weave.class);
+				filter("/worker").through(ContinuationFilter.class);
+				serve("/worker").with(Workers.class);
 
 				bind(ServiceLayerDecorator.class).to(InjectingServiceLayerDecorator.class);
 

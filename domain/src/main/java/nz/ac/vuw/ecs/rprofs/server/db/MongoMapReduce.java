@@ -2,6 +2,7 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -105,19 +106,47 @@ abstract class MongoMapReduce<Input extends DataObject<?, Input>, OutId extends 
 		int numResults = (int) tmp.count();
 		int processed = 0;
 		DBCursor cursor = tmp.find();
+		Map<OutId, List<Output>> oldCache = null;
+		Map<OutId, List<Output>> cache = Maps.newHashMap();
 		while (cursor.hasNext()) {
 			Output result = tmpBuilder.init(cursor.next()).get();
-			Output current = database.findEntity(result.getId());
-			if (current != null) {
-				result = mapReduce.reduce(result.getId().getValue(), Lists.newArrayList(result, current));
+			OutId id = result.getId();
+
+			if (oldCache != null && oldCache.containsKey(id)) {
+				cache.put(id, oldCache.remove(id));
 			}
-			output.init(result).store();
+
+			if (cache.containsKey(id)) {
+				List<Output> list = cache.get(id);
+				list.add(result);
+				if (list.size() > 100) {
+					cache.put(id, Lists.newArrayList(mapReduce.reduce(id.getValue(), list)));
+				}
+			} else {
+				List<Output> list = Lists.newArrayList(result);
+				Output current = database.findEntity(result.getId());
+				if (current != null) {
+					list.add(current);
+				}
+				cache.put(id, list);
+			}
+
+			if (cache.size() > 64000) {
+				if (oldCache != null) flush(oldCache);
+				oldCache = cache;
+				cache = Maps.newHashMap();
+			}
 
 			if (processed % BATCH_SIZE == 0) {
 				log.info("\tprocessed {}/{}", processed, numResults);
 			}
 			processed++;
 		}
+
+		if (oldCache != null) {
+			flush(oldCache);
+		}
+		flush(cache);
 		log.info("finished reduce.");
 
 		log.info("cleaning up...");
@@ -131,6 +160,12 @@ abstract class MongoMapReduce<Input extends DataObject<?, Input>, OutId extends 
 			tmpBuilder.init(value).store();
 		}
 		cache.clear();
+	}
+
+	private void flush(Map<OutId, List<Output>> cache) {
+		for (Map.Entry<OutId, List<Output>> entry : cache.entrySet()) {
+			output.init(mapReduce.reduce(entry.getKey().getValue(), entry.getValue())).store();
+		}
 	}
 
 	private class Emitter implements MapReduce.Emitter<OutId, Output> {

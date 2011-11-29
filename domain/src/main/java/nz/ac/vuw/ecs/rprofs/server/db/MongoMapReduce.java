@@ -5,10 +5,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Creator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
@@ -31,6 +29,8 @@ abstract class MongoMapReduce<Input extends DataObject<?, Input>, OutId extends 
 
 	private static final Logger log = LoggerFactory.getLogger(MongoMapReduce.class);
 
+	private final Database database;
+
 	private final Query<?, Input> input;
 	private final Creator<?, OutId, Output> output;
 	private final MapReduce<Input, OutId, Output> mapReduce;
@@ -40,8 +40,12 @@ abstract class MongoMapReduce<Input extends DataObject<?, Input>, OutId extends 
 	private final DBCollection tmp;
 	private final TmpBuilder tmpBuilder;
 
-	public MongoMapReduce(Query<?, Input> input, Creator<?, OutId, Output> output,
+	public MongoMapReduce(Database database,
+						  Query<?, Input> input,
+						  Creator<?, OutId, Output> output,
 						  MapReduce<Input, OutId, Output> mapReduce) {
+		this.database = database;
+
 		this.input = input;
 		this.output = output;
 		this.mapReduce = mapReduce;
@@ -97,40 +101,22 @@ abstract class MongoMapReduce<Input extends DataObject<?, Input>, OutId extends 
 
 	@Override
 	public void reduce() {
-		tmp.createIndex(new BasicDBObject("id", 1));
-
 		log.info("starting reduce...");
 		int numResults = (int) tmp.count();
 		int processed = 0;
-		while (true) {
-			DBObject one = tmp.findOne();
-			if (one == null) break;
-			Long id = (Long) one.get("id");
-			List<Output> values = Lists.newArrayList();
-			DBCursor cursor = tmp.find(new BasicDBObject("id", id));
-			Output result;
-			while (true) {
-				if (values.size() > BATCH_SIZE || !cursor.hasNext()) {
-					result = mapReduce.reduce(id, values);
-					if (!cursor.hasNext()) break;
-					else {
-						values.clear();
-						values.add(result);
-					}
-				}
-
-				values.add(tmpBuilder.init(cursor.next()).get());
-
-				if (processed % BATCH_SIZE == 0) {
-					log.info("\tprocessed {}/{}", processed, numResults);
-				}
-				processed++;
+		DBCursor cursor = tmp.find();
+		while (cursor.hasNext()) {
+			Output result = tmpBuilder.init(cursor.next()).get();
+			Output current = database.findEntity(result.getId());
+			if (current != null) {
+				result = mapReduce.reduce(result.getId().getValue(), Lists.newArrayList(result, current));
 			}
-			cursor.close();
-			if (result != null) {
-				output.init(result).store();
+			output.init(result).store();
+
+			if (processed % BATCH_SIZE == 0) {
+				log.info("\tprocessed {}/{}", processed, numResults);
 			}
-			tmp.remove(new BasicDBObject("id", id));
+			processed++;
 		}
 		log.info("finished reduce.");
 

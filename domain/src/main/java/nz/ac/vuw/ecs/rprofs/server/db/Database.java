@@ -204,7 +204,8 @@ public class Database {
 			getCollection(Instance.class).drop();
 		}
 
-		return new MongoMapReduce<Input, InstanceId, Instance, MongoInstanceBuilder>(input, getInstanceCreator(), mr) {
+		return new MongoMapReduce<Input, InstanceId, Instance, MongoInstanceBuilder>(this, input, getInstanceCreator(),
+				mr) {
 			@Override
 			protected MongoInstanceBuilder getTmpBuilder() {
 				return tmpBuilder;

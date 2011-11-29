@@ -1,13 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import java.util.Date;
+
+import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetQuery;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
-
-import javax.validation.constraints.NotNull;
-import java.util.Date;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>

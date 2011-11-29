@@ -103,7 +103,6 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 
 	@SuppressWarnings("unchecked")
 	B init(@NotNull BSONObject init) {
-		reset();
 		if (init != null) b.putAll(init);
 		return (B) this;
 	}

@@ -141,7 +141,8 @@ public class Database {
 			DB db = getDatabase(current);
 			DBCollection collection = getCollection(db, id.getTargetClass());
 			DBObject data = collection.findOne(new BasicDBObject("_id", id.getValue()));
-			return getBuilder(id.getTargetClass()).init(data).get();
+			if (data == null) return null;
+			else return getBuilder(id.getTargetClass()).init(data).get();
 		}
 	}
 

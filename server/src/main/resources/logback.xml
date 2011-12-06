@@ -29,12 +29,12 @@
         </encoder>
     </appender>
 
-    <logger name="nz.ac.vuw.ecs.rprofs" level="TRACE">
+    <logger name="nz.ac.vuw.ecs" level="TRACE">
         <appender-ref ref="DEBUGFILE"/>
     </logger>
 
     <root level="INFO">
         <appender-ref ref="INFOFILE"/>
-	<appender-ref ref="STDOUT"/>
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

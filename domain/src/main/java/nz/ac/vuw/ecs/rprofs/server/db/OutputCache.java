@@ -65,6 +65,8 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 
 	private final Creator<?, I, T> output;
 
+	private boolean reclaim = false;
+
 	public OutputCache(Creator<?, I, T> output) {
 		this.output = output;
 
@@ -76,7 +78,7 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 		MONITOR.deregister(this);
 	}
 
-	public synchronized int size() {
+	public int size() {
 		int size = 0;
 		for (Map<?, ?> m : maps) {
 			size += m.size();
@@ -84,28 +86,28 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 		return size;
 	}
 
-	public synchronized boolean isEmpty() {
+	public boolean isEmpty() {
 		for (Map<?, ?> m : maps) {
 			if (!m.isEmpty()) return false;
 		}
 		return true;
 	}
 
-	public synchronized boolean containsKey(Object key) {
+	public boolean containsKey(Object key) {
 		for (Map<?, ?> m : maps) {
 			if (m.containsKey(key)) return true;
 		}
 		return false;
 	}
 
-	public synchronized T get(I key) {
+	public T get(I key) {
 		for (Map<?, T> m : maps) {
 			if (m.containsKey(key)) return m.get(key);
 		}
 		return null;
 	}
 
-	public synchronized T put(I key, T value) {
+	public T put(I key, T value) {
 		T toReturn = null;
 		for (Map<?, T> m : maps) {
 			if (m.containsKey(key)) {
@@ -116,6 +118,12 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 				break;
 			}
 		}
+
+		if (reclaim) {
+			reclaim = false;
+			reclaim();
+		}
+
 		Map<I, T> map = maps.isEmpty() ? null : maps.getLast();
 		if (map == null || map.size() >= MAP_SIZE) {
 			map = new HashMap<I, T>(MAP_SIZE * 2);
@@ -134,7 +142,7 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 		return toReturn;
 	}
 
-	public synchronized void flush() {
+	public void flush() {
 		for (Map<?, T> m : maps) {
 			for (T value : m.values()) {
 				output.init(value).store();
@@ -143,10 +151,9 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 		maps.clear();
 	}
 
-	@Override
-	public synchronized void handleNotification(Notification notification, Object handback) {
+	private void reclaim() {
 		int num = maps.size() / 2;
-		log.debug("flushing {} to reclaim memory ({} cached)", num, size());
+		log.debug("flushing caches to reclaim memory ({} cached, {} to flush)", size(), num);
 		for (int i = 0; i < num; i++) {
 			Map<?, T> m = maps.removeFirst();
 			if (m != null) {
@@ -155,5 +162,10 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 				}
 			}
 		}
+	}
+
+	@Override
+	public void handleNotification(Notification notification, Object handback) {
+		reclaim = true;
 	}
 }

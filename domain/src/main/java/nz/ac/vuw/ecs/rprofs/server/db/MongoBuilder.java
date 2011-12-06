@@ -37,6 +37,11 @@ public abstract class MongoBuilder<B extends EntityBuilder<B, I, T>, I extends I
 	}
 
 	@Override
+	DBObject _find(DBObject query) {
+		return _getCollection().findOne(query);
+	}
+
+	@Override
 	long _count(DBObject query) {
 		return _getCollection().count(query);
 	}

@@ -18,7 +18,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
-import nz.ac.vuw.ecs.rprofs.server.reports.MapReduceTask;
+import nz.ac.vuw.ecs.rprofs.server.reports.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +92,7 @@ public class Worker {
 		long started = Calendar.getInstance().getTime().getTime();
 
 		InstanceMapReduce mr = new InstanceMapReduce(ds, database);
-		MapReduceTask<Event> task = database.createInstanceMapReduce(null, mr, false);
+		Mapper.MapTask<Event> task = database.createInstanceMapper(null, mr, false);
 
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long id = dis.readLong();
@@ -131,7 +131,6 @@ public class Worker {
 				}
 			}
 
-			//b.store();
 			task.mapVolatile(b.get());
 		}
 

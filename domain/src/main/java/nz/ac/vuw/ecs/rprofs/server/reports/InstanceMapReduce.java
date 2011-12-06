@@ -85,8 +85,8 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 	}
 
 	@Override
-	public Instance reduce(Long id, List<Instance> values) {
-		Instance result = new Instance(new InstanceId(id));
+	public Instance reduce(InstanceId id, Iterable<Instance> values) {
+		Instance result = new Instance(id);
 
 		ClazzId type = null;
 		MethodId constructor = null;

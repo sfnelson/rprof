@@ -13,9 +13,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
-import nz.ac.vuw.ecs.rprofs.server.reports.MapReduceTask;
 import org.slf4j.LoggerFactory;
 
 @Singleton
@@ -42,26 +40,26 @@ public class Process extends HttpServlet {
 		final String op = req.getParameter("op");
 
 		final Dataset dataset = datasets.findDataset(handle);
-		Context.setDataset(dataset);
+		if (dataset != null) {
+			Context.setDataset(dataset);
 
-		InstanceMapReduce mr = new InstanceMapReduce(dataset, db);
+			final InstanceMapReduce mr = new InstanceMapReduce(dataset, db);
 
-		final MapReduceTask<Event> task = db.createInstanceMapReduce(db.getEventQuery(), mr, true);
-		new Thread() {
-			@Override
-			public void run() {
-				Context.setDataset(dataset);
-				if (op == null) task.run();
-				else if (op.equals("map")) {
-					task.map();
-				} else if (op.equals("reduce")) {
-					task.reduce();
+			new Thread() {
+				@Override
+				public void run() {
+					Context.setDataset(dataset);
+					if (op.equals("map")) {
+						db.createInstanceMapper(db.getEventQuery(), mr, true).map();
+					} else if (op.equals("reduce")) {
+						db.createInstanceReducer(mr).reduce();
+					}
+					Context.clear();
 				}
-				Context.clear();
-			}
-		}.start();
+			}.start();
 
-		Context.clear();
+			Context.clear();
+		}
 
 		resp.addHeader("Dataset", dataset.getHandle());
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);

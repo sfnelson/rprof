@@ -1,10 +1,10 @@
 package nz.ac.vuw.ecs.rprofs.server.data.util;
 
-import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
-import nz.ac.vuw.ecs.rprofs.server.model.Id;
+import java.util.Iterator;
 
 import javax.validation.constraints.NotNull;
-import java.util.Iterator;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+import nz.ac.vuw.ecs.rprofs.server.model.Id;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -25,4 +25,6 @@ public interface Query<I extends Id<I, T>, T extends DataObject<I, T>> {
 
 	@NotNull
 	Cursor<? extends T> find(long start, long limit);
+
+	T find(I id);
 }

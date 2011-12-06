@@ -18,7 +18,8 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import nz.ac.vuw.ecs.rprofs.server.reports.MapReduce;
-import nz.ac.vuw.ecs.rprofs.server.reports.MapReduceTask;
+import nz.ac.vuw.ecs.rprofs.server.reports.Mapper;
+import nz.ac.vuw.ecs.rprofs.server.reports.Reducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,8 +174,8 @@ public class Database {
 		return true;
 	}
 
-	public <Input extends DataObject<?, Input>> MapReduceTask<Input>
-	createInstanceMapReduce(Query<?, Input> input, MapReduce<Input, InstanceId, Instance> mr, boolean replace) {
+	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
+	createInstanceMapper(Query<?, Input> input, MapReduce<Input, InstanceId, Instance> mr, boolean replace) {
 		DB db = getDatabase();
 		final DBCollection tmp = db.getCollection("tmp.mapreduce");
 		final MongoInstanceBuilder tmpBuilder = new MongoInstanceBuilder() {
@@ -205,16 +206,41 @@ public class Database {
 			getCollection(Instance.class).drop();
 		}
 
-		return new MongoMapReduce<Input, InstanceId, Instance, MongoInstanceBuilder>(this, input, getInstanceCreator(),
-				mr) {
+		return new MongoMapper<Input, InstanceId, Instance>(input, tmpBuilder, mr, mr);
+	}
+
+	public <Input extends DataObject<?, Input>> Reducer.ReducerTask
+	createInstanceReducer(MapReduce<Input, InstanceId, Instance> mr) {
+		DB db = getDatabase();
+		final DBCollection tmp = db.getCollection("tmp.mapreduce");
+		final MongoInstanceBuilder tmpBuilder = new MongoInstanceBuilder() {
 			@Override
-			protected MongoInstanceBuilder getTmpBuilder() {
-				return tmpBuilder;
+			DBCollection _getCollection() {
+				return tmp;
 			}
 
 			@Override
-			protected DBCollection getTmpCollection() {
-				return tmp;
+			void _store(DBObject toStore) {
+				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
+						.append("value", toStore));
+			}
+
+			@Override
+			public Instance get() {
+				init((DBObject) b.get("value"));
+				return super.get();
+			}
+
+			@Override
+			InstanceId _createId() {
+				return new InstanceId((Long) b.get("_id"));
+			}
+		};
+
+		return new MongoReducer<InstanceId, Instance>(tmpBuilder, getInstanceCreator(), getInstanceQuery(), mr) {
+			@Override
+			protected void cleanup() {
+				tmp.drop();
 			}
 		};
 	}

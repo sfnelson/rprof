@@ -49,6 +49,14 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 	}
 
 	@Override
+	public T find(I id) {
+		DBObject data = _find(new BasicDBObject("_id", id.getValue()));
+		if (data == null) return null;
+		reset();
+		return init(data).get();
+	}
+
+	@Override
 	public Cursor<? extends T> find() {
 		return find(0, Integer.MAX_VALUE);
 	}
@@ -114,6 +122,8 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 	abstract void _update(DBObject ref, DBObject update);
 
 	abstract DBCursor _query(DBObject ref);
+
+	abstract DBObject _find(DBObject ref);
 
 	abstract long _count(DBObject ref);
 

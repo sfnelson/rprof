@@ -20,18 +20,20 @@ import org.slf4j.LoggerFactory;
 class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements NotificationListener {
 
 	private static class MemoryMonitor {
-		private static final float THRESHOLD = 0.8f;
+		private static final float THRESHOLD = 0.6f;
 		private static final NotificationFilter FILTER = new NotificationFilter() {
 			@Override
 			public boolean isNotificationEnabled(Notification notification) {
+				log.debug("possible memory notification");
 				return notification.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED);
 			}
 		};
+		private final MemoryMXBean memory;
 		private final NotificationEmitter emitter;
 
 		public MemoryMonitor() {
-			MemoryMXBean mem = ManagementFactory.getMemoryMXBean();
-			emitter = (NotificationEmitter) mem;
+			memory = ManagementFactory.getMemoryMXBean();
+			emitter = (NotificationEmitter) memory;
 
 			MemoryPoolMXBean pool = null;
 			for (MemoryPoolMXBean p : ManagementFactory.getMemoryPoolMXBeans()) {
@@ -51,6 +53,11 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 
 		public void deregister(NotificationListener listener) throws ListenerNotFoundException {
 			emitter.removeNotificationListener(listener);
+		}
+
+		public boolean update() {
+			memory.gc();
+			return THRESHOLD > (1f * memory.getHeapMemoryUsage().getUsed() / memory.getHeapMemoryUsage().getMax());
 		}
 	}
 
@@ -120,7 +127,6 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 		}
 
 		if (reclaim) {
-			reclaim = false;
 			reclaim();
 		}
 
@@ -152,20 +158,27 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 	}
 
 	private void reclaim() {
-		int num = maps.size() / 2;
-		log.debug("flushing caches to reclaim memory ({} cached, {} to flush)", size(), num);
-		for (int i = 0; i < num; i++) {
+		int size = size();
+		log.info("flushing caches to reclaim memory ({} cached)", size);
+		for (int i = 0; i < size / 2; ) {
+			if (maps.isEmpty()) break;
 			Map<?, T> m = maps.removeFirst();
+			i += m.size();
 			if (m != null) {
 				for (T value : m.values()) {
 					output.init(value).store();
 				}
 			}
 		}
+		reclaim = MONITOR.update();
+		if (reclaim && maps.isEmpty()) {
+			log.error("after reclaiming caches memory threshold is still exceeded");
+		}
 	}
 
 	@Override
 	public void handleNotification(Notification notification, Object handback) {
 		reclaim = true;
+		log.debug("reclaim flag set");
 	}
 }

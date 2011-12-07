@@ -24,6 +24,7 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 		private static final NotificationFilter FILTER = new NotificationFilter() {
 			@Override
 			public boolean isNotificationEnabled(Notification notification) {
+				log.debug("possible memory notification");
 				return notification.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED);
 			}
 		};
@@ -178,5 +179,6 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 	@Override
 	public void handleNotification(Notification notification, Object handback) {
 		reclaim = true;
+		log.debug("reclaim flag set");
 	}
 }

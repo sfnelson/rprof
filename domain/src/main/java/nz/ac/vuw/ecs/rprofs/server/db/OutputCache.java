@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements NotificationListener {
 
 	private static class MemoryMonitor {
-		private static final float THRESHOLD = 0.5f;
+		private static final float THRESHOLD = 0.8f;
 		private static final NotificationFilter FILTER = new NotificationFilter() {
 			@Override
 			public boolean isNotificationEnabled(Notification notification) {
@@ -133,7 +133,7 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 		map.put(key, value);
 
 		while (maps.size() > NUM_MAPS) {
-			Map<?, T> m = maps.getFirst();
+			Map<?, T> m = maps.removeFirst();
 			for (T v : m.values()) {
 				output.init(v).store();
 			}

@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements NotificationListener {
 
 	private static class MemoryMonitor {
-		private static final float THRESHOLD = 0.6f;
+		private static final float THRESHOLD = 0.9f;
 		private static final NotificationFilter FILTER = new NotificationFilter() {
 			@Override
 			public boolean isNotificationEnabled(Notification notification) {
@@ -57,7 +57,7 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 
 		public boolean update() {
 			memory.gc();
-			return THRESHOLD > (1f * memory.getHeapMemoryUsage().getUsed() / memory.getHeapMemoryUsage().getMax());
+			return THRESHOLD < (1f * memory.getHeapMemoryUsage().getUsed() / memory.getHeapMemoryUsage().getMax());
 		}
 	}
 

@@ -25,7 +25,7 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 			@Override
 			public boolean isNotificationEnabled(Notification notification) {
 				log.debug("notification: {}", notification.getType());
-				return notification.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED);
+				return notification.getType().equals(MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED);
 			}
 		};
 		private final MemoryMXBean memory;

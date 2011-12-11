@@ -64,6 +64,7 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 				if (MethodUtils.isInit(method)) {
 					result.setType(method.getOwner());
 					result.setConstructor(method.getId());
+					result.setConstructorReturn(e.getId());
 				}
 				break;
 			case Event.CLASS_INITIALIZED:

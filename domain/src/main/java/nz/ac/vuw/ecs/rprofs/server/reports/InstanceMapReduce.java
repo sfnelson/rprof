@@ -60,8 +60,8 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 				break;
 			case Event.METHOD_RETURN:
 			case Event.METHOD_EXCEPTION:
-				if (method == null) ; // TODO why is it null now?
-				else if (MethodUtils.isInit(method)) {
+				assert method != null;
+				if (MethodUtils.isInit(method)) {
 					result.setType(method.getOwner());
 					result.setConstructor(method.getId());
 				}
@@ -72,8 +72,8 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 				result.setType(e.getClazz());
 				break;
 			case Event.METHOD_ENTER:
-				if (method == null) ; // TODO why is it null now?
-				else if (MethodUtils.isEquals(method)) {
+				assert method != null;
+				if (MethodUtils.isEquals(method)) {
 					result.setFirstEquals(e.getId());
 				} else if (MethodUtils.isHashCode(method)) {
 					result.setFirstHashCode(e.getId());

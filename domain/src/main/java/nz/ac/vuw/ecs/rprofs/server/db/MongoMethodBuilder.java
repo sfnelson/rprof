@@ -34,9 +34,9 @@ abstract class MongoMethodBuilder extends MongoBuilder<MongoMethodBuilder, Metho
 	}
 
 	/*
-		 * We can't assign a method id until the owning class has an id, so delay the real store until the owning class has
-		 * been stored. Return an placeholder id which will become valid when the class has been stored.
-		 */
+	 * We can't assign a method id until the owning class has an id, so delay the real store until the owning class has
+	 * been stored. Return an placeholder id which will become valid when the class has been stored.
+	 */
 	@Override
 	public MethodId store() {
 		id = new MethodId(0l);

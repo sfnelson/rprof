@@ -114,7 +114,7 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 		}
 
 		if (b.containsField("constructor")) {
-			i.setType(new ClazzId((Long) b.get("constructor")));
+			i.setConstructor(new MethodId((Long) b.get("constructor")));
 		}
 
 		if (b.containsField("constructorReturn")) {

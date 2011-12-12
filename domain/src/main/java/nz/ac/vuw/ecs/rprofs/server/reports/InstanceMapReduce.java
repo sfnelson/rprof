@@ -62,7 +62,7 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 			case Event.METHOD_EXCEPTION:
 				assert method != null;
 				if (MethodUtils.isInit(method)) {
-					result.setType(method.getOwner());
+					result.setType(e.getClazz());
 					result.setConstructor(method.getId());
 					result.setConstructorReturn(e.getId());
 				}

@@ -19,7 +19,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 @Singleton
 public class Workers extends HttpServlet {
 
-	private BlockingQueue<Continuation> workers = new ArrayBlockingQueue<Continuation>(10);
+	private BlockingQueue<Continuation> workers = new ArrayBlockingQueue<Continuation>(40);
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

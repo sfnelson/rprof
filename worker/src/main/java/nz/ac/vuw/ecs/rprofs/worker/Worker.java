@@ -65,7 +65,14 @@ public class Worker {
 		Dataset ds = getDataset(connection.getHeaderField("Dataset"));
 
 		if (ds == null) {
-			log.error("couldn't find dataset! throwing away response");
+			log.error("couldn't find dataset! throwing away response ({} bytes)", connection.getContentLength());
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+				System.exit(1);
+			}
+			return;
 		}
 
 		Context.setDataset(ds);

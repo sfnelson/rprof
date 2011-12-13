@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import java.util.Date;
+
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
@@ -11,8 +13,6 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import java.util.Date;
-
 import static org.objectweb.asm.Opcodes.*;
 
 public class ConstructorWeavingTest extends WeaverTestBase {
@@ -21,7 +21,7 @@ public class ConstructorWeavingTest extends WeaverTestBase {
 
 	@Before
 	public void setUp() throws Exception {
-		Dataset dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
+		Dataset dataset = new Dataset(new DatasetId((short) 1), "foo", new Date(), "rprof_foo_1");
 		clazz = new Clazz(ClazzId.create(dataset, 1), 0, "TestOutput", null, null, 0);
 	}
 

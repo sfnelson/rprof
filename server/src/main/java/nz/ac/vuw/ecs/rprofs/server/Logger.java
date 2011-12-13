@@ -28,7 +28,7 @@ public class Logger extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		log.info("receiving events");
+		log.debug("receiving events");
 
 		Continuation worker;
 		try {
@@ -51,7 +51,7 @@ public class Logger extends HttpServlet {
 			int r = in.read(buffer, read, buffer.length - read);
 			read += r;
 		}
-		log.info("done reading");
+		log.debug("done reading");
 
 		worker.setAttribute("data", buffer);
 		worker.resume();
@@ -60,6 +60,6 @@ public class Logger extends HttpServlet {
 		resp.setContentLength(0);
 		resp.getOutputStream().close();
 
-		log.info("events sent to worker");
+		log.info("received events - events sent to worker");
 	}
 }

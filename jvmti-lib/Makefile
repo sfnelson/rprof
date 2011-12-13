@@ -86,19 +86,19 @@ clean:
 	rm -f -r bin classes objects tmp/pre/* tmp/post/*
 
 test: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes Test)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -classpath ../classes Test)
 
 debug: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes Test)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes Test)
 
 server: all
 	(cd classes; $(JDK)/bin/java nz.ac.vuw.ecs.rprof.Logger)
 
 avrora: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../dacapo-20110822.jar -n 1 -t 1 avrora)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),avrora -classpath ../classes -jar ../dacapo-20110822.jar -n 1 -t 1 avrora)
 
 pmd: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../dacapo-20110822.jar -n 1 -t 1 pmd)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),pmd -classpath ../classes -jar ../dacapo-20110822.jar -n 1 -t 1 pmd)
 
 fop: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST) -classpath ../classes -jar ../dacapo-20110822.jar -n 1 -t 1 fop)
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),fop -classpath ../classes -jar ../dacapo-20110822.jar -n 1 -t 1 fop)

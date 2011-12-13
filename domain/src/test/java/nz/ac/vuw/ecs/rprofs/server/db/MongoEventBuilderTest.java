@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import java.util.Date;
+
 import com.google.common.collect.Lists;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -10,8 +12,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
 
 import static org.junit.Assert.*;
 
@@ -30,7 +30,7 @@ public class MongoEventBuilderTest {
 
 	@Before
 	public void createBuilder() {
-		ds = new Dataset(new DatasetId(DS), "foo", new Date());
+		ds = new Dataset(new DatasetId(DS), "foo", new Date(), "rprof_foo_8");
 		b = new MongoEventBuilder() {
 			@Override
 			DBCollection _getCollection() {

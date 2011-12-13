@@ -8,8 +8,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
 import org.slf4j.LoggerFactory;
 
 @Singleton
@@ -18,10 +21,12 @@ public class Stop extends HttpServlet {
 	private final org.slf4j.Logger log = LoggerFactory.getLogger(Stop.class);
 
 	private final DatasetManager datasets;
+	private final Database db;
 
 	@Inject
-	Stop(DatasetManager datasets) {
+	Stop(DatasetManager datasets, Database db) {
 		this.datasets = datasets;
+		this.db = db;
 	}
 
 	@Override
@@ -36,6 +41,13 @@ public class Stop extends HttpServlet {
 		Dataset ds = datasets.findDataset(handle);
 
 		log.info("profiler run stopped");
+
+		Context.setDataset(dataset);
+		final InstanceMapReduce mr = new InstanceMapReduce(dataset, db);
+		db.createInstanceReducer(mr).reduce();
+		Context.clear();
+
+		log.info("finished reduce");
 
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 		resp.setContentLength(0);

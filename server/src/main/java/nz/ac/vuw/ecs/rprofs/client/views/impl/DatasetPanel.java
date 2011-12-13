@@ -1,6 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import com.google.common.collect.Lists;
+import java.util.Date;
+import java.util.List;
+
 import com.google.gwt.cell.client.*;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -19,12 +21,11 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SingleSelectionModel;
+
+import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 import nz.ac.vuw.ecs.rprofs.client.ui.TimeFormat;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetListView;
-
-import java.util.Date;
-import java.util.List;
 
 public class DatasetPanel extends Composite implements DatasetListView {
 
@@ -73,7 +74,7 @@ public class DatasetPanel extends Composite implements DatasetListView {
 		ProvidesKey<DatasetProxy> keyProvider = new ProvidesKey<DatasetProxy>() {
 			@Override
 			public String getKey(DatasetProxy item) {
-				return item.getHandle();
+				return item.getDatasetHandle();
 			}
 		};
 
@@ -99,6 +100,15 @@ public class DatasetPanel extends Composite implements DatasetListView {
 					long time = d.getStopped().getTime() - d.getStarted().getTime();
 					return TimeFormat.DOUBLE_PRECISION.format(time / 1000);
 				}
+			}
+		});
+
+		table.addColumn(new Column<DatasetProxy, SafeHtml>(new SafeHtmlCell()) {
+			@Override
+			public SafeHtml getValue(DatasetProxy d) {
+				SafeHtmlBuilder sb = new SafeHtmlBuilder();
+				sb.appendHtmlConstant(d.getBenchmark());
+				return sb.toSafeHtml();
 			}
 		});
 

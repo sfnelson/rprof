@@ -160,7 +160,7 @@ public class Worker {
 		Query.Cursor<? extends Dataset> cursor = database.getDatasetQuery().find();
 		while (cursor.hasNext()) {
 			Dataset ds = cursor.next();
-			if (ds.getHandle().equals(name)) return ds;
+			if (ds.getDatasetHandle().equals(name)) return ds;
 		}
 		return null;
 	}

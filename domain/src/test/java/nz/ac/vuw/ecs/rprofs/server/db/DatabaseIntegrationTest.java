@@ -88,7 +88,7 @@ public class DatabaseIntegrationTest {
 		assertEquals(Lists.<String>newArrayList(), dbs);
 
 		DatasetId id = database.getDatasetCreator()
-				.setHandle("foobar")
+				.setBenchmark("foobar")
 				.setStarted(new Date())
 				.store();
 		Dataset dataset = database.findEntity(id);
@@ -97,8 +97,8 @@ public class DatabaseIntegrationTest {
 		assertNotNull(id);
 		assertEquals(id, dataset.getId());
 		assertTrue(id.getDatasetIndex() > 0);
-		assertNotNull(dataset.getHandle());
-		assertFalse(dataset.getHandle().isEmpty());
+		assertNotNull(dataset.getBenchmark());
+		assertFalse(dataset.getBenchmark().isEmpty());
 		assertNotNull(dataset.getId());
 		assertEquals(dataset.getId().getDatasetIndex(), dataset.getId().getDatasetIndex());
 
@@ -109,21 +109,23 @@ public class DatabaseIntegrationTest {
 		assertEquals(1, dbs.size());
 
 		String dbname = dbs.get(0);
-		assertEquals(dbname, database.getDBName(dataset));
+		assertEquals(dbname, dataset.getDatasetHandle());
 	}
 
 	@Test
 	public void testGetName() throws Exception {
-		assertEquals("rprof_foo_0", database.getDBName(new Dataset(new DatasetId((short) 0), "foo", new Date())));
-		assertEquals("rprof_20110101_1", database.getDBName(new Dataset(new DatasetId((short) 1), "20110101", new Date())));
+		assertEquals("rprof_foo_0",
+				new Dataset(new DatasetId((short) 0), "foo", new Date(), "rprof_foo_0").getDatasetHandle());
+		assertEquals("rprof_20110101_1",
+				new Dataset(new DatasetId((short) 1), "20110101", new Date(), "rprof_20110101_1").getDatasetHandle());
 	}
 
 	@Test
 	public void testGetDatasets() throws Exception {
 		assertFalse(database.getDatasetQuery().find().hasNext());
-		DatasetId id1 = database.getDatasetCreator().setHandle("foo").setStarted(new Date()).store();
+		DatasetId id1 = database.getDatasetCreator().setBenchmark("foo").setStarted(new Date()).store();
 		assertEquals(id1, database.getDatasetQuery().find().next().getId());
-		DatasetId id2 = database.getDatasetCreator().setHandle("foo").setStarted(new Date()).store();
+		DatasetId id2 = database.getDatasetCreator().setBenchmark("foo").setStarted(new Date()).store();
 
 		Query.Cursor<? extends Dataset> result = database.getDatasetQuery().find();
 		assertEquals(id1, result.next().getId());
@@ -133,15 +135,16 @@ public class DatabaseIntegrationTest {
 
 	@Test
 	public void testGetDatasetDatasetId() throws Exception {
-		DatasetId in = database.getDatasetCreator().setHandle("foobar").setStarted(new Date()).store();
-		assertEquals("foobar", database.findEntity(in).getHandle());
+		DatasetId in = database.getDatasetCreator().setBenchmark("foobar").setStarted(new Date()).store();
+		assertEquals("foobar", database.findEntity(in).getBenchmark());
+		assertEquals("rprof_foobar_1", database.findEntity(in).getDatasetHandle());
 
 		assertNull(database.findEntity(new DatasetId((short) 0)));
 	}
 
 	@Test
 	public void testDropDataset() throws Exception {
-		DatasetId in = database.getDatasetCreator().setHandle("foobar").setStarted(new Date()).store();
+		DatasetId in = database.getDatasetCreator().setBenchmark("foobar").setStarted(new Date()).store();
 		Query.Cursor<? extends Dataset> datasets = database.getDatasetQuery().find();
 		assertEquals(1, database.getDatasetQuery().find().count());
 		database.deleteEntity(database.findEntity(in));
@@ -154,39 +157,38 @@ public class DatabaseIntegrationTest {
 	public void testDatasets() throws Exception {
 		Date now = new Date();
 		String handle = "foobar";
-		String program = "baz";
 		DatasetId id = database.getDatasetCreator()
-				.setHandle(handle)
+				.setBenchmark(handle)
 				.setStarted(now)
 				.store();
 
 		Dataset ds = database.findEntity(id);
 
-		assertEquals(handle, ds.getHandle());
+		assertEquals(handle, ds.getBenchmark());
 		assertEquals(now, ds.getStarted());
 		assertEquals(1, ds.getVersion().intValue());
+		assertEquals("rprof_foobar_1", ds.getDatasetHandle());
 
 		database.getDatasetUpdater()
-				.setProgram(program)
 				.setStopped(now)
 				.update(id);
 
 		ds = database.findEntity(id);
 
-		assertEquals(handle, ds.getHandle());
+		assertEquals(handle, ds.getBenchmark());
 		assertEquals(now, ds.getStarted());
 		assertEquals(now, ds.getStopped());
-		assertEquals(program, ds.getProgram());
+		assertEquals("rprof_foobar_1", ds.getDatasetHandle());
 
-		assertEquals(1, database.getDatasetQuery().setProgram("baz").count());
-		assertEquals(ds, database.getDatasetQuery().setProgram("baz").find().next());
+		assertEquals(1, database.getDatasetQuery().setBenchmark(handle).count());
+		assertEquals(ds, database.getDatasetQuery().setBenchmark(handle).find().next());
 	}
 
 	@Test
 	public void testClasses() throws Exception {
 		DatasetId id = database.getDatasetCreator()
 				.setStarted(new Date())
-				.setHandle("foobar")
+				.setBenchmark("foobar")
 				.store();
 		Dataset ds = database.findEntity(id);
 		context.setDataset(ds);
@@ -253,7 +255,7 @@ public class DatabaseIntegrationTest {
 	public void testEvents() throws Exception {
 		DatasetId id = database.getDatasetCreator()
 				.setStarted(new Date())
-				.setHandle("foobar")
+				.setBenchmark("foobar")
 				.store();
 		Dataset ds = database.findEntity(id);
 		context.setDataset(ds);

@@ -16,6 +16,7 @@
 
 #define EVENT_BUFFER_SIZE 1048576
 #define HOST_MAX_LENGTH 256
+#define BENCHMARK_MAX_LENGTH 256
 #define DATASET_MAX_LENGTH 256
 
 struct response {
@@ -42,6 +43,7 @@ typedef struct {
 	EventRecord    records[EVENT_BUFFER_SIZE];
 	unsigned int   event_index;
 	char		   host[HOST_MAX_LENGTH];
+	char           benchmark[BENCHMARK_MAX_LENGTH];
 	char           dataset[DATASET_MAX_LENGTH];
 	long int       lastId;
 } GlobalCommData;
@@ -75,6 +77,7 @@ JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti, char *options)
 {
 	static GlobalCommData data;
 	jvmtiError error;
+	char *benchmark;
 
 	(void)memset((void*)&data, 0, sizeof(data));
 	cdata = &data;
@@ -83,8 +86,18 @@ JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti, char *options)
 	{
 		strcpy(cdata->host, "localhost:8888");
 	}
-	else {
+	else if (0 == strchr(options, ',')) {
+	    stdout_message("unknown benchmark\n");
 		strcpy(cdata->host, options);
+	}
+	else {
+	    benchmark = strchr(options, ',');
+	    benchmark[0] = 0;
+	    benchmark++;
+	    strcpy(cdata->host, options);
+	    sprintf(cdata->benchmark, "Benchmark: %s", benchmark);
+	    stdout_message(cdata->benchmark);
+	    stdout_message("\n");
 	}
 
 	cdata->jvmti = jvmti;
@@ -136,7 +149,9 @@ size_t read_dataset(void *ptr, size_t size, size_t nmemb, void* args) {
 
 	if (strstr(header, "dataset:") == header) {
 		sprintf(cdata->dataset, "Dataset: %s", &header[9]);
-		cdata->dataset[9 + 14] = 0;
+		char* end = strchr(cdata->dataset, '\r');
+		if (end == 0) end = strchr(cdata->dataset, '\n');
+		end[0] = 0;
 	}
 
 	return size * nmemb;
@@ -155,6 +170,9 @@ JNIEXPORT void JNICALL log_profiler_started()
 	curl_easy_setopt(handle, CURLOPT_WRITEHEADER, NULL);
 	
 	struct curl_slist *headers=NULL;
+	if (cdata->benchmark[0] != 0) {
+	    headers = curl_slist_append(headers, cdata->benchmark);
+	}
 	headers = curl_slist_append(headers, "Content-Type: application/rprof");
 	headers = curl_slist_append(headers, "Connection: Keep-Alive");
 	headers = curl_slist_append(headers, "Keep-Alive: 600");

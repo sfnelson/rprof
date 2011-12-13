@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.Context;
-import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
@@ -23,13 +22,11 @@ public class Process extends HttpServlet {
 
 	private final DatasetManager datasets;
 	private final Database db;
-	private final ClassManager classes;
 
 	@Inject
-	Process(DatasetManager datasets, Database db, ClassManager classes) {
+	Process(DatasetManager datasets, Database db) {
 		this.datasets = datasets;
 		this.db = db;
-		this.classes = classes;
 	}
 
 	@Override
@@ -61,7 +58,7 @@ public class Process extends HttpServlet {
 			Context.clear();
 		}
 
-		resp.addHeader("Dataset", dataset.getHandle());
+		resp.addHeader("Dataset", dataset.getDatasetHandle());
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 		resp.setContentLength(0);
 

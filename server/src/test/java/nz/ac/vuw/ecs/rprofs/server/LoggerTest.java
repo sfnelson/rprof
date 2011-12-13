@@ -42,7 +42,7 @@ public class LoggerTest {
 
 	@Before
 	public void setup() {
-		ds = new Dataset(new DatasetId((short) 1), "foobar", new Date());
+		ds = new Dataset(new DatasetId((short) 1), "foobar", new Date(), "rprof_foobar_1");
 
 		database = createMock(Database.class);
 		datasets = createMock(DatasetManager.class);

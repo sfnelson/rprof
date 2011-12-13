@@ -8,6 +8,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.*;
+
 import nz.ac.vuw.ecs.rprofs.client.request.DatasetProxy;
 import nz.ac.vuw.ecs.rprofs.client.views.DatasetView;
 
@@ -46,7 +47,8 @@ public class DatasetWidget extends Composite implements DatasetView, MouseOverHa
 		this.run = run;
 
 		started.setText(date.format(run.getStarted()));
-		program.setTarget("#run=" + run.getHandle());
+		program.setText(run.getBenchmark());
+		program.setTarget("#run=" + run.getDatasetHandle());
 		delete.setVisible(false);
 
 		if (run.getStopped() != null) {
@@ -55,12 +57,6 @@ public class DatasetWidget extends Composite implements DatasetView, MouseOverHa
 		} else {
 			stopped.setText("");
 			stop.setVisible(true);
-		}
-
-		if (run.getProgram() != null) {
-			program.setText(run.getProgram());
-		} else {
-			program.setText("");
 		}
 	}
 

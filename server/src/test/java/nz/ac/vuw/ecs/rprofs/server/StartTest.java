@@ -30,14 +30,15 @@ public class StartTest {
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
 
-		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
+		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date(), "rprof_foo_1");
 		start = new Start(manager);
 	}
 
 	@Test
 	public void testDoGet() throws Exception {
-		expect(manager.createDataset()).andReturn(dataset);
-		response.addHeader("Dataset", "foo");
+		expect(request.getHeader(eq("Benchmark"))).andReturn("foo");
+		expect(manager.createDataset("foo")).andReturn(dataset);
+		response.addHeader("Dataset", "rprof_foo_1");
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 
 		replay(request, response, manager);

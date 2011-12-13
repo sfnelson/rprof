@@ -57,7 +57,7 @@ public class GwtRequestTest {
 	@Test
 	public void testDoFilter() throws Exception {
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "dataset_id", new Date());
+		Dataset dataset = new Dataset(id, "program", new Date(), "rprof_program_1");
 
 		expect(req.getRequestURI()).andReturn("/gwtRequest/1");
 		expect(datasets.findDataset(id)).andReturn(dataset);

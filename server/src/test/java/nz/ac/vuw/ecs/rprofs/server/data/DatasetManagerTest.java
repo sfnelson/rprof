@@ -35,19 +35,19 @@ public class DatasetManagerTest {
 	@Test
 	public void testCreateDataset() throws Exception {
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 
 		DatasetCreator builder = createMock(DatasetCreator.class);
 
 		expect(database.getDatasetCreator()).andReturn(builder);
-		expect(builder.setHandle(anyObject(String.class))).andReturn(builder);
+		expect(builder.setBenchmark(eq("foobar"))).andReturn(builder);
 		expect(builder.setStarted(anyObject(Date.class))).andReturn(builder);
 		expect(builder.store()).andReturn(id);
 		expect(database.findEntity(id)).andReturn(dataset);
 
 		replay(database, builder);
 
-		Dataset returned = manager.createDataset();
+		Dataset returned = manager.createDataset("foobar");
 
 		verify(database, builder);
 		assertSame(dataset, returned);
@@ -79,16 +79,16 @@ public class DatasetManagerTest {
 		DatasetQuery query = createMock(DatasetQuery.class);
 
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 		List<Dataset> list = Lists.newArrayList(dataset);
 
 		expect(database.getDatasetQuery()).andReturn(query);
-		expect(query.setHandle("foobar")).andReturn(query);
+		expect(query.setDatasetHandle("rprof_foobar_1")).andReturn(query);
 		expect(query.find()).andReturn(new TestCursor(list));
 
 		replay(database, query);
 
-		Dataset returned = manager.findDataset("foobar");
+		Dataset returned = manager.findDataset("rprof_foobar_1");
 
 		verify(database, query);
 		assertEquals(dataset, returned);
@@ -98,7 +98,7 @@ public class DatasetManagerTest {
 	@Test
 	public void testFindDatasetById() throws Exception {
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 
 		expect(database.findEntity(id)).andReturn(dataset);
 
@@ -117,7 +117,7 @@ public class DatasetManagerTest {
 		DatasetUpdater b = createMock(DatasetUpdater.class);
 
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 
 		expect(database.getDatasetUpdater()).andReturn(b);
 		expect(b.setStopped(anyObject(Date.class))).andReturn(b);
@@ -137,10 +137,10 @@ public class DatasetManagerTest {
 		DatasetUpdater b = createMock(DatasetUpdater.class);
 
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 
 		expect(database.getDatasetUpdater()).andReturn(b);
-		expect(b.setProgram("PROG")).andReturn(b);
+		expect(b.setBenchmark("PROG")).andReturn(b);
 		b.update(id);
 
 		replay(database, b);
@@ -154,7 +154,7 @@ public class DatasetManagerTest {
 	@Test
 	public void testDeleteDataset() throws Exception {
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 
 		expect(database.findEntity(id)).andReturn(dataset);
 		expect(database.deleteEntity(dataset)).andReturn(true);
@@ -184,7 +184,7 @@ public class DatasetManagerTest {
 	@Test
 	public void testGetId() {
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 
 		assertEquals(id, manager.getId(dataset));
 	}
@@ -192,7 +192,7 @@ public class DatasetManagerTest {
 	@Test
 	public void testFind() {
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 
 		expect(database.findEntity(id)).andReturn(dataset);
 
@@ -206,7 +206,7 @@ public class DatasetManagerTest {
 	@Test
 	public void testGetVersion() {
 		DatasetId id = new DatasetId((short) 1);
-		Dataset dataset = new Dataset(id, "foobar", new Date());
+		Dataset dataset = new Dataset(id, "foobar", new Date(), "rprof_foobar_1");
 
 		assertEquals(dataset.getVersion(), manager.getVersion(dataset));
 	}

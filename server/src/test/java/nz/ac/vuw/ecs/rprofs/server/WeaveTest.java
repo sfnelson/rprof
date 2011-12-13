@@ -60,7 +60,7 @@ public class WeaveTest {
 		mbuilder = createMock(MethodCreator.class);
 		fbuilder = createMock(FieldCreator.class);
 
-		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
+		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date(), "rprof_foo_1");
 		clazz = new Clazz(ClazzId.create(dataset, 1), 0, "org.foo.Bar", null, null, 0);
 		method = new Method(MethodId.create(dataset, clazz, (short) 1),
 				0, "<init>", clazz.getId(), clazz.getName(), "()V", Opcodes.ACC_PUBLIC);

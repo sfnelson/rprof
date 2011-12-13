@@ -22,18 +22,21 @@ public class DatasetManager extends Locator<Dataset, DatasetId> implements Datas
 		this.database = database;
 	}
 
-	public Dataset createDataset() {
+	public Dataset createDataset(String benchmark) {
 		Calendar now = Calendar.getInstance();
-		String handle = String.format("%02d%02d%02d%02d%02d%02d",
-				now.get(Calendar.YEAR),
-				now.get(Calendar.MONTH),
-				now.get(Calendar.DATE),
-				now.get(Calendar.HOUR),
-				now.get(Calendar.MINUTE),
-				now.get(Calendar.SECOND));
+
+		if (benchmark == null) {
+			benchmark = String.format("%02d%02d%02d%02d%02d%02d",
+					now.get(Calendar.YEAR),
+					now.get(Calendar.MONTH),
+					now.get(Calendar.DATE),
+					now.get(Calendar.HOUR),
+					now.get(Calendar.MINUTE),
+					now.get(Calendar.SECOND));
+		}
 
 		DatasetId id = database.getDatasetCreator()
-				.setHandle(handle)
+				.setBenchmark(benchmark)
 				.setStarted(now.getTime())
 				.store();
 
@@ -84,7 +87,7 @@ public class DatasetManager extends Locator<Dataset, DatasetId> implements Datas
 	@Override
 	public Dataset findDataset(String handle) {
 		Dataset result = null;
-		Query.Cursor<? extends Dataset> cursor = database.getDatasetQuery().setHandle(handle).find();
+		Query.Cursor<? extends Dataset> cursor = database.getDatasetQuery().setDatasetHandle(handle).find();
 		if (cursor.hasNext()) {
 			result = cursor.next();
 		}
@@ -107,7 +110,7 @@ public class DatasetManager extends Locator<Dataset, DatasetId> implements Datas
 	@Override
 	public void setProgram(DatasetId dataset, String program) {
 		database.getDatasetUpdater()
-				.setProgram(program)
+				.setBenchmark(program)
 				.update(dataset);
 	}
 

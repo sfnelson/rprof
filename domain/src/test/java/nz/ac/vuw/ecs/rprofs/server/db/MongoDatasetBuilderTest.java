@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import java.util.Date;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCollection;
@@ -8,8 +10,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 
@@ -49,8 +49,8 @@ public class MongoDatasetBuilderTest {
 
 	@Test
 	public void testSetHandle() throws Exception {
-		builder.setHandle("foobar");
-		assertEquals("foobar", builder.b.get("handle"));
+		builder.setBenchmark("foobar");
+		assertEquals("foobar", builder.b.get("benchmark"));
 	}
 
 	@Test
@@ -69,8 +69,8 @@ public class MongoDatasetBuilderTest {
 
 	@Test
 	public void testSetProgram() throws Exception {
-		builder.setProgram("PROG");
-		assertEquals("PROG", builder.b.get("program"));
+		builder.setBenchmark("PROG");
+		assertEquals("PROG", builder.b.get("benchmark"));
 	}
 
 	@Test
@@ -88,17 +88,17 @@ public class MongoDatasetBuilderTest {
 
 		builder.init(new BasicDBObjectBuilder()
 				.add("_id", 1l)
-				.add("handle", "foobar")
+				.add("benchmark", "foobar")
 				.add("started", started)
 				.add("stopped", stopped)
-				.add("program", "prog")
+				.add("handle", "rprof_foobar_1")
 				.get());
 		Dataset ds = builder.get();
 
 		assertEquals(1l, ds.getId().getValue());
-		assertEquals("foobar", ds.getHandle());
+		assertEquals("foobar", ds.getBenchmark());
 		assertEquals(started, ds.getStarted());
 		assertEquals(stopped, ds.getStopped());
-		assertEquals("prog", ds.getProgram());
+		assertEquals("rprof_foobar_1", ds.getDatasetHandle());
 	}
 }

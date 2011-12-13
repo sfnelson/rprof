@@ -1,11 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
-import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+import java.util.Date;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import java.util.Date;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Dataset> {
 
@@ -16,10 +16,10 @@ public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Datas
 	private Integer version;
 
 	@NotNull
-	private String handle;
+	private String benchmark;
 
 	@Nullable
-	private String program;
+	private String handle;
 
 	@NotNull
 	private Date started;
@@ -30,16 +30,19 @@ public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Datas
 	public Dataset() {
 	}
 
-	public Dataset(@NotNull DatasetId id, @NotNull String handle, @NotNull Date started) {
+	public Dataset(@NotNull DatasetId id, @NotNull String benchmark, @NotNull Date started, @NotNull String handle) {
 		this.id = id;
 		this.version = 0;
+		this.benchmark = benchmark;
 		this.handle = handle;
 		this.started = started;
 	}
 
-	public Dataset(@NotNull DatasetId id, @NotNull Integer version, @NotNull String handle, @NotNull Date started) {
+	public Dataset(@NotNull DatasetId id, @NotNull Integer version, @NotNull String benchmark, @NotNull Date started,
+				   @NotNull String handle) {
 		this.id = id;
 		this.version = version;
+		this.benchmark = benchmark;
 		this.handle = handle;
 		this.started = started;
 	}
@@ -55,17 +58,17 @@ public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Datas
 	}
 
 	@NotNull
-	public String getHandle() {
+	public String getDatasetHandle() {
 		return handle;
 	}
 
-	@Nullable
-	public String getProgram() {
-		return program;
+	@NotNull
+	public String getBenchmark() {
+		return benchmark;
 	}
 
-	public void setProgram(@Nullable String program) {
-		this.program = program;
+	public void setBenchmark(@Nullable String benchmark) {
+		this.benchmark = benchmark;
 	}
 
 	@NotNull

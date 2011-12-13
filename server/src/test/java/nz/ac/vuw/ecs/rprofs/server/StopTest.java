@@ -5,8 +5,12 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
+import nz.ac.vuw.ecs.rprofs.server.reports.MapReduce;
+import nz.ac.vuw.ecs.rprofs.server.reports.Reducer;
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,31 +27,39 @@ public class StopTest {
 	private DatasetManager manager;
 	private HttpServletRequest request;
 	private HttpServletResponse response;
+	private Database database;
+	private Reducer.ReducerTask reduce;
 
 	@Before
 	public void setup() {
 		manager = createMock(DatasetManager.class);
 		request = createMock(HttpServletRequest.class);
 		response = createMock(HttpServletResponse.class);
+		database = createMock(Database.class);
+		reduce = createMock(Reducer.ReducerTask.class);
 
-		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date());
-		stop = new Stop(manager);
+		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date(), "rprof_foo_1");
+		stop = new Stop(manager, database);
 	}
 
 	@Test
 	public void testDoGet() throws Exception {
 
-		expect(request.getHeader("Dataset")).andReturn("foo");
-		expect(manager.findDataset("foo")).andReturn(dataset);
+		expect(request.getHeader("Dataset")).andReturn("rprof_foo_1");
+		expect(manager.findDataset("rprof_foo_1")).andReturn(dataset);
 		manager.stopDataset(dataset.getId());
-		expect(manager.findDataset("foo")).andReturn(dataset);
+		expect(manager.findDataset("rprof_foo_1")).andReturn(dataset);
+
+		expect(database.createInstanceReducer(EasyMock.<MapReduce>anyObject())).andReturn(reduce);
+		reduce.reduce();
+
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 		response.setContentLength(0);
 
-		replay(request, response, manager);
+		replay(request, response, manager, database, reduce);
 
 		stop.doGet(request, response);
 
-		verify(request, response, manager);
+		verify(request, response, manager, database, reduce);
 	}
 }

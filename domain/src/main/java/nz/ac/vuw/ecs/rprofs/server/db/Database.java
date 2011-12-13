@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -167,8 +166,8 @@ public class Database {
 		collection.remove(new BasicDBObject("_id", entity.getId().getValue()));
 
 		if (entity.getClass() == Dataset.class) {
-			log.info("deleting database {}", getDBName((Dataset) entity));
-			mongo.dropDatabase(getDBName((Dataset) entity));
+			log.info("deleting database {}", ((Dataset) entity).getDatasetHandle());
+			mongo.dropDatabase(((Dataset) entity).getDatasetHandle());
 		}
 
 		return true;
@@ -256,7 +255,7 @@ public class Database {
 	}
 
 	private DB getDatabase(@NotNull Dataset dataset) {
-		return mongo.getDB(getDBName(dataset));
+		return mongo.getDB(dataset.getDatasetHandle());
 	}
 
 	DBCollection getCollection(Class<? extends DataObject> type) {
@@ -308,18 +307,13 @@ public class Database {
 	}
 
 	private Dataset updateDataset(Dataset dataset) {
-		DBObject properties = mongo.getDB(getDBName(dataset)).getCollection("properties").findOne();
+		DBObject properties = mongo.getDB(dataset.getDatasetHandle()).getCollection("properties").findOne();
 		return createDatasetBuilder().init(properties).get();
 	}
 
 	DBCollection getRawCollection(String name) {
 		DB db = getDatabase();
 		return db.getCollection(name);
-	}
-
-	@VisibleForTesting
-	String getDBName(Dataset dataset) {
-		return "rprof_" + dataset.getHandle() + "_" + dataset.getId().getDatasetIndex();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -378,9 +372,10 @@ public class Database {
 
 			@Override
 			void _store(DBObject dataset) {
-				String dbname = "rprof_" + dataset.get("handle") + "_" + dataset.get("_id");
+				String dbname = "rprof_" + dataset.get("benchmark") + "_" + dataset.get("_id");
 				DB db = mongo.getDB(dbname);
 				dataset.put("version", 1);
+				dataset.put("handle", dbname);
 				db.getCollection("properties").insert(dataset);
 			}
 

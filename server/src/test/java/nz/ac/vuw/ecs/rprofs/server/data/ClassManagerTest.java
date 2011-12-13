@@ -40,7 +40,7 @@ public class ClassManagerTest {
 		mQuery = createMock(MethodQuery.class);
 		cursor = createMock(Query.Cursor.class);
 
-		dataset = new Dataset(new DatasetId(1l), "foo", new Date());
+		dataset = new Dataset(new DatasetId(1l), "foo", new Date(), "rprof_foo_1");
 
 		cm = new ClassManager(database);
 	}

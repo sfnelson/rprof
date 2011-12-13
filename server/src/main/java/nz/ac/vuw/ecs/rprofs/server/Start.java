@@ -28,11 +28,15 @@ public class Start extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		Dataset dataset = datasets.createDataset();
+		String benchmark = req.getHeader("Benchmark");
 
-		log.info("profiler run started");
+		Dataset dataset = datasets.createDataset(benchmark);
 
-		resp.addHeader("Dataset", dataset.getHandle());
+
+		if (benchmark == null) benchmark = "unknown";
+		log.info("profiler run started: {}", benchmark);
+
+		resp.addHeader("Dataset", dataset.getDatasetHandle());
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 	}
 

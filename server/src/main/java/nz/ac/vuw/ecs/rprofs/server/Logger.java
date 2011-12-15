@@ -30,19 +30,7 @@ public class Logger extends HttpServlet {
 
 		log.debug("receiving events");
 
-		Continuation worker;
-		try {
-			worker = workers.getWorker();
-			while (worker.isExpired()) {
-				worker = workers.getWorker();
-				worker.getServletResponse();
-			}
-		} catch (InterruptedException ex) {
-			throw new ServletException("interrupted while waiting for a worker", ex);
-		}
-
 		String dataset = req.getHeader("Dataset");
-		worker.setAttribute("dataset", dataset);
 
 		byte[] buffer = new byte[req.getContentLength()];
 		int read = 0;
@@ -51,15 +39,35 @@ public class Logger extends HttpServlet {
 			int r = in.read(buffer, read, buffer.length - read);
 			read += r;
 		}
-		log.debug("done reading");
+		log.debug("done reading: {} bytes", buffer.length);
 
-		worker.setAttribute("data", buffer);
-		worker.resume();
+		Continuation worker;
+		try {
+			while (true) {
+				try {
+					worker = workers.getWorker();
+					while (true) {
+						if (worker.isExpired()) {
+							worker = workers.getWorker();
+						} else break;
+					}
+
+					worker.setAttribute("dataset", dataset);
+					worker.setAttribute("data", buffer);
+					worker.resume();
+
+					log.info("sent {} bytes to worker for {}", buffer.length, dataset);
+					break;
+				} catch (IllegalStateException ex) {
+					log.error(ex.getMessage(), ex);
+				}
+			}
+		} catch (InterruptedException ex) {
+			throw new ServletException("interrupted while waiting for a worker", ex);
+		}
 
 		resp.setStatus(201);
 		resp.setContentLength(0);
 		resp.getOutputStream().close();
-
-		log.info("received events - events sent to worker");
 	}
 }

@@ -19,24 +19,30 @@ public class Test extends A {
 
 		try {
 			c.equals(t);
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
 		try {
 			c.hashCode();
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 
 		try {
 			new D();
-		}
-		catch (Exception ex) {
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
+		E e = new E();
+		e.x = 2;
+		e = new E();
+		System.out.println(e.y);
+		e.x = 2;
+		e = new E();
+		System.out.println(e.y);
+		e.y = 2;
 
 		System.out.println(Thread.currentThread().getName());
 
@@ -65,9 +71,11 @@ public class Test extends A {
 class A {
 	public int a;
 	protected Object foo;
+
 	public A(Object foo) {
 		this.foo = foo;
 	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o == null) return false;
@@ -80,23 +88,28 @@ class A {
 
 class B {
 	private int a;
+
 	public B() {
 		a = 1;
 	}
+
 	public void foo() {
 		a = 2;
 	}
+
 	public void bar() {
-		if (a == 2);
+		if (a == 2) ;
 		a = 3;
 	}
 }
 
 class C {
 	private int a;
+
 	public C(int a) {
 		this.a = a;
 	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o == null) return false;
@@ -105,6 +118,7 @@ class C {
 		}
 		throw new NullPointerException("test equals exception");
 	}
+
 	@Override
 	public int hashCode() {
 		throw new NullPointerException("test hashcode exception");
@@ -117,3 +131,12 @@ class D {
 	}
 }
 
+class E {
+	public int x;
+	public int y;
+
+	public E() {
+		x = 1;
+		y = 1;
+	}
+}

@@ -342,6 +342,12 @@
                     <requestLog implementation="ch.qos.logback.access.jetty.v7.RequestLogImpl">
                         <filename>src/main/resources/logback-access.xml</filename>
                     </requestLog>
+                    <webApp>
+                        <contextPath>/</contextPath>
+                    </webApp>
+                    <webAppSourceDirectory>
+                        ${project.build.directory}/${project.build.finalName}
+                    </webAppSourceDirectory>
                 </configuration>
                 <dependencies>
                     <dependency>

@@ -14,7 +14,7 @@
 #include "agent_util.h"
 #include "rprof.h"
 
-#define EVENT_BUFFER_SIZE 1048576
+#define EVENT_BUFFER_SIZE 121072
 #define HOST_MAX_LENGTH 256
 #define BENCHMARK_MAX_LENGTH 256
 #define DATASET_MAX_LENGTH 256

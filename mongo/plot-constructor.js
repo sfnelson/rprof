@@ -6,8 +6,7 @@ for (i in dbs) {
     for (j in cols) {
         if (cols[j] == "results") {
             var output = d.properties.findOne().benchmark;
-            //var output = "" + count;
-            d.results.find({ _id : "fieldsFine" }).forEach(function (r) {
+            d.results.find({ _id : "constructorReturn" }).forEach(function (r) {
                 output += "\t" + r.value.immutable.noequals;
                 output += "\t" + r.value.immutable.equals;
                 output += "\t" + r.value.mutable.noequals;

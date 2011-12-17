@@ -24,14 +24,33 @@ function MutabilityRecord() {
     this.__proto__ = MutabilityPrototype;
 }
 var MutabilityPrototype = {
+    total : 0,
     init : function (immutable, equals) {
         this[(immutable ? "immutable" : "mutable")] = new EqualsRecord().init(equals);
+        this.total = 1;
         return this;
     },
     add : function (o) {
         if (!o) return;
         if (o.immutable) this.immutable = (this.immutable ? this.immutable.add(o.immutable) : o.immutable);
         if (o.mutable) this.mutable = (this.mutable ? this.mutable.add(o.mutable) : o.mutable);
+        this.total += o.total;
+        return this;
+    },
+    inc : function (o) {
+        if (!o) return;
+        this.total = 1;
+        if (o.immutable) {
+            this.immutable = new EqualsRecord();
+            if (o.immutable.equals) this.immutable.equals = 1;
+            if (o.immutable.noequals) this.immutable.noequals = 1;
+        }
+        if (o.mutable) {
+            this.mutable = new EqualsRecord();
+            if (o.mutable.equals) this.mutable.equals = 1;
+            if (o.mutable.noequals) this.mutable.noequals = 1;
+        }
+        return this;
     },
     cast : function (obj) {
         if (!obj) return;
@@ -46,6 +65,8 @@ function ClassRecord() {
     this.fieldsFine = new MutabilityRecord();
     this.fieldsCoarse = new MutabilityRecord();
     this.constructorReturn = new MutabilityRecord();
+    this.firstEquals = new MutabilityRecord();
+    this.composite = new MutabilityRecord();
     this.__proto__ = ClassPrototype;
 }
 var ClassPrototype = {
@@ -56,18 +77,26 @@ var ClassPrototype = {
         this.fieldsFine.add(o.fieldsFine);
         this.fieldsCoarse.add(o.fieldsCoarse);
         this.constructorReturn.add(o.constructorReturn);
+        this.firstEquals.add(o.firstEquals);
+        this.composite.add(o.composite);
     },
     cast : function (obj) {
         obj.__proto__ = ClassPrototype;
         MutabilityPrototype.cast(obj.fieldsFine);
         MutabilityPrototype.cast(obj.fieldsCoarse);
         MutabilityPrototype.cast(obj.constructorReturn);
+        MutabilityPrototype.cast(obj.firstEquals);
+        MutabilityPrototype.cast(obj.composite);
     }
 }
 ClassRecord.prototype = ClassPrototype;
 
 function mapInstances() {
     var equals = (this.firstHashCode || this.firstEquals) ? true : false;
+    var firstEquals = null;
+    if (this.firstHashCode) firstEquals = this.firstHashCode;
+    if (this.firstEquals && (!firstEquals || this.firstEquals < firstEquals)) firstEquals = this.firstEquals;
+
     var fieldsAreImmutable = true;
     var firstRead = false;
     var lastWrite = false;
@@ -88,11 +117,15 @@ function mapInstances() {
     var fieldsFineImmutable = fieldsAreImmutable;
     var fieldsCoarseImmutable = (!firstRead || !lastWrite || firstRead > lastWrite);
     var constructorReturnImmutable = (!this.constructorReturn || !lastWrite || this.constructorReturn > lastWrite);
+    var firstEqualsImmutable = (equals && firstEquals > lastWrite);
+    var composite = fieldsCoarseImmutable || constructorReturnImmutable;
 
     var result = new ClassRecord();
     result.fieldsFine.init(fieldsFineImmutable, equals);
     result.fieldsCoarse.init(fieldsCoarseImmutable, equals);
     result.constructorReturn.init(constructorReturnImmutable, equals);
+    result.firstEquals.init(firstEqualsImmutable, equals);
+    result.composite.init(composite, equals);
 
     if (this.type) {
         var cr = db.classes.findOne({"_id": this.type});
@@ -113,13 +146,34 @@ function reduceInstances(type, entries) {
     return result;
 }
 
-function mapClassRecords() {
+function mapInstanceSummary() {
     emit("fieldsFine", this.value.fieldsFine);
     emit("fieldsCoarse", this.value.fieldsCoarse);
     emit("constructorReturn", this.value.constructorReturn);
+    emit("firstEquals", this.value.firstEquals);
+    emit("composite", this.value.composite);
 }
 
-function reduceClassRecords(key, entries) {
+function reduceInstanceSummary(key, entries) {
+    var result = new MutabilityRecord();
+    entries.forEach(
+        function (record) {
+            MutabilityPrototype.cast(record);
+            result.add(record);
+        }
+    );
+    return result;
+}
+
+function mapClassSummary() {
+    emit("fieldsFine", new MutabilityRecord().inc(this.value.fieldsFine));
+    emit("fieldsCoarse", new MutabilityRecord().inc(this.value.fieldsCoarse));
+    emit("constructorReturn", new MutabilityRecord().inc(this.value.constructorReturn));
+    emit("firstEquals", new MutabilityRecord().inc(this.value.firstEquals));
+    emit("composite", new MutabilityRecord().inc(this.value.composite));
+}
+
+function reduceClassSummary(key, entries) {
     var result = new MutabilityRecord();
     entries.forEach(
         function (record) {
@@ -142,16 +196,26 @@ var scope = {
 db.instances.mapReduce(mapInstances, reduceInstances,
     {
         out : {
-            replace: "classResults"
+            replace: "rawClassResults"
         },
         scope : scope
     }
 );
 
-db.classResults.mapReduce(mapClassRecords, reduceClassRecords,
+
+db.rawClassResults.mapReduce(mapClassSummary, reduceClassSummary,
     {
         out : {
-            replace: "results"
+            replace: "resultsClasses"
+        },
+        scope : scope
+    }
+)
+
+db.rawClassResults.mapReduce(mapInstanceSummary, reduceInstanceSummary,
+    {
+        out : {
+            replace: "resultsInstances"
         },
         scope : scope
     }

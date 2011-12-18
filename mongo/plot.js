@@ -6,7 +6,7 @@ for (i in dbs) {
     for (j in cols) {
         if (cols[j] == "TABLE_NAME") {
             var output = d.properties.findOne().benchmark;
-            d.results.find({ _id : "RESULT_SET" }).forEach(function (r) {
+            d.TABLE_NAME.find({ _id : "RESULT_SET" }).forEach(function (r) {
                 output += "\t" + r.value.immutable.noequals;
                 output += "\t" + r.value.immutable.equals;
                 output += "\t" + r.value.mutable.noequals;

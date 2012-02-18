@@ -3,15 +3,14 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
-
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static org.objectweb.asm.Opcodes.RETURN;
@@ -88,6 +87,11 @@ public class GenericClassWeaver extends ClassAdapter {
 		else if (MethodUtils.isCLInit(method)) {
 			visitedCLInit = true;
 			mv = new CLInitMethodWeaver(cr, method, mv);
+		}
+		// check for: public methods with arguments on a collection
+		else if ((cr.getProperties() & Clazz.COLLECTION) != 0
+				&& MethodUtils.isPublic(method) && MethodUtils.hasArgs(method)) {
+			mv = new CollectionMethodWeaver(cr, method, mv);
 		}
 		return mv;
 	}

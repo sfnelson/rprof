@@ -3,14 +3,14 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
-import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
-import nz.ac.vuw.ecs.rprofs.server.model.EventVisitor;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
-import java.util.List;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+import nz.ac.vuw.ecs.rprofs.server.model.EventVisitor;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)

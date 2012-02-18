@@ -15,8 +15,9 @@ OS=$(shell uname)
 LIBRARY_PATH_NAME=LD_LIBRARY_PATH
 
 ifeq ($(OS),Darwin)
-	JDK=/Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
+	#JDK=/Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
 	#JDK=/Library/Java/JavaVirtualMachines/openjdk-1.7-x86_64/Contents/Home
+	JDK=/Library/Java/JavaVirtualMachines/JDK\ 1.7.0\ Developer\ Preview.jdk/Contents/Home
 	HEADERS=
 	CC=cc
 	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin

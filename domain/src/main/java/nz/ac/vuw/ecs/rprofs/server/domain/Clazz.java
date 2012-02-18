@@ -3,11 +3,10 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
-import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
-
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -18,6 +17,7 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 	public static final int SPECIAL_CLASS_WEAVER = 0x2;
 	public static final int CLASS_INCLUDE_MATCHED = 0x4;
 	public static final int CLASS_EXCLUDE_MATCHED = 0x8;
+	public static final int COLLECTION = 0x10;
 
 	@NotNull
 	private ClazzId id;

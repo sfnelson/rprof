@@ -239,4 +239,12 @@ public class MethodUtils {
 	public static boolean isStatic(Method method) {
 		return (Opcodes.ACC_STATIC & method.getAccess()) != 0; // static
 	}
+
+	public static boolean isPublic(Method method) {
+		return (Opcodes.ACC_PUBLIC & method.getAccess()) != 0; // public
+	}
+
+	public static boolean hasArgs(Method method) {
+		return !method.getDescription().contains("()");
+	}
 }

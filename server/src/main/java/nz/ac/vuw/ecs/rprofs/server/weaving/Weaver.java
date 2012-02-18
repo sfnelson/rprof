@@ -19,6 +19,14 @@ public class Weaver {
 			.add(".*")
 			.get();
 
+	public static final Pattern collections = new PatternBuilder()
+			.add("java/util/.*Set")
+			.add("java/util/.*Map")
+			.add("java/util/.*List")
+			.add("java/util/.*table")
+			.add("java/util/Vector")
+			.get();
+
 	public static final Pattern excludes = new PatternBuilder()
 			.add("sun/reflect/.*")	// jhotdraw crashes in this package
 			.add("java/awt/.*")		// jhotdraw has font problems if this packages is included
@@ -57,6 +65,10 @@ public class Weaver {
 			flags |= Clazz.SPECIAL_CLASS_WEAVER;
 			visitor = new ObjectClassWeaver(writer, record);
 		} else {
+			if (collections.matcher(record.getName()).find()) {
+				flags |= Clazz.COLLECTION;
+				log.debug("{} is a collection", record.getName());
+			}
 			if (includes.matcher(record.getName()).find()) {
 				flags |= Clazz.CLASS_INCLUDE_MATCHED;
 				if (excludes.matcher(record.getName()).find()) {

@@ -1,3 +1,6 @@
+import java.util.HashSet;
+import java.util.LinkedList;
+
 public class Test extends A {
 	public static void main(String[] args) {
 		Test t = new Test("test");
@@ -45,6 +48,9 @@ public class Test extends A {
 		e.y = 2;
 
 		System.out.println(Thread.currentThread().getName());
+
+		new LinkedList<Object>().add(new CollectionElement());
+		new HashSet<Object>().add(new CollectionElement());
 
 		throw new RuntimeException("test exception in main method");
 	}
@@ -139,4 +145,7 @@ class E {
 		x = 1;
 		y = 1;
 	}
+}
+
+class CollectionElement {
 }

@@ -28,6 +28,7 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 		if (value.getConstructorReturn() != null) setConstructorReturn(value.getConstructorReturn());
 		if (value.getFirstEquals() != null) setFirstEquals(value.getFirstEquals());
 		if (value.getFirstHashCode() != null) setFirstHashCode(value.getFirstHashCode());
+		if (value.getFirstCollection() != null) setFirstCollection(value.getFirstCollection());
 		for (Instance.FieldInfo info : value.getFields().values()) {
 			addFieldInfo(info);
 		}
@@ -67,6 +68,12 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 	@Override
 	public MongoInstanceBuilder setFirstHashCode(EventId hashCode) {
 		b.append("firstHashCode", hashCode.getValue());
+		return this;
+	}
+
+	@Override
+	public MongoInstanceBuilder setFirstCollection(EventId collection) {
+		b.append("firstCollection", collection.getValue());
 		return this;
 	}
 
@@ -127,6 +134,10 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 
 		if (b.containsField("firstHashCode")) {
 			i.setFirstHashCode(new EventId((Long) b.get("firstHashCode")));
+		}
+
+		if (b.containsField("firstCollection")) {
+			i.setFirstCollection(new EventId((Long) b.get("firstCollection")));
 		}
 
 		if (b.containsField("fields")) {

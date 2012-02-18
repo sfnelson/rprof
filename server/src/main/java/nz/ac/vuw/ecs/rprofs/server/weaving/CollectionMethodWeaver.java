@@ -42,7 +42,6 @@ public class CollectionMethodWeaver extends MethodWeaver {
 			setStack(3);
 		}
 
-		System.out.println("just wove " + method.getOwnerName() + "." + method.getName());
 		visitTrackerMethod(Tracker.enter);
 	}
 }

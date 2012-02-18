@@ -31,6 +31,7 @@ public class MongoInstanceBuilderTest {
 	private EventId consReturn;
 	private EventId firstEquals;
 	private EventId firstHashcode;
+	private EventId firstCollection;
 
 	@Before
 	public void setUp() throws Exception {
@@ -75,6 +76,7 @@ public class MongoInstanceBuilderTest {
 		consReturn = new EventId((short) 33, 50123);
 		firstEquals = new EventId((short) 33, 50132);
 		firstHashcode = new EventId((short) 33, 50131);
+		firstCollection = new EventId((short) 33, 50133);
 
 		nextId = 1l;
 	}
@@ -117,6 +119,12 @@ public class MongoInstanceBuilderTest {
 	}
 
 	@Test
+	public void testSetFirstCollection() throws Exception {
+		builder.setFirstCollection(firstCollection);
+		assertEquals(firstCollection.getValue(), builder.b.get("firstCollection"));
+	}
+
+	@Test
 	public void testGet() throws Exception {
 		builder.init(new BasicDBObjectBuilder()
 				.add("_id", 1l)
@@ -125,6 +133,7 @@ public class MongoInstanceBuilderTest {
 				.add("constructorReturn", consReturn.getValue())
 				.add("firstEquals", firstEquals.getValue())
 				.add("firstHashCode", firstHashcode.getValue())
+				.add("firstCollection", firstCollection.getValue())
 				.get());
 		Instance result = builder.get();
 
@@ -134,6 +143,7 @@ public class MongoInstanceBuilderTest {
 		assertEquals(consReturn, result.getConstructorReturn());
 		assertEquals(firstEquals, result.getFirstEquals());
 		assertEquals(firstHashcode, result.getFirstHashCode());
+		assertEquals(firstCollection, result.getFirstCollection());
 	}
 
 	@Test
@@ -144,12 +154,15 @@ public class MongoInstanceBuilderTest {
 				.setConstructor(constructor)
 				.setConstructorReturn(consReturn)
 				.setFirstEquals(firstEquals)
-				.setFirstHashCode(firstHashcode).store();
+				.setFirstHashCode(firstHashcode)
+				.setFirstCollection(firstCollection)
+				.store();
 
 		assertEquals(clazzId.getValue(), stored.get("type"));
 		assertEquals(constructor.getValue(), stored.get("constructor"));
 		assertEquals(consReturn.getValue(), stored.get("constructorReturn"));
 		assertEquals(firstEquals.getValue(), stored.get("firstEquals"));
 		assertEquals(firstHashcode.getValue(), stored.get("firstHashCode"));
+		assertEquals(firstCollection.getValue(), stored.get("firstCollection"));
 	}
 }

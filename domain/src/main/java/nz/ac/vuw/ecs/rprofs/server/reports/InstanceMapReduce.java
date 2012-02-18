@@ -31,13 +31,18 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 		if (args == null || args.isEmpty() || e.getFirstArg() == null || e.getFirstArg().getValue() == 0l) return;
 
 		InstanceId id = e.getFirstArg();
+
+		Context.setDataset(dataset);
+		Clazz clazz = null;
 		Field field = null;
 		Method method = null;
-		Context.setDataset(dataset);
 		if (e.getField() != null) {
 			field = database.findEntity(e.getField());
 		} else if (e.getMethod() != null) {
 			method = database.findEntity(e.getMethod());
+			if (method != null) {
+				clazz = database.findEntity(method.getOwner());
+			}
 		}
 		Context.clear();
 
@@ -78,6 +83,17 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 					result.setFirstEquals(e.getId());
 				} else if (MethodUtils.isHashCode(method)) {
 					result.setFirstHashCode(e.getId());
+				} else if (clazz != null && (clazz.getProperties() & Clazz.COLLECTION) != 0) {
+					List<InstanceId> argList = e.getArgs();
+					for (int i = 1; i < argList.size(); i++) { // skip this
+						id = argList.get(i);
+						if (id != null && id.getValue() != 0) {
+							result = new Instance(id);
+							result.setFirstCollection(e.getId());
+							emitter.emit(id, result);
+						}
+					}
+					return;
 				}
 				break;
 		}
@@ -95,6 +111,7 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 
 		EventId firstEquals = null;
 		EventId firstHashCode = null;
+		EventId firstCollection = null;
 
 		Map<FieldId, Instance.FieldInfo> fields = Maps.newHashMap();
 
@@ -118,6 +135,11 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 			if (i.getFirstHashCode() != null) {
 				if (firstHashCode == null || i.getFirstHashCode().before(firstHashCode)) {
 					firstHashCode = i.getFirstHashCode();
+				}
+			}
+			if (i.getFirstCollection() != null) {
+				if (firstCollection == null || i.getFirstCollection().before(firstCollection)) {
+					firstCollection = i.getFirstCollection();
 				}
 			}
 
@@ -153,6 +175,7 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 		if (constructorReturn != null) result.setConstructorReturn(constructorReturn);
 		if (firstEquals != null) result.setFirstEquals(firstEquals);
 		if (firstHashCode != null) result.setFirstHashCode(firstHashCode);
+		if (firstCollection != null) result.setFirstCollection(firstCollection);
 		for (Instance.FieldInfo info : fields.values()) {
 			result.addFieldInfo(info.getId(), info);
 		}

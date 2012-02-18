@@ -3,13 +3,13 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
-import com.google.common.collect.Maps;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
-import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import java.util.Map;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
+import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -36,6 +36,9 @@ public class Instance implements DataObject<InstanceId, Instance> {
 
 	@Nullable
 	private EventId firstHashCode;
+
+	@Nullable
+	private EventId firstCollection;
 
 	@NotNull
 	private Map<FieldId, FieldInfo> fields = Maps.newHashMap();
@@ -105,6 +108,15 @@ public class Instance implements DataObject<InstanceId, Instance> {
 
 	public void setFirstHashCode(@Nullable EventId firstHashCode) {
 		this.firstHashCode = firstHashCode;
+	}
+
+	@Nullable
+	public EventId getFirstCollection() {
+		return firstCollection;
+	}
+
+	public void setFirstCollection(@Nullable EventId firstCollection) {
+		this.firstCollection = firstCollection;
 	}
 
 	public boolean hasFieldInfo(FieldId fieldId) {

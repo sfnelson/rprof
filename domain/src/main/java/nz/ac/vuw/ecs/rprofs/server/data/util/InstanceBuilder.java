@@ -24,5 +24,7 @@ public interface InstanceBuilder<I extends InstanceBuilder<I>> extends Builder<I
 
 	I setFirstHashCode(EventId hashCode);
 
+	I setFirstCollection(EventId collection);
+
 	I addFieldInfo(Instance.FieldInfo info);
 }

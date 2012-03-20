@@ -22,8 +22,9 @@ public class EqualsMethodWeaver extends ExceptionHandlingMethodWeaver {
 
 		pushMethodReference(method);			// stack: cid, mid
 		push(2);								// stack: cid, mid, 2
-		visitTypeInsn(ANEWARRAY, Type.getInternalName(Object.class));
-		// stack: cid, mid, args
+		visitTypeInsn(ANEWARRAY,				// stack: cid, mid, args
+				Type.getInternalName(Object.class));
+
 		// store this
 		visitInsn(DUP);							// stack: cid, mid, args, args
 		push(0);								// stack: cid, mid, args, args, 0

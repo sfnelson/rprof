@@ -92,6 +92,12 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 			i.append("firstWrite", info.getFirstWrite().getValue());
 			i.append("lastWrite", info.getLastWrite().getValue());
 		}
+		if (info.getFirstEqualsRead() != null) {
+			i.append("firstEqualsRead", info.getFirstEqualsRead().getValue());
+		}
+		if (info.getLastEqualsRead() != null) {
+			i.append("lastEqualsRead", info.getLastEqualsRead().getValue());
+		}
 
 		List<BasicDBObject> fields;
 		if (b.containsField("fields")) {

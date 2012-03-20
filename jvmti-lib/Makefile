@@ -1,7 +1,7 @@
 LIBNAME=rprof
 SOURCES=src/rprof.c src/agent_util.c src/java_crw_demo.c src/comm.c
 
-JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java
+JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java src/Example.java
 JARFILE=bin/rprof.jar
 
 OBJECTS=objects/rprof.o objects/agent_util.o objects/java_crw_demo.o objects/comm.o
@@ -88,6 +88,9 @@ clean:
 
 test: all
 	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -classpath ../classes Test)
+
+example: all
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),example -classpath ../classes Example)
 
 debug: all
 	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes Test)

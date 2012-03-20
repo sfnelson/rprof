@@ -43,6 +43,18 @@ public class Instance implements DataObject<InstanceId, Instance> {
 	@NotNull
 	private Map<FieldId, FieldInfo> fields = Maps.newHashMap();
 
+	/**
+	 * This field is not persisted in the database
+	 */
+	@Nullable
+	private EventId inEquals;
+
+	/**
+	 * This field is not persisted in the database
+	 */
+	@Nullable
+	private EventId inHashCode;
+
 	public Instance() {
 	}
 
@@ -137,6 +149,30 @@ public class Instance implements DataObject<InstanceId, Instance> {
 		return fields;
 	}
 
+	@Nullable
+	public EventId getInEquals() {
+		return inEquals;
+	}
+
+	@Nullable
+	public void setInEquals(EventId inEquals) {
+		this.inEquals = inEquals;
+	}
+
+	@Nullable
+	public EventId getInHashCode() {
+		return inHashCode;
+	}
+
+	@Nullable
+	public void setInHashCode(EventId inHashCode) {
+		this.inHashCode = inHashCode;
+	}
+
+	public boolean inEqualsOrHashCode() {
+		return inEquals != null || inHashCode != null;
+	}
+
 	public static class FieldInfo {
 
 		@NotNull
@@ -160,6 +196,12 @@ public class Instance implements DataObject<InstanceId, Instance> {
 
 		@Nullable
 		private EventId lastWrite;
+
+		@Nullable
+		private EventId firstEqualsRead;
+
+		@Nullable
+		private EventId lastEqualsRead;
 
 		public FieldInfo() {
 		}
@@ -240,6 +282,24 @@ public class Instance implements DataObject<InstanceId, Instance> {
 
 		public void setLastWrite(@Nullable EventId lastWrite) {
 			this.lastWrite = lastWrite;
+		}
+
+		@Nullable
+		public EventId getFirstEqualsRead() {
+			return firstEqualsRead;
+		}
+
+		public void setFirstEqualsRead(@Nullable EventId firstEqualsRead) {
+			this.firstEqualsRead = firstEqualsRead;
+		}
+
+		@Nullable
+		public EventId getLastEqualsRead() {
+			return lastEqualsRead;
+		}
+
+		public void setLastEqualsRead(@Nullable EventId lastEqualsRead) {
+			this.lastEqualsRead = lastEqualsRead;
 		}
 
 		@Override

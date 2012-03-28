@@ -96,6 +96,18 @@ public class Database {
 		return createInstanceBuilder();
 	}
 
+	public ResultCreator<?> getResultCreator() {
+		return createResultBuilder();
+	}
+
+	public ResultQuery<?> getResultQuery() {
+		return createResultBuilder();
+	}
+
+	public ResultUpdater<?> getResultUpdater() {
+		return createResultBuilder();
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<String> findPackages() {
 		DBCollection classes = getCollection(Clazz.class);
@@ -176,7 +188,7 @@ public class Database {
 	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
 	createInstanceMapper(Query<?, Input> input, MapReduce<Input, InstanceId, Instance> mr, boolean replace) {
 		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce");
+		final DBCollection tmp = db.getCollection("tmp.mapreduce.instances");
 		final MongoInstanceBuilder tmpBuilder = new MongoInstanceBuilder() {
 			@Override
 			DBCollection _getCollection() {
@@ -211,7 +223,7 @@ public class Database {
 	public <Input extends DataObject<?, Input>> Reducer.ReducerTask
 	createInstanceReducer(MapReduce<Input, InstanceId, Instance> mr) {
 		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce");
+		final DBCollection tmp = db.getCollection("tmp.mapreduce.instances");
 		final MongoInstanceBuilder tmpBuilder = new MongoInstanceBuilder() {
 			@Override
 			DBCollection _getCollection() {
@@ -237,6 +249,77 @@ public class Database {
 		};
 
 		return new MongoReducer<InstanceId, Instance>(tmpBuilder, getInstanceCreator(), getInstanceQuery(), mr) {
+			@Override
+			protected void cleanup() {
+				tmp.drop();
+			}
+		};
+	}
+
+	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
+	createResultMapper(Query<?, Input> input, MapReduce<Input, ResultId, Result> mr, boolean replace) {
+		DB db = getDatabase();
+		final DBCollection tmp = db.getCollection("tmp.mapreduce.results");
+		final MongoResultBuilder tmpBuilder = new MongoResultBuilder() {
+			@Override
+			DBCollection _getCollection() {
+				return tmp;
+			}
+
+			@Override
+			void _store(DBObject toStore) {
+				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
+						.append("value", toStore));
+			}
+
+			@Override
+			public Result get() {
+				init((DBObject) b.get("value"));
+				return super.get();
+			}
+
+			@Override
+			ResultId _createId() {
+				return new ResultId((Long) b.get("_id"));
+			}
+		};
+
+		if (replace) {
+			getCollection(Result.class).drop();
+		}
+
+		return new MongoMapper<Input, ResultId, Result>(input, tmpBuilder, mr, mr);
+	}
+
+	public <Input extends DataObject<?, Input>> Reducer.ReducerTask
+	createResultReducer(MapReduce<Input, ResultId, Result> mr) {
+		DB db = getDatabase();
+		final DBCollection tmp = db.getCollection("tmp.mapreduce.results");
+		final MongoResultBuilder tmpBuilder = new MongoResultBuilder() {
+			@Override
+			DBCollection _getCollection() {
+				return tmp;
+			}
+
+			@Override
+			void _store(DBObject toStore) {
+				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
+						.append("value", toStore));
+			}
+
+			@Override
+			public Result get() {
+				init((DBObject) b.get("value"));
+				return super.get();
+			}
+
+			@Override
+			ResultId _createId() {
+				return new ResultId((Long) b.get("_id"));
+			}
+		};
+
+		return new MongoReducer<ResultId, Result>(tmpBuilder, getResultCreator(), getResultQuery(), mr) {
 			@Override
 			protected void cleanup() {
 				tmp.drop();
@@ -283,6 +366,8 @@ public class Database {
 			return root.getCollection("instances");
 		} else if (type == Event.class) {
 			return root.getCollection("events");
+		} else if (type == Result.class) {
+			return root.getCollection("results");
 		} else {
 			throw new RuntimeException("type not implemented: " + type);
 		}
@@ -330,6 +415,8 @@ public class Database {
 			return EntityBuilder.class.cast(createMethodQuery());
 		} else if (type.equals(Instance.class)) {
 			return EntityBuilder.class.cast(createInstanceBuilder());
+		} else if (type.equals(Result.class)) {
+			return EntityBuilder.class.cast(createResultBuilder());
 		} else {
 			log.error("request for unavaible builder: {}", type);
 			return null;
@@ -562,6 +649,21 @@ public class Database {
 			@Override
 			DBCollection _getCollection() {
 				return instances;
+			}
+		};
+	}
+
+	private MongoResultBuilder createResultBuilder() {
+		final DBCollection results = getCollection(Result.class);
+		return new MongoResultBuilder() {
+			@Override
+			DBCollection _getCollection() {
+				return results;
+			}
+
+			@Override
+			ResultId _createId() {
+				return new ResultId((Long) b.get("_id"));
 			}
 		};
 	}

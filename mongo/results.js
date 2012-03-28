@@ -2,18 +2,18 @@ function EqualsRecord() {
     this.__proto__ = EqualsPrototype;
 }
 var EqualsPrototype = {
-    init : function (equals) {
+    init:function (equals) {
         if (equals) this.equals = 1;
         else this.noequals = 1;
         return this;
     },
-    add : function (o) {
+    add:function (o) {
         if (!o) return;
         if (o.equals) this.equals = (this.equals || 0) + o.equals;
         if (o.noequals) this.noequals = (this.noequals || 0) + o.noequals;
         return this;
     },
-    cast : function (obj) {
+    cast:function (obj) {
         if (!obj) return;
         obj.__proto__ = EqualsPrototype;
     }
@@ -24,20 +24,20 @@ function MutabilityRecord() {
     this.__proto__ = MutabilityPrototype;
 }
 var MutabilityPrototype = {
-    total : 0,
-    init : function (immutable, equals) {
+    total:0,
+    init:function (immutable, equals) {
         this[(immutable ? "immutable" : "mutable")] = new EqualsRecord().init(equals);
         this.total = 1;
         return this;
     },
-    add : function (o) {
+    add:function (o) {
         if (!o) return;
         if (o.immutable) this.immutable = (this.immutable ? this.immutable.add(o.immutable) : o.immutable);
         if (o.mutable) this.mutable = (this.mutable ? this.mutable.add(o.mutable) : o.mutable);
         this.total += o.total;
         return this;
     },
-    inc : function (o) {
+    inc:function (o) {
         if (!o) return;
         this.total = 1;
         if (o.immutable) {
@@ -52,7 +52,7 @@ var MutabilityPrototype = {
         }
         return this;
     },
-    cast : function (obj) {
+    cast:function (obj) {
         if (!obj) return;
         obj.__proto__ = MutabilityPrototype;
         EqualsPrototype.cast(obj.immutable);
@@ -70,7 +70,7 @@ function ClassRecord() {
     this.__proto__ = ClassPrototype;
 }
 var ClassPrototype = {
-    add : function (o) {
+    add:function (o) {
         if (!o) return;
         this.name = this.name || o.name;
         this["package"] = this["package"] || o["package"];
@@ -80,7 +80,7 @@ var ClassPrototype = {
         this.firstEquals.add(o.firstEquals);
         this.composite.add(o.composite);
     },
-    cast : function (obj) {
+    cast:function (obj) {
         obj.__proto__ = ClassPrototype;
         MutabilityPrototype.cast(obj.fieldsFine);
         MutabilityPrototype.cast(obj.fieldsCoarse);
@@ -96,6 +96,9 @@ function mapInstances() {
     var firstEquals = null;
     if (this.firstHashCode) firstEquals = this.firstHashCode;
     if (this.firstEquals && (!firstEquals || this.firstEquals < firstEquals)) firstEquals = this.firstEquals;
+
+    var coll = (this.firstCollection) ? true : false;
+    var firstCollection = this.firstCollection;
 
     var fieldsAreImmutable = true;
     var firstRead = false;
@@ -128,7 +131,7 @@ function mapInstances() {
     result.composite.init(composite, equals);
 
     if (this.type) {
-        var cr = db.classes.findOne({"_id": this.type});
+        var cr = db.classes.findOne({"_id":this.type});
         if (cr) result.name = cr.name;
         if (cr) result.package = cr.package;
     }
@@ -185,38 +188,38 @@ function reduceClassSummary(key, entries) {
 }
 
 var scope = {
-    ClassRecord : ClassRecord,
-    ClassPrototype : ClassPrototype,
-    MutabilityRecord : MutabilityRecord,
-    MutabilityPrototype : MutabilityPrototype,
-    EqualsRecord : EqualsRecord,
-    EqualsPrototype : EqualsPrototype
+    ClassRecord:ClassRecord,
+    ClassPrototype:ClassPrototype,
+    MutabilityRecord:MutabilityRecord,
+    MutabilityPrototype:MutabilityPrototype,
+    EqualsRecord:EqualsRecord,
+    EqualsPrototype:EqualsPrototype
 };
 
 db.instances.mapReduce(mapInstances, reduceInstances,
     {
-        out : {
-            replace: "rawClassResults"
+        out:{
+            replace:"rawClassResults"
         },
-        scope : scope
+        scope:scope
     }
 );
 
 
 db.rawClassResults.mapReduce(mapClassSummary, reduceClassSummary,
     {
-        out : {
-            replace: "resultsClasses"
+        out:{
+            replace:"resultsClasses"
         },
-        scope : scope
+        scope:scope
     }
 )
 
 db.rawClassResults.mapReduce(mapInstanceSummary, reduceInstanceSummary,
     {
-        out : {
-            replace: "resultsInstances"
+        out:{
+            replace:"resultsInstances"
         },
-        scope : scope
+        scope:scope
     }
 );

@@ -20,9 +20,13 @@ public interface ResultBuilder<I extends ResultBuilder<I>> extends Builder<I, Re
 
 	I setNumObjects(int numObjects);
 
-	I setTotals(int[] totals);
+	I setEqCol(int[] eqcol);
 
-	I setCounts(int[] counts);
+	I setEq(int[] eq);
+
+	I setCol(int[] col);
+
+	I setNone(int[] none);
 
 	I setFields(Map<FieldId, Result.FieldInfo> fields);
 }

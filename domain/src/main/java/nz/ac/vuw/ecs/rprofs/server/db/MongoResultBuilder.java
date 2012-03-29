@@ -29,8 +29,10 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 		setClassName(value.getClassName());
 		setPackageName(value.getPackageName());
 		setNumObjects(value.getNumObjects());
-		setTotals(value.getTotals());
-		setCounts(value.getCounts());
+		setEqCol(value.getEqCol());
+		setEq(value.getEq());
+		setCol(value.getCol());
+		setNone(value.getNone());
 		setFields(value.getFields());
 
 		return this;
@@ -61,18 +63,34 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 	}
 
 	@Override
-	public MongoResultBuilder setTotals(int[] totals) {
+	public MongoResultBuilder setEqCol(int[] eqcol) {
 		BasicDBList list = new BasicDBList();
-		for (int i : totals) list.add(i);
-		b.put("totals", list);
+		for (int i : eqcol) list.add(i);
+		b.put("eqcol", list);
 		return this;
 	}
 
 	@Override
-	public MongoResultBuilder setCounts(int[] counts) {
+	public MongoResultBuilder setEq(int[] eq) {
 		BasicDBList list = new BasicDBList();
-		for (int i : counts) list.add(i);
-		b.put("counts", list);
+		for (int i : eq) list.add(i);
+		b.put("eq", list);
+		return this;
+	}
+
+	@Override
+	public MongoResultBuilder setCol(int[] col) {
+		BasicDBList list = new BasicDBList();
+		for (int i : col) list.add(i);
+		b.put("col", list);
+		return this;
+	}
+
+	@Override
+	public MongoResultBuilder setNone(int[] none) {
+		BasicDBList list = new BasicDBList();
+		for (int i : none) list.add(i);
+		b.put("none", list);
 		return this;
 	}
 
@@ -100,16 +118,28 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 
 		int numObjects = (Integer) b.get("objects");
 
-		List<?> totalsList = (List<?>) b.get("totals");
-		int[] totals = new int[totalsList.size()];
-		for (int i = 0; i < totals.length; i++) {
-			totals[i] = (Integer) totalsList.get(i);
+		List<?> eqcolList = (List<?>) b.get("eqcol");
+		int[] eqcol = new int[eqcolList.size()];
+		for (int i = 0; i < eqcol.length; i++) {
+			eqcol[i] = (Integer) eqcolList.get(i);
 		}
 
-		List<?> countsList = (List<?>) b.get("counts");
-		int[] counts = new int[countsList.size()];
-		for (int i = 0; i < counts.length; i++) {
-			counts[i] = (Integer) countsList.get(i);
+		List<?> eqList = (List<?>) b.get("eq");
+		int[] eq = new int[eqList.size()];
+		for (int i = 0; i < eq.length; i++) {
+			eq[i] = (Integer) eqList.get(i);
+		}
+
+		List<?> colList = (List<?>) b.get("col");
+		int[] col = new int[colList.size()];
+		for (int i = 0; i < col.length; i++) {
+			col[i] = (Integer) colList.get(i);
+		}
+
+		List<?> noneList = (List<?>) b.get("none");
+		int[] none = new int[noneList.size()];
+		for (int i = 0; i < none.length; i++) {
+			none[i] = (Integer) noneList.get(i);
 		}
 
 		Map<FieldId, Result.FieldInfo> fields = Maps.newHashMap();
@@ -123,6 +153,6 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 				fields.put(fid, info);
 			}
 		}
-		return new Result(id, className, packageName, numObjects, totals, counts, fields);
+		return new Result(id, className, packageName, numObjects, eqcol, eq, col, none, fields);
 	}
 }

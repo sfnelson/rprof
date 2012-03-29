@@ -17,11 +17,6 @@ import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
  */
 public class Result implements DataObject<ResultId, Result> {
 
-	public static final int TOTAL_EQUALS_COLL = 3;
-	public static final int TOTAL_EQUALS = 2;
-	public static final int TOTAL_COLL = 1;
-	public static final int TOTAL_NONE = 0;
-
 	public static final int CONSTRUCTOR_COARSE_FINE_EQUALS_COLL = 31;
 	public static final int CONSTRUCTOR_COARSE_FINE_EQUALS = 30;
 	public static final int CONSTRUCTOR_COARSE_FINE_COLL = 29;
@@ -54,13 +49,6 @@ public class Result implements DataObject<ResultId, Result> {
 	public static final int EQUALS = 2;
 	public static final int COLL = 1;
 	public static final int NONE = 0;
-
-	public static int totalIndex(boolean inEquals, boolean inColl) {
-		if (inEquals && inColl) return TOTAL_EQUALS_COLL;
-		if (inEquals) return TOTAL_EQUALS;
-		if (inColl) return TOTAL_COLL;
-		else return TOTAL_NONE;
-	}
 
 	public static int countIndex(boolean isConstructor, boolean isCoarse, boolean isFine, boolean isEquals, boolean isColl) {
 		if (isConstructor && isCoarse && isFine && isEquals && isColl) return CONSTRUCTOR_COARSE_FINE_EQUALS_COLL;
@@ -112,10 +100,16 @@ public class Result implements DataObject<ResultId, Result> {
 	private int numObjects;
 
 	@NotNull
-	private int[] totals;
+	private int[] eqcol;
 
 	@NotNull
-	private int[] counts;
+	private int[] eq;
+
+	@NotNull
+	private int[] col;
+
+	@NotNull
+	private int[] none;
 
 	@NotNull
 	private Map<FieldId, FieldInfo> fields;
@@ -125,8 +119,10 @@ public class Result implements DataObject<ResultId, Result> {
 		this.version = 0;
 
 		numObjects = 0;
-		totals = new int[4];
-		counts = new int[32];
+		eqcol = new int[32];
+		col = new int[32];
+		eq = new int[32];
+		none = new int[32];
 
 		fields = Maps.newHashMap();
 	}
@@ -152,8 +148,11 @@ public class Result implements DataObject<ResultId, Result> {
 		boolean inColl = collection != null;
 		boolean isColl = (collection != null) && (lastWrite == null || lastWrite.before(collection));
 
-		totals[totalIndex(inEquals, inColl)] = 1;
-		counts[countIndex(isConstructor, isCoarse, isFine, isEquals, isColl)] = 1;
+		int index = countIndex(isConstructor, isCoarse, isFine, isEquals, isColl);
+		if (inEquals && inColl) eqcol[index] = 1;
+		else if (inEquals) eq[index] = 1;
+		else if (inColl) col[index] = 1;
+		else none[index] = 1;
 
 		for (FieldId field : fields.keySet()) {
 			boolean isMutable = mutable.contains(field);
@@ -162,13 +161,16 @@ public class Result implements DataObject<ResultId, Result> {
 		}
 	}
 
-	public Result(ResultId id, String className, String packageName, int numObjects, int[] totals, int[] counts, Map<FieldId, FieldInfo> fields) {
+	public Result(ResultId id, String className, String packageName, int numObjects,
+				  int[] eqcol, int[] eq, int[] col, int[] none, Map<FieldId, FieldInfo> fields) {
 		this.id = id;
 		this.className = className;
 		this.packageName = packageName;
 		this.numObjects = numObjects;
-		this.totals = totals;
-		this.counts = counts;
+		this.eqcol = eqcol;
+		this.eq = eq;
+		this.col = col;
+		this.none = none;
 		this.fields = fields;
 	}
 
@@ -214,21 +216,39 @@ public class Result implements DataObject<ResultId, Result> {
 	}
 
 	@NotNull
-	public int[] getTotals() {
-		return totals;
+	public int[] getEqCol() {
+		return eqcol;
 	}
 
-	public void setTotals(@NotNull int[] totals) {
-		this.totals = totals;
+	public void setEqCol(@NotNull int[] eqcol) {
+		this.eqcol = eqcol;
 	}
 
 	@NotNull
-	public int[] getCounts() {
-		return counts;
+	public int[] getEq() {
+		return eq;
 	}
 
-	public void setCounts(@NotNull int[] counts) {
-		this.counts = counts;
+	public void setEq(@NotNull int[] eq) {
+		this.eq = eq;
+	}
+
+	@NotNull
+	public int[] getCol() {
+		return col;
+	}
+
+	public void setCol(@NotNull int[] col) {
+		this.col = col;
+	}
+
+	@NotNull
+	public int[] getNone() {
+		return none;
+	}
+
+	public void setNone(@NotNull int[] none) {
+		this.none = none;
 	}
 
 	@NotNull
@@ -248,12 +268,20 @@ public class Result implements DataObject<ResultId, Result> {
 
 		numObjects += result.numObjects;
 
-		for (int i = 0; i < totals.length; i++) {
-			totals[i] += result.totals[i];
+		for (int i = 0; i < eqcol.length; i++) {
+			eqcol[i] += result.eqcol[i];
 		}
 
-		for (int i = 0; i < counts.length; i++) {
-			counts[i] += result.counts[i];
+		for (int i = 0; i < eq.length; i++) {
+			eq[i] += result.eq[i];
+		}
+
+		for (int i = 0; i < col.length; i++) {
+			col[i] += result.col[i];
+		}
+
+		for (int i = 0; i < none.length; i++) {
+			none[i] += result.none[i];
 		}
 
 		for (FieldId field : result.fields.keySet()) {

@@ -1,6 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
 import java.io.IOException;
+import java.util.Map;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,6 +16,7 @@ import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Result;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import nz.ac.vuw.ecs.rprofs.server.reports.ResultMapReduce;
 import org.slf4j.LoggerFactory;
 
@@ -107,22 +109,52 @@ public class Process extends HttpServlet {
 		resp.setContentType("text/plain");
 		ServletOutputStream out = resp.getOutputStream();
 
-		int[] eqcol = new int[7];
-		int[] eq = new int[7];
-		int[] col = new int[7];
-		int[] none = new int[7];
+		int[] eqcol = new int[13];
+		int[] eq = new int[13];
+		int[] col = new int[13];
+		int[] none = new int[13];
 
 		Query.Cursor<? extends Result> query = db.getResultQuery().find();
 		while (query.hasNext()) {
 			Result r = query.next();
 
-			getTotals(eqcol, r.getEqCol());
-			getTotals(eq, r.getEq());
-			getTotals(col, r.getCol());
-			getTotals(none, r.getNone());
+			Map<FieldId, FieldInfo> fields = r.getFields();
+			int core0 = 0;
+			int core1 = 0;
+			int coreN = 0;
+			for (FieldInfo field : fields.values()) {
+				if (field.getMutable() == 0) {
+					core0++;
+					if (field.getReads() > 0) {
+						core1++;
+					}
+					if (field.getReads() >= r.getNumObjects()) {
+						coreN++;
+					}
+				}
+			}
+
+			boolean half = (core0 >= Math.max(1, fields.size() / 2));
+			boolean full = (core0 >= Math.max(1, fields.size()));
+
+			// todo is requiring at least one field sensible?
+			if (fields.size() == 0) {
+				half = false;
+				full = false;
+			}
+
+			if (full && !half) {
+				throw new RuntimeException("wat?");
+			}
+
+			getTotals(eqcol, r.getEqCol(), core0, core1, coreN, half, full);
+			getTotals(eq, r.getEq(), core0, core1, coreN, half, full);
+			getTotals(col, r.getCol(), core0, core1, coreN, half, full);
+			getTotals(none, r.getNone(), core0, core1, coreN, half, full);
 		}
 
-		out.println("Set,Constructor,Coarse,Fine,Equals,Collection,Immutable,Total");
+		out.println("Set,Constructor,Coarse,Fine,Equals,Collection,Immutable,Total,"
+				+ "Partial(n),Partial(1),Partial(0),Combined,Semi-Immutable,Fully-Immutable");
 
 		out.print("All Objects");
 		for (int i = 0; i < none.length; i++) {
@@ -163,13 +195,19 @@ public class Process extends HttpServlet {
 		resp.getOutputStream().close();
 	}
 
-	private void getTotals(int[] totals, int[] input) {
+	private void getTotals(int[] totals, int[] input, int core0, int core1, int coreN, boolean half, boolean full) {
 		int constructor = 0;
 		int fine = 0;
 		int coarse = 0;
 		int equals = 0;
 		int collection = 0;
 		int immutable = 0;
+		int partial0 = 0;
+		int partial1 = 0;
+		int partialN = 0;
+		int combined = 0;
+		int semiImmutable = 0;
+		int fullyImmutable = 0;
 		int total = 0;
 
 		immutable += input[CONSTRUCTOR_COARSE_FINE_EQUALS_COLL];
@@ -291,6 +329,26 @@ public class Process extends HttpServlet {
 
 		total = immutable + input[NONE];
 
+		if (coreN > 0) {
+			partialN = immutable + input[NONE];
+		} else if (core1 > 0) {
+			partial1 = immutable + input[NONE];
+		} else if (core0 > 0) {
+			partial0 = immutable + input[NONE];
+		}
+
+		if (core0 > 0) {
+			combined = input[NONE];
+		}
+
+		if (half) {
+			semiImmutable = immutable + input[NONE];
+		}
+
+		if (full) {
+			fullyImmutable = immutable + input[NONE];
+		}
+
 		totals[0] += constructor;
 		totals[1] += coarse;
 		totals[2] += fine;
@@ -298,5 +356,11 @@ public class Process extends HttpServlet {
 		totals[4] += collection;
 		totals[5] += immutable;
 		totals[6] += total;
+		totals[7] += partialN;
+		totals[8] += partial1;
+		totals[9] += partial0;
+		totals[10] += combined;
+		totals[11] += semiImmutable;
+		totals[12] += fullyImmutable;
 	}
 }

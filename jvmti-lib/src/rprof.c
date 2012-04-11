@@ -35,6 +35,7 @@
  */
 
 #include "stdlib.h"
+#include "stdint.h"
 #include "string.h"
 #include "errno.h"
 
@@ -175,7 +176,7 @@ logEvent(JNIEnv *env, jvmtiEnv *jvmti, jthread thread, jobject o, const char* fo
 
 static int hashField(rField *map, int len, jfieldID field) {
 	int index = 0;
-	int key = ((long unsigned int) field) % len;
+	int key = (int) (((uint64_t) field) % len);
 	int i = 0;
 	while (i < len) {
 		index = ((int)(key + i/2.0f + i*i/2.0f)) % len;

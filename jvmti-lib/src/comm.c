@@ -45,7 +45,7 @@ typedef struct {
 	char		   host[HOST_MAX_LENGTH];
 	char           benchmark[BENCHMARK_MAX_LENGTH];
 	char           dataset[DATASET_MAX_LENGTH];
-	long int       lastId;
+	jlong          lastId;
 } GlobalCommData;
 
 static GlobalCommData *cdata;
@@ -161,7 +161,7 @@ JNIEXPORT void JNICALL log_profiler_started()
 {
 	CURL* handle = curl_easy_init();
 	char host [HOST_MAX_LENGTH];
-	long status;
+	jlong status;
 	
 	sprintf(host, "http://%s/start", cdata->host);
 
@@ -200,7 +200,7 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 {
 	CURL* handle = curl_easy_init();
 	char host [HOST_MAX_LENGTH];
-	long status;
+	jlong status;
 	
 	sprintf(host, "http://%s/stop", cdata->host);
 
@@ -235,7 +235,7 @@ JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
 		jint cnum, jint mnum, jint len, jlong* params)
 {
 	int i;
-	long int id;
+	jlong id;
 	EventRecord* record;
 
 	if (len > MAX_PARAMETERS) {
@@ -270,7 +270,7 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 {
 	CURL* handle = curl_easy_init();
 	char host [HOST_MAX_LENGTH];
-	long status;
+	jlong status;
 	CURLcode err;
 	
 	sprintf(host, "http://%s/logger", cdata->host);
@@ -325,7 +325,7 @@ JNIEXPORT void JNICALL weave_classfile(
 	
 	CURL* handle = curl_easy_init();
 	char host [HOST_MAX_LENGTH];
-	long status;
+	jlong status;
 	
 	sprintf(host, "http://%s/weaver?", cdata->host);
 

@@ -101,10 +101,15 @@ public class Worker {
 		InstanceMapReduce mr = new InstanceMapReduce(ds, database);
 		Mapper.MapTask<Event> task = database.createInstanceMapper(null, mr, false);
 
+		long first = 0, last = 0;
+
 		for (int i = 0; i < length / RECORD_LENGTH; i++) {
 			long id = dis.readLong();
 			b.setId(EventId.create(ds, id));
 			b.setThread(parseObjectId(ds, dis.readLong()));
+
+			if (i == 0) first = id;
+			if (i + 1 == length / RECORD_LENGTH) last = id;
 
 			int type = dis.readInt();
 
@@ -144,8 +149,8 @@ public class Worker {
 		task.flush();
 
 		long finished = Calendar.getInstance().getTime().getTime();
-		log.debug("{} events stored successfully in {}ms",
-				length / RECORD_LENGTH, finished - started);
+		log.debug("{}: events {} to {} stored successfully in {}ms",
+				new Object[]{ds.getDatasetHandle(), first, last, finished - started});
 
 		Context.clear();
 	}

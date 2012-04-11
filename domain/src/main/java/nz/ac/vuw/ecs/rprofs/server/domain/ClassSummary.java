@@ -6,16 +6,16 @@ import java.util.Set;
 import com.google.common.collect.Maps;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassSummaryId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ResultId;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 27/03/12
  */
-public class Result implements DataObject<ResultId, Result> {
+public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 
 	public static final int CONSTRUCTOR_COARSE_FINE_EQUALS_COLL = 31;
 	public static final int CONSTRUCTOR_COARSE_FINE_EQUALS = 30;
@@ -86,7 +86,7 @@ public class Result implements DataObject<ResultId, Result> {
 	}
 
 	@NotNull
-	private ResultId id;
+	private ClassSummaryId id;
 
 	@NotNull
 	private Integer version;
@@ -114,7 +114,7 @@ public class Result implements DataObject<ResultId, Result> {
 	@NotNull
 	private Map<FieldId, FieldInfo> fields;
 
-	public Result(ResultId id) {
+	public ClassSummary(ClassSummaryId id) {
 		this.id = id;
 		this.version = 0;
 
@@ -127,10 +127,10 @@ public class Result implements DataObject<ResultId, Result> {
 		fields = Maps.newHashMap();
 	}
 
-	public Result(ResultId id, String className, String packageName,
-				  EventId lastWrite, EventId constructor, EventId firstRead,
-				  EventId equals, EventId collection, Map<FieldId, Instance.FieldInfo> fields,
-				  Set<FieldId> mutable) {
+	public ClassSummary(ClassSummaryId id, String className, String packageName,
+						EventId lastWrite, EventId constructor, EventId firstRead,
+						EventId equals, EventId collection, Map<FieldId, Instance.FieldInfo> fields,
+						Set<FieldId> mutable) {
 		this(id);
 
 		this.className = className;
@@ -161,8 +161,8 @@ public class Result implements DataObject<ResultId, Result> {
 		}
 	}
 
-	public Result(ResultId id, String className, String packageName, int numObjects,
-				  int[] eqcol, int[] eq, int[] col, int[] none, Map<FieldId, FieldInfo> fields) {
+	public ClassSummary(ClassSummaryId id, String className, String packageName, int numObjects,
+						int[] eqcol, int[] eq, int[] col, int[] none, Map<FieldId, FieldInfo> fields) {
 		this.id = id;
 		this.className = className;
 		this.packageName = packageName;
@@ -176,7 +176,7 @@ public class Result implements DataObject<ResultId, Result> {
 
 	@Override
 	@NotNull
-	public ResultId getId() {
+	public ClassSummaryId getId() {
 		return id;
 	}
 
@@ -260,7 +260,7 @@ public class Result implements DataObject<ResultId, Result> {
 		this.fields = fields;
 	}
 
-	public void append(@NotNull Result result) {
+	public void append(@NotNull ClassSummary result) {
 		assert (id.equals(result.getId()));
 
 		if (result.className != null) this.className = result.className;
@@ -298,13 +298,13 @@ public class Result implements DataObject<ResultId, Result> {
 		if (other == this) return true;
 		if (other == null) return false;
 		if (getClass() == other.getClass()) {
-			return id.equals(((Result) other).getId());
+			return id.equals(((ClassSummary) other).getId());
 		}
 		return false;
 	}
 
 	public int hashCode() {
-		return id.hashCode() ^ Result.class.hashCode();
+		return id.hashCode() ^ ClassSummary.class.hashCode();
 	}
 
 	public static class FieldInfo {

@@ -3,11 +3,10 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.domain;
 
+import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import nz.ac.vuw.ecs.rprofs.server.model.Attribute;
-
-import javax.validation.constraints.NotNull;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -90,6 +89,10 @@ public class Field implements Attribute<FieldId, Field> {
 
 	public int getAccess() {
 		return access;
+	}
+
+	public boolean isFinal() {
+		return (16 & access) != 0; // org.objectweb.asm.Opcodes.ACC_FINAL
 	}
 
 	@Override

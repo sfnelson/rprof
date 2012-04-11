@@ -14,13 +14,15 @@ import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.Result;
+import nz.ac.vuw.ecs.rprofs.server.domain.FieldSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.reports.ResultMapReduce;
+import nz.ac.vuw.ecs.rprofs.server.reports.ClassMapReduce;
+import nz.ac.vuw.ecs.rprofs.server.reports.FieldMapReduce;
 import org.slf4j.LoggerFactory;
 
-import static nz.ac.vuw.ecs.rprofs.server.domain.Result.*;
+import static nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary.*;
 
 @Singleton
 public class Process extends HttpServlet {
@@ -47,13 +49,16 @@ public class Process extends HttpServlet {
 		if (dataset != null) {
 			Context.setDataset(dataset);
 
-			final ResultMapReduce mr = new ResultMapReduce(db.getClazzQuery());
+			final ClassMapReduce mr = new ClassMapReduce(db.getClazzQuery());
+			final FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
 
 			if (op == null || op.equals("map") || op.equals("mapreduce")) {
-				db.createResultMapper(db.getInstanceQuery(), mr, true).map();
+				db.createClassSummaryMapper(db.getInstanceQuery(), mr, true).map();
+				db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
 			}
 			if (op == null || op.equals("reduce") || op.equals("mapreduce")) {
-				db.createResultReducer(mr).reduce();
+				db.createClassSummaryReducer(mr).reduce();
+				db.createFieldSummaryReducer(fmr).reduce();
 			}
 			if (op == null || op.equals("print")) {
 				print(resp);
@@ -61,6 +66,9 @@ public class Process extends HttpServlet {
 			}
 			if (op.equals("summary")) {
 				summary(resp);
+			}
+			if (op.equals("fields")) {
+				fields(dataset, resp);
 			}
 
 			Context.clear();
@@ -78,9 +86,9 @@ public class Process extends HttpServlet {
 		resp.setContentType("text/plain");
 		ServletOutputStream out = resp.getOutputStream();
 
-		Query.Cursor<? extends Result> query = db.getResultQuery().find();
+		Query.Cursor<? extends ClassSummary> query = db.getClassSummaryQuery().find();
 		while (query.hasNext()) {
-			Result r = query.next();
+			ClassSummary r = query.next();
 			out.print(r.getClassName());
 			for (int i : r.getNone()) {
 				out.print(",");
@@ -114,9 +122,9 @@ public class Process extends HttpServlet {
 		int[] col = new int[13];
 		int[] none = new int[13];
 
-		Query.Cursor<? extends Result> query = db.getResultQuery().find();
+		Query.Cursor<? extends ClassSummary> query = db.getClassSummaryQuery().find();
 		while (query.hasNext()) {
-			Result r = query.next();
+			ClassSummary r = query.next();
 
 			Map<FieldId, FieldInfo> fields = r.getFields();
 			int core0 = 0;
@@ -191,6 +199,41 @@ public class Process extends HttpServlet {
 		}
 		out.println();
 
+
+		resp.getOutputStream().close();
+	}
+
+	private void fields(Dataset dataset, HttpServletResponse resp) throws IOException {
+		resp.setStatus(HttpServletResponse.SC_OK);
+		resp.setContentType("text/plain");
+		ServletOutputStream out = resp.getOutputStream();
+
+		int total = 0;
+		int numFSC = 0;
+		int numFS = 0;
+		int numFC = 0;
+		int numF = 0;
+		int numSC = 0;
+		int numS = 0;
+		int numC = 0;
+		int numNone = 0;
+
+		Query.Cursor<? extends FieldSummary> query = db.getFieldSummaryQuery().find();
+		while (query.hasNext()) {
+			FieldSummary r = query.next();
+
+			total++;
+			if (r.isFinal() && r.isStationary() && r.isConstructed()) numFSC++;
+			else if (r.isFinal() && r.isStationary()) numFS++;
+			else if (r.isFinal() && r.isConstructed()) numFC++;
+			else if (r.isFinal()) numF++;
+			else if (r.isStationary() && r.isConstructed()) numSC++;
+			else if (r.isStationary()) numS++;
+			else if (r.isConstructed()) numC++;
+			else numNone++;
+		}
+
+		out.println(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", dataset.getBenchmark(), total, numFSC, numFS, numFC, numF, numSC, numS, numC, numNone));
 
 		resp.getOutputStream().close();
 	}

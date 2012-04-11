@@ -4,28 +4,28 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzQuery;
+import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.domain.Result;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassSummaryId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ResultId;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 27/03/12
  */
-public class ResultMapReduce implements MapReduce<Instance, ResultId, Result> {
+public class ClassMapReduce implements MapReduce<Instance, ClassSummaryId, ClassSummary> {
 
 	private final ClazzQuery<?> classes;
 
-	public ResultMapReduce(ClazzQuery<?> classes) {
+	public ClassMapReduce(ClazzQuery<?> classes) {
 		this.classes = classes;
 	}
 
 	@Override
-	public void map(Instance instance, Emitter<ResultId, Result> emitter) {
+	public void map(Instance instance, Emitter<ClassSummaryId, ClassSummary> emitter) {
 		ClazzId type = instance.getType();
 		Clazz clazz = type != null ? classes.find(type) : null;
 		String className = clazz != null ? clazz.getName() : null;
@@ -72,17 +72,17 @@ public class ResultMapReduce implements MapReduce<Instance, ResultId, Result> {
 
 		EventId collection = instance.getFirstCollection();
 
-		ResultId id = new ResultId(type);
-		Result result = new Result(id, className, packageName, lastWrite, constructor, firstRead,
+		ClassSummaryId id = new ClassSummaryId(type);
+		ClassSummary result = new ClassSummary(id, className, packageName, lastWrite, constructor, firstRead,
 				equals, collection, instance.getFields(), mutable);
 		emitter.emit(id, result);
 	}
 
 	@Override
-	public Result reduce(ResultId id, Iterable<Result> values) {
-		Result result = new Result(id);
+	public ClassSummary reduce(ClassSummaryId id, Iterable<ClassSummary> values) {
+		ClassSummary result = new ClassSummary(id);
 
-		for (Result r : values) {
+		for (ClassSummary r : values) {
 			result.append(r);
 		}
 

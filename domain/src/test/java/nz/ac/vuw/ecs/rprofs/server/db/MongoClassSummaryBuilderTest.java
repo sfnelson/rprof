@@ -6,9 +6,9 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.mongodb.*;
-import nz.ac.vuw.ecs.rprofs.server.domain.Result;
+import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassSummaryId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ResultId;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,9 +19,9 @@ import static org.junit.Assert.assertEquals;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 27/03/12
  */
-public class MongoResultBuilderTest {
+public class MongoClassSummaryBuilderTest {
 
-	private MongoResultBuilder builder;
+	private MongoClassSummaryBuilder builder;
 	private long nextId;
 	private BasicDBObject stored;
 	private BasicDBObject ref;
@@ -42,11 +42,11 @@ public class MongoResultBuilderTest {
 	private int[] none;
 	private List<Integer> noneList;
 
-	private Map<FieldId, Result.FieldInfo> fields;
+	private Map<FieldId, ClassSummary.FieldInfo> fields;
 
 	@Before
 	public void setUp() throws Exception {
-		builder = new MongoResultBuilder() {
+		builder = new MongoClassSummaryBuilder() {
 			@Override
 			void _store(DBObject toStore) {
 				stored = new BasicDBObject();
@@ -77,8 +77,8 @@ public class MongoResultBuilderTest {
 			}
 
 			@Override
-			ResultId _createId() {
-				return new ResultId(nextId);
+			ClassSummaryId _createId() {
+				return new ClassSummaryId(nextId);
 			}
 		};
 
@@ -101,7 +101,7 @@ public class MongoResultBuilderTest {
 		for (int i : none) noneList.add(i);
 
 		fields = Maps.newHashMap();
-		fields.put(new FieldId(1l), new Result.FieldInfo(new FieldId(1l), 1, 2, 3));
+		fields.put(new FieldId(1l), new ClassSummary.FieldInfo(new FieldId(1l), 1, 2, 3));
 
 		nextId = 1l;
 	}
@@ -129,7 +129,7 @@ public class MongoResultBuilderTest {
 						.append("reads", 2)
 						.append("writes", 2)))
 				.get());
-		Result result = builder.get();
+		ClassSummary result = builder.get();
 
 		assertEquals(1l, result.getId().getValue());
 		assertEquals(className, result.getClassName());

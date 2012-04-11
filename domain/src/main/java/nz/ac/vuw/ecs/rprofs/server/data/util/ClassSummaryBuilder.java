@@ -2,17 +2,17 @@ package nz.ac.vuw.ecs.rprofs.server.data.util;
 
 import java.util.Map;
 
-import nz.ac.vuw.ecs.rprofs.server.domain.Result;
+import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassSummaryId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ResultId;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 27/03/12
  */
-public interface ResultBuilder<I extends ResultBuilder<I>> extends Builder<I, ResultId, Result> {
+public interface ClassSummaryBuilder<I extends ClassSummaryBuilder<I>> extends Builder<I, ClassSummaryId, ClassSummary> {
 
-	I setId(ResultId id);
+	I setId(ClassSummaryId id);
 
 	I setClassName(String className);
 
@@ -28,5 +28,5 @@ public interface ResultBuilder<I extends ResultBuilder<I>> extends Builder<I, Re
 
 	I setNone(int[] none);
 
-	I setFields(Map<FieldId, Result.FieldInfo> fields);
+	I setFields(Map<FieldId, ClassSummary.FieldInfo> fields);
 }

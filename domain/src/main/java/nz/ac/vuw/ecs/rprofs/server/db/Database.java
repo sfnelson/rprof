@@ -96,16 +96,28 @@ public class Database {
 		return createInstanceBuilder();
 	}
 
-	public ResultCreator<?> getResultCreator() {
-		return createResultBuilder();
+	public ClassSummaryCreator<?> getClassSummaryCreator() {
+		return createClassSummaryBuilder();
 	}
 
-	public ResultQuery<?> getResultQuery() {
-		return createResultBuilder();
+	public ClassSummaryQuery<?> getClassSummaryQuery() {
+		return createClassSummaryBuilder();
 	}
 
-	public ResultUpdater<?> getResultUpdater() {
-		return createResultBuilder();
+	public ClassSummaryUpdater<?> getClassSummaryUpdater() {
+		return createClassSummaryBuilder();
+	}
+
+	public FieldSummaryCreator<?> getFieldSummaryCreator() {
+		return createFieldSummaryBuilder();
+	}
+
+	public FieldSummaryQuery<?> getFieldSummaryQuery() {
+		return createFieldSummaryBuilder();
+	}
+
+	public FieldSummaryUpdater<?> getFieldSummaryUpdater() {
+		return createFieldSummaryBuilder();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -257,10 +269,10 @@ public class Database {
 	}
 
 	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
-	createResultMapper(Query<?, Input> input, MapReduce<Input, ResultId, Result> mr, boolean replace) {
+	createClassSummaryMapper(Query<?, Input> input, MapReduce<Input, ClassSummaryId, ClassSummary> mr, boolean replace) {
 		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce.results");
-		final MongoResultBuilder tmpBuilder = new MongoResultBuilder() {
+		final DBCollection tmp = db.getCollection("tmp.mapreduce.classes");
+		final MongoClassSummaryBuilder tmpBuilder = new MongoClassSummaryBuilder() {
 			@Override
 			DBCollection _getCollection() {
 				return tmp;
@@ -273,29 +285,29 @@ public class Database {
 			}
 
 			@Override
-			public Result get() {
+			public ClassSummary get() {
 				init((DBObject) b.get("value"));
 				return super.get();
 			}
 
 			@Override
-			ResultId _createId() {
-				return new ResultId((Long) b.get("_id"));
+			ClassSummaryId _createId() {
+				return new ClassSummaryId((Long) b.get("_id"));
 			}
 		};
 
 		if (replace) {
-			getCollection(Result.class).drop();
+			getCollection(ClassSummary.class).drop();
 		}
 
-		return new MongoMapper<Input, ResultId, Result>(input, tmpBuilder, mr, mr);
+		return new MongoMapper<Input, ClassSummaryId, ClassSummary>(input, tmpBuilder, mr, mr);
 	}
 
 	public <Input extends DataObject<?, Input>> Reducer.ReducerTask
-	createResultReducer(MapReduce<Input, ResultId, Result> mr) {
+	createClassSummaryReducer(MapReduce<Input, ClassSummaryId, ClassSummary> mr) {
 		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce.results");
-		final MongoResultBuilder tmpBuilder = new MongoResultBuilder() {
+		final DBCollection tmp = db.getCollection("tmp.mapreduce.classes");
+		final MongoClassSummaryBuilder tmpBuilder = new MongoClassSummaryBuilder() {
 			@Override
 			DBCollection _getCollection() {
 				return tmp;
@@ -308,18 +320,89 @@ public class Database {
 			}
 
 			@Override
-			public Result get() {
+			public ClassSummary get() {
 				init((DBObject) b.get("value"));
 				return super.get();
 			}
 
 			@Override
-			ResultId _createId() {
-				return new ResultId((Long) b.get("_id"));
+			ClassSummaryId _createId() {
+				return new ClassSummaryId((Long) b.get("_id"));
 			}
 		};
 
-		return new MongoReducer<ResultId, Result>(tmpBuilder, getResultCreator(), getResultQuery(), mr) {
+		return new MongoReducer<ClassSummaryId, ClassSummary>(tmpBuilder, getClassSummaryCreator(), getClassSummaryQuery(), mr) {
+			@Override
+			protected void cleanup() {
+				tmp.drop();
+			}
+		};
+	}
+
+	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
+	createFieldSummaryMapper(Query<?, Input> input, MapReduce<Input, FieldSummaryId, FieldSummary> mr, boolean replace) {
+		DB db = getDatabase();
+		final DBCollection tmp = db.getCollection("tmp.mapreduce.fields");
+		final MongoFieldSummaryBuilder tmpBuilder = new MongoFieldSummaryBuilder() {
+			@Override
+			DBCollection _getCollection() {
+				return tmp;
+			}
+
+			@Override
+			void _store(DBObject toStore) {
+				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
+						.append("value", toStore));
+			}
+
+			@Override
+			public FieldSummary get() {
+				init((DBObject) b.get("value"));
+				return super.get();
+			}
+
+			@Override
+			FieldSummaryId _createId() {
+				return new FieldSummaryId((Long) b.get("_id"));
+			}
+		};
+
+		if (replace) {
+			getCollection(FieldSummary.class).drop();
+		}
+
+		return new MongoMapper<Input, FieldSummaryId, FieldSummary>(input, tmpBuilder, mr, mr);
+	}
+
+	public <Input extends DataObject<?, Input>> Reducer.ReducerTask
+	createFieldSummaryReducer(MapReduce<Input, FieldSummaryId, FieldSummary> mr) {
+		DB db = getDatabase();
+		final DBCollection tmp = db.getCollection("tmp.mapreduce.fields");
+		final MongoFieldSummaryBuilder tmpBuilder = new MongoFieldSummaryBuilder() {
+			@Override
+			DBCollection _getCollection() {
+				return tmp;
+			}
+
+			@Override
+			void _store(DBObject toStore) {
+				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
+						.append("value", toStore));
+			}
+
+			@Override
+			public FieldSummary get() {
+				init((DBObject) b.get("value"));
+				return super.get();
+			}
+
+			@Override
+			FieldSummaryId _createId() {
+				return new FieldSummaryId((Long) b.get("_id"));
+			}
+		};
+
+		return new MongoReducer<FieldSummaryId, FieldSummary>(tmpBuilder, getFieldSummaryCreator(), getFieldSummaryQuery(), mr) {
 			@Override
 			protected void cleanup() {
 				tmp.drop();
@@ -366,8 +449,10 @@ public class Database {
 			return root.getCollection("instances");
 		} else if (type == Event.class) {
 			return root.getCollection("events");
-		} else if (type == Result.class) {
+		} else if (type == ClassSummary.class) {
 			return root.getCollection("results");
+		} else if (type == FieldSummary.class) {
+			return root.getCollection("field.results");
 		} else {
 			throw new RuntimeException("type not implemented: " + type);
 		}
@@ -415,8 +500,10 @@ public class Database {
 			return EntityBuilder.class.cast(createMethodQuery());
 		} else if (type.equals(Instance.class)) {
 			return EntityBuilder.class.cast(createInstanceBuilder());
-		} else if (type.equals(Result.class)) {
-			return EntityBuilder.class.cast(createResultBuilder());
+		} else if (type.equals(ClassSummary.class)) {
+			return EntityBuilder.class.cast(createClassSummaryBuilder());
+		} else if (type.equals(FieldSummary.class)) {
+			return EntityBuilder.class.cast(createFieldSummaryBuilder());
 		} else {
 			log.error("request for unavaible builder: {}", type);
 			return null;
@@ -653,17 +740,32 @@ public class Database {
 		};
 	}
 
-	private MongoResultBuilder createResultBuilder() {
-		final DBCollection results = getCollection(Result.class);
-		return new MongoResultBuilder() {
+	private MongoClassSummaryBuilder createClassSummaryBuilder() {
+		final DBCollection results = getCollection(ClassSummary.class);
+		return new MongoClassSummaryBuilder() {
 			@Override
 			DBCollection _getCollection() {
 				return results;
 			}
 
 			@Override
-			ResultId _createId() {
-				return new ResultId((Long) b.get("_id"));
+			ClassSummaryId _createId() {
+				return new ClassSummaryId((Long) b.get("_id"));
+			}
+		};
+	}
+
+	private MongoFieldSummaryBuilder createFieldSummaryBuilder() {
+		final DBCollection results = getCollection(FieldSummary.class);
+		return new MongoFieldSummaryBuilder() {
+			@Override
+			DBCollection _getCollection() {
+				return results;
+			}
+
+			@Override
+			FieldSummaryId _createId() {
+				return new FieldSummaryId((Long) b.get("_id"));
 			}
 		};
 	}

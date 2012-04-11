@@ -8,22 +8,22 @@ import com.google.common.collect.Maps;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import nz.ac.vuw.ecs.rprofs.server.data.util.ResultCreator;
-import nz.ac.vuw.ecs.rprofs.server.data.util.ResultQuery;
-import nz.ac.vuw.ecs.rprofs.server.data.util.ResultUpdater;
-import nz.ac.vuw.ecs.rprofs.server.domain.Result;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClassSummaryCreator;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClassSummaryQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClassSummaryUpdater;
+import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassSummaryId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.ResultId;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 27/03/12
  */
-public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder, ResultId, Result>
-		implements ResultCreator<MongoResultBuilder>, ResultQuery<MongoResultBuilder>, ResultUpdater<MongoResultBuilder> {
+public abstract class MongoClassSummaryBuilder extends MongoBuilder<MongoClassSummaryBuilder, ClassSummaryId, ClassSummary>
+		implements ClassSummaryCreator<MongoClassSummaryBuilder>, ClassSummaryQuery<MongoClassSummaryBuilder>, ClassSummaryUpdater<MongoClassSummaryBuilder> {
 
 	@Override
-	public MongoResultBuilder init(Result value) {
+	public MongoClassSummaryBuilder init(ClassSummary value) {
 		reset();
 		setId(value.getId());
 		setClassName(value.getClassName());
@@ -39,31 +39,31 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 	}
 
 	@Override
-	public MongoResultBuilder setId(ResultId id) {
+	public MongoClassSummaryBuilder setId(ClassSummaryId id) {
 		b.put("_id", id.getValue());
 		return this;
 	}
 
 	@Override
-	public MongoResultBuilder setClassName(String className) {
+	public MongoClassSummaryBuilder setClassName(String className) {
 		b.put("class", className);
 		return this;
 	}
 
 	@Override
-	public MongoResultBuilder setPackageName(String packageName) {
+	public MongoClassSummaryBuilder setPackageName(String packageName) {
 		b.put("package", packageName);
 		return this;
 	}
 
 	@Override
-	public MongoResultBuilder setNumObjects(int numObjects) {
+	public MongoClassSummaryBuilder setNumObjects(int numObjects) {
 		b.put("objects", numObjects);
 		return this;
 	}
 
 	@Override
-	public MongoResultBuilder setEqCol(int[] eqcol) {
+	public MongoClassSummaryBuilder setEqCol(int[] eqcol) {
 		BasicDBList list = new BasicDBList();
 		for (int i : eqcol) list.add(i);
 		b.put("eqcol", list);
@@ -71,7 +71,7 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 	}
 
 	@Override
-	public MongoResultBuilder setEq(int[] eq) {
+	public MongoClassSummaryBuilder setEq(int[] eq) {
 		BasicDBList list = new BasicDBList();
 		for (int i : eq) list.add(i);
 		b.put("eq", list);
@@ -79,7 +79,7 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 	}
 
 	@Override
-	public MongoResultBuilder setCol(int[] col) {
+	public MongoClassSummaryBuilder setCol(int[] col) {
 		BasicDBList list = new BasicDBList();
 		for (int i : col) list.add(i);
 		b.put("col", list);
@@ -87,7 +87,7 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 	}
 
 	@Override
-	public MongoResultBuilder setNone(int[] none) {
+	public MongoClassSummaryBuilder setNone(int[] none) {
 		BasicDBList list = new BasicDBList();
 		for (int i : none) list.add(i);
 		b.put("none", list);
@@ -95,9 +95,9 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 	}
 
 	@Override
-	public MongoResultBuilder setFields(Map<FieldId, Result.FieldInfo> fields) {
+	public MongoClassSummaryBuilder setFields(Map<FieldId, ClassSummary.FieldInfo> fields) {
 		List<DBObject> values = Lists.newArrayList();
-		for (Result.FieldInfo field : fields.values()) {
+		for (ClassSummary.FieldInfo field : fields.values()) {
 			BasicDBObject b = new BasicDBObject();
 			b.append("_id", field.getId().getValue());
 			b.append("mutable", field.getMutable());
@@ -110,13 +110,13 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 	}
 
 	@Override
-	public Result get() {
-		ResultId id = new ResultId(((Long) b.get("_id")).longValue());
+	public ClassSummary get() {
+		ClassSummaryId id = new ClassSummaryId(((Long) b.get("_id")).longValue());
 
-		String className = b.containsField("class") ? (String) b.get("class") : null;
-		String packageName = b.containsField("package") ? (String) b.get("package") : null;
+		String className = b.getString("class");
+		String packageName = b.getString("package");
 
-		int numObjects = (Integer) b.get("objects");
+		int numObjects = b.getInt("objects", 0);
 
 		List<?> eqcolList = (List<?>) b.get("eqcol");
 		int[] eqcol = new int[eqcolList.size()];
@@ -142,17 +142,17 @@ public abstract class MongoResultBuilder extends MongoBuilder<MongoResultBuilder
 			none[i] = (Integer) noneList.get(i);
 		}
 
-		Map<FieldId, Result.FieldInfo> fields = Maps.newHashMap();
+		Map<FieldId, ClassSummary.FieldInfo> fields = Maps.newHashMap();
 		if (b.containsField("fields")) {
 			for (DBObject f : (List<DBObject>) b.get("fields")) {
 				FieldId fid = new FieldId((Long) f.get("_id"));
-				Result.FieldInfo info = new Result.FieldInfo(fid,
+				ClassSummary.FieldInfo info = new ClassSummary.FieldInfo(fid,
 						(Integer) f.get("mutable"),
 						(Integer) f.get("reads"),
 						(Integer) f.get("writes"));
 				fields.put(fid, info);
 			}
 		}
-		return new Result(id, className, packageName, numObjects, eqcol, eq, col, none, fields);
+		return new ClassSummary(id, className, packageName, numObjects, eqcol, eq, col, none, fields);
 	}
 }

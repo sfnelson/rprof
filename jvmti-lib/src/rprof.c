@@ -176,8 +176,8 @@ logEvent(JNIEnv *env, jvmtiEnv *jvmti, jthread thread, jobject o, const char* fo
 
 static int hashField(rField *map, int len, jfieldID field) {
 	int index = 0;
-	uint64_t fieldAsInt = field;
-	int key = (int) (fieldAsInt % len);
+	intptr_t fieldAsInt = (intptr_t) field;
+	int key = (int) ((fieldAsInt >> 1) % len);
 	int i = 0;
 	while (i < len) {
 		index = ((int)(key + i/2.0f + i*i/2.0f)) % len;

@@ -50,10 +50,19 @@ ifeq ($(OS),NetBSD)
 endif
 
 ifeq ($(OS),Linux)
-	JDK=/usr/pkg/java/sun-6
-	ifeq ($(wildcard /usr/pkg/java/sun-6),)
-		JDK=/usr/lib/jvm/java-6-openjdk
+	JDK1=/usr/lib/jvm/java-7-openjdk-amd64
+	JDK2=/usr/lib/jvm/java-6-openjdk
+	JDK3=/usr/pkg/java/sun-6
+	ifeq ($(wildcard $(JDK1)),$(JDK1))
+		JDK=$(JDK1)
+	else
+		ifeq ($(wildcard $(JDK2)),$(JDK2))
+			JDK=$(JDK2)
+		else
+			JDK=$(JDK3)
+		endif
 	endif
+
 	CC=gcc
 	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux
 	LIBRARY=bin/lib$(LIBNAME).so

@@ -5,7 +5,8 @@
 #include <jni.h>
 #include <jvmti.h>
 #include <stdint.h>
-#include <stringlist.h>
+
+#include "stringlist.h"
 
 typedef union {
     struct {

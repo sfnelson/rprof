@@ -4,7 +4,7 @@ SOURCES=src/rprof.c src/agent_util.c src/java_crw_demo.c src/comm.c
 JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java src/Example.java
 JARFILE=bin/rprof.jar
 
-OBJECTS=objects/rprof.o objects/agent_util.o objects/rprof_util.o objects/rprof_comm.o
+OBJECTS=objects/rprof.o objects/agent_util.o objects/rprof_util.o objects/rprof_comm.o objects/stringlist.o
 TEST-OBJECTS=$(OBJECTS) objects/test_utils.o
 
 # Required flags

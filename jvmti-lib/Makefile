@@ -16,8 +16,6 @@ OS=$(shell uname)
 LIBRARY_PATH_NAME=LD_LIBRARY_PATH
 
 ifeq ($(OS),Darwin)
-	#JDK=/Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
-	#JDK=/Library/Java/JavaVirtualMachines/openjdk-1.7-x86_64/Contents/Home
 	JDK=/Library/Java/JavaVirtualMachines/JDK\ 1.7.0\ Developer\ Preview.jdk/Contents/Home
 	HEADERS=
 	CC=cc
@@ -35,31 +33,25 @@ ifeq ($(OS),NetBSD)
 	CC=gcc
 	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/netbsd
 	LIBRARY=bin/lib$(LIBNAME).so
-	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
+	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
 	LIBRARY_PATH=.:/usr/pkg/lib
 	HOST=[::1]:8888
 endif
 
 ifeq ($(OS),Linux)
 	JDK1=/usr/lib/jvm/java-7-openjdk-amd64
-	JDK2=/usr/lib/jvm/java-6-openjdk
-	JDK3=/usr/pkg/java/sun-6
+	JDK2=/vol/projects/stephen/oracle-jdk7-x86_64
 	ifeq ($(wildcard $(JDK1)),$(JDK1))
 		JDK=$(JDK1)
 	else
-		ifeq ($(wildcard $(JDK2)),$(JDK2))
-			JDK=$(JDK2)
-		else
-			JDK=$(JDK3)
-		endif
+		JDK=$(JDK2)
 	endif
-
 	CC=gcc
-	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux
+	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux -I/vol/projects/stephen/curl/include
 	LIBRARY=bin/lib$(LIBNAME).so
-	LIBRARY_PATH=$(shell pwd)/bin/:/usr/pkg/lib
+	LIBRARY_PATH=$(shell pwd)/bin/:/usr/pkg/lib:/vol/projects/stephen/curl/lib
 	LIBRARY_PATH_NAME=LD_LIBRARY_PATH
-	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
+	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
 	HOST=[::1]:8888
 endif
 
@@ -88,8 +80,8 @@ clean:
 
 test: $(TEST-OBJECTS)
 	mkdir -p bin
-	$(CC) -o bin/test $(CFLAGS) $(TEST-OBJECTS) $(LIBRARIES)
-	bin/test
+	$(CC) $(LDFLAGS) -o bin/test $(CFLAGS) $(TEST-OBJECTS) $(LIBRARIES)
+	$(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) bin/test
 	
 testrun: all
 	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -classpath ../classes -Xcheck:jni -Djava.compiler=NONE Test)

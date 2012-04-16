@@ -15,8 +15,6 @@ OS=$(shell uname)
 LIBRARY_PATH_NAME=LD_LIBRARY_PATH
 
 ifeq ($(OS),Darwin)
-	#JDK=/Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
-	#JDK=/Library/Java/JavaVirtualMachines/openjdk-1.7-x86_64/Contents/Home
 	JDK=/Library/Java/JavaVirtualMachines/JDK\ 1.7.0\ Developer\ Preview.jdk/Contents/Home
 	HEADERS=
 	CC=cc
@@ -29,46 +27,30 @@ ifeq ($(OS),Darwin)
 	HOST=127.0.0.1:8888
 endif
 
-#ifeq ($(OS),Darwin)
-#	JDK=/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Home
-#	CC=cc
-#	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -arch i386 -I/Developer/SDKs/MacOSX10.6.sdk/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Headers/ -D DEBUG
-#	LIBRARY=bin/lib$(LIBNAME).jnilib
-#	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
-#	LIBRARY_PATH=
-#	HOST=127.0.0.1:8888
-#endif
-
 ifeq ($(OS),NetBSD)
 	JDK=/usr/pkg/java/jdk-1.6.0
 	CC=gcc
 	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/netbsd
 	LIBRARY=bin/lib$(LIBNAME).so
-	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
+	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
 	LIBRARY_PATH=.:/usr/pkg/lib
 	HOST=[::1]:8888
 endif
 
 ifeq ($(OS),Linux)
 	JDK1=/usr/lib/jvm/java-7-openjdk-amd64
-	JDK2=/usr/lib/jvm/java-6-openjdk
-	JDK3=/usr/pkg/java/sun-6
+	JDK2=/vol/projects/stephen/oracle-jdk7-x86_64
 	ifeq ($(wildcard $(JDK1)),$(JDK1))
 		JDK=$(JDK1)
 	else
-		ifeq ($(wildcard $(JDK2)),$(JDK2))
-			JDK=$(JDK2)
-		else
-			JDK=$(JDK3)
-		endif
+		JDK=$(JDK2)
 	endif
-
 	CC=gcc
-	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux
+	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux -I/vol/projects/stephen/curl/include
 	LIBRARY=bin/lib$(LIBNAME).so
-	LIBRARY_PATH=$(shell pwd)/bin/:/usr/pkg/lib
+	LIBRARY_PATH=$(shell pwd)/bin/:/usr/pkg/lib:/vol/projects/stephen/curl/lib
 	LIBRARY_PATH_NAME=LD_LIBRARY_PATH
-	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib
+	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
 	HOST=[::1]:8888
 endif
 

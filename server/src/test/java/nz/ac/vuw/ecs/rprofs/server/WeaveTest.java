@@ -61,7 +61,7 @@ public class WeaveTest {
 		fbuilder = createMock(FieldCreator.class);
 
 		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date(), "rprof_foo_1");
-		clazz = new Clazz(ClazzId.create(dataset, 1), 0, "org.foo.Bar", null, null, 0);
+		clazz = new Clazz(ClazzId.create(dataset, 1), 0, "org.foo.Bar", null, null, 0, 0, false);
 		method = new Method(MethodId.create(dataset, clazz, (short) 1),
 				0, "<init>", clazz.getId(), clazz.getName(), "()V", Opcodes.ACC_PUBLIC);
 
@@ -78,6 +78,7 @@ public class WeaveTest {
 
 		// get properties
 		expect(request.getHeader("Dataset")).andReturn("foobar");
+		expect(request.getParameter("cls")).andReturn("org/foo/Bar");
 		expect(manager.findDataset("foobar")).andReturn(dataset);
 		context.setDataset(dataset);
 		expect(request.getContentLength()).andReturn(data.content.length);
@@ -87,12 +88,13 @@ public class WeaveTest {
 		expect(classes.createClazz()).andReturn(builder);
 		expect(builder.setName("org.foo.Bar")).andReturn(builder);
 		expect(builder.setParentName("java/lang/Object")).andReturn(builder);
+		expect(builder.setAccess(Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER)).andReturn(builder);
 		expect(builder.addMethod()).andReturn(mbuilder);
 		expect(mbuilder.setAccess(Opcodes.ACC_PUBLIC)).andReturn(mbuilder);
 		expect(mbuilder.setName("<init>")).andReturn(mbuilder);
 		expect(mbuilder.setDescription("()V")).andReturn(mbuilder);
 		expect(mbuilder.store()).andReturn(null);
-		expect(builder.store()).andReturn(clazz.getId());
+		expect(builder.storeIfNotInterface()).andReturn(clazz.getId());
 
 		expect(classes.getClazz(clazz.getId())).andReturn(clazz);
 		expect(classes.findMethods(clazz.getId())).andReturn((List) Lists.newArrayList(method));
@@ -104,6 +106,7 @@ public class WeaveTest {
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentLength(EasyMock.capture(responseLength));
 		response.setContentType("application/rprof");
+		response.setHeader("class-id", "1");
 		expect(response.getOutputStream()).andReturn(output);
 		context.clear();
 

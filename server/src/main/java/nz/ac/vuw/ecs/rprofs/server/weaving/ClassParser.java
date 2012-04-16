@@ -1,10 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
-import org.objectweb.asm.*;
-
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
+import org.objectweb.asm.*;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -30,6 +29,7 @@ public class ClassParser extends ClassAdapter {
 					  @Nullable String superName, @Nullable String[] interfaces) {
 		builder.setName(name);
 		builder.setParentName(superName);
+		builder.setAccess(access);
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import java.util.List;
+
 import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
@@ -8,10 +10,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import org.junit.Before;
 import org.junit.Test;
+import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
-
-import java.util.List;
 
 import static org.easymock.EasyMock.*;
 import static org.objectweb.asm.Opcodes.*;
@@ -20,28 +21,31 @@ import static org.objectweb.asm.Opcodes.*;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 15/09/11
  */
-public class CLInitMethodWeaverTest {
+public class AgentInitMethodWeaverTest {
 
 	ClazzId id;
 	Clazz clazz;
 	ClassRecord record;
 	Method method;
+	ClassAdapter cvisitor;
 	MethodVisitor visitor;
 
 	@Before
 	public void setUp() throws Exception {
 		id = new ClazzId(1l);
-		clazz = new Clazz(id, 0, "org/foo/Bar", null, null, 0);
+		clazz = new Clazz(id, 0, "org/foo/Bar", null, null, 0, 0, false);
 		record = new ClassRecord(clazz);
-		record.generateMethod("<clinit>", "()V", ACC_STATIC);
-		method = record.getMethod("<clinit>", "()V");
+		record.generateMethod("_rprof_agent_init", "()V", ACC_STATIC);
+		method = record.getMethod("_rprof_agent_init", "()V");
 
+		cvisitor = createMock(ClassAdapter.class);
 		visitor = createMock(MethodVisitor.class);
 	}
 
 	@Test
-	public void testWeaveCLInitCreateNoFields() {
+	public void testWeaveAgentInitCreateNoFields() {
 
+		expect(cvisitor.visitMethod(ACC_STATIC, "_rprof_agent_init", "()V", null, null)).andReturn(visitor);
 		visitor.visitCode();
 		visitor.visitLdcInsn(Type.getType("Lorg/foo/Bar;"));
 		visitor.visitInsn(ICONST_1); // class number
@@ -51,19 +55,15 @@ public class CLInitMethodWeaverTest {
 		visitor.visitMaxs(3, 0);
 		visitor.visitEnd();
 
-		replay(visitor);
+		replay(cvisitor, visitor);
 
-		MethodVisitor v = new CLInitMethodWeaver(record, method, visitor);
-		v.visitCode();
-		v.visitInsn(RETURN);
-		v.visitMaxs(0, 0);
-		v.visitEnd();
+		AgentInitMethodWeaver.generate(record, cvisitor);
 
-		verify(visitor);
+		verify(cvisitor, visitor);
 	}
 
 	@Test
-	public void testWeaveCLInitCreateWithFields() {
+	public void testWeaveAgentInitCreateWithFields() {
 
 		List<Field> fields = Lists.newArrayList(
 				new Field(new FieldId(id.getDatasetIndex(), id.getClassIndex(), (short) 4), 0, "foo",
@@ -75,6 +75,9 @@ public class CLInitMethodWeaverTest {
 		);
 		record.addFields(fields);
 
+		reset(cvisitor, visitor);
+
+		expect(cvisitor.visitMethod(ACC_STATIC, "_rprof_agent_init", "()V", null, null)).andReturn(visitor);
 		visitor.visitCode();
 		visitor.visitLdcInsn(Type.getType("Lorg/foo/Bar;"));
 		visitor.visitInsn(ICONST_1); // class number
@@ -93,20 +96,10 @@ public class CLInitMethodWeaverTest {
 		visitor.visitMaxs(6, 0);
 		visitor.visitEnd();
 
-		replay(visitor);
+		replay(cvisitor, visitor);
 
-		MethodVisitor v = new CLInitMethodWeaver(record, method, visitor);
-		v.visitCode();
-		v.visitInsn(RETURN);
-		v.visitMaxs(0, 0);
-		v.visitEnd();
+		AgentInitMethodWeaver.generate(record, cvisitor);
 
-		verify(visitor);
-	}
-
-	@Test
-	public void testWeaveCLInitExisting() {
-
-		// todo write a test for appending to an existing <clinit>
+		verify(cvisitor, visitor);
 	}
 }

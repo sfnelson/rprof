@@ -1,5 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Scanner;
+
 import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
@@ -10,10 +14,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import org.junit.Before;
 import org.junit.Test;
 import org.objectweb.asm.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.Scanner;
 
 import static org.junit.Assert.assertEquals;
 import static org.objectweb.asm.Opcodes.*;
@@ -37,7 +37,7 @@ public class TrackingClassWeaverTest extends WeaverTestBase {
 		name = "nz/ac/vuw/ecs/rprof/HeapTracker";
 		parent = new ClazzId(2l);
 		parentName = "java/lang/Object";
-		clazz = new Clazz(id, 0, name, parent, parentName, 0);
+		clazz = new Clazz(id, 0, name, parent, parentName, 0, 0, false);
 		record = new ClassRecord(clazz);
 		record.addFields(Lists.<Field>newArrayList(
 				new Field(new FieldId((short) 0, 1, (short) 1), 0, "engaged", id, name,
@@ -109,7 +109,7 @@ public class TrackingClassWeaverTest extends WeaverTestBase {
 	}
 
 	@Test
-	public void testTrackerWeaving() throws Exception {
+	public void testTrackerWeavingAsLines() throws Exception {
 		byte[] input = generateTrackerClass();
 		byte[] expect = generateWovenTrackerClass(record);
 
@@ -124,10 +124,29 @@ public class TrackingClassWeaverTest extends WeaverTestBase {
 		Scanner e = new Scanner(new ByteArrayInputStream(expectedOutput.toByteArray()));
 		Scanner a = new Scanner(new ByteArrayInputStream(actualOutput.toByteArray()));
 
+		int count = 0;
 		while (e.hasNextLine() && a.hasNextLine()) {
-			assertEquals(e.nextLine(), a.nextLine());
+			assertEquals("Lines " + count + " differ:", e.nextLine(), a.nextLine());
+			count++;
 		}
 		assertEquals(e.hasNextLine(), a.hasNextLine());
+	}
+
+	@Test
+	public void testTrackerWeavingAsStream() throws Exception {
+		byte[] input = generateTrackerClass();
+		byte[] expect = generateWovenTrackerClass(record);
+
+		byte[] output = new Weaver().weave(record, input);
+
+		ByteArrayOutputStream expectedOutput = new ByteArrayOutputStream();
+		print(expect, expectedOutput);
+
+		ByteArrayOutputStream actualOutput = new ByteArrayOutputStream();
+		print(output, actualOutput);
+
+		Scanner e = new Scanner(new ByteArrayInputStream(expectedOutput.toByteArray()));
+		Scanner a = new Scanner(new ByteArrayInputStream(actualOutput.toByteArray()));
 
 		assertEquals(expectedOutput.toString(), actualOutput.toString());
 	}
@@ -805,6 +824,18 @@ public class TrackingClassWeaverTest extends WeaverTestBase {
 			mv.visitInsn(ICONST_0);
 			mv.visitMethodInsn(INVOKESPECIAL, "nz/ac/vuw/ecs/rprof/HeapTracker", "<init>", "(S)V");
 			mv.visitFieldInsn(PUTSTATIC, "nz/ac/vuw/ecs/rprof/HeapTracker", "nullCounter", "Lnz/ac/vuw/ecs/rprof/HeapTracker;");
+			mv.visitMethodInsn(INVOKESTATIC, "nz/ac/vuw/ecs/rprof/HeapTracker", "_rprof_agent_init", "()V");
+			mv.visitInsn(RETURN);
+			mv.visitMaxs(3, 0);
+			mv.visitEnd();
+		}
+		{
+			mv = cw.visitMethod(ACC_STATIC, "_rprof_agent_init", "()V", null, null);
+			mv.visitCode();
+			mv.visitLdcInsn(Type.getType("Lnz/ac/vuw/ecs/rprof/HeapTracker;"));
+			mv.visitInsn(ICONST_1);
+			mv.visitInsn(ACONST_NULL);
+			mv.visitMethodInsn(INVOKESTATIC, "nz/ac/vuw/ecs/rprof/HeapTracker", "newcls", "(Ljava/lang/Object;I[I)V");
 			mv.visitInsn(RETURN);
 			mv.visitMaxs(3, 0);
 			mv.visitEnd();

@@ -1,7 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
@@ -10,12 +16,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
 import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class ClassRecord {
 
@@ -53,7 +53,9 @@ public class ClassRecord {
 	public void addFields(List<? extends Field> fields) {
 		for (Field f : fields) {
 			this.fields.put(f.getName() + f.getDescription(), f);
-			if ((Opcodes.ACC_STATIC & f.getAccess()) == 0) {
+			if ((Opcodes.ACC_STATIC & f.getAccess()) != 0) ;
+			else if ((Opcodes.ACC_SYNTHETIC & f.getAccess()) != 0) ;
+			else {
 				watches.add(f);
 			}
 		}
@@ -72,6 +74,10 @@ public class ClassRecord {
 
 	void setProperties(int properties) {
 		clazz.setProperties(properties);
+	}
+
+	void addProperty(int property) {
+		clazz.setProperties(clazz.getProperties() | property);
 	}
 
 	@Nullable

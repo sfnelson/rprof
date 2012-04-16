@@ -30,6 +30,12 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 		if (value.getProperties() != 0) {
 			setProperties(value.getProperties());
 		}
+		if (value.getAccess() != 0) {
+			setAccess(value.getAccess());
+		}
+		if (value.isInitialized()) {
+			setInitialized(true);
+		}
 		if (value.getName() != null) setName(value.getName());
 		if (value.getParent() != null) setParent(value.getParent());
 		if (value.getParentName() != null) setParentName(value.getParentName());
@@ -73,6 +79,27 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 	public MongoClassBuilder setProperties(int properties) {
 		b.put("properties", properties);
 		return this;
+	}
+
+	@Override
+	public MongoClassBuilder setAccess(int access) {
+		b.put("access", access);
+		return this;
+	}
+
+	@Override
+	public MongoClassBuilder setInitialized(boolean initialized) {
+		b.put("initialized", initialized);
+		return this;
+	}
+
+	@Override
+	public ClazzId storeIfNotInterface() {
+		if ((b.getInt("access", 0) & 512) == 0) { // not interface
+			return store();
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -152,25 +179,16 @@ public abstract class MongoClassBuilder extends MongoBuilder<MongoClassBuilder, 
 
 	@Override
 	public Clazz get() {
-		ClazzId id = new ClazzId((Long) b.get("_id"));
-		Integer version = (Integer) b.get("version");
-		int properties = 0;
-		if (b.containsField("properties")) {
-			properties = (Integer) b.get("properties");
-		}
-		Clazz clazz = new Clazz(id, version, null, null, null, properties);
-		if (b.containsField("name")) {
-			clazz.setName((String) b.get("name"));
-		}
+		ClazzId id = new ClazzId(b.getLong("_id"));
+		String name = b.getString("name");
+		String parentName = b.getString("parentName");
+		int version = b.getInt("version", 0);
+		int properties = b.getInt("properties", 0);
+		int access = b.getInt("access", 0);
+		boolean initialized = b.getBoolean("initialized", false);
+		Clazz clazz = new Clazz(id, version, name, null, parentName, properties, access, initialized);
 		if (b.containsField("parent")) {
-			Long parentRaw = (Long) b.get("parent");
-			if (parentRaw != null) {
-				ClazzId parent = new ClazzId(parentRaw);
-				clazz.setParent(parent);
-			}
-		}
-		if (b.containsField("parentName")) {
-			clazz.setParentName((String) b.get("parentName"));
+			clazz.setParent(new ClazzId(b.getLong("parent")));
 		}
 		reset();
 		return clazz;

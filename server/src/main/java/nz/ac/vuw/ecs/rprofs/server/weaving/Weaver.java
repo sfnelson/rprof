@@ -16,7 +16,7 @@ public class Weaver {
 	private static final Logger log = LoggerFactory.getLogger(Weaver.class);
 
 	public static final Pattern includes = new PatternBuilder()
-			.add(".*")
+			.add(".*") //.add("[^/]*")
 			.get();
 
 	public static final Pattern collections = new PatternBuilder()
@@ -24,24 +24,29 @@ public class Weaver {
 			.add("java/util/.*Map")
 			.add("java/util/.*List")
 			.add("java/util/.*table")
+			.add("java/util/.*Queue")
+			.add("java/util/.*Deque")
 			.add("java/util/Vector")
 			.get();
 
 	public static final Pattern excludes = new PatternBuilder()
-			.add("sun/reflect/.*")	// jhotdraw crashes in this package
-			.add("java/awt/.*")		// jhotdraw has font problems if this packages is included
-			.add("com/sun/.*")
-			.add("sun/.*")
-			.add("apple/.*")
-			.add("com/apple/.*")		// might help jhotdraw?
-			.add("java/lang/IncompatibleClassChangeError")	// gc blows up if this is woven
-			.add("java/lang/LinkageError")					// gc blows up if this is woven
-			.add("java/lang/NullPointerException")			// something blows up - null pointers appear as runtime exceptions with this change
-			.add("java/util/concurrent/.*")					// SIGSEGV/SIGBUS in pmd
-			.add("java/lang/reflect/.*")
+//			.add("java/awt/.*")        // jhotdraw has font problems if this packages is included
+//			.add("com/sun/.*")
+//			.add("sun/.*")
+//			.add("apple/.*")
+//			.add("com/apple/.*")        // might help jhotdraw?
+//			.add("java/lang/IncompatibleClassChangeError")    // gc blows up if this is woven
+//			.add("java/lang/LinkageError")                    // gc blows up if this is woven
+//			.add("java/lang/NullPointerException")            // something blows up - null pointers appear as runtime exceptions with this change
+//			.add("java/util/concurrent/.*")                    // SIGSEGV/SIGBUS in pmd
+//			.add("java/lang/reflect/.*")
+//			.add("sun/reflect/.*")
 			.add("java/nio/charset/CharsetDecoder")
 			.add("java/nio/charset/CharsetEncoder")
 			.add("java/util/zip/ZipFile")
+					// throwable has a transient field, backtrace, which causes off-by-1 errors
+					// see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4934380
+			.add("java/lang/Throwable")
 			.get();
 
 	public byte[] weave(ClassRecord record, byte[] classfile) {
@@ -49,31 +54,26 @@ public class Weaver {
 		ClassReader reader = new ClassReader(classfile);
 		ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
 
-		int flags = record.getProperties();
-
 		ClassVisitor visitor;
 		if (Type.getInternalName(HeapTracker.class).equals(record.getName())) {
-			flags |= Clazz.SPECIAL_CLASS_WEAVER;
+			record.addProperty(Clazz.SPECIAL_CLASS_WEAVER);
 			visitor = new TrackingClassWeaver(writer, record);
 		} else if (Type.getInternalName(Thread.class).equals(record.getName())) {
-			flags |= Clazz.SPECIAL_CLASS_WEAVER;
+			record.addProperty(Clazz.SPECIAL_CLASS_WEAVER);
 			visitor = new ThreadClassWeaver(writer, record);
-		} else if (Type.getInternalName(Throwable.class).equals(record.getName())) {
-			flags |= Clazz.SPECIAL_CLASS_WEAVER;
-			visitor = new ThrowableClassWeaver(writer, record);
 		} else if (Type.getInternalName(Object.class).equals(record.getName())) {
-			flags |= Clazz.SPECIAL_CLASS_WEAVER;
+			record.addProperty(Clazz.SPECIAL_CLASS_WEAVER);
 			visitor = new ObjectClassWeaver(writer, record);
 		} else {
 			if (collections.matcher(record.getName()).find()) {
-				flags |= Clazz.COLLECTION;
-				log.debug("{} is a collection", record.getName());
+				record.addProperty(Clazz.COLLECTION);
+				log.trace("{} is a collection", record.getName());
 			}
 			if (includes.matcher(record.getName()).find()) {
-				flags |= Clazz.CLASS_INCLUDE_MATCHED;
+				record.addProperty(Clazz.CLASS_INCLUDE_MATCHED);
 				if (excludes.matcher(record.getName()).find()) {
-					flags |= Clazz.CLASS_EXCLUDE_MATCHED;
-					visitor = writer;
+					record.addProperty(Clazz.CLASS_EXCLUDE_MATCHED);
+					visitor = new GentleClassWeaver(writer, record);
 				} else {
 					visitor = new GenericClassWeaver(writer, record);
 				}
@@ -81,8 +81,6 @@ public class Weaver {
 				visitor = writer;
 			}
 		}
-
-		record.setProperties(flags);
 
 		reader.accept(visitor, 0);
 

@@ -16,11 +16,17 @@ public interface FieldSummaryBuilder<B extends FieldSummaryBuilder<B>> extends B
 
 	B setPackageName(String name);
 
-	B setFinal(boolean isFinal);
+	B setDeclaredFinal(boolean isDeclaredFinal);
 
 	B setStationary(boolean isStationary);
 
 	B setConstructed(boolean isConstructed);
 
+	B setFinal(boolean isFinal);
+
 	B setInstances(int instances);
+
+	B setReads(long reads);
+
+	B setWrites(long writes);
 }

@@ -34,6 +34,7 @@ public class ThreadClassWeaver extends ClassAdapter {
 		if (MethodUtils.isCLInit(method)) {
 			visitor = new CLInitMethodWeaver(cr, method, visitor);
 		}
+
 		return visitor;
 	}
 
@@ -44,6 +45,8 @@ public class ThreadClassWeaver extends ClassAdapter {
 		if (fv != null) {
 			fv.visitEnd();
 		}
+
+		AgentInitMethodWeaver.generate(cr, this);
 
 		super.visitEnd();
 	}

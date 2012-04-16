@@ -43,7 +43,7 @@ package nz.ac.vuw.ecs.rprof;
 /**
  * Provides static methods which are called from the byte code injected by the
  * static weaver. Provides facility for generating unique ids for objects.
- * 
+ * <p/>
  * Object ids are 64 bits:
  * <dl>
  * <dt>0-15</dt><dd>These bits are reserved for the database.</dd>
@@ -63,48 +63,55 @@ public class HeapTracker {
 	}
 
 	private static native void _newcls(Object cls, int cnum, int[] fieldsToWatch);
+
 	public static void newcls(Object cls, int cnum, int[] fieldsToWatch) {
-		if ( engaged != 0 ) {
+		if (engaged != 0) {
 			_newcls(cls, cnum, fieldsToWatch);
 		}
 	}
 
-	private static native void _newobj(Object thread, Object o, long id);
-	public static void newobj(Object o) {
-		if ( engaged != 0 ) {
-			_newobj(Thread.currentThread(), o, id(o));
+	private static native void _newobj(Object thread, Class cls, Object o, long id);
+
+	public static void newobj(Class cls, Object o) {
+		if (engaged != 0) {
+			_newobj(Thread.currentThread(), cls, o, id(o));
 		}
 	}
 
 	private static native void _newarr(Object thread, Object a, long id);
+
 	public static void newarr(Object a) {
-		if ( engaged != 0 ) {
+		if (engaged != 0) {
 			_newarr(Thread.currentThread(), a, id(a));
 		}
 	}
 
 	private static native void _menter(Object thread, int cnum, int mnum, Object[] args);
+
 	public static void enter(int cnum, int mnum, Object[] args) {
-		if ( engaged != 0 ) {
+		if (engaged != 0) {
 			_menter(Thread.currentThread(), cnum, mnum, args);
 		}
 	}
 
 	private static native void _mexit(Object thread, int cnum, int mnum, Object arg);
+
 	public static void exit(int cnum, int mnum, Object arg) {
-		if ( engaged != 0 ) {
+		if (engaged != 0) {
 			_mexit(Thread.currentThread(), cnum, mnum, arg);
 		}
 	}
 
 	private static native void _mexcept(Object thread, int cnum, int mnum, Object arg);
+
 	public static void except(int cnum, int mnum, Object arg) {
-		if ( engaged != 0 ) {
+		if (engaged != 0) {
 			_mexcept(Thread.currentThread(), cnum, mnum, arg);
 		}
 	}
 
 	private static native void _main(Object thread, int cnum, int mnum);
+
 	public static void main(int cnum, int mnum) {
 		if (engaged != 0) {
 			_main(Thread.currentThread(), cnum, mnum);
@@ -152,11 +159,6 @@ public class HeapTracker {
 
 	private final long thread;
 	private long counter = 0;
-
-	{
-		// If this is called from <clinit> we never see it
-		newcls(HeapTracker.class, cnum, null);
-	}
 
 	private HeapTracker() {
 		this(nextThreadId());

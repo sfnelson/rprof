@@ -32,7 +32,7 @@ public abstract class MongoBuilder<B extends EntityBuilder<B, I, T>, I extends I
 
 	@Override
 	DBCursor _query(DBObject query) {
-		log.debug("mongo query: {}", query);
+		log.trace("mongo query: {}", query);
 		return _getCollection().find(query);
 	}
 

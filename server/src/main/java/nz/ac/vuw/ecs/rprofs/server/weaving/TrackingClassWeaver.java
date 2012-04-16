@@ -5,19 +5,20 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprof.HeapTracker;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class TrackingClassWeaver extends ClassAdapter {
+public class TrackingClassWeaver extends BasicClassWeaver {
 
-	private final ClassRecord record;
+	public TrackingClassWeaver(ClassVisitor cv, ClassRecord cr) {
+		super(cv, cr);
 
-	public TrackingClassWeaver(ClassVisitor cv, ClassRecord record) {
-		super(cv);
-
-		this.record = record;
+		cr.getWatches().clear();
 	}
 
 	@Override
@@ -25,7 +26,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 									 String signature, String[] exceptions) {
 		MethodVisitor visitor = super.visitMethod(access, name, desc, signature, exceptions);
 
-		Method method = record.getMethod(name, desc);
+		Method method = cr.getMethod(name, desc);
 		if (method == null) throw new RuntimeException("method was not found");
 
 		if (name.equals("_getTracker")) {
@@ -41,7 +42,7 @@ public class TrackingClassWeaver extends ClassAdapter {
 								   String signature, Object value) {
 		if (name.equals("cnum")) {
 			return super.visitField(access, name, desc, signature,
-					new Integer(record.getId().getClassIndex()));
+					new Integer(cr.getId().getClassIndex()));
 		} else {
 			return super.visitField(access, name, desc, signature, value);
 		}

@@ -23,6 +23,8 @@ public class FieldSummary implements DataObject<FieldSummaryId, FieldSummary> {
 	@Nullable
 	private String description;
 
+	private boolean isDeclaredFinal;
+
 	private boolean isFinal;
 
 	private boolean isStationary;
@@ -31,21 +33,37 @@ public class FieldSummary implements DataObject<FieldSummaryId, FieldSummary> {
 
 	private int instances;
 
+	private long reads;
+
+	private long writes;
+
 	public FieldSummary(FieldSummaryId id, String packageName, String name, String description,
-						boolean isFinal, boolean isStationary, boolean isConstructed, int instances) {
+						boolean isDeclaredFinal, boolean isStationary, boolean isConstructed, boolean isFinal,
+						int instances, long reads, long writes) {
 		this.id = id;
 		this.packageName = packageName;
 		this.name = name;
 		this.description = description;
+		this.isDeclaredFinal = isDeclaredFinal;
 		this.isFinal = isFinal;
 		this.isStationary = isStationary;
 		this.isConstructed = isConstructed;
 		this.instances = instances;
+		this.reads = reads;
+		this.writes = writes;
 	}
 
 	@Override
 	public FieldSummaryId getId() {
 		return id;
+	}
+
+	public boolean isDeclaredFinal() {
+		return isDeclaredFinal;
+	}
+
+	public void setDeclaredFinal(boolean declaredFinal) {
+		isDeclaredFinal = declaredFinal;
 	}
 
 	public boolean isFinal() {
@@ -105,6 +123,22 @@ public class FieldSummary implements DataObject<FieldSummaryId, FieldSummary> {
 
 	public void setName(@Nullable String name) {
 		this.name = name;
+	}
+
+	public long getReads() {
+		return reads;
+	}
+
+	public void setReads(long reads) {
+		this.reads = reads;
+	}
+
+	public long getWrites() {
+		return writes;
+	}
+
+	public void setWrites(long writes) {
+		this.writes = writes;
 	}
 
 	public boolean equals(Object obj) {

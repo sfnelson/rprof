@@ -8,51 +8,16 @@ import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
-
-import static org.objectweb.asm.Opcodes.ACC_STATIC;
-import static org.objectweb.asm.Opcodes.RETURN;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  */
-public class GenericClassWeaver extends ClassAdapter {
-
-	protected final ClassRecord cr;
-
-	protected boolean visitedCLInit = false;
+public class GenericClassWeaver extends BasicClassWeaver {
 
 	public GenericClassWeaver(ClassVisitor cv, ClassRecord cr) {
-		super(cv);
-
-		this.cr = cr;
-	}
-
-	@Override
-	public void visitEnd() {
-		if (!visitedCLInit) {
-			cr.generateMethod("<clinit>", "()V", ACC_STATIC);
-			MethodVisitor mv = visitMethod(ACC_STATIC, "<clinit>", "()V", null, null);
-			mv.visitCode();
-			mv.visitInsn(RETURN);
-			mv.visitMaxs(0, 0);
-			mv.visitEnd();
-		}
-		super.visitEnd();
-	}
-
-	@Override
-	public void visit(int version, int access, String name, String signature,
-					  String superName, String[] interfaces) {
-		int major = version & 0xFFFF;
-		//int minor = (version >> 16) & 0xFFFF;
-		if (major < 49) {
-			version = 49;
-			cr.setProperties(cr.getProperties() | Clazz.CLASS_VERSION_UPDATED);
-		}
-		super.visit(version, access, name, signature, superName, interfaces);
+		super(cv, cr);
 	}
 
 	@Override
@@ -83,21 +48,11 @@ public class GenericClassWeaver extends ClassAdapter {
 		else if (MethodUtils.isHashCode(method)) {
 			mv = new HashCodeMethodWeaver(cr, method, mv);
 		}
-		// check for: <clinit>()
-		else if (MethodUtils.isCLInit(method)) {
-			visitedCLInit = true;
-			mv = new CLInitMethodWeaver(cr, method, mv);
-		}
 		// check for: public methods with arguments on a collection
 		else if ((cr.getProperties() & Clazz.COLLECTION) != 0
 				&& MethodUtils.isPublic(method) && MethodUtils.hasArgs(method)) {
 			mv = new CollectionMethodWeaver(cr, method, mv);
 		}
 		return mv;
-	}
-
-	protected MethodVisitor visitMethodRaw(int access, String name, String desc,
-										   String signature, String[] exceptions) {
-		return super.visitMethod(access, name, desc, signature, exceptions);
 	}
 }

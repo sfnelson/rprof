@@ -11,4 +11,6 @@ public interface ClazzCreator<C extends ClazzCreator<C>> extends ClazzBuilder<C>
 	FieldCreator<?> addField();
 
 	MethodCreator<?> addMethod();
+
+	ClazzId storeIfNotInterface();
 }

@@ -20,10 +20,13 @@ public abstract class MongoFieldSummaryBuilder extends MongoBuilder<MongoFieldSu
 		setPackageName(value.getPackageName());
 		setName(value.getName());
 		setDescription(value.getDescription());
-		setFinal(value.isFinal());
+		setDeclaredFinal(value.isDeclaredFinal());
 		setStationary(value.isStationary());
 		setConstructed(value.isConstructed());
+		setFinal(value.isFinal());
 		setInstances(value.getInstances());
+		setReads(value.getReads());
+		setWrites(value.getWrites());
 		return this;
 	}
 
@@ -52,6 +55,12 @@ public abstract class MongoFieldSummaryBuilder extends MongoBuilder<MongoFieldSu
 	}
 
 	@Override
+	public MongoFieldSummaryBuilder setDeclaredFinal(boolean isDeclaredFinal) {
+		b.put("declaredFinal", isDeclaredFinal);
+		return this;
+	}
+
+	@Override
 	public MongoFieldSummaryBuilder setFinal(boolean isFinal) {
 		b.put("final", isFinal);
 		return this;
@@ -76,15 +85,32 @@ public abstract class MongoFieldSummaryBuilder extends MongoBuilder<MongoFieldSu
 	}
 
 	@Override
+	public MongoFieldSummaryBuilder setReads(long reads) {
+		b.put("reads", reads);
+		return this;
+	}
+
+	@Override
+	public MongoFieldSummaryBuilder setWrites(long writes) {
+		b.put("writes", writes);
+		return this;
+	}
+
+	@Override
 	public FieldSummary get() {
 		FieldSummaryId id = new FieldSummaryId((Long) b.get("_id"));
 		String packageName = b.getString("package");
 		String name = b.getString("name");
 		String description = b.getString("description");
-		boolean isFinal = b.getBoolean("final");
+		boolean isDeclaredFinal = b.getBoolean("declaredFinal");
 		boolean isStationary = b.getBoolean("stationary");
 		boolean isConstructed = b.getBoolean("constructed");
+		boolean isFinal = b.getBoolean("final");
 		int instances = b.getInt("instances");
-		return new FieldSummary(id, packageName, name, description, isFinal, isStationary, isConstructed, instances);
+		long reads = b.getLong("reads");
+		long writes = b.getLong("writes");
+		return new FieldSummary(id, packageName, name, description,
+				isDeclaredFinal, isStationary, isConstructed, isFinal,
+				instances, reads, writes);
 	}
 }

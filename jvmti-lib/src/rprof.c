@@ -1,11 +1,10 @@
-#include <stringlist.h>
-
 #include "rprof.h"
 
 #include "agent_util.h"
 #include "rprof_comm.h"
 #include "rprof_util.h"
 #include "rprof_events.h"
+#include "stringlist.h"
 
 /* -------------------------------------------------------------------
  * Some constant names that tie to Java class/method names.

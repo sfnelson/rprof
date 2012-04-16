@@ -44,34 +44,49 @@ public class Process extends HttpServlet {
 
 		final String handle = req.getParameter("dataset");
 		final String op = req.getParameter("op");
+		final String target = req.getParameter("target");
 
 		final Dataset dataset = datasets.findDataset(handle);
 		if (dataset != null) {
-			Context.setDataset(dataset);
+			try {
+				Context.setDataset(dataset);
 
-			final ClassMapReduce mr = new ClassMapReduce(db.getClazzQuery());
-			final FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
+				if ("classes".equals(target) || "all".equals(target)) {
+					final ClassMapReduce mr = new ClassMapReduce(db.getClazzQuery());
 
-			if (op == null || op.equals("map") || op.equals("mapreduce")) {
-				db.createClassSummaryMapper(db.getInstanceQuery(), mr, true).map();
-				db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
-			}
-			if (op == null || op.equals("reduce") || op.equals("mapreduce")) {
-				db.createClassSummaryReducer(mr).reduce();
-				db.createFieldSummaryReducer(fmr).reduce();
-			}
-			if (op == null || op.equals("print")) {
-				print(resp);
-				return;
-			}
-			if (op.equals("summary")) {
-				summary(resp);
-			}
-			if (op.equals("fields")) {
-				fields(dataset, resp);
-			}
+					if (op == null || op.equals("map") || op.equals("mapreduce")) {
+						db.createClassSummaryMapper(db.getInstanceQuery(), mr, true).map();
+					}
+					if (op == null || op.equals("reduce") || op.equals("mapreduce")) {
+						db.createClassSummaryReducer(mr).reduce();
+					}
+					if (op == null || op.equals("summary")) {
+						summary(resp);
+						return;
+					}
+					if ("print".equals(op)) {
+						print(resp);
+						return;
+					}
+				}
 
-			Context.clear();
+				if ("fields".equals(target) || "all".equals(target)) {
+					final FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
+
+					if (op == null || op.equals("map") || op.equals("mapreduce")) {
+						db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
+					}
+					if (op == null || op.equals("reduce") || op.equals("mapreduce")) {
+						db.createFieldSummaryReducer(fmr).reduce();
+					}
+					if (op == null || "summary".equals(op)) {
+						fields(dataset, resp);
+						return;
+					}
+				}
+			} finally {
+				Context.clear();
+			}
 		}
 
 		resp.addHeader("Dataset", dataset.getDatasetHandle());
@@ -209,13 +224,21 @@ public class Process extends HttpServlet {
 		ServletOutputStream out = resp.getOutputStream();
 
 		int total = 0;
-		int numFSC = 0;
-		int numFS = 0;
-		int numFC = 0;
-		int numF = 0;
+		int numDSCF = 0;
+		int numDSC = 0;
+		int numDSF = 0;
+		int numDS = 0;
+		int numDCF = 0;
+		int numDC = 0;
+		int numDF = 0;
+		int numDNone = 0;
+		int numSCF = 0;
 		int numSC = 0;
+		int numSF = 0;
 		int numS = 0;
+		int numCF = 0;
 		int numC = 0;
+		int numF = 0;
 		int numNone = 0;
 
 		Query.Cursor<? extends FieldSummary> query = db.getFieldSummaryQuery().find();
@@ -223,17 +246,29 @@ public class Process extends HttpServlet {
 			FieldSummary r = query.next();
 
 			total++;
-			if (r.isFinal() && r.isStationary() && r.isConstructed()) numFSC++;
-			else if (r.isFinal() && r.isStationary()) numFS++;
-			else if (r.isFinal() && r.isConstructed()) numFC++;
-			else if (r.isFinal()) numF++;
+			if (false) ;
+			else if (r.isDeclaredFinal() && r.isStationary() && r.isConstructed() && r.isFinal()) numDSCF++;
+			else if (r.isDeclaredFinal() && r.isStationary() && r.isConstructed()) numDSC++;
+			else if (r.isDeclaredFinal() && r.isStationary() && r.isFinal()) numDSF++;
+			else if (r.isDeclaredFinal() && r.isStationary()) numDS++;
+			else if (r.isDeclaredFinal() && r.isConstructed() && r.isFinal()) numDCF++;
+			else if (r.isDeclaredFinal() && r.isConstructed()) numDC++;
+			else if (r.isDeclaredFinal() && r.isFinal()) numDF++;
+			else if (r.isDeclaredFinal()) numDNone++;
+			else if (r.isStationary() && r.isConstructed() && r.isFinal()) numSCF++;
 			else if (r.isStationary() && r.isConstructed()) numSC++;
+			else if (r.isStationary() && r.isFinal()) numSF++;
 			else if (r.isStationary()) numS++;
+			else if (r.isConstructed() && r.isFinal()) numCF++;
 			else if (r.isConstructed()) numC++;
+			else if (r.isFinal()) numF++;
 			else numNone++;
 		}
 
-		out.println(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", dataset.getBenchmark(), total, numFSC, numFS, numFC, numF, numSC, numS, numC, numNone));
+		out.println(String.format("%s,%d," + "%d,%d,%d,%d,%d,%d,%d,%d," + "%d,%d,%d,%d,%d,%d,%d,%d",
+				dataset.getBenchmark(), total,
+				numDSCF, numDSC, numDSF, numDS, numDCF, numDC, numDF, numDNone,
+				numSCF, numSC, numSF, numS, numCF, numC, numF, numNone));
 
 		resp.getOutputStream().close();
 	}

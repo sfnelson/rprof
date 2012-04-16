@@ -61,7 +61,7 @@ public class ClassManagerTest {
 	@Test
 	public void testGetClazzById() {
 		ClazzId id = new ClazzId(1l);
-		Clazz clazz = new Clazz(id, 0, "foo", null, null, 0);
+		Clazz clazz = new Clazz(id, 0, "foo", null, null, 0, 0, false);
 
 		expect(database.findEntity(id)).andReturn(clazz);
 
@@ -93,7 +93,7 @@ public class ClassManagerTest {
 	@Test
 	public void testGetClazzByName() {
 		ClazzId id = new ClazzId(1l);
-		Clazz clazz = new Clazz(id, 0, "foo", null, null, 0);
+		Clazz clazz = new Clazz(id, 0, "foo", null, null, 0, 0, false);
 
 		expect(database.getClazzQuery()).andReturn(query);
 		expect(query.setName("foo")).andReturn(query);

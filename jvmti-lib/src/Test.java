@@ -52,6 +52,16 @@ public class Test extends A {
 		new LinkedList<Object>().add(new CollectionElement());
 		new HashSet<Object>().add(new CollectionElement());
 
+		for (int i = 0; i < 1000; i++) {
+			final int testFinal = i;
+			new Runnable() {
+				public void run() {
+					if (testFinal % 1 == 0) System.out.print(".");
+				}
+			}.run();
+		}
+		System.out.println();
+
 		throw new RuntimeException("test exception in main method");
 	}
 

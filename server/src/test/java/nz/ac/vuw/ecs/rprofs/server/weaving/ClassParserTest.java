@@ -35,6 +35,7 @@ public class ClassParserTest {
 
 		expect(builder.setName("org.foo.Bar")).andReturn(builder);
 		expect(builder.setParentName("org.Foo")).andReturn(builder);
+		expect(builder.setAccess(Opcodes.ACC_PUBLIC)).andReturn(builder);
 
 		replay(builder, mbuilder, fbuilder);
 

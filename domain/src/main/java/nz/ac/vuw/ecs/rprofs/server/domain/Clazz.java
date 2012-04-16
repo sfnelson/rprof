@@ -36,18 +36,24 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 
 	private int properties;
 
+	private int access;
+
+	private boolean initialized;
+
 	public Clazz() {
 	}
 
 	public Clazz(@NotNull ClazzId id, @NotNull Integer version, @Nullable String name,
 				 @Nullable ClazzId parent, @Nullable String parentName,
-				 int properties) {
+				 int properties, int access, boolean initialized) {
 		this.id = id;
 		this.version = version;
 		this.name = name;
 		this.parent = parent;
 		this.parentName = parentName;
 		this.properties = properties;
+		this.access = access;
+		this.initialized = initialized;
 	}
 
 	@Override
@@ -112,6 +118,22 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 
 	public void setProperties(int properties) {
 		this.properties = properties;
+	}
+
+	public int getAccess() {
+		return access;
+	}
+
+	public void setAccess(int access) {
+		this.access = access;
+	}
+
+	public boolean isInitialized() {
+		return initialized;
+	}
+
+	public void setInitialized(boolean initialized) {
+		this.initialized = initialized;
 	}
 
 	public static String getPackageName(String fqname) {

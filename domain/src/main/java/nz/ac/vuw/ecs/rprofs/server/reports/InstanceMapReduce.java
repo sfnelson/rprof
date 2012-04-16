@@ -9,12 +9,16 @@ import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 29/09/11
  */
 public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance> {
+
+	private final Logger log = LoggerFactory.getLogger(InstanceMapReduce.class);
 
 	private final Database database;
 
@@ -73,8 +77,13 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 				}
 				break;
 			case Event.CLASS_INITIALIZED:
-				return; // don't care about classes.
+				Context.setDataset(dataset);
+				database.getClazzUpdater()
+						.setInitialized(true)
+						.update(e.getClazz());
+				Context.clear();
 			case Event.OBJECT_TAGGED:
+			case Event.OBJECT_ALLOCATED:
 				result.setType(e.getClazz());
 				break;
 			case Event.METHOD_ENTER:

@@ -28,7 +28,7 @@ public class Logger extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		log.debug("receiving events");
+		log.trace("receiving events");
 
 		String dataset = req.getHeader("Dataset");
 
@@ -39,7 +39,7 @@ public class Logger extends HttpServlet {
 			int r = in.read(buffer, read, buffer.length - read);
 			read += r;
 		}
-		log.debug("done reading: {} bytes", buffer.length);
+		log.trace("done reading: {} bytes", buffer.length);
 
 		Continuation worker;
 		try {
@@ -56,7 +56,7 @@ public class Logger extends HttpServlet {
 					worker.setAttribute("data", buffer);
 					worker.resume();
 
-					log.info("sent {} bytes to worker for {}", buffer.length, dataset);
+					log.debug("sent {} bytes to worker ({})", buffer.length, dataset);
 					break;
 				} catch (IllegalStateException ex) {
 					log.error(ex.getMessage(), ex);

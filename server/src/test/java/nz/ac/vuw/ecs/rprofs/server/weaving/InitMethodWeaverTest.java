@@ -30,7 +30,7 @@ public class InitMethodWeaverTest {
 	@Before
 	public void setUp() throws Exception {
 		id = new ClazzId(1l);
-		clazz = new Clazz(id, 0, "org/foo/Bar", null, null, 0);
+		clazz = new Clazz(id, 0, "org/foo/Bar", null, null, 0, 0, false);
 		record = new ClassRecord(clazz);
 		record.generateMethod(name, desc, ACC_STATIC);
 		method = record.getMethod(name, desc);

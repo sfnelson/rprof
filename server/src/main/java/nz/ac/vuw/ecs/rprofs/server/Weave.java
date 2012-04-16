@@ -44,9 +44,11 @@ public class Weave extends HttpServlet {
 		Dataset ds = datasets.findDataset(req.getHeader("Dataset"));
 		context.setDataset(ds);
 
+		String cname = req.getParameter("cls");
+
 		int length = req.getContentLength();
 
-		log.debug("received class weave request ({}, {})", ds, length);
+		log.trace("received class weave request: {} ({} bytes)", cname, length);
 
 		buffer = new byte[length];
 		InputStream is = req.getInputStream();
@@ -56,24 +58,39 @@ public class Weave extends HttpServlet {
 
 		ClazzId clazzId = new ClassParser(classes.createClazz())
 				.read(buffer)
-				.store();
-		Clazz newClazz = classes.getClazz(clazzId);
+				.storeIfNotInterface();
 
-		ClassRecord record = new ClassRecord(newClazz);
-		record.addFields(classes.findFields(clazzId));
-		record.addMethods(classes.findMethods(clazzId));
+		if (clazzId == null) {
 
-		result = new Weaver().weave(record, buffer);
+			result = buffer;
 
-		classes.setProperties(clazzId, newClazz.getProperties());
+			log.debug("ignoring {} (interface)", cname);
+
+		} else {
+
+			Clazz newClazz = classes.getClazz(clazzId);
+
+			ClassRecord record = new ClassRecord(newClazz);
+			record.addFields(classes.findFields(clazzId));
+			record.addMethods(classes.findMethods(clazzId));
+
+			result = new Weaver().weave(record, buffer);
+
+			classes.setProperties(clazzId, newClazz.getProperties());
+
+			log.debug("class {} woven successfully ({})", newClazz.getName(), clazzId.getClassIndex());
+
+		}
 
 		resp.setStatus(200);
 		resp.setContentLength(result.length);
 		resp.setContentType("application/rprof");
+		if (clazzId != null) {
+			resp.setHeader("class-id", String.valueOf(clazzId.getClassIndex()));
+		}
 		resp.getOutputStream().write(result);
 
-		log.debug("class {} woven successfully", newClazz.getName());
-		log.debug("returning {} bytes", new Object[]{result.length});
+		log.trace("returning {} bytes", new Object[]{result.length});
 
 		context.clear();
 	}

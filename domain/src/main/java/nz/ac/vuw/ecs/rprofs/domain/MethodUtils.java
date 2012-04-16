@@ -224,6 +224,10 @@ public class MethodUtils {
 		return "<clinit>".equals(method.getName());
 	}
 
+	public static boolean isAgentInit(Method method) {
+		return "_rprof_agent_init".equals(method.getName());
+	}
+
 	public static boolean isEquals(Method method) {
 		return "equals".equals(method.getName())
 				&& "(Ljava/lang/Object;)Z".equals(method.getDescription())

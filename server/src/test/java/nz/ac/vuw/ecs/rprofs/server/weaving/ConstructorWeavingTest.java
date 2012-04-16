@@ -22,7 +22,7 @@ public class ConstructorWeavingTest extends WeaverTestBase {
 	@Before
 	public void setUp() throws Exception {
 		Dataset dataset = new Dataset(new DatasetId((short) 1), "foo", new Date(), "rprof_foo_1");
-		clazz = new Clazz(ClazzId.create(dataset, 1), 0, "TestOutput", null, null, 0);
+		clazz = new Clazz(ClazzId.create(dataset, 1), 0, "TestOutput", null, null, 0, 0, false);
 	}
 
 	@Test

@@ -37,14 +37,39 @@ public class FieldMapReduce implements MapReduce<Instance, FieldSummaryId, Field
 			String name = field != null ? className + '.' + field.getName() : null;
 			String description = field != null ? field.getDescription() : null;
 
-			boolean isFinal = (field != null) && field.isFinal();
+			boolean isDeclaredFinal = (field != null) && field.isFinal();
 			EventId firstRead = info.getFirstRead();
 			EventId lastWrite = info.getLastWrite();
 			EventId constructor = instance.getConstructorReturn();
-			boolean isStationary = firstRead == null || lastWrite == null || lastWrite.before(firstRead);
-			boolean isConstructed = constructor != null && (lastWrite == null || lastWrite.before(constructor));
 
-			emitter.emit(id, new FieldSummary(id, packageName, name, description, isFinal, isStationary, isConstructed, 1));
+			// no reads, no writes, or last write is before last read
+			boolean isStationary = firstRead == null || lastWrite == null || lastWrite.before(firstRead);
+
+			// no writes, or last write was before constructor ended.
+			boolean isConstructed = (lastWrite == null)
+					|| (constructor != null && lastWrite.before(constructor));
+
+			boolean isFinal = (lastWrite == null)
+					|| (constructor != null && lastWrite.before(constructor) && info.getWrites() <= 1);
+
+			if (isDeclaredFinal && !isStationary) {
+				//System.out.println(field + " is declared final but not stationary");
+				//assert false;
+			}
+
+			if (isDeclaredFinal && !isConstructed) {
+				//System.out.println(field + " is declared final but not constructed");
+				//assert false;
+			}
+
+			if (isDeclaredFinal && !isFinal) {
+				//System.out.println(field + " is declared final but not final");
+				//assert false;
+			}
+
+			emitter.emit(id, new FieldSummary(id, packageName, name, description,
+					isDeclaredFinal, isStationary, isConstructed, isFinal,
+					1, info.getReads(), info.getWrites()));
 		}
 	}
 
@@ -53,21 +78,29 @@ public class FieldMapReduce implements MapReduce<Instance, FieldSummaryId, Field
 		String packageName = null;
 		String name = null;
 		String description = null;
-		boolean isFinal = true;
+		boolean isDeclaredFinal = true;
 		boolean isStationary = true;
 		boolean isConstructed = true;
+		boolean isFinal = true;
 		int instances = 0;
+		long reads = 0;
+		long writes = 0;
 
 		for (FieldSummary summary : values) {
 			packageName = summary.getPackageName();
 			name = summary.getName();
 			description = summary.getDescription();
-			isFinal &= summary.isFinal();
+			isDeclaredFinal = summary.isDeclaredFinal();
 			isStationary &= summary.isStationary();
 			isConstructed &= summary.isConstructed();
+			isFinal &= summary.isFinal();
 			instances += summary.getInstances();
+			reads += summary.getReads();
+			writes += summary.getWrites();
 		}
 
-		return new FieldSummary(id, packageName, name, description, isFinal, isStationary, isConstructed, instances);
+		return new FieldSummary(id, packageName, name, description,
+				isDeclaredFinal, isStationary, isConstructed, isFinal,
+				instances, reads, writes);
 	}
 }

@@ -137,6 +137,18 @@ public class MongoClassBuilderTest {
 	}
 
 	@Test
+	public void testSetAccess() throws Exception {
+		builder.setAccess(255);
+		assertEquals(255, builder.b.get("access"));
+	}
+
+	@Test
+	public void testSetInitialized() throws Exception {
+		builder.setInitialized(true);
+		assertEquals(true, builder.b.get("initialized"));
+	}
+
+	@Test
 	public void testStore() throws Exception {
 
 		ClazzId id = new ClazzId(15l);
@@ -217,7 +229,9 @@ public class MongoClassBuilderTest {
 				.add("name", "org.foo.Bar")
 				.add("parent", 2l)
 				.add("parentName", "org.Foo")
-				.add("properties", 3).get());
+				.add("properties", 3)
+				.add("access", 4)
+				.add("initialized", true).get());
 		Clazz result = builder.get();
 
 		assertEquals(1l, result.getId().getValue());
@@ -225,5 +239,7 @@ public class MongoClassBuilderTest {
 		assertEquals(new ClazzId(2l), result.getParent());
 		assertEquals("org.Foo", result.getParentName());
 		assertEquals(3, result.getProperties());
+		assertEquals(4, result.getAccess());
+		assertEquals(true, result.isInitialized());
 	}
 }

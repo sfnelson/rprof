@@ -1,5 +1,7 @@
 package nz.ac.vuw.ecs.rprofs.server.data;
 
+import java.util.List;
+
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.FieldCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.MethodCreator;
@@ -9,8 +11,6 @@ import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
-
-import java.util.List;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -29,7 +29,7 @@ public class TestClazzCreator implements ClazzCreator<TestClazzCreator> {
 	}
 
 	public TestClazzCreator start(ClazzId id) {
-		c = new Clazz(id, 0, null, null, null, 0);
+		c = new Clazz(id, 0, null, null, null, 0, 0, false);
 		return this;
 	}
 
@@ -93,11 +93,28 @@ public class TestClazzCreator implements ClazzCreator<TestClazzCreator> {
 	}
 
 	@Override
+	public TestClazzCreator setAccess(int access) {
+		c.setAccess(access);
+		return this;
+	}
+
+	@Override
+	public TestClazzCreator setInitialized(boolean initialized) {
+		c.setInitialized(initialized);
+		return this;
+	}
+
+	@Override
 	public ClazzId store() {
 		return c.getId();
 	}
 
 	public Clazz get() {
 		return c;
+	}
+
+	@Override
+	public ClazzId storeIfNotInterface() {
+		return store();
 	}
 }

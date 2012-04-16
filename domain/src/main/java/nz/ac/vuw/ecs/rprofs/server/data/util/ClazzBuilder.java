@@ -19,4 +19,8 @@ public interface ClazzBuilder<C extends ClazzBuilder<C>> extends Builder<C, Claz
 	C setParentName(String name);
 
 	C setProperties(int properties);
+
+	C setAccess(int access);
+
+	C setInitialized(boolean initialized);
 }

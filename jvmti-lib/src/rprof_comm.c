@@ -5,25 +5,27 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <curl/curl.h>
+#include <stdint.h>
 
 #include <sys/types.h>
-#include "jni.h"
-#include "jvmti.h"
+#include <jni.h>
+#include <jvmti.h>
 
-#include "comm.h"
 #include "agent_util.h"
-#include "rprof.h"
+#include "rprof_events.h"
+#include "rprof_comm.h"
 
 #define EVENT_BUFFER_SIZE 121072
 #define HOST_MAX_LENGTH 256
 #define BENCHMARK_MAX_LENGTH 256
 #define DATASET_MAX_LENGTH 256
 
-struct response {
+typedef struct {
 	jint* length;
 	unsigned char** image;
 	unsigned int offset;
-};
+	jint* classId;
+} Response;
 
 typedef struct {
     int id_upper;
@@ -34,7 +36,7 @@ typedef struct {
 	int cnum;
 	int mnum;
 	int len;
-	int params[MAX_PARAMETERS * 2];
+	int params[RPROF_MAX_PARAMETERS * 2];
 } EventRecord;
 
 typedef struct {
@@ -52,10 +54,9 @@ static GlobalCommData *cdata;
 static char *host;
 
 /* Enter a critical section by doing a JVMTI Raw Monitor Enter */
-static void
-enterCriticalSection()
+void
+enterCriticalSection(jvmtiEnv *jvmti)
 {
-	jvmtiEnv *jvmti = cdata->jvmti;
 	jvmtiError error;
 
 	error = (*jvmti)->RawMonitorEnter(jvmti, cdata->lock);
@@ -63,17 +64,16 @@ enterCriticalSection()
 }
 
 /* Exit a critical section by doing a JVMTI Raw Monitor Exit */
-static void
-exitCriticalSection()
+void
+exitCriticalSection(jvmtiEnv *jvmti)
 {
-	jvmtiEnv *jvmti = cdata->jvmti;
 	jvmtiError error;
 
 	error = (*jvmti)->RawMonitorExit(jvmti, cdata->lock);
 	check_jvmti_error(jvmti, error, "Cannot exit with raw monitor");
 }
 
-JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti, char *options)
+void init_comm(jvmtiEnv *jvmti, char *options)
 {
 	static GlobalCommData data;
 	jvmtiError error;
@@ -108,8 +108,9 @@ JNIEXPORT void JNICALL init_comm(jvmtiEnv *jvmti, char *options)
 	curl_global_init(CURL_GLOBAL_ALL);
 }
 
-size_t read_header(void *ptr, size_t size, size_t nmemb, struct response* response) {
-	unsigned int len, i;
+size_t read_header(void *ptr, size_t size, size_t nmemb, Response* response)
+{
+	unsigned int len, i, id;
 
 	char header[size * nmemb + 1];
 	for (i = 0; i < size * nmemb; i++) {
@@ -118,27 +119,34 @@ size_t read_header(void *ptr, size_t size, size_t nmemb, struct response* respon
 	header[size * nmemb] = 0;
 
 	if (strstr(header, "content-length:") == header) {
-		int len = atoi(&header[16]);
+		len = atoi(&header[16]);
 		*response->length = len;
 		*response->image = malloc(len * sizeof(unsigned char));
+	}
+
+	if (strstr(header, "class-id:") == header) {
+	    id = atoi(&header[10]);
+	    *response->classId = id;
 	}
 
 	return size * nmemb;
 }
 
-size_t read_response(void *buffer, size_t size, size_t nmemb, struct response* response) {
+size_t read_response(void *buffer, size_t size, size_t nmemb, Response* response)
+{
 	unsigned char* image = *response->image;
 	unsigned int offset = response->offset;
 	memcpy(&image[offset], buffer, size * nmemb);
 	offset += size * nmemb;
 	response->offset = offset;
 
-	//stdout_message("received %d bytes from weaver (offset %d)\n", size * nmemb, offset);
+	// stdout_message("received %d bytes from weaver (offset %d)\n",size * nmemb, offset);
 
 	return size * nmemb;
 }
 
-size_t read_dataset(void *ptr, size_t size, size_t nmemb, void* args) {
+size_t read_dataset(void *ptr, size_t size, size_t nmemb, void* args)
+{
 	unsigned int len, i;
 	
 	char header[size * nmemb + 1];
@@ -157,7 +165,7 @@ size_t read_dataset(void *ptr, size_t size, size_t nmemb, void* args) {
 	return size * nmemb;
 }
 
-JNIEXPORT void JNICALL log_profiler_started()
+void log_profiler_started()
 {
 	CURL* handle = curl_easy_init();
 	char host [HOST_MAX_LENGTH];
@@ -196,7 +204,7 @@ JNIEXPORT void JNICALL log_profiler_started()
 	curl_easy_cleanup(handle);
 }
 
-JNIEXPORT void JNICALL log_profiler_stopped()
+void log_profiler_stopped()
 {
 	CURL* handle = curl_easy_init();
 	char host [HOST_MAX_LENGTH];
@@ -231,42 +239,39 @@ JNIEXPORT void JNICALL log_profiler_stopped()
 	curl_easy_cleanup(handle);
 }
 
-JNIEXPORT void JNICALL log_method_event(jlong thread, jint message,
-		jint cnum, jint mnum, jint len, jlong* params)
+jlong log_event(jvmtiEnv *jvmti, r_event* event)
 {
 	int i;
 	jlong id;
 	EventRecord* record;
 
-	if (len > MAX_PARAMETERS) {
-		fatal_error("max method parameters exceeded! %d.%d %d > %d\n", cnum, mnum, len, MAX_PARAMETERS);
-	}
-
-	enterCriticalSection(); {
+	enterCriticalSection(jvmti); {
 		record = &(cdata->records[cdata->event_index++]);
 		memset(record, 0, sizeof(record));
 
         id = ++(cdata->lastId);
         record->id_upper = htonl((id >> 32) & 0xffffffff);
 		record->id_lower = htonl(id & 0xffffffff);
-		record->thread_upper = htonl((thread >> 32) & 0xffffffff);
-		record->thread_lower = htonl(thread & 0xffffffff);
-		record->message = htonl(message);
-		record->cnum = htonl(cnum);
-		record->mnum = htonl(mnum);
-		record->len = htonl(len);
-		for (i = 0; i < len; i++) {
-			record->params[i * 2] = htonl((params[i] >> 32) & 0xffffffff);
-			record->params[i * 2 + 1] = htonl(params[i] & 0xffffffff);
+		record->thread_upper = htonl((event->thread >> 32) & 0xffffffff);
+		record->thread_lower = htonl(event->thread & 0xffffffff);
+		record->message = htonl(event->type);
+		record->cnum = htonl(event->cid);
+		record->mnum = htonl(event->attr.mid);
+		record->len = htonl(event->args_len);
+		for (i = 0; i < event->args_len; i++) {
+			record->params[i * 2] = htonl((event->args[i] >> 32) & 0xffffffff);
+			record->params[i * 2 + 1] = htonl(event->args[i] & 0xffffffff);
 		}
 
 		if (cdata->event_index >= EVENT_BUFFER_SIZE) {
-			flush_method_event_buffer();
+			flush_events(jvmti);
 		}
-	}; exitCriticalSection();
+	}; exitCriticalSection(jvmti);
+
+	return id;
 }
 
-JNIEXPORT void JNICALL flush_method_event_buffer()
+void flush_events(jvmtiEnv *jvmti)
 {
 	CURL* handle = curl_easy_init();
 	char host [HOST_MAX_LENGTH];
@@ -283,7 +288,7 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 	headers = curl_slist_append(headers, "Connection: Keep-Alive");
 	headers = curl_slist_append(headers, "Keep-Alive: 600");
 
-	enterCriticalSection(); {
+	enterCriticalSection(jvmti); {
 		/* post binary data */
 		curl_easy_setopt(handle, CURLOPT_POSTFIELDS, &(cdata->records));
 
@@ -295,7 +300,7 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 		err = curl_easy_perform(handle); /* post away! */
 
 		cdata->event_index = 0;
-	}; exitCriticalSection();
+	}; exitCriticalSection(jvmti);
 
 	if (err != 0) {
 		fatal_error("error sending log! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
@@ -310,24 +315,25 @@ JNIEXPORT void JNICALL flush_method_event_buffer()
 	curl_easy_cleanup(handle);
 }
 
-JNIEXPORT void JNICALL weave_classfile(
+void weave_classfile(
 		const char* classname, int systemClass,
 		jint class_data_len, const unsigned char* class_data,
-		jint* newLength, unsigned char** newImage)
+		jint* newLength, unsigned char** newImage, jint* classId)
 {
 	*newLength = 0;
 	*newImage = NULL;
 
-	struct response r;
+	Response r;
 	r.length = newLength;
 	r.image = newImage;
+	r.classId = classId;
 	r.offset = 0;
 	
 	CURL* handle = curl_easy_init();
 	char host [HOST_MAX_LENGTH];
 	jlong status;
 	
-	sprintf(host, "http://%s/weaver?", cdata->host);
+	sprintf(host, "http://%s/weaver?cls=", cdata->host);
 
 	char name[strlen(classname) + strlen(host) + 1];
 	sprintf(name, "%s%s", host, classname);

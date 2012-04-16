@@ -80,8 +80,8 @@ clean:
 
 test: $(TEST-OBJECTS)
 	mkdir -p bin
-	$(CC) -o bin/test $(CFLAGS) $(TEST-OBJECTS) $(LIBRARIES)
-	bin/test
+	$(CC) $(LDFLAGS) -o bin/test $(CFLAGS) $(TEST-OBJECTS) $(LIBRARIES)
+	$(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) bin/test
 	
 testrun: all
 	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -classpath ../classes -Xcheck:jni -Djava.compiler=NONE Test)

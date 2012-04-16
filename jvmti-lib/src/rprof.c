@@ -1130,7 +1130,5 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 JNIEXPORT void JNICALL
 Agent_OnUnload(JavaVM *vm)
 {
-    if (gdata->jvmti == NULL) return; // never initialized
-
 	log_profiler_stopped();
 }

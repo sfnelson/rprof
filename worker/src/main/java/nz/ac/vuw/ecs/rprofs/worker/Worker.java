@@ -157,7 +157,7 @@ public class Worker {
 
 	@Nullable
 	InstanceId parseObjectId(Dataset ds, long id) {
-		if (id == 0) return null;
+		if (id == 0) return InstanceId.NULL;
 		return InstanceId.create(ds, id);
 	}
 

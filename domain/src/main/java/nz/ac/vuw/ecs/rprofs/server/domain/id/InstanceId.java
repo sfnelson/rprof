@@ -12,6 +12,8 @@ public class InstanceId extends Id<InstanceId, Instance> {
 		return new InstanceId(dataset.getId().getDatasetIndex(), id);
 	}
 
+	public static InstanceId NULL = new InstanceId(0);
+
 	private static final long mask = 0xFFFFFFFFFFFFl;
 
 	public InstanceId() {

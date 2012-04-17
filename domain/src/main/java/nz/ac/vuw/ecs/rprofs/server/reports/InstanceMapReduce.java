@@ -32,7 +32,9 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 	@Override
 	public void map(Event e, Emitter<InstanceId, Instance> emitter) {
 		List<InstanceId> args = e.getArgs();
-		if (args == null || args.isEmpty() || e.getFirstArg() == null || e.getFirstArg().getValue() == 0l) return;
+
+		// we used to return if ID was 0, but it's useful to know what happens to untagged objects
+		if (args == null || args.isEmpty()) return;
 
 		InstanceId id = e.getFirstArg();
 

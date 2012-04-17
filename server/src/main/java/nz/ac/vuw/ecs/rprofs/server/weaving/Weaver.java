@@ -68,6 +68,7 @@ public class Weaver {
 			if (collections.matcher(record.getName()).find()) {
 				record.addProperty(Clazz.COLLECTION);
 				log.trace("{} is a collection", record.getName());
+				//record.getWatches().clear(); -- this fixed hashmap's loadfactor issue
 			}
 			if (includes.matcher(record.getName()).find()) {
 				record.addProperty(Clazz.CLASS_INCLUDE_MATCHED);

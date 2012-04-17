@@ -55,7 +55,7 @@ abstract class BasicClassWeaver extends ClassAdapter {
 		AgentInitMethodWeaver.generate(cr, this);
 
 		if (!visitedCLInit && (cr.getClazz().getAccess() & ACC_INTERFACE) == 0) {
-			CLInitMethodWeaver.generate(cr, this);
+			// CLInitMethodWeaver.generate(cr, this);
 		}
 
 		super.visitEnd();

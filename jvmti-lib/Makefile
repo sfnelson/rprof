@@ -1,3 +1,10 @@
+# Makefile for rprof JVMTI agent
+#
+#       OPT=true        : compile with optimizations/no debug
+#       J_DEBUG=true    : connect to java debugger at localhost:8000
+#       GDB=true        : run inside gdb
+#
+
 OS=$(shell uname)
 
 LIBNAME=rprof
@@ -103,13 +110,13 @@ clean:
 test: all
 	$(JAVA) -version
 
-testrun: all
+kitchensink: all
 	$(JAVA) -classpath classes Test
 
 example: all
 	$(JAVA) -classpath classes Example
 
-testhash: all
+hashmap: all
 	$(JAVA) -classpath classes HashMapError
 
 list: all

@@ -31,6 +31,7 @@ public class StopTest {
 	private Reducer.ReducerTask reduce;
 
 	@Before
+	@SuppressWarnings("unchecked")
 	public void setup() {
 		manager = createMock(DatasetManager.class);
 		request = createMock(HttpServletRequest.class);
@@ -43,6 +44,7 @@ public class StopTest {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testDoGet() throws Exception {
 
 		expect(request.getHeader("Dataset")).andReturn("rprof_foo_1");

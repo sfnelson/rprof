@@ -1,5 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -465,7 +466,13 @@ public class Database {
 			if (dbname.startsWith("rprof_")) {
 				DBObject properties = mongo.getDB(dbname)
 						.getCollection("properties").findOne();
-				result.add(builder.init(properties).get());
+				if (properties == null) {
+					String[] args = dbname.split("_");
+					result.add(new Dataset(new DatasetId(Short.valueOf(args[2])),
+							args[1], new Date(), dbname));
+				} else {
+					result.add(builder.init(properties).get());
+				}
 			}
 		}
 		Map<DatasetId, Dataset> newDatasets = Maps.newHashMap();

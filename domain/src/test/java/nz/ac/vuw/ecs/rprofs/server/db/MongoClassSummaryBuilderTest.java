@@ -143,6 +143,7 @@ public class MongoClassSummaryBuilderTest {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testStore() throws Exception {
 		nextId = 51l;
 		builder.init()

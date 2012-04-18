@@ -1,62 +1,85 @@
+OS=$(shell uname)
+
 LIBNAME=rprof
-SOURCES=src/rprof.c src/agent_util.c src/java_crw_demo.c src/comm.c
+SOURCES=src/rprof.c src/agent_util.c src/rprof_util.c src/rprof_comm.c src/stringlist.c
+TEST_SOURCES=src/test_utils.c
 
 JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java src/Example.java src/HashMapError.java
 JARFILE=bin/rprof.jar
 
-OBJECTS=objects/rprof.o objects/agent_util.o objects/rprof_util.o objects/rprof_comm.o objects/stringlist.o
-TEST-OBJECTS=$(OBJECTS) objects/test_utils.o
+DACAPO=dacapo-20110822.jar
+
+OBJECTS=$(SOURCES:src/%.c=objects/%.o)
+TEST-OBJECTS=$(OBJECTS) $(TEST_SOURCES:src/%.c=objects/%.o)
 
 # Required flags
-COMMON_FLAGS=-fno-strict-aliasing -fPIC -fno-omit-frame-pointer
+COMMON_FLAGS = -fno-strict-aliasing -fPIC -fno-omit-frame-pointer
 # Error checking flags
-COMMON_FLAGS+= -W -Wall -Wno-unused-parameter -Wno-parentheses
+COMMON_FLAGS += -W -Wall -Wno-unused-parameter -Wno-parentheses
+# To prevent include of procfs.h (what does this do?)
+COMMON_FLAGS += -DLINUX
+# To make sure code is reentrant
+COMMON_FLAGS += -D_REENTRANT
 
-OS=$(shell uname)
-LIBRARY_PATH_NAME=LD_LIBRARY_PATH
-
-ifeq ($(OS),Darwin)
-	JDK=/Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
-	HEADERS=
-	CC=cc
-	CFLAGS=-O1 -g $(COMMON_FLAGS) -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
-	DEBUG=-D DEBUG
-	LIBRARY=bin/lib$(LIBNAME).dylib
-	LDFLAGS=-dynamiclib -mimpure-text
-	LIBRARY_PATH=$(shell pwd)/bin/
-	LIBRARY_PATH_NAME=DYLD_LIBRARY_PATH
-	HOST=127.0.0.1:8888
+ifeq ($(OPT), true)
+    CFLAGS=-O2 $(COMMON_FLAGS) -DNDEBUG
+else
+    CFLAGS=-g $(COMMON_FLAGS) -DDEBUG
 endif
 
-ifeq ($(OS),NetBSD)
-	JDK=/usr/pkg/java/jdk-1.6.0
-	CC=gcc
-	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/netbsd
-	LIBRARY=bin/lib$(LIBNAME).so
-	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
-	LIBRARY_PATH=.:/usr/pkg/lib
-	HOST=[::1]:8888
+# Library name and options needed to build it
+LIBRARY=lib$(LIBNAME).so
+LDFLAGS=-Wl,-soname=$(LIBRARY) -static-libgcc -mimpure-text
+# Libraries we are dependent on
+LIBRARIES= -ldl -lc
+# Building a shared library
+LINK_SHARED=$(LINK.c) -shared -o $@
+
+HOST=[::1]:8888
+
+ifeq ($(OS),Darwin)
+	JDK     = /Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
+	CC      = clang
+	CFLAGS += -analyze -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
+	LIBRARY = bin/lib$(LIBNAME).dylib
+	LPATH   = ./bin/
+	LPATHN  = DYLD_LIBRARY_PATH
+	LDFLAGS = -dynamiclib -mimpure-text
 endif
 
 ifeq ($(OS),Linux)
-	JDK1=/usr/lib/jvm/java-7-openjdk-amd64
-	JDK2=/vol/projects/stephen/oracle-jdk7-x86_64
+	JDK1    = /usr/lib/jvm/java-7-openjdk-amd64
+	JDK2    = /vol/projects/stephen/oracle-jdk7-x86_64
 	ifeq ($(wildcard $(JDK1)),$(JDK1))
-		JDK=$(JDK1)
+		JDK = $(JDK1)
 	else
-		JDK=$(JDK2)
+		JDK = $(JDK2)
 	endif
-	CC=gcc
-	CFLAGS=-g $(COMMON_FLAGS) -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux -I/vol/projects/stephen/curl/include
-	LIBRARY=bin/lib$(LIBNAME).so
-	LIBRARY_PATH=$(shell pwd)/bin/:/usr/pkg/lib:/vol/projects/stephen/curl/lib
-	LIBRARY_PATH_NAME=LD_LIBRARY_PATH
-	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
-	HOST=[::1]:8888
+	CC      = gcc
+	CFLAGS += -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux -I/vol/projects/stephen/curl/include
+	LIBRARY = bin/lib$(LIBNAME).so
+	LPATH   = bin/:/usr/pkg/lib:/vol/projects/stephen/curl/lib
+	LPATHN  = LD_LIBRARY_PATH
+	LDFLAGS+= -dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
 endif
 
 LIBRARIES=-lcurl
 LINK_SHARED=$(LINK.c) -shared -o $@
+
+J_OPTS = \
+    -Xcheck:jni \
+    -Xbootclasspath/a:$(JARFILE) \
+    -agentlib:$(LIBNAME)=$(HOST),$@
+
+ifeq ($(J_DEBUG),true)
+    J_OPTS  += -agentlib:jdwp=transport=dt_socket,address=localhost:8000
+endif
+
+ifeq ($(GDB),true)
+    JAVA    = $(LPATHN)=$(LPATH) gdb --args $(JDK)/bin/java $(J_OPTS)
+else
+    JAVA    = $(LPATHN)=$(LPATH) $(JDK)/bin/java $(J_OPTS)
+endif
 
 all: $(LIBRARY) $(JARFILE)
 
@@ -66,9 +89,8 @@ $(LIBRARY): $(OBJECTS)
 
 objects/%.o: src/%.c
 	mkdir -p objects
-	$(CC) $(CFLAGS) $(DEBUG) -c $? -o $@
+	$(CC) $(CFLAGS) -c $? -o $@
 
-# Build jar file
 $(JARFILE): $(JAVA_SOURCES)
 	mkdir -p bin
 	mkdir -p classes
@@ -78,37 +100,23 @@ $(JARFILE): $(JAVA_SOURCES)
 clean:
 	rm -f -r bin classes objects tmp/pre/* tmp/post/*
 
-test: $(TEST-OBJECTS)
-	mkdir -p bin
-	$(CC) $(LDFLAGS) -o bin/test $(CFLAGS) $(TEST-OBJECTS) $(LIBRARIES)
-	$(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) bin/test
-	
+test: all
+	$(JAVA) -version
+
 testrun: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -classpath ../classes -Xcheck:jni -Djava.compiler=NONE Test)
+	$(JAVA) -classpath classes Test
 
 example: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),example -classpath ../classes Example)
+	$(JAVA) -classpath classes Example
 
 testhash: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),testhash -classpath ../classes -Xcheck:jni -Djava.compiler=NONE HashMapError)
+	$(JAVA) -classpath classes HashMapError
 
-debughash: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),testhash -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes -Xcheck:jni -Djava.compiler=NONE HashMapError)
+list: all
+	$(JAVA) -jar $(DACAPO) -l
 
-gdb: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) gdb $(JDK)/bin/java)
-
-debug: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes Test)
-
-server: all
-	(cd classes; $(JDK)/bin/java nz.ac.vuw.ecs.rprof.Logger)
-
-avrora: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),avrora -classpath ../classes -jar ../dacapo-20110822.jar -n 1 -t 1 avrora)
-
-pmd: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),pmd -classpath ../classes -jar ../dacapo-20110822.jar -n 1 -t 1 pmd)
+batik: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 fop
 
 fop: all
-	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),fop -classpath ../classes -Xcheck:jni -Djava.compiler=NONE -Xmx1024m -jar ../dacapo-20110822.jar -n 1 -t 1 fop)
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 fop

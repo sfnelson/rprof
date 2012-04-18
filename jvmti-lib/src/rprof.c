@@ -1,3 +1,5 @@
+#include <errno.h>
+
 #include "rprof.h"
 
 #include "agent_util.h"
@@ -780,11 +782,10 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 				FILE *pre, *post;
 				int written, err;
 
-				sprintf(buffer, "../tmp/pre/%s.class", cfname);
+				sprintf(buffer, "tmp/pre/%s.class", cfname);
 				pre = fopen(buffer, "w");
 				if (pre == NULL) {
-				    err = ferror(pre);
-					fatal_error("could not open file %s (%s)\n", buffer, strerror(err));
+					fatal_error("could not open file %s (%s)\n", buffer, strerror(errno));
 				}
 				written = fwrite ( class_data, sizeof(unsigned char), class_data_len, pre );
 				if (written != class_data_len) {
@@ -793,11 +794,10 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 				}
 				fclose(pre);
 
-				sprintf(buffer, "../tmp/post/%s.class", cfname);
+				sprintf(buffer, "tmp/post/%s.class", cfname);
 				post = fopen(buffer, "w");
 				if (post == NULL) {
-				    err = ferror(pre);
-					fatal_error("could not open file: %s (%s)\n", buffer, strerror(err));
+					fatal_error("could not open file: %s (%s)\n", buffer, strerror(errno));
 				}
 				written = fwrite ( newImage, sizeof(unsigned char), newLength, post );
 				if (written != newLength) {

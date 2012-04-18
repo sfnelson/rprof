@@ -66,7 +66,7 @@ sl_init(void)
  * sl_add(): Add an item to the string list
  */
 void
-sl_add(StringList *sl, char *name)
+sl_add(StringList *sl, const char *name)
 {
 	if (sl->sl_cur == sl->sl_max - 1) {
 		sl->sl_max += _SL_CHUNKSIZE;
@@ -91,7 +91,7 @@ sl_free(StringList *sl, int all)
 	if (sl->sl_str) {
 		if (all)
 			for (i = 0; i < sl->sl_cur; i++)
-				free(sl->sl_str[i]);
+				free((void*) sl->sl_str[i]);
 		free(sl->sl_str);
 	}
 	free(sl);

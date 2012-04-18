@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -51,6 +52,9 @@ public class Test extends A {
 
 		new LinkedList<Object>().add(new CollectionElement());
 		new HashSet<Object>().add(new CollectionElement());
+		HashMap<Object, Object> map = new HashMap<Object, Object>();
+		for (int i = 0; i < 64; i++)
+			map.put(new CollectionElement(), new CollectionElement());
 
 		for (int i = 0; i < 1000; i++) {
 			final int testFinal = i;

@@ -71,14 +71,16 @@ void store_fields(r_fieldTable *table, r_fieldRecord *toStore, uint32_t len)
     for (i = 0; i < old; i++) {
         in = &(old_table->entries[i]);
         if (in->field != NULL) {
-            memcpy(find(new_table, in->class_tag, in->field), in, sizeof(r_fieldRecord));
+            out = find(new_table, in->class_tag, in->field);
+            memcpy(out, in, sizeof(r_fieldRecord));
         }
     }
 
     for (i = 0; i < len; i++) {
         in = &(toStore[i]);
         if (in->field != NULL) {
-            memcpy(find(new_table, in->class_tag, in->field), in, sizeof(r_fieldRecord));
+            out = find(new_table, in->class_tag, in->field);
+            memcpy(out, in, sizeof(r_fieldRecord));
         }
     }
 

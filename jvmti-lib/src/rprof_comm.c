@@ -51,7 +51,6 @@ typedef struct {
 } GlobalCommData;
 
 static GlobalCommData *cdata;
-static char *host;
 
 /* Enter a critical section by doing a JVMTI Raw Monitor Enter */
 void
@@ -147,7 +146,7 @@ size_t read_response(void *buffer, size_t size, size_t nmemb, Response* response
 
 size_t read_dataset(void *ptr, size_t size, size_t nmemb, void* args)
 {
-	unsigned int len, i;
+	size_t i;
 	
 	char header[size * nmemb + 1];
 	for (i = 0; i < size * nmemb; i++) {
@@ -247,7 +246,7 @@ jlong log_event(jvmtiEnv *jvmti, r_event* event)
 
 	enterCriticalSection(jvmti); {
 		record = &(cdata->records[cdata->event_index++]);
-		memset(record, 0, sizeof(record));
+		memset(record, 0, sizeof(EventRecord));
 
         id = ++(cdata->lastId);
         record->id_upper = htonl((id >> 32) & 0xffffffff);

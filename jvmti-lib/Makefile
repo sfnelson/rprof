@@ -1,7 +1,7 @@
 LIBNAME=rprof
 SOURCES=src/rprof.c src/agent_util.c src/java_crw_demo.c src/comm.c
 
-JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java src/Example.java
+JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java src/Example.java src/HashMapError.java
 JARFILE=bin/rprof.jar
 
 OBJECTS=objects/rprof.o objects/agent_util.o objects/rprof_util.o objects/rprof_comm.o objects/stringlist.o
@@ -10,19 +10,19 @@ TEST-OBJECTS=$(OBJECTS) objects/test_utils.o
 # Required flags
 COMMON_FLAGS=-fno-strict-aliasing -fPIC -fno-omit-frame-pointer
 # Error checking flags
-COMMON_FLAGS+= -W -Wall  -Wno-unused -Wno-parentheses
+COMMON_FLAGS+= -W -Wall -Wno-unused-parameter -Wno-parentheses
 
 OS=$(shell uname)
 LIBRARY_PATH_NAME=LD_LIBRARY_PATH
 
 ifeq ($(OS),Darwin)
-	JDK=/Library/Java/JavaVirtualMachines/JDK\ 1.7.0\ Developer\ Preview.jdk/Contents/Home
+	JDK=/Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
 	HEADERS=
 	CC=cc
-	CFLAGS=-02 -g $(COMMON_FLAGS) -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
+	CFLAGS=-O1 -g $(COMMON_FLAGS) -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
 	DEBUG=-D DEBUG
 	LIBRARY=bin/lib$(LIBNAME).dylib
-	LDFLAGS=-dynamiclib -static-libgcc -mimpure-text
+	LDFLAGS=-dynamiclib -mimpure-text
 	LIBRARY_PATH=$(shell pwd)/bin/
 	LIBRARY_PATH_NAME=DYLD_LIBRARY_PATH
 	HOST=127.0.0.1:8888
@@ -88,6 +88,15 @@ testrun: all
 
 example: all
 	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),example -classpath ../classes Example)
+
+testhash: all
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),testhash -classpath ../classes -Xcheck:jni -Djava.compiler=NONE HashMapError)
+
+debughash: all
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),testhash -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes -Xcheck:jni -Djava.compiler=NONE HashMapError)
+
+gdb: all
+	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) gdb $(JDK)/bin/java)
 
 debug: all
 	(cd bin; $(LIBRARY_PATH_NAME)=$(LIBRARY_PATH) $(JDK)/bin/java -Xbootclasspath/a:rprof.jar -agentlib:$(LIBNAME)=$(HOST),test -agentlib:jdwp=transport=dt_socket,address=localhost:8000 -classpath ../classes Test)

@@ -55,7 +55,7 @@ ifeq ($(OS),Linux)
 	HOST=[::1]:8888
 endif
 
-LIBRARIES=-lc -lcurl
+LIBRARIES=-lcurl
 LINK_SHARED=$(LINK.c) -shared -o $@
 
 all: $(LIBRARY) $(JARFILE)

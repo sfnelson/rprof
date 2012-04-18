@@ -250,7 +250,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass site, jthread thread, jclass klas
 
     jvmti = gdata->jvmti;
 
-	bzero(&event, sizeof(event));
+	memset(&event, 0, sizeof(event));
 
 	if (id == 0) {
 	    id = generate_object_tag();
@@ -286,7 +286,7 @@ HEAP_TRACKER_native_newarr(JNIEnv *env, jclass klass, jthread thread, jobject a,
 
 	jvmti = gdata->jvmti;
 
-	bzero(&event, sizeof(event));
+	memset(&event, 0, sizeof(event));
 
 	if (id == 0) {
         id = generate_object_tag();
@@ -314,7 +314,7 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 		return;
 	}
 
-	bzero(&event, sizeof(event));
+	memset(&event, 0, sizeof(event));
 
 	jvmti = gdata->jvmti;
 
@@ -351,7 +351,7 @@ HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 
     jvmti = gdata->jvmti;
 
-    bzero(&event, sizeof(event));
+    memset(&event, 0, sizeof(event));
 
     event.type = RPROF_METHOD_RETURN;
     event.thread = get_tag(jvmti, thread);
@@ -379,7 +379,7 @@ HEAP_TRACKER_native_except(JNIEnv *env, jclass klass, jthread thread, jint cnum,
 
     jvmti = gdata->jvmti;
 
-    bzero(&event, sizeof(event));
+    memset(&event, 0, sizeof(event));
 
     event.type = RPROF_METHOD_EXCEPTION;
     event.thread = get_tag(jvmti, thread);
@@ -406,7 +406,7 @@ HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 
     jvmti = gdata->jvmti;
 
-    bzero(&event, sizeof(event));
+    memset(&event, 0, sizeof(event));
 
     event.type = RPROF_METHOD_ENTER;
     event.thread = get_tag(gdata->jvmti, thread);
@@ -522,7 +522,7 @@ cbObjectTagger(jlong class_tag, jlong size, jlong* tag_ptr, jint length, void* u
 		*tag_ptr = generate_object_tag();
 	}
 
-    bzero(&event, sizeof(event));
+    memset(&event, 0, sizeof(event));
 
     event.type = RPROF_OBJECT_TAGGED;
     event.cid = (jint)(class_tag & 0xFFFFFFFFll);
@@ -633,7 +633,7 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 		 */
 
 		/* Clear out all callbacks. */
-		(void)bzero(&callbacks, sizeof(callbacks));
+		(void)memset(&callbacks, 0, sizeof(callbacks));
 		error = (*jvmti)->SetEventCallbacks(jvmti, &callbacks,
 				(jint)sizeof(callbacks));
 		check_jvmti_error(jvmti, error, "Cannot set jvmti callbacks");
@@ -666,7 +666,7 @@ cbObjectFree(jvmtiEnv *jvmti, jlong id)
 {
     r_event event;
 
-    bzero(&event, sizeof(event));
+    memset(&event, 0, sizeof(event));
 
     event.type = RPROF_OBJECT_FREED;
     event.args_len = 1;
@@ -849,24 +849,28 @@ cbFieldAccess(jvmtiEnv *jvmti,
         find_field(gdata->fields, class_tag, field, &record);
     }; exitCriticalSection(jvmti);
 
-    bzero(&event, sizeof(event));
+    //memset(&event, 0, sizeof(r_event));
 
     if (record.field != field || class_tag != record.class_tag) {
-        char* sig;
-        (*jvmti)->GetFieldName(jvmti, field_klass, field, &sig, NULL, NULL);
-        fatal_error("could not find field %s (%llx.%llx), found (%llx.%llx)\n",
-            sig, class_tag, field,
+        char *klass_name, *field_name;
+        (*jvmti)->GetClassSignature(jvmti, field_klass, &klass_name, NULL);
+        (*jvmti)->GetFieldName(jvmti, field_klass, field, &field_name, NULL, NULL);
+        fatal_error("could not find field %s.%s (%llx.%llx), found (%llx.%llx)\n",
+            klass_name, field_name,
+            class_tag, field,
             record.class_tag, record.field);
+        deallocate(jvmti, klass_name);
+        deallocate(jvmti, field_name);
     }
 
-    event.type = RPROF_FIELD_READ;
     event.thread = get_tag(jvmti, thread);
+    event.type = RPROF_FIELD_READ;
     event.cid = record.id.id.cls;
     event.attr.fid = record.id.id.field;
     event.args_len = 1;
     event.args[0] = id;
 
-	log_event(jvmti, &event);
+    log_event(jvmti, &event);
 }
 
 /* Callback for JVMTI_EVENT_FIELD_MODIFICATION */
@@ -891,14 +895,18 @@ cbFieldModification(jvmtiEnv *jvmti,
         find_field(gdata->fields, class_tag, field, &record);
     }; exitCriticalSection(jvmti);
 
-    bzero(&event, sizeof(event));
+    memset(&event, 0, sizeof(event));
 
     if (record.field != field || class_tag != record.class_tag) {
-        char* sig;
-        (*jvmti)->GetFieldName(jvmti, field_klass, field, &sig, NULL, NULL);
-        fatal_error("could not find field %s (%llx.%llx), found (%llx.%llx)\n",
-            sig, class_tag, field,
+        char *klass_name, *field_name;
+        (*jvmti)->GetClassSignature(jvmti, field_klass, &klass_name, NULL);
+        (*jvmti)->GetFieldName(jvmti, field_klass, field, &field_name, NULL, NULL);
+        fatal_error("could not find field %s.%s (%llx.%llx), found (%llx.%llx)\n",
+            klass_name, field_name,
+            class_tag, field,
             record.class_tag, record.field);
+        deallocate(jvmti, klass_name);
+        deallocate(jvmti, field_name);
     }
 
     event.type = RPROF_FIELD_WRITE;
@@ -920,7 +928,7 @@ cbFieldModification(jvmtiEnv *jvmti,
         break;
     }
 
-    id = log_event(jvmti, &event);
+    log_event(jvmti, &event);
 }
 
 /* Agent_OnLoad: This is called immediately after the shared library is
@@ -942,7 +950,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	 *     so anything allocated in this library needs to be freed in
 	 *     the Agent_OnUnload() function.
 	 */
-	bzero(&data, sizeof(data));
+	memset(&data, 0, sizeof(GlobalAgentData));
 	gdata = &data;
 
 	/* First thing we need to do is get the jvmtiEnv* or JVMTI environment */

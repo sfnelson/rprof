@@ -238,14 +238,14 @@ void log_profiler_stopped()
 	curl_easy_cleanup(handle);
 }
 
-jlong log_event(jvmtiEnv *jvmti, r_event* event)
+jlong log_event(jvmtiEnv *jvmti, r_event *event)
 {
 	int i;
 	jlong id;
 	EventRecord* record;
 
 	enterCriticalSection(jvmti); {
-		record = &(cdata->records[cdata->event_index++]);
+		record = &(cdata->records[(cdata->event_index)++]);
 		memset(record, 0, sizeof(EventRecord));
 
         id = ++(cdata->lastId);

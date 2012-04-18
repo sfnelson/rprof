@@ -36,10 +36,10 @@ public class ExceptionHandlingMethodWeaver extends MethodWeaver {
 	public void visitMaxs(int stack, int locals) {
 		visitLabel(end);
 
-		visitTryCatchBlock(start, end, handler, Type.getInternalName(Exception.class));
+		visitTryCatchBlock(start, end, handler, Type.getInternalName(Throwable.class));
 
 		visitLabel(handler);
-		visitFrame(Opcodes.F_FULL, 0, new Object[]{}, 1, new Object[]{Type.getInternalName(Exception.class)});
+		visitFrame(Opcodes.F_FULL, 0, new Object[]{}, 1, new Object[]{Type.getInternalName(Throwable.class)});
 
 		visitVarInsn(ASTORE, 1); // store exception
 		setLocals(2);

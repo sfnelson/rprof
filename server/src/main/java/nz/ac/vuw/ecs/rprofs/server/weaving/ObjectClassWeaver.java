@@ -36,7 +36,7 @@ public class ObjectClassWeaver extends ClassAdapter {
 		return mv;
 	}
 
-	private static class ObjectInitWeaver extends InitMethodWeaver {
+	private static class ObjectInitWeaver extends MethodWeaver {
 
 		public ObjectInitWeaver(ClassRecord cr, Method m, MethodVisitor mv) {
 			super(cr, m, mv);

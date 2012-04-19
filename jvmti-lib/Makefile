@@ -74,9 +74,9 @@ LIBRARIES=-lcurl
 LINK_SHARED=$(LINK.c) -shared -o $@
 
 J_OPTS = \
-    -Xcheck:jni \
     -Xbootclasspath/a:$(JARFILE) \
     -agentlib:$(LIBNAME)=$(HOST),$@
+#    -Xcheck:jni
 
 ifeq ($(J_DEBUG),true)
     J_OPTS  += -agentlib:jdwp=transport=dt_socket,address=localhost:8000
@@ -123,7 +123,13 @@ list: all
 	$(JAVA) -jar $(DACAPO) -l
 
 batik: all
-	$(JAVA) -jar $(DACAPO) -n 1 -t 1 fop
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 batik
 
 fop: all
 	$(JAVA) -jar $(DACAPO) -n 1 -t 1 fop
+
+luindex: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 lusearch
+
+lusearch: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 luindex

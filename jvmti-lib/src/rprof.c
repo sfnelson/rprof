@@ -51,6 +51,9 @@
 
 #define ACC_INTERFACE 512
 
+#define _SAVE_XMM asm volatile ("subq $0x10,%rsp\nmovaps %xmm0,(%rsp)");
+#define _RESTORE_XMM asm volatile ("movaps (%rsp),%xmm0\naddq $0x10,%rsp");
+
 /* ------------------------------------------------------------------- */
 
 /* Global agent data structure */
@@ -886,6 +889,8 @@ cbFieldModification(jvmtiEnv *jvmti,
 		char signature_type,
 		jvalue new_value)
 {
+    _SAVE_XMM
+
     r_event event;
     r_fieldRecord record;
     jlong class_tag = get_tag(jvmti, field_klass);
@@ -929,6 +934,8 @@ cbFieldModification(jvmtiEnv *jvmti,
     }
 
     log_event(jvmti, &event);
+
+    _RESTORE_XMM
 }
 
 /* Agent_OnLoad: This is called immediately after the shared library is

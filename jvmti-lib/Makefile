@@ -47,7 +47,7 @@ HOST=[::1]:8888
 ifeq ($(OS),Darwin)
 	JDK     = /Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
 	CC      = clang
-	CFLAGS += -analyze -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
+	CFLAGS += -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
 	LIBRARY = bin/lib$(LIBNAME).dylib
 	LPATH   = ./bin/
 	LPATHN  = DYLD_LIBRARY_PATH

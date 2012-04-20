@@ -8,16 +8,15 @@
 OS=$(shell uname)
 
 LIBNAME=agent
-SOURCES=src/rprof.c src/agent_util.c src/rprof_util.c src/rprof_comm.c src/stringlist.c
-TEST_SOURCES=src/test_utils.c
+SOURCES=rprof.c agent_util.c rprof_util.c rprof_comm.c stringlist.c
+TEST_SOURCES=test_utils.c
 
-JAVA_SOURCES=src/nz/ac/vuw/ecs/rprof/*.java src/Test.java src/Example.java src/HashMapError.java
-JARFILE=bin/rprof.jar
+JARFILE=../jvmti-lib/target/jvmti-lib-1.0-SNAPSHOT.jar
 
 DACAPO=dacapo-20110822.jar
 
-OBJECTS=$(SOURCES:src/%.c=objects/%.o)
-TEST_OBJECTS=$(OBJECTS) $(TEST_SOURCES:src/%.c=objects/%.o)
+OBJECTS=$(SOURCES:%.c=%.o)
+TEST_OBJECTS=$(OBJECTS) $(TEST_SOURCES:%.c=%.o)
 
 # Required flags
 COMMON_FLAGS = -fno-strict-aliasing -fPIC -fno-omit-frame-pointer
@@ -29,7 +28,7 @@ COMMON_FLAGS += -DLINUX
 COMMON_FLAGS += -D_REENTRANT
 
 ifeq ($(OPT), true)
-    CFLAGS=-O1 $(COMMON_FLAGS) -DNDEBUG
+    CFLAGS=-Os $(COMMON_FLAGS) -DNDEBUG
 else
     CFLAGS=-g $(COMMON_FLAGS) -DDEBUG
 endif
@@ -38,7 +37,7 @@ endif
 LIBRARY=lib$(LIBNAME).so
 LDFLAGS=-Wl,-soname=$(LIBRARY) -static-libgcc -mimpure-text
 # Libraries we are dependent on
-LIBRARIES= -ldl -lc
+LIBRARIES= -lcurl
 # Building a shared library
 LINK_SHARED=$(LINK.c) -shared -o $@
 
@@ -48,8 +47,9 @@ ifeq ($(OS),Darwin)
 	JDK     = /Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
 	CC      = clang
 	CFLAGS += -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
-	LIBRARY = bin/lib$(LIBNAME).dylib
-	LPATH   = /Users/stephen/Library/Developer/Xcode/DerivedData/Agent-futybmjwxpndsxcvqeoojdbzvigz/Build/Products/Debug/
+	LIBRARY = lib$(LIBNAME).dylib
+	#LPATH  = /Users/stephen/Library/Developer/Xcode/DerivedData/Agent-futybmjwxpndsxcvqeoojdbzvigz/Build/Products/Debug/
+	LPATH	= .
 	LPATHN  = DYLD_LIBRARY_PATH
 	LDFLAGS = -dynamiclib -mimpure-text
 endif
@@ -65,18 +65,16 @@ ifeq ($(OS),Linux)
 	CC      = gcc
 	CFLAGS += -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux -I/vol/projects/stephen/curl/include
 	LIBRARY = bin/lib$(LIBNAME).so
-	LPATH   = bin/:/usr/pkg/lib:/vol/projects/stephen/curl/lib
+	LPATH   = .:/usr/pkg/lib:/vol/projects/stephen/curl/lib
 	LPATHN  = LD_LIBRARY_PATH
 	LDFLAGS+= -dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
 endif
 
-LIBRARIES=-lcurl
 LINK_SHARED=$(LINK.c) -shared -o $@
 
 J_OPTS = \
     -Xbootclasspath/a:$(JARFILE) \
     -agentlib:$(LIBNAME)=$(HOST),$@
-#    -Xcheck:jni
 
 ifeq ($(J_DEBUG),true)
     J_OPTS  += -agentlib:jdwp=transport=dt_socket,address=localhost:8000
@@ -91,27 +89,18 @@ endif
 all: $(LIBRARY) $(JARFILE)
 
 $(LIBRARY): $(OBJECTS)
-	mkdir -p bin
 	$(LINK_SHARED) $(OBJECTS) $(LIBRARIES)
 
-tests: test/utils
+tests: test-utils
 
-test/%: $(TEST_OBJECTS)
-	mkdir -p test
-	$(CC) -o test/utils $(TEST_OBJECTS) $(LIBRARIES)
+test-utils: $(TEST_OBJECTS)
+	$(CC) -o test-utils $(TEST_OBJECTS) $(LIBRARIES)
 
-objects/%.o: src/%.c
-	mkdir -p objects
+%.o: %.c
 	$(CC) $(CFLAGS) -c $? -o $@
 
-$(JARFILE): $(JAVA_SOURCES)
-	mkdir -p bin
-	mkdir -p classes
-	$(JDK)/bin/javac -d classes $(JAVA_SOURCES)
-	(cd classes; $(JDK)/bin/jar cf ../$@ *)
-
 clean:
-	rm -f -r bin classes objects tmp/pre/* tmp/post/*
+	rm -f -r $(LIBRARY) $(TEST_OBJECTS) test-utils tmp/pre/* tmp/post/*
 
 test: all
 	$(JAVA) -version

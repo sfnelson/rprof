@@ -18,6 +18,7 @@ public class Clazz implements DataObject<ClazzId, Clazz> {
 	public static final int CLASS_INCLUDE_MATCHED = 0x4;
 	public static final int CLASS_EXCLUDE_MATCHED = 0x8;
 	public static final int COLLECTION = 0x10;
+	public static final int GENERATED = 0x20;
 
 	@NotNull
 	private ClazzId id;

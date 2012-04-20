@@ -1,9 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.db;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -526,11 +523,15 @@ public class Database {
 				} else {
 					long max = 0;
 					for (String dbname : mongo.getDatabaseNames()) {
-						if (dbname.startsWith("rprof")) {
+						if (dbname.startsWith("rprof_")) {
 							DB db = mongo.getDB(dbname);
-							DBObject properties = db.getCollection("properties").findOne();
-							if (properties.containsField("_id")) {
-								short id = ((Long) properties.get("_id")).shortValue();
+							Scanner sc = new Scanner(dbname);
+							sc.useDelimiter("_");
+							short id;
+							if (sc.hasNext()) sc.next();
+							if (sc.hasNext()) sc.next();
+							if (sc.hasNextShort()) {
+								id = sc.nextShort();
 								if (id > max) max = id;
 							}
 						}

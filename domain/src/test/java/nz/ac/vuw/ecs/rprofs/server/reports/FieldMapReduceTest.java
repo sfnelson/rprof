@@ -51,7 +51,7 @@ public class FieldMapReduceTest {
 		ClazzId classId = new ClazzId(14636698788954648l);
 		f = new Field(fieldId, 1, "log", classId, "org/apache/fop/apps/FopFactoryConfigurator",
 				"Lorg/apache/commons/logging/Log;", 18);
-		Instance.FieldInfo info = new Instance.FieldInfo(fieldId, "log");
+		Instance.FieldInfo info = new Instance.FieldInfo(fieldId);
 		info.setReads(0);
 		info.setWrites(1);
 		info.setFirstWrite(new EventId(14636698789177498l));
@@ -84,7 +84,7 @@ public class FieldMapReduceTest {
 		f = new Field(fid, 1, "color", new ClazzId(5066549580793263l),
 				"org/apache/fop/fo/properties/ColorProperty", "Ljava/awt/Color", 20);
 
-		Instance.FieldInfo info = new Instance.FieldInfo(fid, "color");
+		Instance.FieldInfo info = new Instance.FieldInfo(fid);
 		info.setFirstRead(new EventId(5066549581444944l));
 		info.setLastRead(new EventId(5066549581444946l));
 		info.setFirstWrite(new EventId(5066549581444939l));

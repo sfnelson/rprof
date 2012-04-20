@@ -52,20 +52,21 @@ public class FieldMapReduce implements MapReduce<Instance, FieldSummaryId, Field
 			boolean isFinal = (lastWrite == null)
 					|| (constructor != null && lastWrite.before(constructor) && info.getWrites() <= 1);
 
+			/*
 			if (isDeclaredFinal && !isStationary) {
-				//System.out.println(field + " is declared final but not stationary");
-				//assert false;
+				System.out.println(field + " is declared final but not stationary");
+				assert false;
 			}
 
 			if (isDeclaredFinal && !isConstructed) {
-				//System.out.println(field + " is declared final but not constructed");
-				//assert false;
+				System.out.println(field + " is declared final but not constructed");
+				assert false;
 			}
 
 			if (isDeclaredFinal && !isFinal) {
-				//System.out.println(field + " is declared final but not final");
-				//assert false;
-			}
+				System.out.println(field + " is declared final but not final");
+				assert false;
+			}*/
 
 			emitter.emit(id, new FieldSummary(id, packageName, name, description,
 					isDeclaredFinal, isStationary, isConstructed, isFinal,

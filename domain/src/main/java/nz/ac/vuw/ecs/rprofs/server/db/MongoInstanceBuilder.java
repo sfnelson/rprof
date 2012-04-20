@@ -81,7 +81,6 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 	@SuppressWarnings("unchecked")
 	public MongoInstanceBuilder addFieldInfo(Instance.FieldInfo info) {
 		BasicDBObject i = new BasicDBObject("_id", info.getId().getValue());
-		i.append("name", info.getName());
 		i.append("reads", info.getReads());
 		if (info.getReads() > 0) {
 			i.append("firstRead", info.getFirstRead().getValue());
@@ -150,7 +149,7 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 			for (DBObject field : (List<DBObject>) b.get("fields")) {
 				FieldId fieldId = new FieldId((Long) field.get("_id"));
 				String name = (String) field.get("name");
-				Instance.FieldInfo f = new Instance.FieldInfo(fieldId, name);
+				Instance.FieldInfo f = new Instance.FieldInfo(fieldId);
 				f.setReads((Integer) field.get("reads"));
 				if (f.getReads() > 0) {
 					f.setFirstRead(new EventId((Long) field.get("firstRead")));

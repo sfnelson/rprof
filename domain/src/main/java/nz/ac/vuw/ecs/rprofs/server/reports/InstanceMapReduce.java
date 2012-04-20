@@ -40,11 +40,8 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 
 		Context.setDataset(dataset);
 		Clazz clazz = null;
-		Field field = null;
 		Method method = null;
-		if (e.getField() != null) {
-			field = database.findEntity(e.getField());
-		} else if (e.getMethod() != null) {
+		if (e.getMethod() != null) {
 			method = database.findEntity(e.getMethod());
 			if (method != null) {
 				clazz = database.findEntity(method.getOwner());
@@ -56,25 +53,24 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 		Instance.FieldInfo info;
 		switch (e.getEvent()) {
 			case Event.FIELD_READ:
-				info = new Instance.FieldInfo(field);
+				info = new Instance.FieldInfo(e.getField());
 				info.setReads(1);
 				info.setFirstRead(e.getId());
 				info.setLastRead(e.getId());
-				result.addFieldInfo(field.getId(), info);
+				result.addFieldInfo(e.getField(), info);
 				break;
 			case Event.FIELD_WRITE:
-				info = new Instance.FieldInfo(field);
+				info = new Instance.FieldInfo(e.getField());
 				info.setWrites(1);
 				info.setFirstWrite(e.getId());
 				info.setLastWrite(e.getId());
-				result.addFieldInfo(field.getId(), info);
+				result.addFieldInfo(e.getField(), info);
 				break;
 			case Event.METHOD_RETURN:
 			case Event.METHOD_EXCEPTION:
-				assert method != null;
 				if (MethodUtils.isInit(method)) {
 					result.setType(e.getClazz());
-					result.setConstructor(method.getId());
+					result.setConstructor(e.getMethod());
 					result.setConstructorReturn(e.getId());
 				}
 				break;

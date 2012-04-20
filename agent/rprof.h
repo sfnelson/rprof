@@ -17,7 +17,7 @@
 
 /* Agent library externals to export. */
 
-#define RPROF_CLASS_THREAD_ID 0x0000FFFF00000000ll
+#define RPROF_CLASS_THREAD_ID (0x0000FFFF00000000ll)
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *vm, char *options, void *reserved);
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *vm);

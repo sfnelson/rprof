@@ -1,0 +1,294 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DC4918A7153FE8C400A12CB6 /* agent_util.c in Sources */ = {isa = PBXBuildFile; fileRef = DC49188F153FE8C400A12CB6 /* agent_util.c */; };
+		DC4918A8153FE8C400A12CB6 /* agent_util.h in Headers */ = {isa = PBXBuildFile; fileRef = DC491890153FE8C400A12CB6 /* agent_util.h */; };
+		DC4918AF153FE8C400A12CB6 /* rprof_comm.c in Sources */ = {isa = PBXBuildFile; fileRef = DC49189C153FE8C400A12CB6 /* rprof_comm.c */; };
+		DC4918B0153FE8C400A12CB6 /* rprof_comm.h in Headers */ = {isa = PBXBuildFile; fileRef = DC49189D153FE8C400A12CB6 /* rprof_comm.h */; };
+		DC4918B1153FE8C400A12CB6 /* rprof_events.h in Headers */ = {isa = PBXBuildFile; fileRef = DC49189E153FE8C400A12CB6 /* rprof_events.h */; };
+		DC4918B2153FE8C400A12CB6 /* rprof_util.c in Sources */ = {isa = PBXBuildFile; fileRef = DC49189F153FE8C400A12CB6 /* rprof_util.c */; };
+		DC4918B3153FE8C400A12CB6 /* rprof_util.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A0153FE8C400A12CB6 /* rprof_util.h */; };
+		DC4918B4153FE8C400A12CB6 /* rprof.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A1153FE8C400A12CB6 /* rprof.c */; };
+		DC4918B5153FE8C400A12CB6 /* rprof.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A2153FE8C400A12CB6 /* rprof.h */; };
+		DC4918B6153FE8C400A12CB6 /* stringlist.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A3153FE8C400A12CB6 /* stringlist.c */; };
+		DC4918B7153FE8C400A12CB6 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A4153FE8C400A12CB6 /* stringlist.h */; };
+		DC4918B8153FE8C400A12CB6 /* test_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A5153FE8C400A12CB6 /* test_utils.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		DC491888153FE8A300A12CB6 /* libagent.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libagent.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC49188F153FE8C400A12CB6 /* agent_util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = agent_util.c; sourceTree = "<group>"; };
+		DC491890153FE8C400A12CB6 /* agent_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = agent_util.h; sourceTree = "<group>"; };
+		DC49189C153FE8C400A12CB6 /* rprof_comm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof_comm.c; sourceTree = "<group>"; };
+		DC49189D153FE8C400A12CB6 /* rprof_comm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_comm.h; sourceTree = "<group>"; };
+		DC49189E153FE8C400A12CB6 /* rprof_events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_events.h; sourceTree = "<group>"; };
+		DC49189F153FE8C400A12CB6 /* rprof_util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof_util.c; sourceTree = "<group>"; };
+		DC4918A0153FE8C400A12CB6 /* rprof_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_util.h; sourceTree = "<group>"; };
+		DC4918A1153FE8C400A12CB6 /* rprof.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof.c; sourceTree = "<group>"; };
+		DC4918A2153FE8C400A12CB6 /* rprof.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof.h; sourceTree = "<group>"; };
+		DC4918A3153FE8C400A12CB6 /* stringlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stringlist.c; sourceTree = "<group>"; };
+		DC4918A4153FE8C400A12CB6 /* stringlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stringlist.h; sourceTree = "<group>"; };
+		DC4918A5153FE8C400A12CB6 /* test_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_utils.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DC491885153FE8A300A12CB6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DC49187D153FE8A300A12CB6 = {
+			isa = PBXGroup;
+			children = (
+				DC49188F153FE8C400A12CB6 /* agent_util.c */,
+				DC491890153FE8C400A12CB6 /* agent_util.h */,
+				DC49189C153FE8C400A12CB6 /* rprof_comm.c */,
+				DC49189D153FE8C400A12CB6 /* rprof_comm.h */,
+				DC49189E153FE8C400A12CB6 /* rprof_events.h */,
+				DC49189F153FE8C400A12CB6 /* rprof_util.c */,
+				DC4918A0153FE8C400A12CB6 /* rprof_util.h */,
+				DC4918A1153FE8C400A12CB6 /* rprof.c */,
+				DC4918A2153FE8C400A12CB6 /* rprof.h */,
+				DC4918A3153FE8C400A12CB6 /* stringlist.c */,
+				DC4918A4153FE8C400A12CB6 /* stringlist.h */,
+				DC4918A5153FE8C400A12CB6 /* test_utils.c */,
+				DC491889153FE8A300A12CB6 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DC491889153FE8A300A12CB6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DC491888153FE8A300A12CB6 /* libagent.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		DC491886153FE8A300A12CB6 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC4918A8153FE8C400A12CB6 /* agent_util.h in Headers */,
+				DC4918B0153FE8C400A12CB6 /* rprof_comm.h in Headers */,
+				DC4918B1153FE8C400A12CB6 /* rprof_events.h in Headers */,
+				DC4918B3153FE8C400A12CB6 /* rprof_util.h in Headers */,
+				DC4918B5153FE8C400A12CB6 /* rprof.h in Headers */,
+				DC4918B7153FE8C400A12CB6 /* stringlist.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		DC491887153FE8A300A12CB6 /* agent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC49188C153FE8A300A12CB6 /* Build configuration list for PBXNativeTarget "agent" */;
+			buildPhases = (
+				DC491884153FE8A300A12CB6 /* Sources */,
+				DC491885153FE8A300A12CB6 /* Frameworks */,
+				DC491886153FE8A300A12CB6 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = agent;
+			productName = agent;
+			productReference = DC491888153FE8A300A12CB6 /* libagent.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DC49187F153FE8A300A12CB6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+				ORGANIZATIONNAME = "Victoria University of Wellington";
+			};
+			buildConfigurationList = DC491882153FE8A300A12CB6 /* Build configuration list for PBXProject "agent" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = DC49187D153FE8A300A12CB6;
+			productRefGroup = DC491889153FE8A300A12CB6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DC491887153FE8A300A12CB6 /* agent */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DC491884153FE8A300A12CB6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC4918A7153FE8C400A12CB6 /* agent_util.c in Sources */,
+				DC4918AF153FE8C400A12CB6 /* rprof_comm.c in Sources */,
+				DC4918B2153FE8C400A12CB6 /* rprof_util.c in Sources */,
+				DC4918B4153FE8C400A12CB6 /* rprof.c in Sources */,
+				DC4918B6153FE8C400A12CB6 /* stringlist.c in Sources */,
+				DC4918B8153FE8C400A12CB6 /* test_utils.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		DC49188A153FE8A300A12CB6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
+				GCC_TREAT_INCOMPATIBLE_POINTER_TYPE_WARNINGS_AS_ERRORS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = YES;
+				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MULTIPLE_DEFINITION_TYPES_FOR_SELECTOR = YES;
+				GCC_WARN_PEDANTIC = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_SIGN_COMPARE = YES;
+				GCC_WARN_STRICT_SELECTOR_MATCH = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNKNOWN_PRAGMAS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-lcurl";
+				"PRELINK_LIBS[arch=x86_64]" = "";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+				"USER_HEADER_SEARCH_PATHS[arch=x86_64]" = "\"/Library/Java/JavaVirtualMachines/JDK 1.7.0 Developer Preview.jdk/Contents/Home/include\" \"/Library/Java/JavaVirtualMachines/JDK 1.7.0 Developer Preview.jdk/Contents/Home/include/darwin\"";
+				VALID_ARCHS = x86_64;
+				WARNING_LDFLAGS = /usr/lib/libcurl.dylib;
+			};
+			name = Debug;
+		};
+		DC49188B153FE8A300A12CB6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
+				GCC_TREAT_INCOMPATIBLE_POINTER_TYPE_WARNINGS_AS_ERRORS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = YES;
+				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MULTIPLE_DEFINITION_TYPES_FOR_SELECTOR = YES;
+				GCC_WARN_PEDANTIC = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_SIGN_COMPARE = YES;
+				GCC_WARN_STRICT_SELECTOR_MATCH = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNKNOWN_PRAGMAS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_LDFLAGS = "-lcurl";
+				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
+				"USER_HEADER_SEARCH_PATHS[arch=x86_64]" = "\"/Library/Java/JavaVirtualMachines/JDK 1.7.0 Developer Preview.jdk/Contents/Home/include\" \"/Library/Java/JavaVirtualMachines/JDK 1.7.0 Developer Preview.jdk/Contents/Home/include/darwin\"";
+				VALID_ARCHS = x86_64;
+				WARNING_LDFLAGS = "";
+			};
+			name = Release;
+		};
+		DC49188D153FE8A300A12CB6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIPFLAGS = x86_64;
+			};
+			name = Debug;
+		};
+		DC49188E153FE8A300A12CB6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIPFLAGS = x86_64;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DC491882153FE8A300A12CB6 /* Build configuration list for PBXProject "agent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC49188A153FE8A300A12CB6 /* Debug */,
+				DC49188B153FE8A300A12CB6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DC49188C153FE8A300A12CB6 /* Build configuration list for PBXNativeTarget "agent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC49188D153FE8A300A12CB6 /* Debug */,
+				DC49188E153FE8A300A12CB6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DC49187F153FE8A300A12CB6 /* Project object */;
+}

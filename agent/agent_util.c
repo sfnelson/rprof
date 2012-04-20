@@ -52,6 +52,9 @@ stdout_message(const char * format, ...)
 
 /* Send message to stderr or whatever the error output location is and exit  */
 void
+fatal_error(const char * format, ...) __attribute__ ((__noreturn__));
+
+void
 fatal_error(const char * format, ...)
 {
     va_list ap;

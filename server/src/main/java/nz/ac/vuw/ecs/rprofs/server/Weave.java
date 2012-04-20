@@ -64,7 +64,7 @@ public class Weave extends HttpServlet {
 
 			result = buffer;
 
-			log.debug("ignoring {} (interface)", cname);
+			log.debug("interface {} (ignored)", cname);
 
 		} else {
 

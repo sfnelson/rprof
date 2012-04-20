@@ -178,9 +178,6 @@ public class Instance implements DataObject<InstanceId, Instance> {
 		@NotNull
 		private FieldId id;
 
-		@NotNull
-		private String name;
-
 		private int reads = 0;
 
 		@Nullable
@@ -206,14 +203,8 @@ public class Instance implements DataObject<InstanceId, Instance> {
 		public FieldInfo() {
 		}
 
-		public FieldInfo(FieldId id, String name) {
+		public FieldInfo(FieldId id) {
 			this.id = id;
-			this.name = name;
-		}
-
-		public FieldInfo(Field field) {
-			this.id = field.getId();
-			this.name = field.getName();
 		}
 
 		public FieldId getId() {
@@ -222,14 +213,6 @@ public class Instance implements DataObject<InstanceId, Instance> {
 
 		public void setId(FieldId id) {
 			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
 		}
 
 		public int getReads() {

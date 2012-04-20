@@ -1,32 +1,105 @@
 #include "rprof_util.h"
 #include "agent_util.h"
 
-// TODO this is not thread-safe :-(
+/* TODO this is not thread-safe :-( */
+
+#define LOAD_FACTOR 0.7f
 
 typedef struct _r_fieldTable {
-    uint32_t size;
-    uint32_t max;
+    size_t size;
+    size_t max;
     r_fieldRecord *entries;
 } field_map;
 
-r_fieldRecord* find(r_fieldTable table, jlong class_tag, jfieldID field)
+typedef struct {
+    jfieldID field;
+    jint fid;
+} FieldEntry;
+
+typedef struct {
+    jlong cid;
+    jclass cls;
+    size_t num_fields;
+    FieldEntry *fields;
+} ClassEntry;
+
+typedef struct _r_class_table {
+    size_t size;
+    size_t max;
+    ClassEntry *classes;
+} ClassTable;
+
+
+/*
+static ClassEntry *
+_find_cls(ClassTable *table, jint cnum)
 {
-	uint32_t key, max, index, i;
-	uintptr_t fieldAsInt = (intptr_t) field;
-	r_fieldRecord *result;
+    size_t index = (size_t) cnum;
+
+    if (index >= table->size) {
+        fatal_error("request for cnum greater than table size!");
+    }
+    
+    return &(table->classes[cnum]);
+}
+
+static FieldEntry *
+_find_field(ClassEntry *cls, jfieldID field)
+{
+    size_t i;
+    
+    for (i = 0; i < cls->num_fields; i++) {
+        if (cls->fields[i].field == field) {
+            return &(cls->fields[i]);
+        }
+    }
+    
+    return NULL;
+}*/
+
+volatile size_t numProbes;
+volatile size_t numSearches;
+
+static r_fieldRecord *
+find(r_fieldTable table, jlong class_tag, jfieldID field)
+{
+    r_fieldRecord *result;
+    size_t key, max, index, i;
+	size_t fieldAsInt = (size_t) field;
+    size_t classAsInt = (size_t) class_tag;
 
     max = table->max;
-	key = (uint32_t) ((fieldAsInt ^ class_tag) % max);
+    
+    key = fieldAsInt;
+    key ^= fieldAsInt >> 20;
+    key ^= fieldAsInt >> 12;
+    key ^= fieldAsInt >> 7;
+    key ^= fieldAsInt >> 4;
+    key ^= classAsInt;
+    key ^= classAsInt >> 20;
+    key ^= classAsInt >> 12;
+    key ^= classAsInt >> 7;
+    key ^= classAsInt >> 4;
+	key &= (max - 1);
+
 	index = 0;
-	while (index < max) {
-		i = ((uint32_t)(key + index/2.0f + index*index/2.0f)) % max;
+	while (JNI_TRUE) {
+         /* quad probing, guaranteed not to repeat before $max hops */
+		i = ((size_t)(key + index/2.0f + index*index/2.0f)) % max;
 		result = &(table->entries[i]);
-		if (result->field == NULL) return result; // empty
-		if (result->class_tag == class_tag && result->field == field) return result; // found
+		if (result->field == NULL) break; /* empty */
+		if (result->class_tag == class_tag && result->field == field) break; /* found */
 		index++;
+        if (index >= max) {
+            fatal_error("ERROR: probed all hash table entries without finding entry\n");            
+            return NULL;
+        }
 	}
-	fatal_error("ERROR: probed all hash table entries without finding entry\n");
-	return NULL;
+
+	numProbes += index;
+    numSearches += 1;
+    
+    return result;
 }
 
 void find_field(r_fieldTable table, jlong class_tag, jfieldID field, r_fieldRecord* target)
@@ -34,10 +107,10 @@ void find_field(r_fieldTable table, jlong class_tag, jfieldID field, r_fieldReco
     memcpy(target, find(table, class_tag, field), sizeof(r_fieldRecord));
 }
 
-void store_fields(r_fieldTable *table, r_fieldRecord *toStore, uint32_t len)
+void store_fields(r_fieldTable *table, r_fieldRecord *toStore, size_t len)
 {
+    size_t size, max, i, old;
     r_fieldTable old_table, new_table;
-    uint32_t size, max, i, old;
     r_fieldRecord *in, *out;
 
     old_table = *table;
@@ -52,11 +125,12 @@ void store_fields(r_fieldTable *table, r_fieldRecord *toStore, uint32_t len)
         old = 0;
     }
 
-    while (size > 0.7f * max) max *= 2;
+    while (size > LOAD_FACTOR * max) max *= 2;
 
     new_table = malloc(sizeof(field_map));
     if (new_table == NULL) {
         fatal_error("ERROR: unable to allocate space for a field table\n");
+        return;
     }
 
     new_table->size = size;
@@ -90,11 +164,14 @@ void store_fields(r_fieldTable *table, r_fieldRecord *toStore, uint32_t len)
         free(old_table->entries);
         free(old_table);
     }
+    
+    numProbes = 0;
+    numSearches = 0;
 }
 
 void visit_fields(r_fieldTable table, void (*callback) (r_fieldRecord*))
 {
-    uint32_t i, max;
+    size_t i, max;
     r_fieldRecord *tmp;
 
     max = table->max;
@@ -116,7 +193,7 @@ void cleanup_fields(r_fieldTable *table)
 }
 
 
-// ==== Class List Functions
+/* ==== Class List Functions */
 
 void store_class(r_classList* classes, const char *cname)
 {

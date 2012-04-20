@@ -52,7 +52,9 @@ abstract class BasicClassWeaver extends ClassAdapter {
 
 	@Override
 	public void visitEnd() {
-		AgentInitMethodWeaver.generate(cr, this);
+		if ((cr.getProperties() & Clazz.GENERATED) == 0) {
+			AgentInitMethodWeaver.generate(cr, this);
+		}
 
 		if (!visitedCLInit && (cr.getClazz().getAccess() & ACC_INTERFACE) == 0) {
 			// CLInitMethodWeaver.generate(cr, this);

@@ -29,6 +29,10 @@ public class Weaver {
 			.add("java/util/Vector")
 			.get();
 
+	public static final Pattern generated = new PatternBuilder()
+			.add("sun/reflect/Generated.*")
+			.get();
+
 	public static final Pattern excludes = new PatternBuilder()
 //			.add("java/awt/.*")        // jhotdraw has font problems if this packages is included
 //			.add("com/sun/.*")
@@ -68,7 +72,9 @@ public class Weaver {
 			if (collections.matcher(record.getName()).find()) {
 				record.addProperty(Clazz.COLLECTION);
 				log.trace("{} is a collection", record.getName());
-				//record.getWatches().clear(); -- this fixed hashmap's loadfactor issue
+			} else if (generated.matcher(record.getName()).find()) {
+				record.addProperty(Clazz.GENERATED);
+				log.trace("{} is generated", record.getName());
 			}
 			if (includes.matcher(record.getName()).find()) {
 				record.addProperty(Clazz.CLASS_INCLUDE_MATCHED);

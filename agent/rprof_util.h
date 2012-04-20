@@ -38,7 +38,7 @@ typedef struct _r_fieldTable *r_fieldTable;
 
 typedef StringList *r_classList;
 
-void store_fields(r_fieldTable* table, r_fieldRecord* toStore, uint32_t len);
+void store_fields(r_fieldTable* table, r_fieldRecord* toStore, size_t len);
 void visit_fields(r_fieldTable table, void (*callback) (r_fieldRecord*));
 void find_field(r_fieldTable table, jlong class_tag, jfieldID fieldId, r_fieldRecord* target);
 void cleanup_fields(r_fieldTable* table);

@@ -64,7 +64,7 @@ ifeq ($(OS),Linux)
 	endif
 	CC      = gcc
 	CFLAGS += -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux -I/vol/projects/stephen/curl/include
-	LIBRARY = bin/lib$(LIBNAME).so
+	LIBRARY = lib$(LIBNAME).so
 	LPATH   = .:/usr/pkg/lib:/vol/projects/stephen/curl/lib
 	LPATHN  = LD_LIBRARY_PATH
 	LDFLAGS+= -dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib

@@ -120,6 +120,9 @@ list: all
 batik: all
 	$(JAVA) -jar $(DACAPO) -n 1 -t 1 batik
 
+eclipse: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 eclipse
+
 fop: all
 	$(JAVA) -jar $(DACAPO) -n 1 -t 1 fop
 
@@ -128,3 +131,7 @@ luindex: all
 
 lusearch: all
 	$(JAVA) -jar $(DACAPO) -n 1 -t 1 lusearch
+
+pmd: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 pmd
+

@@ -52,6 +52,9 @@
 
 #define ACC_INTERFACE 512
 
+#define _SAVE_OTHERS
+#define _RESTORE_OTHERS
+
 struct _m128 {
     uint64_t x;
     uint64_t y;
@@ -144,13 +147,6 @@ generate_object_tag()
 	return ++(gdata->nullCounter);
 }
 
-static jint
-get_class_num_from_tag(jlong tag)
-{
-    jint cnum = (jint) (tag & 0xffffffffLL);
-    return cnum;
-}
-
 static jlong
 tag_class(jvmtiEnv *jvmti, jclass cls, jint cnum)
 {
@@ -195,25 +191,25 @@ watch_field(r_fieldRecord *record)
 	jvmtiError error;
     
     /*
-     jlong ctag;
-     jint cnum;
-     char *cname, *fname;
-     
-     error = (*jvmti)->GetClassSignature(jvmti, record->cls, &cname, NULL);
-     check_jvmti_error(jvmti, error, "could not get class name\n");
-     
-     error = (*jvmti)->GetFieldName(jvmti, record->cls, record->field, &fname, NULL, NULL);
-     check_jvmti_error(jvmti, error, "could not get field name\n");
-     
-     error = (*jvmti)->GetTag(jvmti, record->cls, &ctag);
-     check_jvmti_error(jvmti, error, "could not get class tag\n");
-     
-     cnum = get_class_num_from_tag(ctag);
-     
-     stdout_message("--watching %x,%x (%s.%s) \n", cnum, record->field, cname, fname);
-     deallocate(jvmti, cname);
-     deallocate(jvmti, fname);
-     */
+    jlong ctag;
+    jint cnum;
+    char *cname, *fname;
+    
+    error = (*jvmti)->GetClassSignature(jvmti, record->cls, &cname, NULL);
+    check_jvmti_error(jvmti, error, "could not get class name\n");
+    
+    error = (*jvmti)->GetFieldName(jvmti, record->cls, record->field, &fname, NULL, NULL);
+    check_jvmti_error(jvmti, error, "could not get field name\n");
+    
+    error = (*jvmti)->GetTag(jvmti, record->cls, &ctag);
+    check_jvmti_error(jvmti, error, "could not get class tag\n");
+    
+    cnum = TAG_TO_CNUM(ctag);
+    
+    stdout_message("--watching %x,%x (%s.%s) \n", cnum, record->field, cname, fname);
+    deallocate(jvmti, cname);
+    deallocate(jvmti, fname);
+    */
     
 	error = (*jvmti)->SetFieldAccessWatch(jvmti, record->cls, record->field);
 	check_jvmti_error(jvmti, error, "Cannot add access watch to field");
@@ -223,7 +219,7 @@ watch_field(r_fieldRecord *record)
 
 /* Java Native Method for <clinit> */
 static void
-HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker, jobject cls, jint cnum, jintArray fieldsToWatch)
+HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker, jobject cls, jint cnum, jintArray toWatch)
 {
 	jvmtiError error;
 	jvmtiEnv *jvmti;
@@ -231,7 +227,7 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker, jobject cls, jint cnum, 
 	jint numFields;
 	jint* targetFields;
 	jfieldID* fields;
-	r_fieldRecord* fieldsToStore;
+	r_fieldRecord* toStore;
 	r_fieldRecord* record;
 	size_t i;
 	jboolean vmInitialized;
@@ -259,46 +255,51 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker, jobject cls, jint cnum, 
     
 	comm_log(jvmti, &event);
     
-	if (fieldsToWatch != NULL) {
-		size_t len = (size_t) (*env)->GetArrayLength(env, fieldsToWatch);
-        targetFields = (*env)->GetIntArrayElements(env, fieldsToWatch, NULL);        /* (1) */
-        vmInitialized = gdata->vmInitialized;
-        
-		error = (*jvmti)->GetClassFields(jvmti, cls, &numFields, &fields);           /* (2) */
-		check_jvmti_error(jvmti, error, "cannot get fields for new class");
-        
-		fieldsToStore = malloc(sizeof(r_fieldRecord) * len);                         /* (3) */
-		if (fieldsToStore == NULL) {
-		    fatal_error("ERROR: Ran out of malloc() space\n");
-            return;
-		}
-        
-        cls = (*env)->NewGlobalRef(env, cls);
-        
-		for (i = 0; i < len; i++) {
-		    record = &(fieldsToStore[i]);
-			record->id.id.cls = (jint) cnum;
-			record->id.id.field = (jshort) targetFields[i];
-			record->cls = cls;
-			record->class_tag = tag;
-            /* Fields begin at 1 in our profiler and 0 in jvmti */
-			record->field = fields[targetFields[i] - 1];
-            
-			if (vmInitialized == JNI_TRUE) {
-			    watch_field(record);
-			}
-		}
-        
-        enterCriticalSection(jvmti); {
-            /* always store fields, they're looked up later */
-		    store_fields(&gdata->fields, fieldsToStore, len);
-		}; exitCriticalSection(jvmti);
-        
-        /* cleanup */
-        (*env)->ReleaseIntArrayElements(env, fieldsToWatch, targetFields, JNI_ABORT);/* (1) */
-		deallocate(jvmti, fields);                                                   /* (2) */
-		(void)free(fieldsToStore);                                                   /* (3) */
-	}
+	if (toWatch == NULL) return;
+    
+    size_t len = (size_t) (*env)->GetArrayLength(env, toWatch);
+    targetFields = (*env)->GetIntArrayElements(env, toWatch, NULL);     /* (1) */
+    vmInitialized = gdata->vmInitialized;
+    
+    error = (*jvmti)->GetClassFields(jvmti, cls, &numFields, &fields);  /* (2) */
+    check_jvmti_error(jvmti, error, "cannot get fields for new class");
+    
+    toStore = malloc(sizeof(r_fieldRecord) * len);                      /* (3) */
+    if (toStore == NULL) {
+        fatal_error("ERROR: Ran out of malloc() space\n");
+        return;
+    }
+    
+    cls = (*env)->NewGlobalRef(env, cls);
+    
+    
+    for (i = 0; i < len; i++) {
+        record = &(toStore[i]);
+        record->id.id.cls = (jint) cnum;
+        record->id.id.field = (jshort) targetFields[i];
+        record->cls = cls;
+        record->class_tag = tag;
+        /* Fields begin at 1 in our profiler and 0 in jvmti */
+        record->field = fields[targetFields[i] - 1];
+    }
+    
+    /* always store fields, watches are added later if we're not ready yet */
+    enterCriticalSection(jvmti); {
+        store_fields(&gdata->fields, toStore, len);
+    }; exitCriticalSection(jvmti);
+    
+    /* don't watch fields until after they've been inserted into the map */
+    if (vmInitialized == JNI_TRUE) {
+        for (i = 0; i < len; i++) {
+            watch_field(&(toStore[i]));
+        }
+    }
+    
+    /* cleanup */
+    (*env)->ReleaseIntArrayElements(env, toWatch, targetFields,   /* (1) */
+                                    JNI_ABORT);
+    deallocate(jvmti, fields);                                          /* (2) */
+    (void)free(toStore);                                                /* (3) */
 }
 
 /* Java Native Method for Object.<init> */
@@ -332,7 +333,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass site, jthread thread, jclass klas
     
 	event.type = RPROF_OBJECT_ALLOCATED;
 	event.thread = get_tag(jvmti, thread);
-	event.cid = get_class_num_from_tag(type);
+	event.cid = TAG_TO_CNUM(type);
 	event.args_len = 1;
 	event.args[0] = id;
     
@@ -840,7 +841,7 @@ cbClassFileLoadHook(jvmtiEnv *jvmti, JNIEnv* env,
 				size_t written;
                 int err;
                 char cfname[strlen(classname)+1];
-
+                
 				strcpy(cfname, classname);
                 
 				for (i = 0; i < strlen(cfname); i++) {
@@ -904,12 +905,12 @@ findFieldRecord(jvmtiEnv *jvmti, JNIEnv *env, jclass field_klass, jfieldID field
     char *cname, *fname;
     
     memset(record, 0, sizeof(r_fieldRecord));
-
+    
     cls = field_klass;
     class_tag = get_tag(jvmti, cls);
     find_field(gdata->fields, class_tag, field, record);
     
-    while (cls == NULL || record->cls == NULL) {
+    while (cls != NULL && TAG_TO_CNUM(class_tag) != 1 && record->cls == NULL) {
         class_tag = get_tag(jvmti, cls);
         find_field(gdata->fields, class_tag, field, record);
         if (record->cls == NULL) {
@@ -925,9 +926,9 @@ findFieldRecord(jvmtiEnv *jvmti, JNIEnv *env, jclass field_klass, jfieldID field
                 (*jvmti)->GetClassSignature(jvmti, field_klass, &cname, NULL);
                 (*jvmti)->GetFieldName(jvmti, field_klass, field, &fname, NULL, NULL);
                 stdout_message("stored super field for faster access: %s.%s (%llx.%llx)\n",
-                            cname, fname,
-                            class_tag, field,
-                            record->class_tag, record->field);
+                               cname, fname,
+                               class_tag, field,
+                               record->class_tag, record->field);
                 deallocate(jvmti, cname);
                 deallocate(jvmti, fname);
             } exitCriticalSection(jvmti);
@@ -968,12 +969,10 @@ _cbFieldAccess(jvmtiEnv *jvmti,
 {
     r_event event;
     r_fieldRecord record;
-
+    
     memset(&event, 0, sizeof(r_event));
     
-    /*enterCriticalSection(jvmti); {*/
-        findFieldRecord(jvmti, env, field_klass, field, &record);
-    /*}; exitCriticalSection(jvmti);*/
+    findFieldRecord(jvmti, env, field_klass, field, &record);
     
     event.thread = get_tag(jvmti, thread);
     event.type = RPROF_FIELD_READ;
@@ -995,11 +994,14 @@ cbFieldAccess(jvmtiEnv *jvmti,
               jobject object,
               jfieldID field)
 {
+    _SAVE_OTHERS
     _SAVE_XMM
+    
     
     _cbFieldAccess(jvmti, env, thread, method, location, field_klass, object, field);
     
     _RESTORE_XMM
+    _RESTORE_OTHERS
 }
 
 static void _cbFieldModification(jvmtiEnv* jvmti,
@@ -1027,12 +1029,10 @@ _cbFieldModification(jvmtiEnv *jvmti,
 {
     r_event event;
     r_fieldRecord record;
-
+    
     memset(&event, 0, sizeof(event));
     
-    /* enterCriticalSection(jvmti); { */
-        findFieldRecord(jvmti, env, field_klass, field, &record);
-    /*}; exitCriticalSection(jvmti); */
+    findFieldRecord(jvmti, env, field_klass, field, &record);
     
     event.type = RPROF_FIELD_WRITE;
     event.thread = get_tag(jvmti, thread);

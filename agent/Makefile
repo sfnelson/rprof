@@ -13,7 +13,6 @@ TEST_SOURCES=test_utils.c
 
 JARFILE=../jvmti-lib/target/jvmti-lib-1.0-SNAPSHOT.jar
 
-DACAPO=dacapo-20110822.jar
 
 OBJECTS=$(SOURCES:%.c=%.o)
 TEST_OBJECTS=$(OBJECTS) $(TEST_SOURCES:%.c=%.o)
@@ -55,6 +54,7 @@ ifeq ($(OS),Darwin)
 	LPATH	= .
 	LPATHN  = DYLD_LIBRARY_PATH
 	LDFLAGS = -dynamiclib -mimpure-text
+	DACAPO  = dacapo-20110822.jar
 endif
 
 ifeq ($(OS),Linux)
@@ -71,6 +71,7 @@ ifeq ($(OS),Linux)
 	LPATH   = .:/usr/pkg/lib:/vol/projects/stephen/curl/lib
 	LPATHN  = LD_LIBRARY_PATH
 	LDFLAGS+= -dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib
+	DACAPO  = /vol/projects/stephen/dacapo/dacapo-9.12-bach.jar
 endif
 
 LINK_SHARED=$(LINK.c) -shared -o $@

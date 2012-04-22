@@ -27,7 +27,7 @@ COMMON_FLAGS += -DLINUX
 # To make sure code is reentrant
 COMMON_FLAGS += -D_REENTRANT
 
-ifeq ($(OPT), true)
+ifdef OPT
     CFLAGS=-Os $(COMMON_FLAGS) -DNDEBUG
 else
     CFLAGS=-g $(COMMON_FLAGS) -DDEBUG
@@ -41,7 +41,10 @@ LIBRARIES= -lcurl
 # Building a shared library
 LINK_SHARED=$(LINK.c) -shared -o $@
 
-HOST=[::1]:8888
+ifdef HOST
+else
+	HOST=[::1]:8888
+endif
 
 ifeq ($(OS),Darwin)
 	JDK     = /Library/Java/JavaVirtualMachines/1.7.0.jdk/Contents/Home
@@ -64,7 +67,7 @@ ifeq ($(OS),Linux)
 	endif
 	CC      = gcc
 	CFLAGS += -I/usr/pkg/include -I$(JDK)/include -I$(JDK)/include/linux -I/vol/projects/stephen/curl/include
-	LIBRARY = bin/lib$(LIBNAME).so
+	LIBRARY = lib$(LIBNAME).so
 	LPATH   = .:/usr/pkg/lib:/vol/projects/stephen/curl/lib
 	LPATHN  = LD_LIBRARY_PATH
 	LDFLAGS+= -dynamiclib -static-libgcc -mimpure-text -L/usr/pkg/lib -L/vol/projects/stephen/curl/lib

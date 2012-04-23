@@ -8,7 +8,6 @@
 #include "rprof_classes.h"
 #include "rprof_fields.h"
 #include "rprof_events.h"
-#include "stringlist.h"
 
 /* -------------------------------------------------------------------
  * Some constant names that tie to Java class/method names.

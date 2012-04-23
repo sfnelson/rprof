@@ -244,7 +244,7 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker, jobject cls, jint cnum, 
         return;
     }
     
-	memset(&event, 0, sizeof(event));
+	bzero(&event, sizeof(event));
     
 	tag = tag_class(jvmti, cls, cnum);
     
@@ -269,6 +269,7 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker, jobject cls, jint cnum, 
         fatal_error("ERROR: Ran out of malloc() space\n");
         return;
     }
+    bzero(toStore, sizeof(r_fieldRecord) * len);
     
     cls = (*env)->NewGlobalRef(env, cls);
     
@@ -316,7 +317,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass site, jthread thread, jclass klas
     
     jvmti = gdata->jvmti;
     
-	memset(&event, 0, sizeof(event));
+	bzero(&event, sizeof(event));
     
 	if (id == 0) {
 	    id = generate_object_tag();
@@ -353,7 +354,7 @@ HEAP_TRACKER_native_newarr(JNIEnv *env, jclass klass, jthread thread, jobject a,
     
 	jvmti = gdata->jvmti;
     
-	memset(&event, 0, sizeof(event));
+	bzero(&event, sizeof(event));
     
 	if (id == 0) {
         id = generate_object_tag();
@@ -381,7 +382,7 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass klass, jthread thread, jint cnum, 
 		return;
 	}
     
-	memset(&event, 0, sizeof(event));
+	bzero(&event, sizeof(event));
     
 	jvmti = gdata->jvmti;
     
@@ -418,7 +419,7 @@ HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
     
     jvmti = gdata->jvmti;
     
-    memset(&event, 0, sizeof(event));
+    bzero(&event, sizeof(event));
     
     event.type = RPROF_METHOD_RETURN;
     event.thread = get_tag(jvmti, thread);
@@ -446,7 +447,7 @@ HEAP_TRACKER_native_except(JNIEnv *env, jclass klass, jthread thread, jint cnum,
     
     jvmti = gdata->jvmti;
     
-    memset(&event, 0, sizeof(event));
+    bzero(&event, sizeof(event));
     
     event.type = RPROF_METHOD_EXCEPTION;
     event.thread = get_tag(jvmti, thread);
@@ -473,7 +474,7 @@ HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
     
     jvmti = gdata->jvmti;
     
-    memset(&event, 0, sizeof(event));
+    bzero(&event, sizeof(event));
     
     event.type = RPROF_METHOD_ENTER;
     event.thread = get_tag(gdata->jvmti, thread);
@@ -589,7 +590,7 @@ cbObjectTagger(jlong class_tag, jlong size, jlong* tag_ptr, jint length, void* u
 		*tag_ptr = generate_object_tag();
 	}
     
-    memset(&event, 0, sizeof(event));
+    bzero(&event, sizeof(event));
     
     event.type = RPROF_OBJECT_TAGGED;
     event.cid = (jint)(class_tag & 0xFFFFFFFFll);
@@ -630,7 +631,8 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 #endif
     
 	/* Iterate through heap, find all untagged objects allocated before this */
-	(void)memset(&heapCallbacks, 0, sizeof(heapCallbacks));
+	bzero(&heapCallbacks, sizeof(heapCallbacks));
+
 	heapCallbacks.heap_iteration_callback = &cbObjectTagger;
 	error = (*jvmti)->IterateThroughHeap(jvmti, 0, /* JVMTI_HEAP_FILTER_TAGGED, */
                                          NULL, &heapCallbacks, NULL);
@@ -703,7 +705,7 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 		 */
         
 		/* Clear out all callbacks. */
-		(void)memset(&callbacks, 0, sizeof(callbacks));
+		bzero(&callbacks, sizeof(callbacks));
 		error = (*jvmti)->SetEventCallbacks(jvmti, &callbacks,
                                             (jint)sizeof(callbacks));
 		check_jvmti_error(jvmti, error, "Cannot set jvmti callbacks");
@@ -736,7 +738,7 @@ cbObjectFree(jvmtiEnv *jvmti, jlong id)
 {
     r_event event;
     
-    memset(&event, 0, sizeof(event));
+    bzero(&event, sizeof(event));
     
     event.type = RPROF_OBJECT_FREED;
     event.args_len = 1;
@@ -904,7 +906,7 @@ findFieldRecord(jvmtiEnv *jvmti, JNIEnv *env, jclass field_klass, jfieldID field
     jlong class_tag = 0;
     char *cname, *fname;
     
-    memset(record, 0, sizeof(r_fieldRecord));
+    bzero(record, sizeof(r_fieldRecord));
     
     cls = field_klass;
     class_tag = get_tag(jvmti, cls);
@@ -918,20 +920,10 @@ findFieldRecord(jvmtiEnv *jvmti, JNIEnv *env, jclass field_klass, jfieldID field
         }
         else {
             /* found a field on a superclass - register for next time */
-            enterCriticalSection(jvmti); {
-                class_tag = get_tag(jvmti, field_klass);
-                record->class_tag = class_tag;
-                record->cls = field_klass;
-                fields_store(gdata->fields, jvmti, record, 1);
-                (*jvmti)->GetClassSignature(jvmti, field_klass, &cname, NULL);
-                (*jvmti)->GetFieldName(jvmti, field_klass, field, &fname, NULL, NULL);
-                stdout_message("stored super field for faster access: %s.%s (%llx.%llx)\n",
-                               cname, fname,
-                               class_tag, field,
-                               record->class_tag, record->field);
-                deallocate(jvmti, cname);
-                deallocate(jvmti, fname);
-            } exitCriticalSection(jvmti);
+            class_tag = get_tag(jvmti, field_klass);
+            record->class_tag = class_tag;
+            record->cls = field_klass;
+            fields_store(gdata->fields, jvmti, record, 1);
             break;
         }
     }
@@ -970,7 +962,7 @@ _cbFieldAccess(jvmtiEnv *jvmti,
     r_event event;
     r_fieldRecord record;
     
-    memset(&event, 0, sizeof(r_event));
+    bzero(&event, sizeof(r_event));
     
     findFieldRecord(jvmti, env, field_klass, field, &record);
     
@@ -996,7 +988,6 @@ cbFieldAccess(jvmtiEnv *jvmti,
 {
     _SAVE_OTHERS
     _SAVE_XMM
-    
     
     _cbFieldAccess(jvmti, env, thread, method, location, field_klass, object, field);
     
@@ -1030,7 +1021,7 @@ _cbFieldModification(jvmtiEnv *jvmti,
     r_event event;
     r_fieldRecord record;
     
-    memset(&event, 0, sizeof(event));
+    bzero(&event, sizeof(event));
     
     findFieldRecord(jvmti, env, field_klass, field, &record);
     
@@ -1094,7 +1085,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	 *     so anything allocated in this library needs to be freed in
 	 *     the Agent_OnUnload() function.
 	 */
-	memset(&data, 0, sizeof(GlobalAgentData));
+	bzero(&data, sizeof(GlobalAgentData));
 	gdata = &data;
     
 	/* First thing we need to do is get the jvmtiEnv* or JVMTI environment */
@@ -1115,7 +1106,8 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	/* Immediately after getting the jvmtiEnv* we need to ask for the
 	 *   capabilities this agent will need.
 	 */
-	(void)memset(&capabilities,0, sizeof(capabilities));
+	bzero(&capabilities, sizeof(capabilities));
+
 	capabilities.can_generate_all_class_hook_events = 1;
 	capabilities.can_tag_objects  = 1;
 	capabilities.can_generate_object_free_events  = 1;
@@ -1125,13 +1117,15 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	/* capabilities.can_access_local_variables = 1; */
 	capabilities.can_generate_field_access_events = 1;
 	capabilities.can_generate_field_modification_events = 1;
+
 	error = (*jvmti)->AddCapabilities(jvmti, &capabilities);
 	check_jvmti_error(jvmti, error, "Unable to get necessary JVMTI capabilities.");
     
 	/* Next we need to provide the pointers to the callback functions to
 	 *   to this jvmtiEnv*
 	 */
-	(void)memset(&callbacks,0, sizeof(callbacks));
+	bzero(&callbacks, sizeof(callbacks));
+
 	/* JVMTI_EVENT_VM_START */
 	callbacks.VMStart           = &cbVMStart;
 	/* JVMTI_EVENT_VM_INIT */
@@ -1150,6 +1144,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	callbacks.FieldModification = &cbFieldModification;
 	/* JVMTI_EVENT_FIELD_ACCESS */
 	callbacks.FieldAccess = &cbFieldAccess;
+
 	error = (*jvmti)->SetEventCallbacks(jvmti, &callbacks, (jint)sizeof(callbacks));
 	check_jvmti_error(jvmti, error, "Cannot set jvmti callbacks");
     

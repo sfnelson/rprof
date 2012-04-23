@@ -16,11 +16,9 @@
 #include "rprof_comm.h"
 
 #define EVENT_BUFFER_SIZE 121072
-#define HOST_MAX_LENGTH 256
-#define BENCHMARK_MAX_LENGTH 256
-#define DATASET_MAX_LENGTH 256
 
 typedef struct {
+    jvmtiEnv *jvmti;
 	unsigned char **image;
 	jint   *length;
 	jint   *class_id;
@@ -39,359 +37,363 @@ typedef struct {
 	int params[RPROF_MAX_PARAMETERS * 2];
 } EventRecord;
 
-typedef struct {
+struct store {
+    volatile size_t using;
+    size_t size;
+    size_t max;
+    jboolean flush;
+    EventRecord events[EVENT_BUFFER_SIZE];
+};
+
+struct _CommEnv {
 	jvmtiEnv      *jvmti;
 	jrawMonitorID  lock;
-	EventRecord    records[EVENT_BUFFER_SIZE];
-	unsigned int   event_index;
-	char		   host[HOST_MAX_LENGTH];
-	char           benchmark[BENCHMARK_MAX_LENGTH];
-	char           dataset[DATASET_MAX_LENGTH];
-	jlong          lastId;
-} GlobalCommData;
+    struct store *store;
+    volatile jlong prev_id;
+    char *start;
+    char *weave;
+    char *log;
+    char *stop;
+    char *dataset;
+    char *benchmark;
+};
 
-static GlobalCommData *cdata;
+#define LOCK(J, L) \
+check_jvmti_error(J, (*J)->RawMonitorEnter(J, L), "cannot get monitor");
 
-/* Enter a critical section by doing a JVMTI Raw Monitor Enter */
+#define RELEASE(J, L) \
+check_jvmti_error(J, (*J)->RawMonitorExit(J, L), "cannot release monitor");
+
+#define ADD_HEADERS(X) \
+ADD_HEADER(X, "Content-Type: application/rprof") \
+ADD_HEADER(X, "Connection: Keep-Alive") \
+ADD_HEADER(X, "Keep-Alive: 600")
+
+#define HEADER(X) \
+curl_slist_append(NULL, X)
+
+#define ADD_HEADER(X, Y) \
+(*X) = curl_slist_append(*X, Y);
+
+typedef size_t (*header_func) (unsigned char*, size_t, size_t, void *);
+typedef size_t (*data_func) (unsigned char*, size_t, size_t, void *);
+
 static void
-enterCriticalSection(jvmtiEnv *jvmti)
+post(const char* dest, struct curl_slist *headers, void *data, size_t len,
+     header_func cbHeader, void * header_param,
+     data_func cbData, void * data_param)
 {
-	jvmtiError error;
+    CURLcode err;
+    long int status;
+    CURL* curl = curl_easy_init();
     
-	error = (*jvmti)->RawMonitorEnter(jvmti, cdata->lock);
-	check_jvmti_error(jvmti, error, "Cannot enter with raw monitor");
+    ADD_HEADERS(&headers);
+    
+    curl_easy_setopt(curl, CURLOPT_URL, dest);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    
+    if (data != NULL) {
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len);
+    }
+    if (cbHeader != NULL) {
+        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, cbHeader);
+        curl_easy_setopt(curl, CURLOPT_WRITEHEADER, header_param);
+    }
+    if (cbData != NULL) {
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cbData);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, data_param);
+    }
+    
+    err = curl_easy_perform(curl);
+    
+    if (err != CURLE_OK) {   
+        fatal_error("error sending %s! %d: %s",
+                    dest, err, curl_easy_strerror(err));
+        return;
+    }
+    
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+    if (status/100 != 2) {
+        fatal_error("error sending %s! HTTP %ld",
+                    dest, status);
+        return;
+    }
+    
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
 }
 
-/* Exit a critical section by doing a JVMTI Raw Monitor Exit */
 static void
-exitCriticalSection(jvmtiEnv *jvmti)
+flush(CommEnv env, struct store *to_flush)
 {
-	jvmtiError error;
+    if (to_flush == NULL) return;
     
-	error = (*jvmti)->RawMonitorExit(jvmti, cdata->lock);
-	check_jvmti_error(jvmti, error, "Cannot exit with raw monitor");
+    post(env->log, HEADER(env->dataset), &(to_flush->events),
+         to_flush->size * sizeof(EventRecord),
+         NULL, NULL, NULL, NULL);
+    
+    deallocate(env->jvmti, to_flush);
 }
 
-void comm_init(jvmtiEnv *jvmti, char *options)
+static jlong
+request_store(CommEnv env, size_t toStore, struct store **store, EventRecord **record)
 {
-	static GlobalCommData data;
+    struct store *to_flush = NULL;
+    jlong id = 0;
+    
+    if (env == NULL) {
+        fatal_error("NULL comm env!");
+        return 0;
+    }
+    
+    LOCK(env->jvmti, env->lock)
+    
+    (*store) = env->store;
+    
+    if ((*store)->size + toStore > (*store)->max) {
+        to_flush = (*store);
+        
+        env->store = allocate(env->jvmti, sizeof(struct store));
+        bzero(env->store, sizeof(struct store));
+        (*store) = env->store;
+        (*store)->max = EVENT_BUFFER_SIZE;
+        
+        if (to_flush->using != 0) {
+            /* still in use, set flush signal and proceed */
+            (*store)->flush = JNI_TRUE;
+            to_flush = NULL;
+        }
+    }
+    
+    if (toStore > 0) {
+        (*record) = &((*store)->events[(*store)->size]);
+        (*store)->size += toStore;
+        
+        id = env->prev_id + 1;
+        env->prev_id += toStore;
+    }
+    
+    ((*store)->using)++;
+    
+    RELEASE(env->jvmti, env->lock)
+    
+    if (to_flush != NULL) {
+        flush(env, to_flush);
+    }
+    
+    return id;
+}
+
+static void
+release_store(CommEnv env, struct store *store)
+{
+    LOCK(env->jvmti, env->lock)
+    
+    (store->using)--;
+    
+    if (store->using == 0 && store->flush == JNI_TRUE) {
+        flush(env, store);
+    }
+    
+    RELEASE(env->jvmti, env->lock)
+}
+
+#define URL_START   "http://%s/start"
+#define URL_STOP    "http://%s/stop"
+#define URL_LOG     "http://%s/logger"
+#define URL_WEAVE   "http://%s/weaver?cls=%%s"
+#define HEADER_BENCHMARK "Benchmark: %s"
+
+#define OPT_INIT(E, A, F, P) \
+    A = allocate(E->jvmti, strlen(F) + strlen(P) + 1); \
+    sprintf(A, F, P);
+
+static void
+comm_init(CommEnv env, const char *host, const char *benchmark)
+{
+    OPT_INIT(env, env->start, URL_START, host)
+    OPT_INIT(env, env->log,   URL_LOG,   host)
+    OPT_INIT(env, env->weave, URL_WEAVE, host)
+    OPT_INIT(env, env->stop,  URL_STOP,  host)
+    OPT_INIT(env, env->benchmark, HEADER_BENCHMARK, benchmark);
+}
+
+CommEnv comm_create(jvmtiEnv *jvmti, char *options)
+{
+    CommEnv env;
 	jvmtiError error;
 	char *benchmark;
     
-	(void)memset((void*)&data, 0, sizeof(data));
-	cdata = &data;
+    env = allocate(jvmti, sizeof(struct _CommEnv));
+	bzero(env, sizeof(struct _CommEnv));
 	
-	if (0 == options || 0 == strlen(options))
-	{
-		strcpy(cdata->host, "localhost:8888");
+    env->jvmti = jvmti;
+    
+    error = (*jvmti)->CreateRawMonitor(jvmti, "comm", &(env->lock));
+    check_jvmti_error(jvmti, error, "Cannot create monitor");
+
+    env->store = allocate(jvmti, sizeof(struct store));
+    bzero(env->store, sizeof(struct store));
+    env->store->max = EVENT_BUFFER_SIZE;
+
+	if (0 == options || 0 == strlen(options)) {
+		comm_init(env, "localhost:8888", "unknown");
 	}
 	else if (0 == strchr(options, ',')) {
-	    stdout_message("unknown benchmark\n");
-		strcpy(cdata->host, options);
+        comm_init(env, options, "unknown");
 	}
 	else {
 	    benchmark = strchr(options, ',');
 	    benchmark[0] = 0;
 	    benchmark++;
-	    strcpy(cdata->host, options);
-	    sprintf(cdata->benchmark, "Benchmark: %s", benchmark);
-	    stdout_message(cdata->benchmark);
-	    stdout_message("\n");
+	    comm_init(env, options, benchmark);
 	}
-    
-	cdata->jvmti = jvmti;
-    
-	error = (*jvmti)->CreateRawMonitor(jvmti, "comm data", &(cdata->lock));
-	check_jvmti_error(jvmti, error, "Cannot create raw monitor");
-    
+
 	curl_global_init(CURL_GLOBAL_ALL);
+    
+    return env;
 }
 
-static size_t
-read_header(void *ptr, size_t size, size_t nmemb, Response* response)
-{
-	size_t i;
-    jint len, id;
-    char * input;
-    
-    input = (char *) ptr;
+#define CONTENT_LENGTH "Content-Length: "
+#define CLASS_ID "Class-id: "
 
-	char header[size * nmemb + 1];
-	for (i = 0; i < size * nmemb; i++) {
-		header[i] = (char) tolower(input[i]);
-	}
-	header[size * nmemb] = 0;
+static size_t
+read_header(char *input, size_t size, size_t count, Response *response)
+{
+	jint len;
+    jint id;
     
-	if (strstr(header, "content-length:") == header) {
-		len = atoi(&header[16]);
+	if (strcasestr(input, CONTENT_LENGTH) == input) {
+		len = (jint) strtol(&input[strlen(CONTENT_LENGTH)], NULL, 0);
 		*(response->length) = len;
-		*(response->image) = malloc((size_t) len * sizeof(unsigned char));
+		*(response->image) = allocate(response->jvmti, (size_t) len);
 	}
     
-	if (strstr(header, "class-id:") == header) {
-	    id = atoi(&header[10]);
+	if (strcasestr(input, CLASS_ID) == input) {
+		id = (jint) strtol(&input[strlen(CLASS_ID)], NULL, 0);
 	    *(response->class_id) = id;
 	}
     
-	return size * nmemb;
+	return size * count;
 }
 
 /** This call is reentrant. Offset keeps track of how many bytes we've read. */
 static size_t
-read_response(void *buffer, size_t size, size_t nmemb, Response* response)
+read_response(void *input, size_t size, size_t count, Response* response)
 {
-	unsigned char* image = *response->image;
-	size_t offset = response->offset;
-	memcpy(&image[offset], buffer, size * nmemb);
-	offset += size * nmemb;
-	response->offset = offset;
+    size_t offset = response->offset;
+	unsigned char *image = *(response->image);
+    size_t read = size * count;
     
-	/* stdout_message("received %d bytes from weaver (offset %d)\n",size * nmemb, offset); */
+	memcpy(&image[offset], input, read);
+	response->offset += read;
     
-	return size * nmemb;
+	return read;
 }
 
+#define DATASET "Dataset: "
+#define HEADER_DATASET "Dataset: %s"
+
 static size_t
-read_dataset(void *ptr, size_t size, size_t nmemb, void* args)
+read_dataset(char *input, size_t size, size_t count, CommEnv env)
 {
-	size_t i;
-    char * input;
-    
-    input = (char *) ptr;
-	
-	char header[size * nmemb + 1];
-	for (i = 0; i < size * nmemb; i++) {
-		header[i] = (char) tolower(input[i]);
-	}
-	header[size * nmemb] = 0;
-    
-	if (strstr(header, "dataset:") == header) {
-		sprintf(cdata->dataset, "Dataset: %s", &header[9]);
-		char* end = strchr(cdata->dataset, '\r');
-		if (end == 0) end = strchr(cdata->dataset, '\n');
+	if (strcasestr(input, DATASET) == input) {
+        OPT_INIT(env, env->dataset, HEADER_DATASET, &(input[strlen(DATASET)]))
+		char* end = strchr(env->dataset, '\r');
+		if (end == 0) end = strchr(env->dataset, '\n');
 		end[0] = 0;
 	}
     
-	return size * nmemb;
+	return size * count;
 }
 
 void
-comm_started(jvmtiEnv *jvmti)
+comm_started(CommEnv env)
 {
-	CURL* handle = curl_easy_init();
-	char host [HOST_MAX_LENGTH];
-	jlong status;
-	
-	sprintf(host, "http://%s/start", cdata->host);
-    
-	curl_easy_setopt(handle, CURLOPT_URL, host);
-	curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, read_dataset);
-	curl_easy_setopt(handle, CURLOPT_WRITEHEADER, NULL);
-	
-	struct curl_slist *headers=NULL;
-	if (cdata->benchmark[0] != 0) {
-	    headers = curl_slist_append(headers, cdata->benchmark);
-	}
-	headers = curl_slist_append(headers, "Content-Type: application/rprof");
-	headers = curl_slist_append(headers, "Connection: Keep-Alive");
-	headers = curl_slist_append(headers, "Keep-Alive: 600");
-    
-	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-    
-	/* stdout_message("profiler started.\n"); */
-    
-	CURLcode err = curl_easy_perform(handle); /* post away! */
-    
-	if (err != 0) {
-		fatal_error("error sending message! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
-	}
-    
-	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
-	if (status/100 != 2) {
-		fatal_error("error sending message! HTTP %ld (%s)\n", status, host);
-	}
-    
-	curl_slist_free_all(headers); /* free the header list */
-	curl_easy_cleanup(handle);
+    post(env->start, HEADER(env->benchmark), NULL, 0,
+         (header_func) read_dataset, (void *) env,
+         NULL, NULL);	
 }
 
 void
-comm_stopped(jvmtiEnv *jvmti)
+comm_stopped(CommEnv env)
 {
-	CURL* handle = curl_easy_init();
-	char host [HOST_MAX_LENGTH];
-	jlong status;
-	
-	sprintf(host, "http://%s/stop", cdata->host);
-    
-	curl_easy_setopt(handle, CURLOPT_URL, host);
-    
-	struct curl_slist *headers=NULL;
-	headers = curl_slist_append(headers, cdata->dataset);
-	headers = curl_slist_append(headers, "Content-Type: application/rprof");
-	headers = curl_slist_append(headers, "Connection: Keep-Alive");
-	headers = curl_slist_append(headers, "Keep-Alive: 600");
-    
-	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-    
-	/* stdout_message("profiler stopped.\n"); */
-    
-	CURLcode err = curl_easy_perform(handle); /* post away! */
-    
-	if (err != 0) {
-		fatal_error("error sending message! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
-	}
-    
-	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
-	if (status/100 != 2) {
-		fatal_error("error sending message! HTTP %ld (%s)\n", status, host);
-	}
-    
-	curl_slist_free_all(headers); /* free the header list */
-	curl_easy_cleanup(handle);
+	post(env->stop, HEADER(env->dataset), NULL, 0,
+         NULL, NULL, NULL, NULL);
 }
 
 #define untohl(X) (htonl((uint32_t)((X >> 32) & 0xFFFFFFFF)))
 #define lntohl(X) (htonl((uint32_t)(X & 0xFFFFFFFF)))
 
 jlong
-comm_log(jvmtiEnv *jvmti, r_event *event)
+comm_log(CommEnv env, r_event *event)
 {
-	int i;
-	jlong id;
-	EventRecord* record;
+    struct store *store;
+    EventRecord *record;
+    jlong id;
+    jint i;
     
-	enterCriticalSection(jvmti); {
-		record = &(cdata->records[(cdata->event_index)++]);
-		memset(record, 0, sizeof(EventRecord));
-        
-        id = ++(cdata->lastId);
-        record->id_upper =  untohl(id);
-		record->id_lower = lntohl(id);
-		record->thread_upper = untohl(event->thread);
-		record->thread_lower = lntohl(event->thread);
-		record->message = htonl(event->type);
-		record->cnum = htonl(event->cid);
-		record->mnum = htonl(event->attr.mid);
-		record->len = htonl(event->args_len);
-		for (i = 0; i < event->args_len; i++) {
-			record->params[i * 2] = untohl(event->args[i]);
-			record->params[i * 2 + 1] = lntohl(event->args[i]);
-		}
-        
-		if (cdata->event_index >= EVENT_BUFFER_SIZE) {
-			comm_flush(jvmti);
-		}
-	}; exitCriticalSection(jvmti);
+    id = request_store(env, 1, &store, &record);
+    
+    record->id_upper =  untohl(id);
+    record->id_lower = lntohl(id);
+    record->thread_upper = untohl(event->thread);
+    record->thread_lower = lntohl(event->thread);
+    record->message = htonl(event->type);
+    record->cnum = htonl(event->cid);
+    record->mnum = htonl(event->attr.mid);
+    record->len = htonl(event->args_len);
+    for (i = 0; i < event->args_len; i++) {
+        record->params[i * 2] = untohl(event->args[i]);
+        record->params[i * 2 + 1] = lntohl(event->args[i]);
+    }
+    
+    release_store(env, store);
     
 	return id;
 }
 
 void
-comm_flush(jvmtiEnv *jvmti)
+comm_flush(CommEnv env)
 {
-	CURL* handle = curl_easy_init();
-	char host [HOST_MAX_LENGTH];
-	jlong status;
-	CURLcode err;
-	
-	sprintf(host, "http://%s/logger", cdata->host);
+    struct store *store, *new_store;
     
-	curl_easy_setopt(handle, CURLOPT_URL, host);
+    request_store(env, 0, &store, NULL);
     
-	struct curl_slist *headers=NULL;
-	headers = curl_slist_append(headers, cdata->dataset);
-	headers = curl_slist_append(headers, "Content-Type: application/rprof");
-	headers = curl_slist_append(headers, "Connection: Keep-Alive");
-	headers = curl_slist_append(headers, "Keep-Alive: 600");
+    new_store = allocate(env->jvmti, sizeof(struct store));
+    bzero(new_store, sizeof(struct store));
+    new_store->max = EVENT_BUFFER_SIZE;
     
-	enterCriticalSection(jvmti); {
-		/* post binary data */
-		curl_easy_setopt(handle, CURLOPT_POSTFIELDS, &(cdata->records));
-        
-		/* set the size of the postfields data */
-		curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, sizeof(EventRecord) * cdata->event_index);
-        
-		curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-        
-		err = curl_easy_perform(handle); /* post away! */
-        
-		cdata->event_index = 0;
-	}; exitCriticalSection(jvmti);
+    env->store = new_store;
+    store->flush = JNI_TRUE;
     
-	if (err != 0) {
-		fatal_error("error sending log! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
-	}
-    
-	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
-	if (status/100 != 2) {
-		fatal_error("error sending log! HTTP %ld (%s)\n", status, host);
-	}
-    
-	curl_slist_free_all(headers); /* free the header list */
-	curl_easy_cleanup(handle);
+    release_store(env, store);
 }
 
 void
-comm_weave(
+comm_weave(CommEnv env,
            const char* classname, jboolean systemClass,
-           jint class_data_len, const unsigned char* class_data,
-           jint* newLength, unsigned char** newImage, jint* class_id)
+           jint class_len, const unsigned char* class_data,
+           jint *new_class_len, unsigned char** new_class_data,
+           jint* class_id)
 {
 	Response r;
-    CURL* handle;
-    char host [HOST_MAX_LENGTH];
-    jlong status;
+    char *url;
+
+	*new_class_len = 0;
+	*new_class_data = NULL;
     
-	*newLength = 0;
-	*newImage = NULL;
-    
-	r.length = newLength;
-	r.image = newImage;
+    r.jvmti = env->jvmti;
+	r.length = new_class_len;
+	r.image = new_class_data;
 	r.class_id = class_id;
 	r.offset = 0;
-	
-	handle = curl_easy_init();
-	
-	sprintf(host, "http://%s/weaver?cls=", cdata->host);
     
-	char name[strlen(classname) + strlen(host) + 1];
-	sprintf(name, "%s%s", host, classname);
+    OPT_INIT(env, url, env->weave, classname)
     
-	curl_easy_setopt(handle, CURLOPT_URL, name);
-	curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, read_header);
-	curl_easy_setopt(handle, CURLOPT_WRITEHEADER, &r);
-	curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, read_response);
-	curl_easy_setopt(handle, CURLOPT_WRITEDATA, &r);
-    
-	struct curl_slist *headers=NULL;
-	headers = curl_slist_append(headers, cdata->dataset);
-	headers = curl_slist_append(headers, "Content-Type: application/rprof");
-	headers = curl_slist_append(headers, "Connection: Keep-Alive");
-	headers = curl_slist_append(headers, "Keep-Alive: 600");
-    
-	/* post binary data */
-	curl_easy_setopt(handle, CURLOPT_POSTFIELDS, class_data);
-    
-	/* set the size of the postfields data */
-	curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, class_data_len);
-    
-	curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-    
-	/* stdout_message("sending %d bytes to weaver\n", class_data_len); */
-    
-	CURLcode err = curl_easy_perform(handle); /* post away! */
-    
-	if (err != 0) {
-		fatal_error("error weaving file! %d: %s (%s)\n", err, curl_easy_strerror(err), host);
-	}
-    
-	curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
-	if (status/100 != 2) {
-		fatal_error("error weaving file! HTTP %ld (%s)\n", status, name);
-	}
-    
-	curl_slist_free_all(headers); /* free the header list */
-	curl_easy_cleanup(handle);
+    post(url, HEADER(env->dataset), (void *) class_data, (size_t) class_len,
+         (header_func) &read_header, &r,
+         (data_func) &read_response, &r);
 }
 

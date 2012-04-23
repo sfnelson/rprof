@@ -4,7 +4,8 @@
 #include <string.h>
 #include <jni.h>
 
-#include "rprof_util.h"
+#include "rprof_fields.h"
+#include "rprof_classes.h"
 
 #define NUM_FIELDS 50
 
@@ -40,7 +41,7 @@ visitor(r_fieldRecord* target)
 size_t class_count = 0;
 
 static void
-class_visitor(jvmtiEnv* jvmti, JNIEnv* env, const char* cname)
+class_visitor(jvmtiEnv *jvmti, JNIEnv *jni, const char* cname)
 {
     assert(30, (uint64_t) class_count, (uint64_t) (cname[0] - 'a'));
     class_count++;
@@ -64,6 +65,8 @@ static void testFieldTable()
     r_fieldRecord tmp;
     r_fieldRecord records[NUM_FIELDS];
     
+    table = fields_create(jvmti, "field table");
+    
     memset(&records, 0, sizeof(records));
     
     for (i = 0; i < NUM_FIELDS; i++) {
@@ -75,10 +78,10 @@ static void testFieldTable()
         check[i] = 0;
     }
     
-    fields_store(table, jvmti, records, 5);
+    fields_store(table, records, 5);
     
     visited = 0;
-    fields_visit(table, jvmti, &visitor);
+    fields_visit(table, &visitor);
     assert(40, 5, visited);
     
     for (i = 0; i < 5; i++) {
@@ -86,17 +89,17 @@ static void testFieldTable()
         check[i] = 0;
     }
     
-    fields_find(table, jvmti, (jlong) 4, (jfieldID) 1, &tmp);
+    fields_find(table, (jlong) 4, (jfieldID) 1, &tmp);
     assert(60, 1, (uintptr_t) tmp.field);
     assert(70, 4, (uintptr_t) tmp.cls);
     assert(80, 4, (uint64_t) tmp.id.raw);
     
-    fields_store(table, jvmti, &(records[4]), NUM_FIELDS/10);
-    fields_store(table, jvmti, records, NUM_FIELDS/2);
-    fields_store(table, jvmti, records, NUM_FIELDS);
+    fields_store(table, &(records[4]), NUM_FIELDS/10);
+    fields_store(table, records, NUM_FIELDS/2);
+    fields_store(table, records, NUM_FIELDS);
     
     visited = 0;
-    fields_visit(table, jvmti, &visitor);
+    fields_visit(table, &visitor);
     assert(90, 50, visited);
     
     for (i = 0; i < NUM_FIELDS; i++) {
@@ -109,7 +112,7 @@ static void testFieldTable()
 }
 
 static void testClassList() {
-    r_classList classes;
+    ClassList classes;
     size_t i;
     char * name;
     const char * input[] = { "a", "b", "c", "d", "e", "f", "g", "h",
@@ -121,14 +124,12 @@ static void testClassList() {
     for (i = 0; i < 24; i++) {
         name = malloc(2);
         strcpy(name, input[i]);
-        store_class(&classes, name);
+        classes_add(classes, name);
     }
     
-    visit_classes(classes, NULL, NULL, &class_visitor);
+    classes_visit(classes, NULL, NULL, &class_visitor);
     
-    cleanup_classes(&classes);
-    
-    assert(110, 0, (uintptr_t) classes);
+    classes_destroy(classes);
     
     printf("Test: %llu/%llu assertions passed\n", passed, count);
     passed = 0;

@@ -1,4 +1,4 @@
-#include "rprof_util.h"
+#include "rprof_fields.h"
 #include "agent_util.h"
 
 /* TODO this is not thread-safe :-( */
@@ -6,37 +6,35 @@
 #define LOAD_FACTOR 0.7f
 
 #define LOCK(X,Y) \
-check_jvmti_error(X, \
-(*X)->RawMonitorEnter(X, Y), \
+check_jvmti_error(X->jvmti, \
+(*(X->jvmti))->RawMonitorEnter(X->jvmti, Y), \
 "error requesting locking");
 
 #define RELEASE(X,Y) \
-check_jvmti_error(X, \
-(*X)->RawMonitorExit(X, Y), \
+check_jvmti_error(X->jvmti, \
+(*(X->jvmti))->RawMonitorExit(X->jvmti, Y), \
 "error releasing lock");
 
-#define REQUEST_MAP(X, Y, Z) \
-LOCK(X, Y->useLock) \
-if (Y->map == NULL) (*Z) = NULL; \
+#define REQUEST_MAP(X, Y) \
+LOCK(X, X->useLock) \
+if (X->map == NULL) (*Y) = NULL; \
 else { \
-++(Y->map->using); \
-(*Z) = Y->map; \
+++(X->map->using); \
+(*Y) = X->map; \
 } \
-RELEASE(X, Y->useLock)
+RELEASE(X, X->useLock)
 
-#define RELEASE_MAP(X, Y, Z) \
-LOCK(X, Y->useLock) \
-if (Z == NULL); \
+#define RELEASE_MAP(X, Y) \
+LOCK(X, X->useLock) \
+if (Y == NULL); \
 else { \
---(Z->using); \
-if (Z->free == JNI_TRUE && Z->using == 0) { \
-bzero(Z->entries, Z->max * sizeof(r_fieldRecord)); \
-free(Z->entries); \
-bzero(Z, sizeof(struct f_map)); \
-free(Z); \
-} \
-} \
-RELEASE(X, Y->useLock);
+--(Y->using); \
+if (Y->free == JNI_TRUE && Y->using == 0) { \
+bzero(Y->entries, Y->max * sizeof(r_fieldRecord)); \
+deallocate(X->jvmti, Y->entries); \
+bzero(Y, sizeof(struct f_map)); \
+deallocate(X->jvmti, Y); } } \
+RELEASE(X, X->useLock);
 
 typedef struct {
     jfieldID field;
@@ -52,7 +50,8 @@ struct f_map {
 };
 
 struct _FieldTable {
-    struct f_map    *map;
+    jvmtiEnv       *jvmti;
+    struct f_map   *map;
     jrawMonitorID   useLock;
     jrawMonitorID   changeLock;
 };
@@ -116,12 +115,12 @@ find(struct f_map *map, jlong class_tag, jfieldID field)
 }
 
 void
-fields_find(FieldTable table, jvmtiEnv *jvmti,
-            jlong class_tag, jfieldID field, r_fieldRecord* target)
+fields_find(FieldTable table, jlong class_tag, jfieldID field,
+            r_fieldRecord* target)
 {
     struct f_map *map;
     
-    REQUEST_MAP(jvmti, table, &map);
+    REQUEST_MAP(table, &map);
     
     if (map != NULL) {
         memcpy(target, find(map, class_tag, field), sizeof(r_fieldRecord));
@@ -130,18 +129,17 @@ fields_find(FieldTable table, jvmtiEnv *jvmti,
         bzero(target, sizeof(r_fieldRecord));
     }
     
-    RELEASE_MAP(jvmti, table, map);
+    RELEASE_MAP(table, map);
 }
 
 void
-fields_visit(FieldTable table, jvmtiEnv *jvmti,
-             void (*callback) (r_fieldRecord*))
+fields_visit(FieldTable table,  void (*callback) (r_fieldRecord*))
 {
     size_t i, max;
     struct f_map *map;
     r_fieldRecord *tmp;
     
-    REQUEST_MAP(jvmti, table, &map);
+    REQUEST_MAP(table, &map);
     
     if (map != NULL) {
         max = map->max;
@@ -153,19 +151,19 @@ fields_visit(FieldTable table, jvmtiEnv *jvmti,
         }
     }
     
-    RELEASE_MAP(jvmti, table, map);
+    RELEASE_MAP(table, map);
 }
 
 void
-fields_store(FieldTable table, jvmtiEnv *jvmti, r_fieldRecord *toStore, size_t len)
+fields_store(FieldTable table, r_fieldRecord *toStore, size_t len)
 {
     size_t size, max, i, old;
     struct f_map *old_map, *new_map;
     r_fieldRecord *in, *out;
     
-    LOCK(jvmti, table->changeLock);
+    LOCK(table, table->changeLock);
     
-    REQUEST_MAP(jvmti, table, &old_map);
+    REQUEST_MAP(table, &old_map);
     
     if (old_map != NULL) {
         size = old_map->size + len;
@@ -179,7 +177,7 @@ fields_store(FieldTable table, jvmtiEnv *jvmti, r_fieldRecord *toStore, size_t l
     
     while (size > LOAD_FACTOR * max) max *= 2;
     
-    new_map = malloc(sizeof(struct f_map));
+    new_map = allocate(table->jvmti, sizeof(struct f_map));
     if (new_map == NULL) {
         fatal_error("ERROR: unable to allocate space for a field table\n");
         return;
@@ -187,12 +185,10 @@ fields_store(FieldTable table, jvmtiEnv *jvmti, r_fieldRecord *toStore, size_t l
     
     new_map->size = size;
     new_map->max = max;
-    new_map->entries = malloc(max * sizeof(r_fieldRecord));
+    new_map->entries = allocate(table->jvmti, max * sizeof(r_fieldRecord));
     if (new_map->entries == NULL) {
         fatal_error("ERROR: unable to allocate space for a field table\n");
     }
-    
-    bzero(new_map->entries, max * sizeof(r_fieldRecord));
     
     for (i = 0; i < old; i++) {
         in = &(old_map->entries[i]);
@@ -212,63 +208,45 @@ fields_store(FieldTable table, jvmtiEnv *jvmti, r_fieldRecord *toStore, size_t l
     
     table->map = new_map;
     if (old_map != NULL) old_map->free = JNI_TRUE;
-    RELEASE_MAP(jvmti, table, old_map);
+    RELEASE_MAP(table, old_map);
     
-    RELEASE(jvmti, table->changeLock);
+    RELEASE(table, table->changeLock);
 }
 
 FieldTable
-fields_create(jvmtiEnv *jvmti, const char *useLock, const char *changeLock)
+fields_create(jvmtiEnv *jvmti, const char *name)
 {
     FieldTable table;
     jvmtiError error;
+    size_t len;
     
-    table = malloc(sizeof(struct _FieldTable));
+    len = strlen(name);
+
+    char use[len + 6 + 1];
+    char change[len + 9 + 1];
+    
+    sprintf(use, "%s - use", name);
+    sprintf(change, "%s - change", name);
+    
+    table = allocate(jvmti, sizeof(struct _FieldTable));
     if (table == NULL) {
         fatal_error("unable to allocate field table");
         return NULL;
     }
-    bzero(table, sizeof(struct _FieldTable));
     
-    error = (*jvmti)->CreateRawMonitor(jvmti, useLock, &(table->useLock));
+    table->jvmti = jvmti;
+    
+    error = (*jvmti)->CreateRawMonitor(jvmti, use, &(table->useLock));
     if (error != JVMTI_ERROR_NONE) {
         fatal_error("unable to create use monitor for field table");
         return NULL;
     }
     
-    error = (*jvmti)->CreateRawMonitor(jvmti, changeLock, &(table->changeLock));
+    error = (*jvmti)->CreateRawMonitor(jvmti, change, &(table->changeLock));
     if (error != JVMTI_ERROR_NONE) {
         fatal_error("unable to create change monitor for field table");
         return NULL;
     }
     
     return table;
-}
-
-/* ==== Class List Functions */
-
-void store_class(r_classList* classes, const char *cname)
-{
-    if ((*classes) == NULL) {
-        (*classes) = sl_init();
-    }
-    
-    sl_add(*classes, cname);
-}
-
-void visit_classes(r_classList classes, jvmtiEnv* jvmti, JNIEnv *env,
-                   void (*callback) (jvmtiEnv* jvmti, JNIEnv *env, const char *cname))
-{
-    size_t i;
-    if (classes == NULL) return;
-    for (i = 0; i < classes->sl_cur; i++) {
-        (callback) (jvmti, env, classes->sl_str[i]);
-    }
-}
-
-void cleanup_classes(r_classList* classes)
-{
-    if ((*classes) == NULL) return;
-    sl_free(*classes, 1);
-    *classes = NULL;
 }

@@ -103,13 +103,16 @@ deallocate(jvmtiEnv *jvmti, void *ptr)
 
 /* Allocation of JVMTI managed memory */
 void *
-allocate(jvmtiEnv *jvmti, jint len)
+allocate(jvmtiEnv *jvmti, size_t len)
 {
     jvmtiError error;
-    void      *ptr;
+    void      *ptr = NULL;
     
-    error = (*jvmti)->Allocate(jvmti, len, (unsigned char **)&ptr);
+    error = (*jvmti)->Allocate(jvmti, (jlong) len, (unsigned char **)&ptr);
     check_jvmti_error(jvmti, error, "Cannot allocate memory");
+    
+    bzero(ptr, len);
+
     return ptr;
 }
 

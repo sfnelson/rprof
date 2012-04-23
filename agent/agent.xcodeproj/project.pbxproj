@@ -12,12 +12,12 @@
 		DC4918AF153FE8C400A12CB6 /* rprof_comm.c in Sources */ = {isa = PBXBuildFile; fileRef = DC49189C153FE8C400A12CB6 /* rprof_comm.c */; };
 		DC4918B0153FE8C400A12CB6 /* rprof_comm.h in Headers */ = {isa = PBXBuildFile; fileRef = DC49189D153FE8C400A12CB6 /* rprof_comm.h */; };
 		DC4918B1153FE8C400A12CB6 /* rprof_events.h in Headers */ = {isa = PBXBuildFile; fileRef = DC49189E153FE8C400A12CB6 /* rprof_events.h */; };
-		DC4918B2153FE8C400A12CB6 /* rprof_util.c in Sources */ = {isa = PBXBuildFile; fileRef = DC49189F153FE8C400A12CB6 /* rprof_util.c */; };
-		DC4918B3153FE8C400A12CB6 /* rprof_util.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A0153FE8C400A12CB6 /* rprof_util.h */; };
+		DC4918B2153FE8C400A12CB6 /* rprof_fields.c in Sources */ = {isa = PBXBuildFile; fileRef = DC49189F153FE8C400A12CB6 /* rprof_fields.c */; };
+		DC4918B3153FE8C400A12CB6 /* rprof_fields.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A0153FE8C400A12CB6 /* rprof_fields.h */; };
 		DC4918B4153FE8C400A12CB6 /* rprof.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A1153FE8C400A12CB6 /* rprof.c */; };
 		DC4918B5153FE8C400A12CB6 /* rprof.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A2153FE8C400A12CB6 /* rprof.h */; };
-		DC4918B6153FE8C400A12CB6 /* stringlist.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A3153FE8C400A12CB6 /* stringlist.c */; };
-		DC4918B7153FE8C400A12CB6 /* stringlist.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A4153FE8C400A12CB6 /* stringlist.h */; };
+		DC4918B6153FE8C400A12CB6 /* rprof_classes.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A3153FE8C400A12CB6 /* rprof_classes.c */; };
+		DC4918B7153FE8C400A12CB6 /* rprof_classes.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A4153FE8C400A12CB6 /* rprof_classes.h */; };
 		DC4918B8153FE8C400A12CB6 /* test_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A5153FE8C400A12CB6 /* test_utils.c */; };
 /* End PBXBuildFile section */
 
@@ -28,12 +28,12 @@
 		DC49189C153FE8C400A12CB6 /* rprof_comm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof_comm.c; sourceTree = "<group>"; };
 		DC49189D153FE8C400A12CB6 /* rprof_comm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_comm.h; sourceTree = "<group>"; };
 		DC49189E153FE8C400A12CB6 /* rprof_events.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_events.h; sourceTree = "<group>"; };
-		DC49189F153FE8C400A12CB6 /* rprof_util.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof_util.c; sourceTree = "<group>"; };
-		DC4918A0153FE8C400A12CB6 /* rprof_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_util.h; sourceTree = "<group>"; };
+		DC49189F153FE8C400A12CB6 /* rprof_fields.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof_fields.c; sourceTree = "<group>"; };
+		DC4918A0153FE8C400A12CB6 /* rprof_fields.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_fields.h; sourceTree = "<group>"; };
 		DC4918A1153FE8C400A12CB6 /* rprof.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof.c; sourceTree = "<group>"; };
 		DC4918A2153FE8C400A12CB6 /* rprof.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof.h; sourceTree = "<group>"; };
-		DC4918A3153FE8C400A12CB6 /* stringlist.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stringlist.c; sourceTree = "<group>"; };
-		DC4918A4153FE8C400A12CB6 /* stringlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stringlist.h; sourceTree = "<group>"; };
+		DC4918A3153FE8C400A12CB6 /* rprof_classes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof_classes.c; sourceTree = "<group>"; };
+		DC4918A4153FE8C400A12CB6 /* rprof_classes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_classes.h; sourceTree = "<group>"; };
 		DC4918A5153FE8C400A12CB6 /* test_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_utils.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -56,12 +56,12 @@
 				DC49189C153FE8C400A12CB6 /* rprof_comm.c */,
 				DC49189D153FE8C400A12CB6 /* rprof_comm.h */,
 				DC49189E153FE8C400A12CB6 /* rprof_events.h */,
-				DC49189F153FE8C400A12CB6 /* rprof_util.c */,
-				DC4918A0153FE8C400A12CB6 /* rprof_util.h */,
+				DC49189F153FE8C400A12CB6 /* rprof_fields.c */,
+				DC4918A0153FE8C400A12CB6 /* rprof_fields.h */,
 				DC4918A1153FE8C400A12CB6 /* rprof.c */,
 				DC4918A2153FE8C400A12CB6 /* rprof.h */,
-				DC4918A3153FE8C400A12CB6 /* stringlist.c */,
-				DC4918A4153FE8C400A12CB6 /* stringlist.h */,
+				DC4918A3153FE8C400A12CB6 /* rprof_classes.c */,
+				DC4918A4153FE8C400A12CB6 /* rprof_classes.h */,
 				DC4918A5153FE8C400A12CB6 /* test_utils.c */,
 				DC491889153FE8A300A12CB6 /* Products */,
 			);
@@ -85,9 +85,9 @@
 				DC4918A8153FE8C400A12CB6 /* agent_util.h in Headers */,
 				DC4918B0153FE8C400A12CB6 /* rprof_comm.h in Headers */,
 				DC4918B1153FE8C400A12CB6 /* rprof_events.h in Headers */,
-				DC4918B3153FE8C400A12CB6 /* rprof_util.h in Headers */,
+				DC4918B3153FE8C400A12CB6 /* rprof_fields.h in Headers */,
 				DC4918B5153FE8C400A12CB6 /* rprof.h in Headers */,
-				DC4918B7153FE8C400A12CB6 /* stringlist.h in Headers */,
+				DC4918B7153FE8C400A12CB6 /* rprof_classes.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -144,9 +144,9 @@
 			files = (
 				DC4918A7153FE8C400A12CB6 /* agent_util.c in Sources */,
 				DC4918AF153FE8C400A12CB6 /* rprof_comm.c in Sources */,
-				DC4918B2153FE8C400A12CB6 /* rprof_util.c in Sources */,
+				DC4918B2153FE8C400A12CB6 /* rprof_fields.c in Sources */,
 				DC4918B4153FE8C400A12CB6 /* rprof.c in Sources */,
-				DC4918B6153FE8C400A12CB6 /* stringlist.c in Sources */,
+				DC4918B6153FE8C400A12CB6 /* rprof_classes.c in Sources */,
 				DC4918B8153FE8C400A12CB6 /* test_utils.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

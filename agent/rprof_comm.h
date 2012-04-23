@@ -7,18 +7,29 @@
 
 #include "rprof_events.h"
 
-void comm_init(jvmtiEnv *jvmti, char *options);
+struct _CommEnv;
+typedef struct _CommEnv *CommEnv;
 
-void comm_weave(
+CommEnv
+comm_create(jvmtiEnv *jvmti, char *options);
+
+void
+comm_weave(CommEnv env,
 		const char* classname, jboolean systemClass,
 		jint class_data_len, const unsigned char* class_data,
-		jint* new_class_data_len, unsigned char** new_class_data,
-		jint* classId);
+		jint *new_class_len, unsigned char** new_class_data,
+		jint *class_id);
 
-void comm_started(jvmtiEnv *jvmti);
-void comm_stopped(jvmtiEnv *jvmti);
+void
+comm_started(CommEnv env);
 
-jlong comm_log(jvmtiEnv *jvmti, r_event *event);
-void comm_flush(jvmtiEnv *jvmti);
+void
+comm_stopped(CommEnv env);
+
+jlong
+comm_log(CommEnv env, r_event *event);
+
+void
+comm_flush(CommEnv env);
 
 #endif

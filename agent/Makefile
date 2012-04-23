@@ -8,11 +8,10 @@
 OS=$(shell uname)
 
 LIBNAME=agent
-SOURCES=rprof.c agent_util.c rprof_util.c rprof_comm.c stringlist.c
+SOURCES=rprof.c agent_util.c rprof_fields.c rprof_classes.c rprof_comm.c
 TEST_SOURCES=test_utils.c
 
 JARFILE=../jvmti-lib/target/jvmti-lib-1.0-SNAPSHOT.jar
-
 
 OBJECTS=$(SOURCES:%.c=%.o)
 TEST_OBJECTS=$(OBJECTS) $(TEST_SOURCES:%.c=%.o)
@@ -27,9 +26,13 @@ COMMON_FLAGS += -DLINUX
 COMMON_FLAGS += -D_REENTRANT
 
 ifdef OPT
-    CFLAGS=-Os $(COMMON_FLAGS) -DNDEBUG
+    CFLAGS = -Os $(COMMON_FLAGS)
 else
-    CFLAGS=-g $(COMMON_FLAGS) -DDEBUG
+    CFLAGS = -g $(COMMON_FLAGS)
+endif
+
+ifdef DEBUG
+    CFLAGS += -DDEBUG
 endif
 
 # Library name and options needed to build it
@@ -78,14 +81,17 @@ LINK_SHARED=$(LINK.c) -shared -o $@
 
 J_OPTS = \
     -Xbootclasspath/a:$(JARFILE) \
-    -agentlib:$(LIBNAME)=$(HOST),$@ \
-    -Xcheck:jni
+    -agentlib:$(LIBNAME)=$(HOST),$@
 
-ifeq ($(J_DEBUG),true)
+ifdef DEBUG
+    J_OPTS += -Xcheck:jni
+endif
+
+ifdef J_DEBUG
     J_OPTS  += -agentlib:jdwp=transport=dt_socket,address=localhost:8000
 endif
 
-ifeq ($(GDB),true)
+ifdef GDB
     JAVA    = $(LPATHN)=$(LPATH) gdb --args $(JDK)/bin/java $(J_OPTS)
 else
     JAVA    = $(LPATHN)=$(LPATH) $(JDK)/bin/java $(J_OPTS)

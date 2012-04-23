@@ -55,7 +55,7 @@ void  fatal_error(const char * format, ...);
 
 void  check_jvmti_error(jvmtiEnv *jvmti, jvmtiError errnum, const char *str);
 void  deallocate(jvmtiEnv *jvmti, void *ptr);
-void *allocate(jvmtiEnv *jvmti, jint len);
+void *allocate(jvmtiEnv *jvmti, size_t len);
 
 #ifdef __cplusplus
 } /* extern "C" */

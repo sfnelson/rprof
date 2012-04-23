@@ -57,7 +57,8 @@ main() {
 
 static void testFieldTable()
 {
-    r_fieldTable table = NULL;
+    FieldTable table = NULL;
+    jvmtiEnv *jvmti = NULL;
     uint32_t i;
     uintptr_t ptr;
     r_fieldRecord tmp;
@@ -74,10 +75,10 @@ static void testFieldTable()
         check[i] = 0;
     }
     
-    store_fields(&table, records, 5);
+    fields_store(table, jvmti, records, 5);
     
     visited = 0;
-    visit_fields(table, &visitor);
+    fields_visit(table, jvmti, &visitor);
     assert(40, 5, visited);
     
     for (i = 0; i < 5; i++) {
@@ -85,17 +86,17 @@ static void testFieldTable()
         check[i] = 0;
     }
     
-    find_field(table, (jlong) 4, (jfieldID) 1, &tmp);
+    fields_find(table, jvmti, (jlong) 4, (jfieldID) 1, &tmp);
     assert(60, 1, (uintptr_t) tmp.field);
     assert(70, 4, (uintptr_t) tmp.cls);
     assert(80, 4, (uint64_t) tmp.id.raw);
     
-    store_fields(&table, &(records[4]), NUM_FIELDS/10);
-    store_fields(&table, records, NUM_FIELDS/2);
-    store_fields(&table, records, NUM_FIELDS);
+    fields_store(table, jvmti, &(records[4]), NUM_FIELDS/10);
+    fields_store(table, jvmti, records, NUM_FIELDS/2);
+    fields_store(table, jvmti, records, NUM_FIELDS);
     
     visited = 0;
-    visit_fields(table, &visitor);
+    fields_visit(table, jvmti, &visitor);
     assert(90, 50, visited);
     
     for (i = 0; i < NUM_FIELDS; i++) {

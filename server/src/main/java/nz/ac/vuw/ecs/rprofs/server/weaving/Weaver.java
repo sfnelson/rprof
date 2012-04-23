@@ -31,6 +31,7 @@ public class Weaver {
 
 	public static final Pattern generated = new PatternBuilder()
 			.add("sun/reflect/Generated.*")
+			.add(".*ByCGLIB$$.*")
 			.get();
 
 	public static final Pattern excludes = new PatternBuilder()

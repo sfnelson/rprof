@@ -114,7 +114,7 @@ typedef struct {
 	jlong		   nullCounter;
     
     r_classList    classes;
-	r_fieldTable   fields;
+	FieldTable     fields;
 } GlobalAgentData;
 
 static GlobalAgentData *gdata;
@@ -191,25 +191,25 @@ watch_field(r_fieldRecord *record)
 	jvmtiError error;
     
     /*
-    jlong ctag;
-    jint cnum;
-    char *cname, *fname;
-    
-    error = (*jvmti)->GetClassSignature(jvmti, record->cls, &cname, NULL);
-    check_jvmti_error(jvmti, error, "could not get class name\n");
-    
-    error = (*jvmti)->GetFieldName(jvmti, record->cls, record->field, &fname, NULL, NULL);
-    check_jvmti_error(jvmti, error, "could not get field name\n");
-    
-    error = (*jvmti)->GetTag(jvmti, record->cls, &ctag);
-    check_jvmti_error(jvmti, error, "could not get class tag\n");
-    
-    cnum = TAG_TO_CNUM(ctag);
-    
-    stdout_message("--watching %x,%x (%s.%s) \n", cnum, record->field, cname, fname);
-    deallocate(jvmti, cname);
-    deallocate(jvmti, fname);
-    */
+     jlong ctag;
+     jint cnum;
+     char *cname, *fname;
+     
+     error = (*jvmti)->GetClassSignature(jvmti, record->cls, &cname, NULL);
+     check_jvmti_error(jvmti, error, "could not get class name\n");
+     
+     error = (*jvmti)->GetFieldName(jvmti, record->cls, record->field, &fname, NULL, NULL);
+     check_jvmti_error(jvmti, error, "could not get field name\n");
+     
+     error = (*jvmti)->GetTag(jvmti, record->cls, &ctag);
+     check_jvmti_error(jvmti, error, "could not get class tag\n");
+     
+     cnum = TAG_TO_CNUM(ctag);
+     
+     stdout_message("--watching %x,%x (%s.%s) \n", cnum, record->field, cname, fname);
+     deallocate(jvmti, cname);
+     deallocate(jvmti, fname);
+     */
     
 	error = (*jvmti)->SetFieldAccessWatch(jvmti, record->cls, record->field);
 	check_jvmti_error(jvmti, error, "Cannot add access watch to field");
@@ -285,7 +285,7 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker, jobject cls, jint cnum, 
     
     /* always store fields, watches are added later if we're not ready yet */
     enterCriticalSection(jvmti); {
-        store_fields(&gdata->fields, toStore, len);
+        fields_store(gdata->fields, jvmti, toStore, len);
     }; exitCriticalSection(jvmti);
     
     /* don't watch fields until after they've been inserted into the map */
@@ -649,10 +649,10 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
     
 	enterCriticalSection(jvmti); {
         
+        fields_visit(gdata->fields, jvmti, &watch_field);
+
 		/* Indicate VM is initialized */
 		gdata->vmInitialized = JNI_TRUE;
-        
-		visit_fields(gdata->fields, &watch_field);
         
 	} exitCriticalSection(jvmti);
 }
@@ -908,11 +908,11 @@ findFieldRecord(jvmtiEnv *jvmti, JNIEnv *env, jclass field_klass, jfieldID field
     
     cls = field_klass;
     class_tag = get_tag(jvmti, cls);
-    find_field(gdata->fields, class_tag, field, record);
+    fields_find(gdata->fields, jvmti, class_tag, field, record);
     
     while (cls != NULL && TAG_TO_CNUM(class_tag) != 1 && record->cls == NULL) {
         class_tag = get_tag(jvmti, cls);
-        find_field(gdata->fields, class_tag, field, record);
+        fields_find(gdata->fields, jvmti, class_tag, field, record);
         if (record->cls == NULL) {
             cls = (*env)->GetSuperclass(env, cls);
         }
@@ -922,7 +922,7 @@ findFieldRecord(jvmtiEnv *jvmti, JNIEnv *env, jclass field_klass, jfieldID field
                 class_tag = get_tag(jvmti, field_klass);
                 record->class_tag = class_tag;
                 record->cls = field_klass;
-                store_fields(&(gdata->fields), record, 1);
+                fields_store(gdata->fields, jvmti, record, 1);
                 (*jvmti)->GetClassSignature(jvmti, field_klass, &cname, NULL);
                 (*jvmti)->GetFieldName(jvmti, field_klass, field, &fname, NULL, NULL);
                 stdout_message("stored super field for faster access: %s.%s (%llx.%llx)\n",
@@ -1112,11 +1112,6 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	/* Here we save the jvmtiEnv* for Agent_OnUnload(). */
 	gdata->jvmti = jvmti;
     
-	/* initialize comm utilities */
-	comm_init(jvmti, options);
-    
-	comm_started(jvmti);
-    
 	/* Immediately after getting the jvmtiEnv* we need to ask for the
 	 *   capabilities this agent will need.
 	 */
@@ -1184,14 +1179,17 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
                                                JVMTI_EVENT_CLASS_PREPARE, (jthread)NULL);
     check_jvmti_error(jvmti, error, "Cannot set event notification");
     
-	/* Here we create a raw monitor for our use in this agent to
-	 *   protect critical sections of code.
-	 */
-	error = (*jvmti)->CreateRawMonitor(jvmti, "agent data", &(gdata->lock));
-	check_jvmti_error(jvmti, error, "Cannot create raw monitor");
+    /* perform our init */
     
-	/* Add jar file to boot classpath */
-	/* add_demo_jar_to_bootclasspath(jvmti, "rprof"); */
+	error = (*jvmti)->CreateRawMonitor(jvmti, "agent data", &(gdata->lock));
+	check_jvmti_error(jvmti, error, "Cannot create agent data monitor");
+    
+    gdata->fields = fields_create(jvmti, "field table");
+    
+    /* initialize comm utilities */
+	comm_init(jvmti, options);
+    
+	comm_started(jvmti);
     
 	/* We return JNI_OK to signify success */
 	return JNI_OK;

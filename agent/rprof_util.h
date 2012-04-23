@@ -33,15 +33,29 @@ typedef struct {
 	r_fieldID id;
 } r_fieldRecord;
 
-struct _r_fieldTable;
-typedef struct _r_fieldTable *r_fieldTable;
+struct _FieldTable;
+typedef struct _FieldTable *FieldTable;
 
 typedef StringList *r_classList;
 
-void store_fields(r_fieldTable* table, r_fieldRecord* toStore, size_t len);
-void visit_fields(r_fieldTable table, void (*callback) (r_fieldRecord*));
-void find_field(r_fieldTable table, jlong class_tag, jfieldID fieldId, r_fieldRecord* target);
-void cleanup_fields(r_fieldTable* table);
+/* Field Table */
+
+FieldTable
+fields_create(jvmtiEnv *jvmti, const char *name);
+
+void
+fields_store(FieldTable table, jvmtiEnv *jvmti,
+             r_fieldRecord* toStore, size_t len);
+
+void
+fields_visit(FieldTable table, jvmtiEnv *jvmti,
+             void (*callback) (r_fieldRecord*));
+
+void
+fields_find(FieldTable table, jvmtiEnv *jvmti,
+            jlong class_tag, jfieldID fieldId, r_fieldRecord* target);
+
+/* Class List */
 
 void store_class(r_classList* classes, const char *cname);
 void visit_classes(r_classList classes, jvmtiEnv* jvmti, JNIEnv *env,

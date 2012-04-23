@@ -256,7 +256,9 @@ CommEnv comm_create(jvmtiEnv *jvmti, char *options)
 }
 
 #define CONTENT_LENGTH "Content-Length: "
+#define CONTENT_LENGTH_LEN 16
 #define CLASS_ID "Class-id: "
+#define CLASS_ID_LEN 10
 
 static size_t
 read_header(char *input, size_t size, size_t count, Response *response)
@@ -264,14 +266,14 @@ read_header(char *input, size_t size, size_t count, Response *response)
 	jint len;
     jint id;
     
-	if (strcasestr(input, CONTENT_LENGTH) == input) {
-		len = (jint) strtol(&input[strlen(CONTENT_LENGTH)], NULL, 0);
+	if (strncasecmp(input, CONTENT_LENGTH, CONTENT_LENGTH_LEN) == 0) {
+		len = (jint) strtol(&input[CONTENT_LENGTH_LEN], NULL, 0);
 		*(response->length) = len;
 		*(response->image) = allocate(response->jvmti, (size_t) len);
 	}
     
-	if (strcasestr(input, CLASS_ID) == input) {
-		id = (jint) strtol(&input[strlen(CLASS_ID)], NULL, 0);
+	if (strncasecmp(input, CLASS_ID, CLASS_ID_LEN) == 0) {
+		id = (jint) strtol(&input[CLASS_ID_LEN], NULL, 0);
 	    *(response->class_id) = id;
 	}
     

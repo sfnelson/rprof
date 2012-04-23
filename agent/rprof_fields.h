@@ -6,8 +6,6 @@
 #include <jvmti.h>
 #include <stdint.h>
 
-#include "stringlist.h"
-
 typedef union {
     struct {
         jshort  ds;

@@ -78,7 +78,8 @@ LINK_SHARED=$(LINK.c) -shared -o $@
 
 J_OPTS = \
     -Xbootclasspath/a:$(JARFILE) \
-    -agentlib:$(LIBNAME)=$(HOST),$@
+    -agentlib:$(LIBNAME)=$(HOST),$@ \
+    -Xcheck:jni
 
 ifeq ($(J_DEBUG),true)
     J_OPTS  += -agentlib:jdwp=transport=dt_socket,address=localhost:8000
@@ -106,10 +107,10 @@ test-utils: $(TEST_OBJECTS)
 clean:
 	rm -f -r $(LIBRARY) $(TEST_OBJECTS) test-utils tmp/pre/* tmp/post/*
 
-test: all
+version: all
 	$(JAVA) -version
 
-kitchensink: all
+test: all
 	$(JAVA) -classpath classes Test
 
 example: all
@@ -121,6 +122,9 @@ hashmap: all
 list: all
 	$(JAVA) -jar $(DACAPO) -l
 
+avrora: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 avrora
+
 batik: all
 	$(JAVA) -jar $(DACAPO) -n 1 -t 1 batik
 
@@ -130,6 +134,12 @@ eclipse: all
 fop: all
 	$(JAVA) -jar $(DACAPO) -n 1 -t 1 fop
 
+h2: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 h2
+
+jython: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 jython
+
 luindex: all
 	$(JAVA) -jar $(DACAPO) -n 1 -t 1 luindex
 
@@ -138,4 +148,16 @@ lusearch: all
 
 pmd: all
 	$(JAVA) -jar $(DACAPO) -n 1 -t 1 pmd
+
+tomcat: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 tomcat
+
+tradebeans: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 tradebeans
+
+tradesoap: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 tradesoap
+
+xalan: all
+	$(JAVA) -jar $(DACAPO) -n 1 -t 1 xalan
 

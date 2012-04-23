@@ -41,7 +41,7 @@ typedef StringList *r_classList;
 /* Field Table */
 
 FieldTable
-fields_create(jvmtiEnv *jvmti, const char *name);
+fields_create(jvmtiEnv *jvmti, const char *useLock, const char *changeLock);
 
 void
 fields_store(FieldTable table, jvmtiEnv *jvmti,

@@ -1184,7 +1184,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	error = (*jvmti)->CreateRawMonitor(jvmti, "agent data", &(gdata->lock));
 	check_jvmti_error(jvmti, error, "Cannot create agent data monitor");
     
-    gdata->fields = fields_create(jvmti, "field table");
+    gdata->fields = fields_create(jvmti, "field table use", "field table change");
     
     /* initialize comm utilities */
 	comm_init(jvmti, options);

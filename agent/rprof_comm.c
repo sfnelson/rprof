@@ -286,6 +286,10 @@ read_response(void *input, size_t size, size_t count, Response* response)
 	unsigned char *image = *(response->image);
     size_t read = size * count;
     
+    if (offset + read > (size_t) *(response->length)) {
+        fatal_error("reading too much");
+    }
+    
 	memcpy(&image[offset], input, read);
 	response->offset += read;
     

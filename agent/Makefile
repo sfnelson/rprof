@@ -119,6 +119,9 @@ example: all
 hashmap: all
 	$(JAVA) -classpath classes HashMapError
 
+threads: all
+	$(JAVA) Threads
+
 list: all
 	$(JAVA) -jar $(DACAPO) -l
 

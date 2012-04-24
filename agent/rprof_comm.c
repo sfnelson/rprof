@@ -129,10 +129,11 @@ flush(CommEnv env, struct store *to_flush)
 {
     if (to_flush == NULL) return;
     
-    post(env->log, HEADER(env->dataset), &(to_flush->events),
+    post(env->log, HEADER(env->dataset), to_flush->events,
          to_flush->size * sizeof(EventRecord),
          NULL, NULL, NULL, NULL);
     
+    bzero(to_flush, sizeof(struct store));
     deallocate(env->jvmti, to_flush);
 }
 
@@ -299,13 +300,14 @@ read_response(void *input, size_t size, size_t count, Response* response)
 }
 
 #define DATASET "Dataset: "
+#define DATASET_LEN 9
 #define HEADER_DATASET "Dataset: %s"
 
 static size_t
 read_dataset(char *input, size_t size, size_t count, CommEnv env)
 {
-	if (strcasestr(input, DATASET) == input) {
-        OPT_INIT(env, env->dataset, HEADER_DATASET, &(input[strlen(DATASET)]))
+	if (strncasecmp(input, DATASET, DATASET_LEN) == 0) {
+        OPT_INIT(env, env->dataset, HEADER_DATASET, &(input[DATASET_LEN]))
 		char* end = strchr(env->dataset, '\r');
 		if (end == 0) end = strchr(env->dataset, '\n');
 		end[0] = 0;

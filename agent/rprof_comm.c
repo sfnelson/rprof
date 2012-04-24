@@ -191,13 +191,14 @@ release_store(CommEnv env, struct store *store)
 {
     LOCK(env->jvmti, env->lock)
     
-    (store->using)--;
-    
-    if (store->using == 0 && store->flush == JNI_TRUE) {
+    if (store->using == 1 && store->flush == JNI_TRUE) {
+        RELEASE(env->jvmti, env->lock)
         flush(env, store);
     }
-    
-    RELEASE(env->jvmti, env->lock)
+    else {
+        (store->using)--;
+        RELEASE(env->jvmti, env->lock)
+    }
 }
 
 #define URL_START   "http://%s/start"
@@ -367,6 +368,7 @@ comm_flush(CommEnv env)
 {
     struct store *store, *new_store;
     
+    LOCK(env->jvmti, env->lock);
     request_store(env, 0, &store, NULL);
     
     new_store = allocate(env->jvmti, sizeof(struct store));
@@ -376,6 +378,7 @@ comm_flush(CommEnv env)
     env->store = new_store;
     store->flush = JNI_TRUE;
     
+    RELEASE(env->jvmti, env->lock);
     release_store(env, store);
 }
 

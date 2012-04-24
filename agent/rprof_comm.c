@@ -38,7 +38,7 @@ typedef struct {
 } EventRecord;
 
 struct store {
-    volatile size_t using;
+    size_t using;
     size_t size;
     size_t max;
     jboolean flush;
@@ -48,7 +48,7 @@ struct store {
 struct _CommEnv {
 	jvmtiEnv      *jvmti;
 	jrawMonitorID  lock;
-    struct store *store;
+    struct store  *store;
     volatile jlong prev_id;
     char *start;
     char *weave;
@@ -124,65 +124,67 @@ post(const char* dest, struct curl_slist *headers, void *data, size_t len,
     curl_easy_cleanup(curl);
 }
 
-static void
-flush(CommEnv env, struct store *to_flush)
+static struct store *
+create_store(CommEnv env)
 {
-    if (to_flush == NULL) return;
+    struct store *store;
     
-    post(env->log, HEADER(env->dataset), to_flush->events,
-         to_flush->size * sizeof(EventRecord),
+    store = allocate(env->jvmti, sizeof(struct store));
+    store->max = EVENT_BUFFER_SIZE;
+    
+    return store;
+}
+
+static void
+destroy_store(CommEnv env, struct store *store)
+{
+    post(env->log, HEADER(env->dataset), store->events,
+         store->size * sizeof(EventRecord),
          NULL, NULL, NULL, NULL);
     
-    bzero(to_flush, sizeof(struct store));
-    deallocate(env->jvmti, to_flush);
+    bzero(store, sizeof(struct store));
+    deallocate(env->jvmti, store);
 }
 
 static jlong
 request_store(CommEnv env, size_t toStore, struct store **store, EventRecord **record)
 {
-    struct store *to_flush = NULL;
+    struct store *current = NULL, *old = NULL;
     jlong id = 0;
-    
-    if (env == NULL) {
-        fatal_error("NULL comm env!");
-        return 0;
-    }
     
     LOCK(env->jvmti, env->lock)
     
-    (*store) = env->store;
+    current = env->store;
     
-    if ((*store)->size + toStore > (*store)->max) {
-        to_flush = (*store);
-        
-        env->store = allocate(env->jvmti, sizeof(struct store));
-        bzero(env->store, sizeof(struct store));
-        (*store) = env->store;
-        (*store)->max = EVENT_BUFFER_SIZE;
-        
-        if (to_flush->using != 0) {
-            /* still in use, set flush signal and proceed */
-            (*store)->flush = JNI_TRUE;
-            to_flush = NULL;
-        }
+    if (current->size + toStore > current->max) {
+        old = current;
+        current = create_store(env);
+        env->store = current;
     }
     
     if (toStore > 0) {
-        (*record) = &((*store)->events[(*store)->size]);
-        (*store)->size += toStore;
+        (*record) = &(current->events[current->size]);
+        current->size += toStore;
         
         id = env->prev_id + 1;
         env->prev_id += toStore;
     }
     
-    ((*store)->using)++;
+    (current->using)++;
     
-    RELEASE(env->jvmti, env->lock)
-    
-    if (to_flush != NULL) {
-        flush(env, to_flush);
+    if (old != NULL && old->using > 0) {
+        old->flush = JNI_TRUE;
+        RELEASE(env->jvmti, env->lock)
+    }
+    else if (old != NULL) {
+        RELEASE(env->jvmti, env->lock)
+        destroy_store(env, old);
+    }
+    else {
+        RELEASE(env->jvmti, env->lock)
     }
     
+    (*store) = current;
     return id;
 }
 
@@ -193,7 +195,7 @@ release_store(CommEnv env, struct store *store)
     
     if (store->using == 1 && store->flush == JNI_TRUE) {
         RELEASE(env->jvmti, env->lock)
-        flush(env, store);
+        destroy_store(env, store);
     }
     else {
         (store->using)--;
@@ -208,8 +210,8 @@ release_store(CommEnv env, struct store *store)
 #define HEADER_BENCHMARK "Benchmark: %s"
 
 #define OPT_INIT(E, A, F, P) \
-    A = allocate(E->jvmti, strlen(F) + strlen(P) + 1); \
-    sprintf(A, F, P);
+A = allocate(E->jvmti, strlen(F) + strlen(P) + 1); \
+sprintf(A, F, P);
 
 static void
 comm_init(CommEnv env, const char *host, const char *benchmark)
@@ -221,7 +223,8 @@ comm_init(CommEnv env, const char *host, const char *benchmark)
     OPT_INIT(env, env->benchmark, HEADER_BENCHMARK, benchmark);
 }
 
-CommEnv comm_create(jvmtiEnv *jvmti, char *options)
+CommEnv
+comm_create(jvmtiEnv *jvmti, char *options)
 {
     CommEnv env;
 	jvmtiError error;
@@ -234,11 +237,9 @@ CommEnv comm_create(jvmtiEnv *jvmti, char *options)
     
     error = (*jvmti)->CreateRawMonitor(jvmti, "comm", &(env->lock));
     check_jvmti_error(jvmti, error, "Cannot create monitor");
-
-    env->store = allocate(jvmti, sizeof(struct store));
-    bzero(env->store, sizeof(struct store));
-    env->store->max = EVENT_BUFFER_SIZE;
-
+    
+    env->store = create_store(env);
+    
 	if (0 == options || 0 == strlen(options)) {
 		comm_init(env, "localhost:8888", "unknown");
 	}
@@ -251,7 +252,7 @@ CommEnv comm_create(jvmtiEnv *jvmti, char *options)
 	    benchmark++;
 	    comm_init(env, options, benchmark);
 	}
-
+    
 	curl_global_init(CURL_GLOBAL_ALL);
     
     return env;
@@ -366,20 +367,22 @@ comm_log(CommEnv env, r_event *event)
 void
 comm_flush(CommEnv env)
 {
-    struct store *store, *new_store;
+    struct store *store;
     
     LOCK(env->jvmti, env->lock);
-    request_store(env, 0, &store, NULL);
     
-    new_store = allocate(env->jvmti, sizeof(struct store));
-    bzero(new_store, sizeof(struct store));
-    new_store->max = EVENT_BUFFER_SIZE;
+    store = env->store;
+    env->store = create_store(env);
     
-    env->store = new_store;
-    store->flush = JNI_TRUE;
-    
-    RELEASE(env->jvmti, env->lock);
-    release_store(env, store);
+    if (store->using > 0) {
+        store->flush = JNI_TRUE;
+        store = NULL;
+        RELEASE(env->jvmti, env->lock);
+    }
+    else {
+        RELEASE(env->jvmti, env->lock);
+        destroy_store(env, store);
+    }
 }
 
 void
@@ -391,7 +394,7 @@ comm_weave(CommEnv env,
 {
 	Response r;
     char *url;
-
+    
 	*new_class_len = 0;
 	*new_class_data = NULL;
     

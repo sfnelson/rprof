@@ -50,16 +50,10 @@ public class Stop extends HttpServlet {
 		log.info("profiler run stopped");
 
 		Context.setDataset(dataset);
-		final InstanceMapReduce mr = new InstanceMapReduce(dataset, db);
-		db.createInstanceReducer(mr).reduce();
 
-		final ClassMapReduce cmr = new ClassMapReduce(db.getClazzQuery());
-		db.createClassSummaryMapper(db.getInstanceQuery(), cmr, true).map();
-		db.createClassSummaryReducer(cmr).reduce();
-
-		final FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
-		db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
-		db.createFieldSummaryReducer(fmr).reduce();
+		reduceInstances(dataset);
+		reduceClasses(dataset);
+		reduceFields(dataset);
 
 		log.info("finished map/reducing");
 
@@ -76,4 +70,20 @@ public class Stop extends HttpServlet {
 		resp.setContentLength(0);
 	}
 
+	private void reduceInstances(Dataset dataset) {
+		InstanceMapReduce mr = new InstanceMapReduce(dataset, db);
+		db.createInstanceReducer(mr).reduce();
+	}
+
+	private void reduceClasses(Dataset dataset) {
+		ClassMapReduce cmr = new ClassMapReduce(db.getClazzQuery());
+		db.createClassSummaryMapper(db.getInstanceQuery(), cmr, true).map();
+		db.createClassSummaryReducer(cmr).reduce();
+	}
+
+	private void reduceFields(Dataset dataset) {
+		FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
+		db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
+		db.createFieldSummaryReducer(fmr).reduce();
+	}
 }

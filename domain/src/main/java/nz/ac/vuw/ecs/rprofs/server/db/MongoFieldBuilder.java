@@ -51,7 +51,7 @@ abstract class MongoFieldBuilder extends MongoBuilder<MongoFieldBuilder, FieldId
 	/**
 	 * Provided for {@link MongoClassBuilder} to store this field once it has obtained an id.
 	 *
-	 * @param owner	 the id that this field's owner class has been assigned
+	 * @param owner     the id that this field's owner class has been assigned
 	 * @param ownerName the name of the owning class
 	 * @return the updated field id
 	 */
@@ -89,7 +89,9 @@ abstract class MongoFieldBuilder extends MongoBuilder<MongoFieldBuilder, FieldId
 
 	@Override
 	public MongoFieldBuilder setOwner(ClazzId owner) {
-		b.put("owner", owner.getValue());
+		if (owner != null) {
+			b.put("owner", owner.getValue());
+		}
 		return this;
 	}
 

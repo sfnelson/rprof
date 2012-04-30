@@ -14,7 +14,7 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.*;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout;
+import nz.ac.vuw.ecs.rprofs.client.ui.SplitLayout;
 import nz.ac.vuw.ecs.rprofs.client.ui.PlaceAnchor;
 import nz.ac.vuw.ecs.rprofs.client.ui.UIButton;
 import nz.ac.vuw.ecs.rprofs.client.views.ViewListView;
@@ -85,7 +85,7 @@ public class ReportSelectionPanel extends Composite implements ViewListView {
 	@UiField
 	UIButton close;
 
-	private final Provider<FrameLayout> parent;
+	private final Provider<SplitLayout> parent;
 
 	private final Map<String, PlaceAnchor> buttons = Maps.newHashMap();
 
@@ -96,7 +96,7 @@ public class ReportSelectionPanel extends Composite implements ViewListView {
 	private Presenter presenter;
 
 	@Inject
-	public ReportSelectionPanel(Provider<FrameLayout> parent) {
+	public ReportSelectionPanel(Provider<SplitLayout> parent) {
 		this.parent = parent;
 
 		initWidget(uiBinder.createAndBindUi(this));

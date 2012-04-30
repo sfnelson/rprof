@@ -1,41 +1,48 @@
 package nz.ac.vuw.ecs.rprofs.client.views.impl;
 
-import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.place.shared.PlaceController;
-import com.google.gwt.user.client.ui.AcceptsOneWidget;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.uibinder.client.UiBinder;
+import com.google.gwt.uibinder.client.UiFactory;
+import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.*;
+
 import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.web.bindery.event.shared.EventBus;
-import nz.ac.vuw.ecs.rprofs.client.ui.FrameLayout;
 import nz.ac.vuw.ecs.rprofs.client.views.ProfilerAppView;
 import nz.ac.vuw.ecs.rprofs.client.views.ViewListView;
 
-public class InspectorWidget extends FrameLayout implements ProfilerAppView {
+public class InspectorWidget extends Composite implements ProfilerAppView {
 
-	private final Provider<ViewListView> view;
+	interface Binder extends UiBinder<Widget, InspectorWidget> {
+	}
+
+	@UiField
+	SplitLayoutPanel panel;
+
+	@UiField
+	SimpleLayoutPanel top;
+
+	@UiField(provided = true)
+	ViewListView bottom;
 
 	@Inject
-	public InspectorWidget(PlaceController pc, EventBus bus, Provider<ViewListView> view) {
-		super(FrameLayout.MAX_HEIGHT | FrameLayout.HIDE_BOTTOM, 15, 50, Unit.PCT);
+	public InspectorWidget(ViewListView views) {
+		this.bottom = views;
 
-		this.view = view;
-		getCenter().setWidget(view.get());
+		initWidget((GWT.<Binder>create(Binder.class)).createAndBindUi(this));
 	}
 
 	@Override
 	public AcceptsOneWidget getDatasetContainer() {
-		return getTop();
+		return top;
 	}
-
 
 	@Override
 	public AcceptsOneWidget getInspectorContainer() {
-		return view.get();
+		return bottom;
 	}
 
-	@Override
-	public AcceptsOneWidget getReportContainer() {
-		return getBottom();
+	@UiFactory
+	SplitLayoutPanel createSplitterPanel() {
+		return new SplitLayoutPanel(2);
 	}
-
 }

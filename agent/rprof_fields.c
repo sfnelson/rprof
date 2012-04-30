@@ -5,36 +5,11 @@
 
 #define LOAD_FACTOR 0.7f
 
-#define LOCK(X,Y) \
-check_jvmti_error(X->jvmti, \
-(*(X->jvmti))->RawMonitorEnter(X->jvmti, Y), \
-"error requesting locking");
+#define LOCK(J, L) \
+check_jvmti_error(J, (*J)->RawMonitorEnter(J, L), "cannot get monitor");
 
-#define RELEASE(X,Y) \
-check_jvmti_error(X->jvmti, \
-(*(X->jvmti))->RawMonitorExit(X->jvmti, Y), \
-"error releasing lock");
-
-#define REQUEST_MAP(X, Y) \
-LOCK(X, X->useLock) \
-if (X->map == NULL) (*Y) = NULL; \
-else { \
-++(X->map->using); \
-(*Y) = X->map; \
-} \
-RELEASE(X, X->useLock)
-
-#define RELEASE_MAP(X, Y) \
-LOCK(X, X->useLock) \
-if (Y == NULL); \
-else { \
---(Y->using); \
-if (Y->free == JNI_TRUE && Y->using == 0) { \
-bzero(Y->entries, Y->max * sizeof(r_fieldRecord)); \
-deallocate(X->jvmti, Y->entries); \
-bzero(Y, sizeof(struct f_map)); \
-deallocate(X->jvmti, Y); } } \
-RELEASE(X, X->useLock);
+#define RELEASE(J, L) \
+check_jvmti_error(J, (*J)->RawMonitorExit(J, L), "cannot release monitor");
 
 typedef struct {
     jfieldID field;
@@ -56,18 +31,69 @@ struct _FieldTable {
     jrawMonitorID   changeLock;
 };
 
-typedef struct {
-    jlong cid;
-    jclass cls;
-    size_t num_fields;
-    FieldEntry *fields;
-} ClassEntry;
+static struct f_map *
+map_create(FieldTable table, size_t size)
+{
+    struct f_map * map;
+    
+    map = allocate(table->jvmti, sizeof(struct f_map));
+    bzero(map, sizeof(struct f_map));
+    if (map == NULL) {
+        fatal_error("ERROR: unable to allocate space for a field table\n");
+        return NULL;
+    }
+    
+    map->size = 0;
+    map->max = size;
+    map->entries = allocate(table->jvmti, size * sizeof(r_fieldRecord));
+    bzero(map->entries, size * sizeof(r_fieldRecord));
+    if (map->entries == NULL) {
+        fatal_error("ERROR: unable to allocate space for a field table entries\n");
+    }
+    
+    return map;
+}
 
-typedef struct _r_class_table {
-    size_t size;
-    size_t max;
-    ClassEntry *classes;
-} ClassTable;
+static struct f_map *
+map_request(FieldTable table)
+{
+    struct f_map *map;
+    
+    LOCK(table->jvmti, table->useLock)
+    
+    if (table->map == NULL) {
+        map = NULL;
+    }
+    
+    else {
+        ++(table->map->using);
+        map = table->map;
+    }
+    
+    RELEASE(table->jvmti, table->useLock)
+    
+    return map;
+}
+
+static void
+map_release(FieldTable table, struct f_map *map)
+{
+    LOCK(table->jvmti, table->useLock)
+    
+    if (map == NULL);
+    else {
+        if (map->free == JNI_TRUE && map->using == 1) {
+            bzero(map->entries, map->max * sizeof(r_fieldRecord));
+            deallocate(table->jvmti, map->entries);
+            bzero(map, sizeof(struct f_map));
+            deallocate(table->jvmti, map);
+        }
+        else {
+            --(map->using);
+        }
+    }
+    RELEASE(table->jvmti, table->useLock);
+}
 
 static r_fieldRecord *
 find(struct f_map *map, jlong class_tag, jfieldID field)
@@ -120,7 +146,7 @@ fields_find(FieldTable table, jlong class_tag, jfieldID field,
 {
     struct f_map *map;
     
-    REQUEST_MAP(table, &map);
+    map = map_request(table);
     
     if (map != NULL) {
         memcpy(target, find(map, class_tag, field), sizeof(r_fieldRecord));
@@ -129,7 +155,7 @@ fields_find(FieldTable table, jlong class_tag, jfieldID field,
         bzero(target, sizeof(r_fieldRecord));
     }
     
-    RELEASE_MAP(table, map);
+    map_release(table, map);
 }
 
 void
@@ -139,7 +165,7 @@ fields_visit(FieldTable table,  void (*callback) (r_fieldRecord*))
     struct f_map *map;
     r_fieldRecord *tmp;
     
-    REQUEST_MAP(table, &map);
+    map = map_request(table);
     
     if (map != NULL) {
         max = map->max;
@@ -151,19 +177,19 @@ fields_visit(FieldTable table,  void (*callback) (r_fieldRecord*))
         }
     }
     
-    RELEASE_MAP(table, map);
+    map_release(table, map);
 }
 
 void
 fields_store(FieldTable table, r_fieldRecord *toStore, size_t len)
 {
     size_t size, max, i, old;
-    struct f_map *old_map, *new_map;
+    struct f_map *old_map = NULL, *new_map = NULL;
     r_fieldRecord *in, *out;
     
-    LOCK(table, table->changeLock);
+    LOCK(table->jvmti, table->changeLock);
     
-    REQUEST_MAP(table, &old_map);
+    old_map = map_request(table);
     
     if (old_map != NULL) {
         size = old_map->size + len;
@@ -175,27 +201,23 @@ fields_store(FieldTable table, r_fieldRecord *toStore, size_t len)
         old = 0;
     }
     
-    while (size > LOAD_FACTOR * max) max *= 2;
-    
-    new_map = allocate(table->jvmti, sizeof(struct f_map));
-    if (new_map == NULL) {
-        fatal_error("ERROR: unable to allocate space for a field table\n");
-        return;
-    }
-    
-    new_map->size = size;
-    new_map->max = max;
-    new_map->entries = allocate(table->jvmti, max * sizeof(r_fieldRecord));
-    if (new_map->entries == NULL) {
-        fatal_error("ERROR: unable to allocate space for a field table\n");
-    }
-    
-    for (i = 0; i < old; i++) {
-        in = &(old_map->entries[i]);
-        if (in->field != NULL) {
-            out = find(new_map, in->class_tag, in->field);
-            memcpy(out, in, sizeof(r_fieldRecord));
+    if (size > LOAD_FACTOR * max) {
+        while (size > LOAD_FACTOR * max) max *= 2;
+        
+        new_map = map_create(table, max);
+        
+        for (i = 0; i < old; i++) {
+            in = &(old_map->entries[i]);
+            if (in->field != NULL) {
+                out = find(new_map, in->class_tag, in->field);
+                memcpy(out, in, sizeof(r_fieldRecord));
+            }
         }
+        
+        new_map->size = size - len;
+    }
+    else {
+        new_map = old_map;
     }
     
     for (i = 0; i < len; i++) {
@@ -206,11 +228,17 @@ fields_store(FieldTable table, r_fieldRecord *toStore, size_t len)
         }
     }
     
-    table->map = new_map;
-    if (old_map != NULL) old_map->free = JNI_TRUE;
-    RELEASE_MAP(table, old_map);
+    new_map->size = size;
     
-    RELEASE(table, table->changeLock);
+    LOCK(table->jvmti, table->useLock)
+    table->map = new_map;
+    if (old_map != NULL && old_map != new_map) {
+        old_map->free = JNI_TRUE;
+    }
+    map_release(table, old_map);
+    RELEASE(table->jvmti, table->useLock)
+    
+    RELEASE(table->jvmti, table->changeLock);
 }
 
 FieldTable

@@ -47,7 +47,7 @@ abstract class MongoMethodBuilder extends MongoBuilder<MongoMethodBuilder, Metho
 	/**
 	 * Provided for {@link MongoClassBuilder} to store this method once it has obtained an id.
 	 *
-	 * @param owner	 the id that this method's owner class has been assigned
+	 * @param owner     the id that this method's owner class has been assigned
 	 * @param ownerName the name of the owning class
 	 * @return the updated method id
 	 */
@@ -85,7 +85,9 @@ abstract class MongoMethodBuilder extends MongoBuilder<MongoMethodBuilder, Metho
 
 	@Override
 	public MongoMethodBuilder setOwner(ClazzId owner) {
-		b.put("owner", owner.getValue());
+		if (owner != null) {
+			b.put("owner", owner.getValue());
+		}
 		return this;
 	}
 

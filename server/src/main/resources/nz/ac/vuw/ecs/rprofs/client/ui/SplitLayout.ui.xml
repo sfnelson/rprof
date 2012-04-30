@@ -1,0 +1,50 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+             xmlns:r="urn:import:nz.ac.vuw.ecs.rprofs.client.ui">
+    <ui:style field="s">
+        .wrapper {
+            position: relative;
+        }
+
+        .top, .spacer {
+            position: absolute;
+            left: 0;
+            right: 0;
+        }
+
+        .top, {
+            overflow: auto;
+            top: 0;
+        }
+
+        .spacer {
+            height: 1px;
+            border-top: solid 1px #777;
+            background-color: #ccc;
+            cursor: row-resize;
+        }
+    </ui:style>
+    <ui:style field="style" type="nz.ac.vuw.ecs.rprofs.client.ui.SplitLayout.Style">
+        .bottom {
+            position: absolute;
+            overflow: auto;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: 2px 0;
+        }
+
+        .hideTop .bottom {
+            margin-top: 0;
+        }
+
+        .hideBottom .bottom {
+            margin-bottom: 0;
+        }
+    </ui:style>
+    <r:ActivePanel ui:field="wrapper" styleName="{s.wrapper}">
+        <r:SplitLayout.BorderPanel styleName="{s.top}" ui:field="top"/>
+        <r:SplitLayout.Spacer styleName="{s.spacer}" ui:field="spacer"/>
+        <r:SplitLayout.BorderPanel styleName="{style.bottom}" ui:field="bottom"/>
+    </r:ActivePanel>
+</ui:UiBinder> 

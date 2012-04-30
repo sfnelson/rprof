@@ -7,6 +7,7 @@ import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
+
 import com.google.inject.Inject;
 import nz.ac.vuw.ecs.rprofs.client.views.ProfilerAppView;
 
@@ -14,23 +15,21 @@ public class ProfilerApp extends AbstractActivity {
 
 	private final DatasetActivityMapper datasetMapper;
 	private final InspectorActivityMapper inspectorMapper;
-	private final ReportActivityMapper reportMapper;
 
 	private final ProfilerAppView view;
 
 	@Inject
-	public ProfilerApp(DatasetActivityMapper datasetMapper, InspectorActivityMapper inspectorMapper,
-					   ReportActivityMapper reportMapper, ProfilerAppView view) {
+	public ProfilerApp(DatasetActivityMapper datasetMapper,
+					   InspectorActivityMapper inspectorMapper,
+					   ProfilerAppView view) {
 		this.datasetMapper = datasetMapper;
 		this.inspectorMapper = inspectorMapper;
-		this.reportMapper = reportMapper;
 		this.view = view;
 	}
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
 		new ActivityManager(datasetMapper, eventBus).setDisplay(view.getDatasetContainer());
-		new ActivityManager(reportMapper, eventBus).setDisplay(view.getReportContainer());
 		new ActivityManager(inspectorMapper, eventBus).setDisplay(view.getInspectorContainer());
 
 		panel.setWidget(view);

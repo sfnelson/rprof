@@ -37,14 +37,9 @@ public class FieldSummary implements DataObject<FieldSummaryId, FieldSummary> {
 
 	private long writes;
 
-	public FieldSummary(FieldSummaryId id, String packageName, String name, String description,
-						boolean isDeclaredFinal, boolean isStationary, boolean isConstructed, boolean isFinal,
+	public FieldSummary(FieldSummaryId id, boolean isStationary, boolean isConstructed, boolean isFinal,
 						int instances, long reads, long writes) {
 		this.id = id;
-		this.packageName = packageName;
-		this.name = name;
-		this.description = description;
-		this.isDeclaredFinal = isDeclaredFinal;
 		this.isFinal = isFinal;
 		this.isStationary = isStationary;
 		this.isConstructed = isConstructed;

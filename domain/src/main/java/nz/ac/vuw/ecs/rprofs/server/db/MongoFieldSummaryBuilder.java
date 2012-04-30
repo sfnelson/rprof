@@ -109,8 +109,12 @@ public abstract class MongoFieldSummaryBuilder extends MongoBuilder<MongoFieldSu
 		int instances = b.getInt("instances");
 		long reads = b.getLong("reads");
 		long writes = b.getLong("writes");
-		return new FieldSummary(id, packageName, name, description,
-				isDeclaredFinal, isStationary, isConstructed, isFinal,
-				instances, reads, writes);
+		FieldSummary fs = new FieldSummary(id, isStationary,
+				isConstructed, isFinal, instances, reads, writes);
+		fs.setPackageName(packageName);
+		fs.setName(name);
+		fs.setDescription(description);
+		fs.setDeclaredFinal(isDeclaredFinal);
+		return fs;
 	}
 }

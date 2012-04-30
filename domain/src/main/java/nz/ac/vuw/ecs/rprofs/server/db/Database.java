@@ -14,9 +14,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
-import nz.ac.vuw.ecs.rprofs.server.reports.MapReduce;
-import nz.ac.vuw.ecs.rprofs.server.reports.Mapper;
-import nz.ac.vuw.ecs.rprofs.server.reports.Reducer;
+import nz.ac.vuw.ecs.rprofs.server.reports.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -337,6 +335,23 @@ public class Database {
 		};
 	}
 
+	public <Input extends DataObject<?, Input>> Finisher.FinisherTask
+	createClassSummaryFinisher(final MapReduceFinish<Input, ClassSummaryId, ClassSummary, ClassSummaryUpdater<?>> mr) {
+		final ClassSummaryQuery<?> q = getClassSummaryQuery();
+		final ClassSummaryUpdater<?> u = getClassSummaryUpdater();
+		return new Finisher.FinisherTask() {
+			@Override
+			public void finish() {
+				Query.Cursor<? extends ClassSummary> c = q.find();
+				while (c.hasNext()) {
+					u.init();
+					mr.finish(c.next().getId(), u);
+				}
+				c.close();
+			}
+		};
+	}
+
 	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
 	createFieldSummaryMapper(Query<?, Input> input, MapReduce<Input, FieldSummaryId, FieldSummary> mr, boolean replace) {
 		DB db = getDatabase();
@@ -404,6 +419,23 @@ public class Database {
 			@Override
 			protected void cleanup() {
 				tmp.drop();
+			}
+		};
+	}
+
+	public <Input extends DataObject<?, Input>> Finisher.FinisherTask
+	createFieldSummaryFinisher(final MapReduceFinish<Input, FieldSummaryId, FieldSummary, FieldSummaryUpdater<?>> mr) {
+		final FieldSummaryQuery<?> q = getFieldSummaryQuery();
+		final FieldSummaryUpdater<?> u = getFieldSummaryUpdater();
+		return new Finisher.FinisherTask() {
+			@Override
+			public void finish() {
+				Query.Cursor<? extends FieldSummary> f = q.find();
+				while (f.hasNext()) {
+					u.init();
+					mr.finish(f.next().getId(), u);
+				}
+				f.close();
 			}
 		};
 	}

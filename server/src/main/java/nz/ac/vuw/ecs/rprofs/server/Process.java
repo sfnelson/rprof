@@ -59,6 +59,7 @@ public class Process extends HttpServlet {
 					}
 					if (op == null || op.equals("reduce") || op.equals("mapreduce")) {
 						db.createClassSummaryReducer(mr).reduce();
+						db.createClassSummaryFinisher(mr).finish();
 					}
 					if (op == null || op.equals("summary")) {
 						summary(resp);
@@ -78,6 +79,7 @@ public class Process extends HttpServlet {
 					}
 					if (op == null || op.equals("reduce") || op.equals("mapreduce")) {
 						db.createFieldSummaryReducer(fmr).reduce();
+						db.createFieldSummaryFinisher(fmr).finish();
 					}
 					if (op == null || "summary".equals(op)) {
 						fields(dataset, resp);

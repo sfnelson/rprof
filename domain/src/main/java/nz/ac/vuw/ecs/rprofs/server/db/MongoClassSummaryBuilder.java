@@ -153,6 +153,9 @@ public abstract class MongoClassSummaryBuilder extends MongoBuilder<MongoClassSu
 				fields.put(fid, info);
 			}
 		}
-		return new ClassSummary(id, className, packageName, numObjects, eqcol, eq, col, none, fields);
+		ClassSummary cs = new ClassSummary(id, numObjects, eqcol, eq, col, none, fields);
+		cs.setClassName(className);
+		cs.setPackageName(packageName);
+		return cs;
 	}
 }

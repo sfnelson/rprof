@@ -1,17 +1,19 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import nz.ac.vuw.ecs.rprofs.server.data.util.FieldQuery;
+import nz.ac.vuw.ecs.rprofs.server.data.util.FieldSummaryUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.FieldSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldSummaryId;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 10/04/12
  */
-public class FieldMapReduce implements MapReduce<Instance, FieldSummaryId, FieldSummary> {
+public class FieldMapReduce implements MapReduceFinish<Instance, FieldSummaryId, FieldSummary, FieldSummaryUpdater<?>> {
 
 	private final FieldQuery<?> fields;
 
@@ -25,19 +27,6 @@ public class FieldMapReduce implements MapReduce<Instance, FieldSummaryId, Field
 		for (Instance.FieldInfo info : instance.getFields().values()) {
 			FieldSummaryId id = new FieldSummaryId(info.getId());
 
-			Field field = fields.find(info.getId());
-			String className = field != null ? field.getOwnerName() : null;
-			if (className != null) {
-				className = className.replace('/', '.');
-			}
-			String packageName = null;
-			if (className != null && className.contains(".")) {
-				packageName = className.substring(0, className.lastIndexOf('.'));
-			}
-			String name = field != null ? className + '.' + field.getName() : null;
-			String description = field != null ? field.getDescription() : null;
-
-			boolean isDeclaredFinal = (field != null) && field.isFinal();
 			EventId firstRead = info.getFirstRead();
 			EventId lastWrite = info.getLastWrite();
 			EventId constructor = instance.getConstructorReturn();
@@ -52,34 +41,13 @@ public class FieldMapReduce implements MapReduce<Instance, FieldSummaryId, Field
 			boolean isFinal = (lastWrite == null)
 					|| (constructor != null && lastWrite.before(constructor) && info.getWrites() <= 1);
 
-			/*
-			if (isDeclaredFinal && !isStationary) {
-				System.out.println(field + " is declared final but not stationary");
-				assert false;
-			}
-
-			if (isDeclaredFinal && !isConstructed) {
-				System.out.println(field + " is declared final but not constructed");
-				assert false;
-			}
-
-			if (isDeclaredFinal && !isFinal) {
-				System.out.println(field + " is declared final but not final");
-				assert false;
-			}*/
-
-			emitter.emit(id, new FieldSummary(id, packageName, name, description,
-					isDeclaredFinal, isStationary, isConstructed, isFinal,
+			emitter.emit(id, new FieldSummary(id, isStationary, isConstructed, isFinal,
 					1, info.getReads(), info.getWrites()));
 		}
 	}
 
 	@Override
 	public FieldSummary reduce(FieldSummaryId id, Iterable<FieldSummary> values) {
-		String packageName = null;
-		String name = null;
-		String description = null;
-		boolean isDeclaredFinal = true;
 		boolean isStationary = true;
 		boolean isConstructed = true;
 		boolean isFinal = true;
@@ -88,10 +56,6 @@ public class FieldMapReduce implements MapReduce<Instance, FieldSummaryId, Field
 		long writes = 0;
 
 		for (FieldSummary summary : values) {
-			packageName = summary.getPackageName();
-			name = summary.getName();
-			description = summary.getDescription();
-			isDeclaredFinal = summary.isDeclaredFinal();
 			isStationary &= summary.isStationary();
 			isConstructed &= summary.isConstructed();
 			isFinal &= summary.isFinal();
@@ -100,8 +64,32 @@ public class FieldMapReduce implements MapReduce<Instance, FieldSummaryId, Field
 			writes += summary.getWrites();
 		}
 
-		return new FieldSummary(id, packageName, name, description,
-				isDeclaredFinal, isStationary, isConstructed, isFinal,
+		return new FieldSummary(id, isStationary, isConstructed, isFinal,
 				instances, reads, writes);
+	}
+
+	@Override
+	public void finish(FieldSummaryId id, FieldSummaryUpdater<?> updater) {
+		FieldId fid = new FieldId(id.getValue());
+		Field field = fields.find(fid);
+
+		String className = field != null ? field.getOwnerName() : null;
+		if (className != null) {
+			className = className.replace('/', '.');
+		}
+		String packageName = null;
+		if (className != null && className.contains(".")) {
+			packageName = className.substring(0, className.lastIndexOf('.'));
+		}
+		String name = field != null ? className + '.' + field.getName() : null;
+		String description = field != null ? field.getDescription() : null;
+
+		boolean isDeclaredFinal = (field != null) && field.isFinal();
+
+		updater.setPackageName(packageName)
+				.setName(name)
+				.setDescription(description)
+				.setDeclaredFinal(isDeclaredFinal)
+				.update(id);
 	}
 }

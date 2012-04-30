@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.reports;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import nz.ac.vuw.ecs.rprofs.server.data.util.ClassSummaryUpdater;
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzQuery;
 import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
@@ -16,7 +17,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 27/03/12
  */
-public class ClassMapReduce implements MapReduce<Instance, ClassSummaryId, ClassSummary> {
+public class ClassMapReduce implements MapReduceFinish<Instance, ClassSummaryId, ClassSummary, ClassSummaryUpdater<?>> {
 
 	private final ClazzQuery<?> classes;
 
@@ -27,15 +28,6 @@ public class ClassMapReduce implements MapReduce<Instance, ClassSummaryId, Class
 	@Override
 	public void map(Instance instance, Emitter<ClassSummaryId, ClassSummary> emitter) {
 		ClazzId type = instance.getType();
-		Clazz clazz = type != null ? classes.find(type) : null;
-		String className = clazz != null ? clazz.getName() : null;
-		if (className != null) {
-			className = className.replace('/', '.');
-		}
-		String packageName = null;
-		if (className != null && className.contains(".")) {
-			packageName = className.substring(0, className.lastIndexOf('.'));
-		}
 
 		EventId constructor = instance.getConstructorReturn();
 
@@ -73,7 +65,7 @@ public class ClassMapReduce implements MapReduce<Instance, ClassSummaryId, Class
 		EventId collection = instance.getFirstCollection();
 
 		ClassSummaryId id = new ClassSummaryId(type);
-		ClassSummary result = new ClassSummary(id, className, packageName, lastWrite, constructor, firstRead,
+		ClassSummary result = new ClassSummary(id, lastWrite, constructor, firstRead,
 				equals, collection, instance.getFields(), mutable);
 		emitter.emit(id, result);
 	}
@@ -87,5 +79,24 @@ public class ClassMapReduce implements MapReduce<Instance, ClassSummaryId, Class
 		}
 
 		return result;
+	}
+
+	@Override
+	public void finish(ClassSummaryId id, ClassSummaryUpdater<?> updater) {
+		if (id == null) return;
+		ClazzId cid = new ClazzId(id.getValue());
+		Clazz clazz = classes.find(cid);
+		String className = clazz != null ? clazz.getName() : null;
+		if (className != null) {
+			className = className.replace('/', '.');
+		}
+		String packageName = null;
+		if (className != null && className.contains(".")) {
+			packageName = className.substring(0, className.lastIndexOf('.'));
+		}
+
+		updater.setClassName(className)
+				.setPackageName(packageName)
+				.update(id);
 	}
 }

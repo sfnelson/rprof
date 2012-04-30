@@ -49,6 +49,12 @@ public class Stop extends HttpServlet {
 
 		log.info("profiler run stopped");
 
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException ex) {
+			// do nothing
+		}
+
 		Context.setDataset(dataset);
 
 		reduceInstances(dataset);
@@ -79,11 +85,13 @@ public class Stop extends HttpServlet {
 		ClassMapReduce cmr = new ClassMapReduce(db.getClazzQuery());
 		db.createClassSummaryMapper(db.getInstanceQuery(), cmr, true).map();
 		db.createClassSummaryReducer(cmr).reduce();
+		db.createClassSummaryFinisher(cmr).finish();
 	}
 
 	private void reduceFields(Dataset dataset) {
 		FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
 		db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
 		db.createFieldSummaryReducer(fmr).reduce();
+		db.createFieldSummaryFinisher(fmr).finish();
 	}
 }

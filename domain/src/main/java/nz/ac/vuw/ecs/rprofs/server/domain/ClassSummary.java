@@ -127,14 +127,11 @@ public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 		fields = Maps.newHashMap();
 	}
 
-	public ClassSummary(ClassSummaryId id, String className, String packageName,
+	public ClassSummary(ClassSummaryId id,
 						EventId lastWrite, EventId constructor, EventId firstRead,
 						EventId equals, EventId collection, Map<FieldId, Instance.FieldInfo> fields,
 						Set<FieldId> mutable) {
 		this(id);
-
-		this.className = className;
-		this.packageName = packageName;
 
 		numObjects = 1;
 
@@ -161,11 +158,9 @@ public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 		}
 	}
 
-	public ClassSummary(ClassSummaryId id, String className, String packageName, int numObjects,
+	public ClassSummary(ClassSummaryId id, int numObjects,
 						int[] eqcol, int[] eq, int[] col, int[] none, Map<FieldId, FieldInfo> fields) {
 		this.id = id;
-		this.className = className;
-		this.packageName = packageName;
 		this.numObjects = numObjects;
 		this.eqcol = eqcol;
 		this.eq = eq;
@@ -262,9 +257,6 @@ public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 
 	public void append(@NotNull ClassSummary result) {
 		assert (id.equals(result.getId()));
-
-		if (result.className != null) this.className = result.className;
-		if (result.packageName != null) this.packageName = result.packageName;
 
 		numObjects += result.numObjects;
 

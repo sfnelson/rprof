@@ -3,7 +3,7 @@
 
 /* TODO this is not thread-safe :-( */
 
-#define LOAD_FACTOR 0.7f
+#define LOAD_FACTOR 0.7
 
 #define LOCK(J, L) \
 check_jvmti_error(J, (*J)->RawMonitorEnter(J, L), "cannot get monitor");
@@ -99,7 +99,7 @@ static r_fieldRecord *
 find(struct f_map *map, jlong class_tag, jfieldID field)
 {
     r_fieldRecord *result;
-    size_t key, max, index, i;
+    size_t key, max, pos, i;
 	size_t fieldAsInt = (size_t) field;
     size_t classAsInt = (size_t) class_tag;
     
@@ -117,10 +117,10 @@ find(struct f_map *map, jlong class_tag, jfieldID field)
     key ^= classAsInt >> 4;
 	key &= (max - 1);
     
-	index = 0;
+	pos = 0;
 	while (JNI_TRUE) {
         /* quad probing, guaranteed not to repeat before $max hops */
-		i = ((size_t)(key + index/2.0f + index*index/2.0f)) % max;
+		i = ((2*key + pos + pos*pos) / 2) % max;
 		result = &(map->entries[i]);
 		if (result->field == NULL) {
             break; /* empty */
@@ -129,9 +129,9 @@ find(struct f_map *map, jlong class_tag, jfieldID field)
             break; /* found */
         }
         
-		index++;
+		pos++;
         
-        if (index >= max) {
+        if (pos >= max) {
             fatal_error("ERROR: probed all entries without finding field\n");            
             return NULL;
         }
@@ -228,7 +228,9 @@ fields_store(FieldTable table, r_fieldRecord *toStore, size_t len)
         }
     }
     
-    new_map->size = size;
+    if (new_map != NULL) {
+        new_map->size = size;
+    }
     
     LOCK(table->jvmti, table->useLock)
     table->map = new_map;

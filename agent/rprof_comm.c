@@ -75,8 +75,8 @@ curl_slist_append(NULL, X)
 #define ADD_HEADER(X, Y) \
 (*X) = curl_slist_append(*X, Y);
 
-typedef size_t (*header_func) (unsigned char*, size_t, size_t, void *);
-typedef size_t (*data_func) (unsigned char*, size_t, size_t, void *);
+typedef curl_write_callback header_func;
+typedef curl_write_callback data_func;
 
 static void
 post(const char* dest, struct curl_slist *headers, void *data, size_t len,
@@ -98,7 +98,7 @@ post(const char* dest, struct curl_slist *headers, void *data, size_t len,
     }
     if (cbHeader != NULL) {
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, cbHeader);
-        curl_easy_setopt(curl, CURLOPT_WRITEHEADER, header_param);
+        curl_easy_setopt(curl, CURLOPT_HEADERDATA, header_param);
     }
     if (cbData != NULL) {
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, cbData);
@@ -127,23 +127,24 @@ post(const char* dest, struct curl_slist *headers, void *data, size_t len,
 static struct store *
 create_store(CommEnv env)
 {
-    struct store *store;
+    struct store *s;
     
-    store = allocate(env->jvmti, sizeof(struct store));
-    store->max = EVENT_BUFFER_SIZE;
+    s = allocate(env->jvmti, sizeof(struct store));
+    s->max = EVENT_BUFFER_SIZE;
     
-    return store;
+    return s;
 }
 
 static void
-destroy_store(CommEnv env, struct store *store)
+destroy_store(CommEnv env, struct store *s)
 {
-    post(env->log, HEADER(env->dataset), store->events,
-         store->size * sizeof(EventRecord),
-         NULL, NULL, NULL, NULL);
+    if (s->size > 0) {
+        post(env->log, HEADER(env->dataset), s->events, s->size * sizeof(EventRecord),
+             NULL, NULL, NULL, NULL);
+    }
     
-    bzero(store, sizeof(struct store));
-    deallocate(env->jvmti, store);
+    bzero(s, sizeof(struct store));
+    deallocate(env->jvmti, s);
 }
 
 static jlong
@@ -231,7 +232,6 @@ comm_create(jvmtiEnv *jvmti, char *options)
 	char *benchmark;
     
     env = allocate(jvmti, sizeof(struct _CommEnv));
-	bzero(env, sizeof(struct _CommEnv));
 	
     env->jvmti = jvmti;
     
@@ -264,8 +264,9 @@ comm_create(jvmtiEnv *jvmti, char *options)
 #define CLASS_ID_LEN 10
 
 static size_t
-read_header(char *input, size_t size, size_t count, Response *response)
+read_header(char *input, size_t size, size_t count, void * arg)
 {
+    Response *response = arg;
 	jint len;
     jint id;
     
@@ -285,8 +286,9 @@ read_header(char *input, size_t size, size_t count, Response *response)
 
 /** This call is reentrant. Offset keeps track of how many bytes we've read. */
 static size_t
-read_response(void *input, size_t size, size_t count, Response* response)
+read_response(char *input, size_t size, size_t count, void * arg)
 {
+    Response* response = arg;
     size_t offset = response->offset;
 	unsigned char *image = *(response->image);
     size_t read = size * count;
@@ -306,8 +308,9 @@ read_response(void *input, size_t size, size_t count, Response* response)
 #define HEADER_DATASET "Dataset: %s"
 
 static size_t
-read_dataset(char *input, size_t size, size_t count, CommEnv env)
+read_dataset(char *input, size_t size, size_t count, void * arg)
 {
+    CommEnv env = (CommEnv) arg;
 	if (strncasecmp(input, DATASET, DATASET_LEN) == 0) {
         OPT_INIT(env, env->dataset, HEADER_DATASET, &(input[DATASET_LEN]))
 		char* end = strchr(env->dataset, '\r');
@@ -321,9 +324,7 @@ read_dataset(char *input, size_t size, size_t count, CommEnv env)
 void
 comm_started(CommEnv env)
 {
-    post(env->start, HEADER(env->benchmark), NULL, 0,
-         (header_func) read_dataset, (void *) env,
-         NULL, NULL);	
+    post(env->start, HEADER(env->benchmark), NULL, 0, read_dataset, env, NULL, NULL);	
 }
 
 void
@@ -336,8 +337,7 @@ comm_stopped(CommEnv env)
     headers = HEADER(env->dataset);
     ADD_HEADER(&headers, lastId);
     
-	post(env->stop, headers, NULL, 0,
-         NULL, NULL, NULL, NULL);
+	post(env->stop, headers, NULL, 0, NULL, NULL, NULL, NULL);
 }
 
 #define untohl(X) (htonl((uint32_t)((X >> 32) & 0xFFFFFFFF)))
@@ -414,7 +414,9 @@ comm_weave(CommEnv env,
     OPT_INIT(env, url, env->weave, classname)
     
     post(url, HEADER(env->dataset), (void *) class_data, (size_t) class_len,
-         (header_func) &read_header, &r,
-         (data_func) &read_response, &r);
+         read_header, &r,
+         read_response, &r);
+    
+    deallocate(env->jvmti, url);
 }
 

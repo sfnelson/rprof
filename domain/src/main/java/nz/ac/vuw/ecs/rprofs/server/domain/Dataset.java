@@ -21,11 +21,17 @@ public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Datas
 	@Nullable
 	private String handle;
 
+	@Nullable
+	private long numEvents;
+
 	@NotNull
 	private Date started;
 
 	@Nullable
 	private Date stopped;
+
+	@Nullable
+	private Date finished;
 
 	public Dataset() {
 	}
@@ -83,6 +89,23 @@ public class Dataset implements DataObject<DatasetId, Dataset>, Comparable<Datas
 
 	public void setStopped(@Nullable Date time) {
 		this.stopped = time;
+	}
+
+	@Nullable
+	public Date getFinished() {
+		return finished;
+	}
+
+	public void setFinished(@Nullable Date time) {
+		this.finished = time;
+	}
+
+	public long getNumEvents() {
+		return numEvents;
+	}
+
+	public void setNumEvents(long numEvents) {
+		this.numEvents = numEvents;
 	}
 
 	@Override

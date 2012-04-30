@@ -1,6 +1,8 @@
 package nz.ac.vuw.ecs.rprofs.server;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.Enumeration;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -10,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetUpdater;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassMapReduce;
@@ -36,18 +39,19 @@ public class Stop extends HttpServlet {
 			throws ServletException, IOException {
 
 		String handle = req.getHeader("Dataset");
+		String last = req.getHeader("Last-Event");
+
+		for (Enumeration<String> en = req.getHeaderNames(); en.hasMoreElements(); )
+			log.debug("header: " + en.nextElement());
 
 		Dataset dataset = datasets.findDataset(handle);
 		datasets.stopDataset(dataset.getId());
-
-		Dataset ds = datasets.findDataset(handle);
 
 		log.info("profiler run stopped");
 
 		Context.setDataset(dataset);
 		final InstanceMapReduce mr = new InstanceMapReduce(dataset, db);
 		db.createInstanceReducer(mr).reduce();
-		Context.clear();
 
 		final ClassMapReduce cmr = new ClassMapReduce(db.getClazzQuery());
 		db.createClassSummaryMapper(db.getInstanceQuery(), cmr, true).map();
@@ -58,6 +62,15 @@ public class Stop extends HttpServlet {
 		db.createFieldSummaryReducer(fmr).reduce();
 
 		log.info("finished map/reducing");
+
+		DatasetUpdater<?> updater = db.getDatasetUpdater();
+		updater.setFinished(new Date());
+		if (last != null) {
+			updater.setNumEvents(Long.valueOf(last));
+		}
+		updater.update(dataset.getId());
+
+		Context.clear();
 
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 		resp.setContentLength(0);

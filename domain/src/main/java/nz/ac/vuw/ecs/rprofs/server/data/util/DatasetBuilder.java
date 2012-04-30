@@ -16,5 +16,9 @@ public interface DatasetBuilder<D extends DatasetBuilder<D>> extends Builder<D, 
 
 	D setStopped(Date date);
 
+	D setFinished(Date date);
+
 	D setDatasetHandle(String handle);
+
+	D setNumEvents(long events);
 }

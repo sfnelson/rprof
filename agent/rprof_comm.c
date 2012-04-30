@@ -329,7 +329,14 @@ comm_started(CommEnv env)
 void
 comm_stopped(CommEnv env)
 {
-	post(env->stop, HEADER(env->dataset), NULL, 0,
+    char lastId[255];
+    struct curl_slist *headers;
+    
+    sprintf(lastId, "Last-Event: %ld", env->prev_id);
+    headers = HEADER(env->dataset);
+    ADD_HEADER(&headers, lastId);
+    
+	post(env->stop, headers, NULL, 0,
          NULL, NULL, NULL, NULL);
 }
 

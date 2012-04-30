@@ -24,8 +24,12 @@ abstract class MongoDatasetBuilder extends MongoBuilder<MongoDatasetBuilder, Dat
 		setBenchmark(dataset.getBenchmark());
 		setStarted(dataset.getStarted());
 		setDatasetHandle(dataset.getDatasetHandle());
+		setNumEvents(dataset.getNumEvents());
 		if (dataset.getStopped() != null) {
 			setStopped(dataset.getStopped());
+		}
+		if (dataset.getFinished() != null) {
+			setFinished(dataset.getFinished());
 		}
 		return this;
 	}
@@ -53,8 +57,21 @@ abstract class MongoDatasetBuilder extends MongoBuilder<MongoDatasetBuilder, Dat
 
 	@Override
 	@NotNull
+	public MongoDatasetBuilder setFinished(Date date) {
+		b.append("finished", date);
+		return this;
+	}
+
+	@Override
+	@NotNull
 	public MongoDatasetBuilder setDatasetHandle(String handle) {
 		b.append("handle", handle);
+		return this;
+	}
+
+	@Override
+	public MongoDatasetBuilder setNumEvents(long events) {
+		b.append("events", events);
 		return this;
 	}
 
@@ -62,13 +79,19 @@ abstract class MongoDatasetBuilder extends MongoBuilder<MongoDatasetBuilder, Dat
 	@NotNull
 	public Dataset get() {
 		DatasetId id = new DatasetId(((Long) b.get("_id")).shortValue());
-		Integer version = (Integer) b.get("version");
-		String benchmark = (String) b.get("benchmark");
+		int version = b.getInt("version");
+		String benchmark = b.getString("benchmark");
 		Date started = (Date) b.get("started");
-		String handle = (String) b.get("handle");
+		String handle = b.getString("handle");
 		Dataset dataset = new Dataset(id, version, benchmark, started, handle);
 		if (b.containsField("stopped")) {
 			dataset.setStopped((Date) b.get("stopped"));
+		}
+		if (b.containsField("finished")) {
+			dataset.setStopped((Date) b.get("finished"));
+		}
+		if (b.containsField("events")) {
+			dataset.setNumEvents(b.getLong("events"));
 		}
 		reset();
 		return dataset;

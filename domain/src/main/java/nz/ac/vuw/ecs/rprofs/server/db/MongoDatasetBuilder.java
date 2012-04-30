@@ -78,7 +78,9 @@ abstract class MongoDatasetBuilder extends MongoBuilder<MongoDatasetBuilder, Dat
 	@Override
 	@NotNull
 	public Dataset get() {
-		DatasetId id = new DatasetId(((Long) b.get("_id")).shortValue());
+		Long lid = (Long) b.get("_id");
+		if (lid == null) return null;
+		DatasetId id = new DatasetId(lid.shortValue());
 		int version = b.getInt("version");
 		String benchmark = b.getString("benchmark");
 		Date started = (Date) b.get("started");

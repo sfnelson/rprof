@@ -313,9 +313,11 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass site, jthread thread, jclass klas
     
 	bzero(&event, sizeof(event));
     
-	if (id == 0) {
+	/*if (id == 0) { todo this is a test */
+    enterCriticalSection(jvmti); {
 	    id = generate_object_tag();
-	}
+    }; exitCriticalSection(jvmti);
+	/*}*/
     
 	tag_object(jvmti, o, id);
 	type = get_tag(jvmti, klass);

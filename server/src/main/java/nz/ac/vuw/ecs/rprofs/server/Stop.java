@@ -12,6 +12,8 @@ import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.reports.ClassMapReduce;
+import nz.ac.vuw.ecs.rprofs.server.reports.FieldMapReduce;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,15 @@ public class Stop extends HttpServlet {
 		db.createInstanceReducer(mr).reduce();
 		Context.clear();
 
-		log.info("finished reduce");
+		final ClassMapReduce cmr = new ClassMapReduce(db.getClazzQuery());
+		db.createClassSummaryMapper(db.getInstanceQuery(), cmr, true).map();
+		db.createClassSummaryReducer(cmr).reduce();
+
+		final FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
+		db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
+		db.createFieldSummaryReducer(fmr).reduce();
+
+		log.info("finished map/reducing");
 
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 		resp.setContentLength(0);

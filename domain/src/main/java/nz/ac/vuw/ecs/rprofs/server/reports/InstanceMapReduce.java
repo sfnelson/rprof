@@ -69,7 +69,9 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 			case Event.METHOD_RETURN:
 			case Event.METHOD_EXCEPTION:
 				if (MethodUtils.isInit(method)) {
-					result.setType(e.getClazz());
+					// don't need to now that
+					// tagging happens with allocation
+					// result.setType(e.getClazz());
 					result.setConstructor(e.getMethod());
 					result.setConstructorReturn(e.getId());
 				}

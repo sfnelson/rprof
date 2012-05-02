@@ -52,8 +52,8 @@ public class Logger extends HttpServlet {
 						} else break;
 					}
 
-					worker.setAttribute("dataset", dataset);
-					worker.setAttribute("data", buffer);
+					worker.setAttribute("Dataset", dataset);
+					worker.setAttribute("Data", buffer);
 					worker.resume();
 
 					log.debug("sent {} bytes to worker ({})", buffer.length, dataset);

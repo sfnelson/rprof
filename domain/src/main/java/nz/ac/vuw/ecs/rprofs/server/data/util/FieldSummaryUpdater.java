@@ -7,5 +7,5 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldSummaryId;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 10/04/12
  */
-public interface FieldSummaryUpdater<U extends FieldSummaryUpdater<U>> extends FieldSummaryBuilder<U>, Updater<FieldSummaryId, FieldSummary> {
+public interface FieldSummaryUpdater<U extends FieldSummaryUpdater<U>> extends FieldSummaryBuilder<U>, Updater<U, FieldSummaryId, FieldSummary> {
 }

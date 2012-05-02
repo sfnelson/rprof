@@ -2,7 +2,6 @@ package nz.ac.vuw.ecs.rprofs.server;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Enumeration;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,11 +26,13 @@ public class Stop extends HttpServlet {
 
 	private final DatasetManager datasets;
 	private final Database db;
+	private final Workers workers;
 
 	@Inject
-	Stop(DatasetManager datasets, Database db) {
+	Stop(DatasetManager datasets, Database db, Workers workers) {
 		this.datasets = datasets;
 		this.db = db;
+		this.workers = workers;
 	}
 
 	@Override
@@ -41,13 +42,12 @@ public class Stop extends HttpServlet {
 		String handle = req.getHeader("Dataset");
 		String last = req.getHeader("Last-Event");
 
-		for (Enumeration<String> en = req.getHeaderNames(); en.hasMoreElements(); )
-			log.debug("header: " + en.nextElement());
-
 		Dataset dataset = datasets.findDataset(handle);
 		datasets.stopDataset(dataset.getId());
 
 		log.info("profiler run stopped");
+
+		workers.flush(); // wake up all the workers in case their dataset has now finished
 
 		try {
 			Thread.sleep(2000);

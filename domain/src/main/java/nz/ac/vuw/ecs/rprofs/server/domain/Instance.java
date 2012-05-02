@@ -223,6 +223,10 @@ public class Instance implements DataObject<InstanceId, Instance> {
 			this.reads = reads;
 		}
 
+		public void addReads(int reads) {
+			this.reads += reads;
+		}
+
 		@Nullable
 		public EventId getFirstRead() {
 			return firstRead;
@@ -247,6 +251,10 @@ public class Instance implements DataObject<InstanceId, Instance> {
 
 		public void setWrites(int writes) {
 			this.writes = writes;
+		}
+
+		public void addWrites(int writes) {
+			this.writes += writes;
 		}
 
 		@Nullable

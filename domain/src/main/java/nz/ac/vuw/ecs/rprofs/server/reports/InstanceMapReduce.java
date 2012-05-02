@@ -1,14 +1,13 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.Maps;
 import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,9 +68,6 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 			case Event.METHOD_RETURN:
 			case Event.METHOD_EXCEPTION:
 				if (MethodUtils.isInit(method)) {
-					// don't need to now that
-					// tagging happens with allocation
-					// result.setType(e.getClazz());
 					result.setConstructor(e.getMethod());
 					result.setConstructorReturn(e.getId());
 				}
@@ -82,6 +78,7 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 						.setInitialized(true)
 						.update(e.getClazz());
 				Context.clear();
+				break;
 			case Event.OBJECT_TAGGED:
 			case Event.OBJECT_ALLOCATED:
 				result.setType(e.getClazz());
@@ -110,83 +107,62 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 		emitter.emit(id, result);
 	}
 
+	private static boolean setIfBefore(EventId a, EventId b) {
+		if (b == null) return false; // nothing to do
+		else if (a == null) return true; // nothing to compare to
+		else if (b.before(a)) return true;
+		else return false;
+	}
+
+	private static boolean setIfAfter(EventId a, EventId b) {
+		if (b == null) return false; // nothing to do
+		else if (a == null) return true; // nothing to compare to
+		else if (b.after(a)) return true;
+		else return false;
+	}
+
 	@Override
 	public Instance reduce(InstanceId id, Iterable<Instance> values) {
 		Instance result = new Instance(id);
 
-		ClazzId type = null;
-		MethodId constructor = null;
-		EventId constructorReturn = null;
-
-		EventId firstEquals = null;
-		EventId firstHashCode = null;
-		EventId firstCollection = null;
-
-		Map<FieldId, Instance.FieldInfo> fields = Maps.newHashMap();
-
 		for (Instance i : values) {
-			if (i.getType() != null && i.getConstructor() == null) {
-				// type set with tag event
-				type = i.getType();
+			if (i.getType() != null) {
+				assert (result.getType() == null); // type should only be set once per object
+				result.setType(i.getType());
 			}
-			if (i.getConstructorReturn() != null) {
-				if (constructorReturn == null || i.getConstructorReturn().after(constructorReturn)) {
-					type = i.getType();
-					constructor = i.getConstructor();
-					constructorReturn = i.getConstructorReturn();
-				}
+			if (setIfAfter(result.getConstructorReturn(), i.getConstructorReturn())) {
+				result.setConstructor(i.getConstructor());
+				result.setConstructorReturn(i.getConstructorReturn());
 			}
-			if (i.getFirstEquals() != null) {
-				if (firstEquals == null || i.getFirstEquals().before(firstEquals)) {
-					firstEquals = i.getFirstEquals();
-				}
+			if (setIfBefore(result.getFirstEquals(), i.getFirstEquals())) {
+				result.setFirstEquals(i.getFirstEquals());
 			}
-			if (i.getFirstHashCode() != null) {
-				if (firstHashCode == null || i.getFirstHashCode().before(firstHashCode)) {
-					firstHashCode = i.getFirstHashCode();
-				}
+			if (setIfBefore(result.getFirstHashCode(), i.getFirstHashCode())) {
+				result.setFirstHashCode(i.getFirstHashCode());
 			}
-			if (i.getFirstCollection() != null) {
-				if (firstCollection == null || i.getFirstCollection().before(firstCollection)) {
-					firstCollection = i.getFirstCollection();
-				}
+			if (setIfBefore(result.getFirstCollection(), i.getFirstCollection())) {
+				result.setFirstCollection(i.getFirstCollection());
 			}
 
 			for (Instance.FieldInfo field : i.getFields().values()) {
-				if (!fields.containsKey(field.getId())) {
-					fields.put(field.getId(), field);
+				Instance.FieldInfo toMerge = result.getFieldInfo(field.getId());
+				if (toMerge == null) {
+					toMerge = field;
 				} else {
-					Instance.FieldInfo toMerge = fields.get(field.getId());
-					if (field.getReads() > 0) {
-						if (toMerge.getReads() == 0 || field.getFirstRead().before(toMerge.getFirstRead())) {
-							toMerge.setFirstRead(field.getFirstRead());
-						}
-						if (toMerge.getReads() == 0 || field.getLastRead().after(toMerge.getLastRead())) {
-							toMerge.setLastRead(field.getLastRead());
-						}
-						toMerge.setReads(toMerge.getReads() + field.getReads());
-					}
-					if (field.getWrites() > 0) {
-						if (toMerge.getWrites() == 0 || field.getFirstWrite().before(toMerge.getFirstWrite())) {
-							toMerge.setFirstWrite(field.getFirstWrite());
-						}
-						if (toMerge.getWrites() == 0 || field.getLastWrite().after(toMerge.getLastWrite())) {
-							toMerge.setLastWrite(field.getLastWrite());
-						}
-						toMerge.setWrites(toMerge.getWrites() + field.getWrites());
-					}
-				}
-			}
-		}
+					if (setIfBefore(toMerge.getFirstRead(), field.getFirstRead()))
+						toMerge.setFirstRead(field.getFirstRead());
+					if (setIfAfter(toMerge.getLastRead(), field.getLastRead()))
+						toMerge.setLastRead(field.getLastRead());
+					toMerge.addReads(field.getReads());
 
-		if (type != null) result.setType(type);
-		if (constructor != null) result.setConstructor(constructor);
-		if (constructorReturn != null) result.setConstructorReturn(constructorReturn);
-		if (firstEquals != null) result.setFirstEquals(firstEquals);
-		if (firstHashCode != null) result.setFirstHashCode(firstHashCode);
-		if (firstCollection != null) result.setFirstCollection(firstCollection);
-		for (Instance.FieldInfo info : fields.values()) {
-			result.addFieldInfo(info.getId(), info);
+					if (setIfBefore(toMerge.getFirstWrite(), field.getFirstWrite()))
+						toMerge.setFirstWrite(field.getFirstWrite());
+					if (setIfAfter(toMerge.getLastWrite(), field.getLastWrite()))
+						toMerge.setLastWrite(field.getLastWrite());
+					toMerge.addWrites(field.getWrites());
+				}
+				result.addFieldInfo(toMerge.getId(), toMerge);
+			}
 		}
 
 		return result;

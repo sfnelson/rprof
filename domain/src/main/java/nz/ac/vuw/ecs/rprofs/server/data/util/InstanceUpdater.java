@@ -8,5 +8,5 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
  * Date: 29/09/11
  */
 public interface InstanceUpdater<I extends InstanceUpdater<I>>
-		extends InstanceBuilder<I>, Updater<InstanceId, Instance> {
+		extends InstanceBuilder<I>, Updater<I, InstanceId, Instance> {
 }

@@ -31,6 +31,12 @@ public abstract class MongoBuilder<B extends EntityBuilder<B, I, T>, I extends I
 	}
 
 	@Override
+	void _upsert(DBObject ref, DBObject update) {
+		update.put("version", 1);
+		_getCollection().update(ref, update, true, false);
+	}
+
+	@Override
 	DBCursor _query(DBObject query) {
 		log.trace("mongo query: {}", query);
 		return _getCollection().find(query);

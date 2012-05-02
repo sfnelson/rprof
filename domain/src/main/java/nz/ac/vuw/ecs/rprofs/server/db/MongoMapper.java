@@ -27,7 +27,7 @@ class MongoMapper<Input extends DataObject<?, Input>, OutId extends Id<OutId, Ou
 	private final Reducer<OutId, Output> reducer;
 	private final Emitter emitter;
 
-	private final OutputCache<OutId, Output> cache;
+	private final Cache<OutId, Output> cache;
 
 	public MongoMapper(Query<?, Input> input,
 					   Creator<?, OutId, Output> output,
@@ -39,7 +39,7 @@ class MongoMapper<Input extends DataObject<?, Input>, OutId extends Id<OutId, Ou
 		this.reducer = reducer;
 		this.emitter = new Emitter();
 
-		this.cache = new OutputCache<OutId, Output>(output);
+		this.cache = new MapCache<OutId, Output>(output);
 	}
 
 	@Override

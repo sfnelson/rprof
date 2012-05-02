@@ -29,6 +29,7 @@ public class StopTest {
 	private HttpServletResponse response;
 	private Database database;
 	private Reducer.ReducerTask reduce;
+	private Workers workers;
 
 	@Before
 	@SuppressWarnings("unchecked")
@@ -38,9 +39,10 @@ public class StopTest {
 		response = createMock(HttpServletResponse.class);
 		database = createMock(Database.class);
 		reduce = createMock(Reducer.ReducerTask.class);
+		workers = createMock(Workers.class);
 
 		dataset = new Dataset(new DatasetId((short) 1), "foo", new Date(), "rprof_foo_1");
-		stop = new Stop(manager, database);
+		stop = new Stop(manager, database, workers);
 	}
 
 	@Test
@@ -51,6 +53,7 @@ public class StopTest {
 		expect(manager.findDataset("rprof_foo_1")).andReturn(dataset);
 		manager.stopDataset(dataset.getId());
 		expect(manager.findDataset("rprof_foo_1")).andReturn(dataset);
+		workers.flush();
 
 		expect(database.createInstanceReducer(EasyMock.<MapReduce>anyObject())).andReturn(reduce);
 		reduce.reduce();
@@ -58,10 +61,10 @@ public class StopTest {
 		response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 		response.setContentLength(0);
 
-		replay(request, response, manager, database, reduce);
+		replay(request, response, manager, database, reduce, workers);
 
 		stop.doGet(request, response);
 
-		verify(request, response, manager, database, reduce);
+		verify(request, response, manager, database, reduce, workers);
 	}
 }

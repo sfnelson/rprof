@@ -150,12 +150,14 @@ public abstract class MongoInstanceBuilder extends MongoBuilder<MongoInstanceBui
 				FieldId fieldId = new FieldId((Long) field.get("_id"));
 				String name = (String) field.get("name");
 				Instance.FieldInfo f = new Instance.FieldInfo(fieldId);
-				f.setReads((Integer) field.get("reads"));
+				Integer reads = (Integer) field.get("reads");
+				f.setReads(reads != null ? reads : 0);
 				if (f.getReads() > 0) {
 					f.setFirstRead(new EventId((Long) field.get("firstRead")));
 					f.setLastRead(new EventId((Long) field.get("lastRead")));
 				}
-				f.setWrites((Integer) field.get("writes"));
+				Integer writes = (Integer) field.get("writes");
+				f.setWrites(writes != null ? writes : 0);
 				if (f.getWrites() > 0) {
 					f.setFirstWrite(new EventId((Long) field.get("firstWrite")));
 					f.setLastWrite(new EventId((Long) field.get("lastWrite")));

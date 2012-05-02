@@ -102,11 +102,11 @@ public class HeapTracker {
 		}
 	}
 
-	private static native void _mexcept(Object thread, int cnum, int mnum, Object arg);
+	private static native void _mexcept(Object thread, int cnum, int mnum, Object arg, Object err);
 
-	public static void except(int cnum, int mnum, Object arg) {
+	public static void except(int cnum, int mnum, Object arg, Throwable err) {
 		if (engaged != 0) {
-			_mexcept(Thread.currentThread(), cnum, mnum, arg);
+			_mexcept(Thread.currentThread(), cnum, mnum, arg, err);
 		}
 	}
 

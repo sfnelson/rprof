@@ -28,11 +28,30 @@ import org.slf4j.LoggerFactory;
  */
 public class Worker {
 
+	//		#define MAX_PARAMETERS 16
+	//		struct EventRecord {
+	//			long int id;
+	//			long int thread;
+	//			char message[255];
+	//			int cnum;
+	//			int mnum;
+	//			int len;
+	//			long int params[MAX_PARAMETERS];
+	//		}
+	public static final int MAX_PARAMETERS = 16;
+	public static final int RECORD_LENGTH = 8 + 8 + 4 + 4 + 4 + 4 + MAX_PARAMETERS * 8;
+
 	public static final void main(String[] args) throws Exception {
 		Injector injector = Guice.createInjector(new WorkerModule());
 
 		Worker worker = injector.getInstance(Worker.class);
 		worker.run();
+	}
+
+	@Nullable
+	private static InstanceId parseObjectId(Dataset ds, long id) {
+		if (id == 0) return InstanceId.NULL;
+		return InstanceId.create(ds, id);
 	}
 
 	private final Logger log = LoggerFactory.getLogger(Worker.class);
@@ -46,119 +65,51 @@ public class Worker {
 
 	public void run() throws Exception {
 		String server = System.getProperty("rprofs");
-
 		URL url = new URL("http://" + server + "/worker");
+
+		Handler current = null;
 
 		while (true) {
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("GET");
+			if (current != null)
+				connection.setRequestProperty("Dataset", current.ds.getDatasetHandle());
+
 			connection.connect();
 
 			if (connection.getResponseCode() / 100 != 2) break;
-			else if (connection.getResponseCode() == 201) continue;
-			else handleResponse(connection);
-		}
-	}
 
-	private void handleResponse(HttpURLConnection connection)
-			throws IOException {
+			Dataset dataset = getDataset(connection.getHeaderField("Dataset"));
+			boolean flush = connection.getHeaderField("Flush") != null;
+			int length = connection.getContentLength();
 
-		Dataset ds = getDataset(connection.getHeaderField("Dataset"));
-
-		if (ds == null) {
-			log.error("couldn't find dataset! throwing away response ({} bytes)", connection.getContentLength());
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException ex) {
-				ex.printStackTrace();
-				System.exit(1);
+			if (current != null && (flush || !current.ds.equals(dataset))) {
+				current.flush();
+				current = null;
 			}
-			return;
-		}
 
-		Context.setDataset(ds);
-
-		DataInputStream dis = new DataInputStream(connection.getInputStream());
-		int length = connection.getContentLength();
-
-		//		#define MAX_PARAMETERS 16
-		//		struct EventRecord {
-		//			long int id;
-		//			long int thread;
-		//			char message[255];
-		//			int cnum;
-		//			int mnum;
-		//			int len;
-		//			long int params[MAX_PARAMETERS];
-		//		}
-		final int MAX_PARAMETERS = 16;
-		final int RECORD_LENGTH = 8 + 8 + 4 + 4 + 4 + 4 + MAX_PARAMETERS * 8;
-
-		EventCreator<?> b = database.getEventCreater();
-
-		log.debug("storing {} events", length / RECORD_LENGTH);
-		long started = Calendar.getInstance().getTime().getTime();
-
-		InstanceMapReduce mr = new InstanceMapReduce(ds, database);
-		Mapper.MapTask<Event> task = database.createInstanceMapper(null, mr, false);
-
-		long first = 0, last = 0;
-
-		for (int i = 0; i < length / RECORD_LENGTH; i++) {
-			long id = dis.readLong();
-			b.setId(EventId.create(ds, id));
-			b.setThread(parseObjectId(ds, dis.readLong()));
-
-			if (i == 0) first = id;
-			if (i + 1 == length / RECORD_LENGTH) last = id;
-
-			int type = dis.readInt();
-
-			b.setEvent(type);
-
-			int cnum = dis.readInt();
-			int mnum = dis.readInt();
-
-			if ((type & Event.HAS_CLASS) == type) {
-				ClazzId clazzId = ClazzId.create(ds, cnum);
-				b.setClazz(clazzId);
-
-				if ((type & Event.METHODS) == type) {
-					b.setMethod(MethodId.create(ds, clazzId, (short) mnum));
-				} else if ((type & Event.FIELDS) == type) {
-					b.setField(FieldId.create(ds, clazzId, (short) mnum));
+			if (dataset == null) {
+				if (connection.getResponseCode() == 201 || length == 0)
+					log.trace("no data returned");
+				else
+					log.error("couldn't find dataset! throwing away response ({} bytes)", length);
+				try {
+					Thread.sleep(30000);
+				} catch (InterruptedException ex) {
+					ex.printStackTrace();
+					System.exit(1);
 				}
+				continue;
 			}
 
-			int len = dis.readInt();
-
-			if (len > MAX_PARAMETERS) {
-				log.warn("warning: {} is greater than MAX_PARAMETERS\n", len);
-				len = MAX_PARAMETERS;
+			if (current == null) {
+				current = new Handler(dataset);
 			}
 
-			for (int j = 0; j < MAX_PARAMETERS; j++) {
-				long arg = dis.readLong();
-				if (j < len) {
-					b.addArg(parseObjectId(ds, arg));
-				}
-			}
+			DataInputStream dis = new DataInputStream(connection.getInputStream());
 
-			task.mapVolatile(b.get());
+			current.process(length, dis);
 		}
-
-		task.flush();
-
-		long finished = Calendar.getInstance().getTime().getTime();
-		log.debug("{}: events {} to {} stored successfully in {}ms",
-				new Object[]{ds.getDatasetHandle(), first, last, finished - started});
-
-		Context.clear();
-	}
-
-	@Nullable
-	InstanceId parseObjectId(Dataset ds, long id) {
-		if (id == 0) return InstanceId.NULL;
-		return InstanceId.create(ds, id);
 	}
 
 	private Dataset getDataset(String name) {
@@ -168,5 +119,90 @@ public class Worker {
 			if (ds.getDatasetHandle().equals(name)) return ds;
 		}
 		return null;
+	}
+
+	private class Handler {
+		final Dataset ds;
+		final Mapper.MapTask<Event> task;
+
+		public Handler(Dataset ds) {
+			this.ds = ds;
+
+			Context.setDataset(ds);
+
+			InstanceMapReduce mr = new InstanceMapReduce(ds, database);
+			task = database.createInstanceMapper(null, mr, false);
+		}
+
+		public void process(int length, DataInputStream dis)
+				throws IOException {
+
+			log.debug("storing {} events", length / RECORD_LENGTH);
+			long started = Calendar.getInstance().getTime().getTime();
+
+			long first = 0, last = 0;
+
+			EventCreator<?> b = database.getEventCreater();
+
+			for (int i = 0; i < length / RECORD_LENGTH; i++) {
+				long id = dis.readLong();
+				b.setId(EventId.create(ds, id));
+				b.setThread(parseObjectId(ds, dis.readLong()));
+
+				if (i == 0) first = id;
+				if (i + 1 == length / RECORD_LENGTH) last = id;
+
+				int type = dis.readInt();
+
+				b.setEvent(type);
+
+				int cnum = dis.readInt();
+				int mnum = dis.readInt();
+
+				if ((type & Event.HAS_CLASS) == type) {
+					ClazzId clazzId = ClazzId.create(ds, cnum);
+					b.setClazz(clazzId);
+
+					if ((type & Event.METHODS) == type) {
+						b.setMethod(MethodId.create(ds, clazzId, (short) mnum));
+					} else if ((type & Event.FIELDS) == type) {
+						b.setField(FieldId.create(ds, clazzId, (short) mnum));
+					}
+				}
+
+				int len = dis.readInt();
+
+				if (len > MAX_PARAMETERS) {
+					log.warn("warning: {} is greater than MAX_PARAMETERS\n", len);
+					len = MAX_PARAMETERS;
+				}
+
+				for (int j = 0; j < MAX_PARAMETERS; j++) {
+					long arg = dis.readLong();
+					if (j < len) {
+						b.addArg(parseObjectId(ds, arg));
+					}
+				}
+
+				task.mapVolatile(b.get());
+			}
+
+			long finished = Calendar.getInstance().getTime().getTime();
+			log.debug("{}: events {} to {} stored successfully in {}ms",
+					new Object[]{ds.getDatasetHandle(), first, last, finished - started});
+		}
+
+		public void flush() {
+			log.debug("flushing instances");
+			long started = Calendar.getInstance().getTime().getTime();
+
+			task.flush();
+
+			long finished = Calendar.getInstance().getTime().getTime();
+			log.debug("{}: flushed instances in {}ms",
+					new Object[]{ds.getDatasetHandle(), finished - started});
+
+			Context.clear();
+		}
 	}
 }

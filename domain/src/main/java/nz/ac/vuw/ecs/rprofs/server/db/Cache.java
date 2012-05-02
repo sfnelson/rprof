@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.management.*;
-import nz.ac.vuw.ecs.rprofs.server.data.util.Creator;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import org.slf4j.Logger;
@@ -17,14 +16,14 @@ import org.slf4j.LoggerFactory;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 6/12/11
  */
-class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements NotificationListener {
+abstract class Cache<I extends Id<I, T>, T extends DataObject<I, T>> implements NotificationListener {
 
 	private static class MemoryMonitor {
 		private static final float THRESHOLD = 0.9f;
 		private static final NotificationFilter FILTER = new NotificationFilter() {
 			@Override
 			public boolean isNotificationEnabled(Notification notification) {
-				log.debug("notification: {}", notification.getType());
+				log.trace("notification: {}", notification.getType());
 				return notification.getType().equals(MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED);
 			}
 		};
@@ -62,7 +61,7 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 	}
 
 
-	private static final Logger log = LoggerFactory.getLogger(OutputCache.class);
+	private static final Logger log = LoggerFactory.getLogger(Cache.class);
 	private static final MemoryMonitor MONITOR = new MemoryMonitor();
 
 	private static final int NUM_MAPS = 16;
@@ -70,15 +69,13 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 
 	private final Deque<Map<I, T>> maps = new ArrayDeque<Map<I, T>>();
 
-	private final Creator<?, I, T> output;
-
 	private boolean reclaim = false;
 
-	public OutputCache(Creator<?, I, T> output) {
-		this.output = output;
-
+	public Cache() {
 		MONITOR.register(this);
 	}
+
+	protected abstract void store(I id, T value);
 
 	@Override
 	protected void finalize() throws Throwable {
@@ -139,9 +136,9 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 		map.put(key, value);
 
 		while (maps.size() > NUM_MAPS) {
-			Map<?, T> m = maps.removeFirst();
-			for (T v : m.values()) {
-				output.init(v).store();
+			Map<I, T> m = maps.removeFirst();
+			for (I k : m.keySet()) {
+				store(k, m.get(k));
 			}
 		}
 
@@ -149,9 +146,11 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 	}
 
 	public void flush() {
-		for (Map<?, T> m : maps) {
-			for (T value : m.values()) {
-				output.init(value).store();
+		int size = size();
+		log.debug("flush requested ({} cached)", size);
+		for (Map<I, T> m : maps) {
+			for (I k : m.keySet()) {
+				store(k, m.get(k));
 			}
 		}
 		maps.clear();
@@ -159,14 +158,14 @@ class OutputCache<I extends Id<I, T>, T extends DataObject<I, T>> implements Not
 
 	private void reclaim() {
 		int size = size();
-		log.info("flushing caches to reclaim memory ({} cached)", size);
+		log.debug("flushing caches to reclaim memory ({} cached)", size);
 		for (int i = 0; i < size / 2; ) {
 			if (maps.isEmpty()) break;
-			Map<?, T> m = maps.removeFirst();
+			Map<I, T> m = maps.removeFirst();
 			i += m.size();
 			if (m != null) {
-				for (T value : m.values()) {
-					output.init(value).store();
+				for (I k : m.keySet()) {
+					store(k, m.get(k));
 				}
 			}
 		}

@@ -432,7 +432,7 @@ HEAP_TRACKER_native_exit(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
 
 /* Java Native Method for method exceptional return */
 static void
-HEAP_TRACKER_native_except(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum, jobject thrown)
+HEAP_TRACKER_native_except(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum, jobject arg, jobject thrown)
 {
     r_event event;
     jvmtiEnv *jvmti;
@@ -449,10 +449,15 @@ HEAP_TRACKER_native_except(JNIEnv *env, jclass klass, jthread thread, jint cnum,
     event.thread = get_tag(jvmti, thread);
     event.cid = cnum;
     event.attr.mid = mnum;
+
+    if (arg != NULL) {
+        event.args_len = 1;
+        event.args[0] = get_tag(jvmti, arg);
+    }
     
     if (thrown != NULL) {
-        event.args_len = 1;
-        event.args[0] = get_tag(jvmti, thrown);
+        event.args_len = 2;
+        event.args[1] = get_tag(jvmti, thrown);
     }
     
     comm_log(gdata->comm, &event);
@@ -492,7 +497,7 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
             {STRING(HEAP_TRACKER_native_newarr), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newarr},
             {STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
             {STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;IILjava/lang/Object;)V", (void*)&HEAP_TRACKER_native_exit},
-            {STRING(HEAP_TRACKER_native_except), "(Ljava/lang/Object;IILjava/lang/Object;)V", (void*)&HEAP_TRACKER_native_except},
+            {STRING(HEAP_TRACKER_native_except), "(Ljava/lang/Object;IILjava/lang/Object;Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_except},
             {STRING(HEAP_TRACKER_native_main), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_main},
             {STRING(HEAP_TRACKER_native_newcls), "(Ljava/lang/Object;I[I)V", (void*)&HEAP_TRACKER_native_newcls}
 		};

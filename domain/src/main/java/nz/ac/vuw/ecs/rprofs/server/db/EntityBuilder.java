@@ -17,7 +17,7 @@ import org.bson.BSONObject;
  * Date: 14/09/11
  */
 public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends Id<I, T>, T extends DataObject<I, T>>
-		implements Creator<B, I, T>, Updater<I, T>, Query<I, T>, Builder<B, I, T> {
+		implements Creator<B, I, T>, Updater<B, I, T>, Query<I, T>, Builder<B, I, T> {
 
 	protected BasicDBObject b;
 
@@ -105,6 +105,13 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 		reset();
 	}
 
+	@Override
+	public void upsert(I toUpdate) {
+		Long id = toUpdate.getValue();
+		_upsert(new BasicDBObject("_id", id), b);
+		reset();
+	}
+
 	protected void reset() {
 		b = new BasicDBObject();
 	}
@@ -120,6 +127,8 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 	abstract void _store(DBObject toStore);
 
 	abstract void _update(DBObject ref, DBObject update);
+
+	abstract void _upsert(DBObject ref, DBObject update);
 
 	abstract DBCursor _query(DBObject ref);
 

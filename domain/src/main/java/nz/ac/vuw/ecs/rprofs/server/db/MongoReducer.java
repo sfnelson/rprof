@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Creator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
+import nz.ac.vuw.ecs.rprofs.server.data.util.Updater;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
 import nz.ac.vuw.ecs.rprofs.server.reports.Reducer;
@@ -22,18 +23,37 @@ abstract class MongoReducer<I extends Id<I, T>, T extends DataObject<I, T>> impl
 	private final Query<I, T> input;
 	private final Query<I, T> source;
 	private final Reducer<I, T> reducer;
+	private final Creator<?, I, T> output;
+	private final Updater<?, I, T> update;
 
-	private final OutputCache<I, T> cache;
+	private final Cache<I, T> cache;
 
 	public MongoReducer(Query<I, T> input,
 						Creator<?, I, T> output,
+						Updater<?, I, T> update,
 						Query<I, T> source,
 						Reducer<I, T> reducer) {
 		this.input = input;
 		this.source = source;
 		this.reducer = reducer;
+		this.output = output;
+		this.update = update;
 
-		this.cache = new OutputCache<I, T>(output);
+		this.cache = new Cache<I, T>() {
+			@Override
+			protected void store(I id, T value) {
+				MongoReducer.this.store(id, value);
+			}
+		};
+	}
+
+	private void store(I id, T value) {
+		T current = source.find(id);
+		if (current == null) {
+			output.init(value).store();
+		} else {
+			update.init(reducer.reduce(id, Lists.newArrayList(current, value))).update(id);
+		}
 	}
 
 	protected abstract void cleanup();
@@ -51,11 +71,6 @@ abstract class MongoReducer<I extends Id<I, T>, T extends DataObject<I, T>> impl
 
 			if (cache.containsKey(id)) {
 				result = reducer.reduce(id, Lists.newArrayList(cache.get(id), result));
-			} else {
-				T current = source.find(id);
-				if (current != null) {
-					result = reducer.reduce(id, Lists.newArrayList(current, result));
-				}
 			}
 
 			cache.put(id, result);

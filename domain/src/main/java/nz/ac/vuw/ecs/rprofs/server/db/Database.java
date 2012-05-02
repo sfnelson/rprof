@@ -100,7 +100,7 @@ public class Database {
 		return createClassSummaryBuilder();
 	}
 
-	public ClassSummaryUpdater<?> getClassSummaryUpdater() {
+	public ClassSummaryUpdater getClassSummaryUpdater() {
 		return createClassSummaryBuilder();
 	}
 
@@ -256,7 +256,8 @@ public class Database {
 			}
 		};
 
-		return new MongoReducer<InstanceId, Instance>(tmpBuilder, getInstanceCreator(), getInstanceQuery(), mr) {
+		return new MongoReducer<InstanceId, Instance>(tmpBuilder, getInstanceCreator(),
+				getInstanceUpdater(), getInstanceQuery(), mr) {
 			@Override
 			protected void cleanup() {
 				tmp.drop();
@@ -327,7 +328,8 @@ public class Database {
 			}
 		};
 
-		return new MongoReducer<ClassSummaryId, ClassSummary>(tmpBuilder, getClassSummaryCreator(), getClassSummaryQuery(), mr) {
+		return new MongoReducer<ClassSummaryId, ClassSummary>(tmpBuilder, getClassSummaryCreator(),
+				getClassSummaryUpdater(), getClassSummaryQuery(), mr) {
 			@Override
 			protected void cleanup() {
 				tmp.drop();
@@ -335,8 +337,8 @@ public class Database {
 		};
 	}
 
-	public <Input extends DataObject<?, Input>> Finisher.FinisherTask
-	createClassSummaryFinisher(final MapReduceFinish<Input, ClassSummaryId, ClassSummary, ClassSummaryUpdater<?>> mr) {
+	public <Input extends DataObject<?, Input>, U extends ClassSummaryUpdater<U>> Finisher.FinisherTask
+	createClassSummaryFinisher(final MapReduceFinish<Input, ClassSummaryId, ClassSummary, U> mr) {
 		final ClassSummaryQuery<?> q = getClassSummaryQuery();
 		final ClassSummaryUpdater<?> u = getClassSummaryUpdater();
 		return new Finisher.FinisherTask() {
@@ -345,7 +347,7 @@ public class Database {
 				Query.Cursor<? extends ClassSummary> c = q.find();
 				while (c.hasNext()) {
 					u.init();
-					mr.finish(c.next().getId(), u);
+					mr.finish(c.next().getId(), (U) u);
 				}
 				c.close();
 			}
@@ -415,7 +417,8 @@ public class Database {
 			}
 		};
 
-		return new MongoReducer<FieldSummaryId, FieldSummary>(tmpBuilder, getFieldSummaryCreator(), getFieldSummaryQuery(), mr) {
+		return new MongoReducer<FieldSummaryId, FieldSummary>(tmpBuilder, getFieldSummaryCreator(),
+				getFieldSummaryUpdater(), getFieldSummaryQuery(), mr) {
 			@Override
 			protected void cleanup() {
 				tmp.drop();
@@ -423,8 +426,8 @@ public class Database {
 		};
 	}
 
-	public <Input extends DataObject<?, Input>> Finisher.FinisherTask
-	createFieldSummaryFinisher(final MapReduceFinish<Input, FieldSummaryId, FieldSummary, FieldSummaryUpdater<?>> mr) {
+	public <Input extends DataObject<?, Input>, U extends FieldSummaryUpdater<U>> Finisher.FinisherTask
+	createFieldSummaryFinisher(final MapReduceFinish<Input, FieldSummaryId, FieldSummary, U> mr) {
 		final FieldSummaryQuery<?> q = getFieldSummaryQuery();
 		final FieldSummaryUpdater<?> u = getFieldSummaryUpdater();
 		return new Finisher.FinisherTask() {
@@ -433,7 +436,7 @@ public class Database {
 				Query.Cursor<? extends FieldSummary> f = q.find();
 				while (f.hasNext()) {
 					u.init();
-					mr.finish(f.next().getId(), u);
+					mr.finish(f.next().getId(), (U) u);
 				}
 				f.close();
 			}

@@ -13,7 +13,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldSummaryId;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 10/04/12
  */
-public class FieldMapReduce implements MapReduceFinish<Instance, FieldSummaryId, FieldSummary, FieldSummaryUpdater<?>> {
+public class FieldMapReduce<U extends FieldSummaryUpdater<U>> implements MapReduceFinish<Instance, FieldSummaryId, FieldSummary, U> {
 
 	private final FieldQuery<?> fields;
 
@@ -69,7 +69,7 @@ public class FieldMapReduce implements MapReduceFinish<Instance, FieldSummaryId,
 	}
 
 	@Override
-	public void finish(FieldSummaryId id, FieldSummaryUpdater<?> updater) {
+	public void finish(FieldSummaryId id, U updater) {
 		FieldId fid = new FieldId(id.getValue());
 		Field field = fields.find(fid);
 

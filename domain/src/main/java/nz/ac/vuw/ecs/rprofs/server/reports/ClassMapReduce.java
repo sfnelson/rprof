@@ -17,7 +17,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 27/03/12
  */
-public class ClassMapReduce implements MapReduceFinish<Instance, ClassSummaryId, ClassSummary, ClassSummaryUpdater<?>> {
+public class ClassMapReduce<U extends ClassSummaryUpdater<U>> implements MapReduceFinish<Instance, ClassSummaryId, ClassSummary, U> {
 
 	private final ClazzQuery<?> classes;
 
@@ -82,7 +82,7 @@ public class ClassMapReduce implements MapReduceFinish<Instance, ClassSummaryId,
 	}
 
 	@Override
-	public void finish(ClassSummaryId id, ClassSummaryUpdater<?> updater) {
+	public void finish(ClassSummaryId id, U updater) {
 		if (id == null) return;
 		ClazzId cid = new ClazzId(id.getValue());
 		Clazz clazz = classes.find(cid);

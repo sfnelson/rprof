@@ -9,7 +9,7 @@ import nz.ac.vuw.ecs.rprofs.server.model.Id;
  * Date: 30/04/12
  */
 public interface Finisher<OutId extends Id<OutId, Output>, Output extends DataObject<OutId, Output>,
-		U extends Updater<OutId, Output>> {
+		U extends Updater<U, OutId, Output>> {
 
 	interface FinisherTask {
 		void finish();

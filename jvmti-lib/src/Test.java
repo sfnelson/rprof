@@ -34,7 +34,7 @@ public class Test extends A {
 		}
 
 		try {
-			new D();
+			new D(5);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -146,7 +146,10 @@ class C {
 }
 
 class D {
-	public D() {
+	public final int d;
+
+	public D(int d) {
+		this.d = d;
 		throw new NullPointerException("test constructor exception");
 	}
 }

@@ -16,6 +16,7 @@ class InitMethodWeaver extends MethodWeaver {
 	private final Label end;
 	private final Label handler;
 
+	private int stacked = 0;
 	private boolean supered = false;
 
 	public InitMethodWeaver(ClassRecord record, Method method, MethodVisitor visitor) {
@@ -59,12 +60,24 @@ class InitMethodWeaver extends MethodWeaver {
 	@Override
 	public void visitMethodInsn(int type, String cls, String mthd, String desc) {
 		super.visitMethodInsn(type, cls, mthd, desc);
-		if (type == INVOKESPECIAL
-				&& (cls.equals(record.getName()) || cls.equals(record.getClazz().getParentName()))
-				&& (mthd.equals("<init>"))
-				&& !supered) {
-			visitLabel(start);
-			supered = true;
+		if (type == INVOKESPECIAL && mthd.equals("<init>")) {
+			//&& (cls.equals(record.getName()) || cls.equals(record.getClazz().getParentName()))
+			//&& (mthd.equals("<init>"))
+			//&& !supered) {
+			if (stacked > 0) {
+				stacked--;
+			} else if (!supered) {
+				visitLabel(start);
+				supered = true;
+			}
+		}
+	}
+
+	@Override
+	public void visitTypeInsn(int opcode, String type) {
+		super.visitTypeInsn(opcode, type);
+		if (opcode == NEW) {
+			stacked++;
 		}
 	}
 
@@ -84,13 +97,14 @@ class InitMethodWeaver extends MethodWeaver {
 	public void visitMaxs(int stack, int locals) {
 		visitLabel(end);
 
+		assert supered;
+
 		visitTryCatchBlock(start, end, handler, Type.getInternalName(Throwable.class));
 
 		visitLabel(handler);
 		visitFrame(F_FULL,
 				1, new Object[]{record.getName()},
 				1, new Object[]{Type.getInternalName(Throwable.class)});
-		//visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[]{Type.getInternalName(Throwable.class)});
 
 		visitVarInsn(ASTORE, 1); // store exception
 		setLocals(2);

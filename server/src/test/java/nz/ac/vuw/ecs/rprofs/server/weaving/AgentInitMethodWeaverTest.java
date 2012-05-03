@@ -10,7 +10,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import org.junit.Before;
 import org.junit.Test;
-import org.objectweb.asm.ClassAdapter;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -27,7 +27,7 @@ public class AgentInitMethodWeaverTest {
 	Clazz clazz;
 	ClassRecord record;
 	Method method;
-	ClassAdapter cvisitor;
+	ClassVisitor cvisitor;
 	MethodVisitor visitor;
 
 	@Before
@@ -38,7 +38,7 @@ public class AgentInitMethodWeaverTest {
 		record.generateMethod("_rprof_agent_init", "()V", ACC_STATIC);
 		method = record.getMethod("_rprof_agent_init", "()V");
 
-		cvisitor = createMock(ClassAdapter.class);
+		cvisitor = createMock(ClassVisitor.class);
 		visitor = createMock(MethodVisitor.class);
 	}
 

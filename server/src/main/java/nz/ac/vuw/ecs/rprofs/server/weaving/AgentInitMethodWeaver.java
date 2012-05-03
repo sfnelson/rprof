@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import org.objectweb.asm.ClassAdapter;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
@@ -17,7 +17,7 @@ public class AgentInitMethodWeaver extends MethodWeaver {
 	public static final String NAME = "_rprof_agent_init";
 	public static final String TYPE = "()V";
 
-	public static void generate(ClassRecord cr, ClassAdapter ca) {
+	public static void generate(ClassRecord cr, ClassVisitor ca) {
 		cr.generateMethod(NAME, TYPE, ACC_STATIC);
 		Method m = cr.getMethod(NAME, TYPE);
 		MethodVisitor mv = ca.visitMethod(ACC_STATIC, NAME, TYPE, null, null);

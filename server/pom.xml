@@ -17,6 +17,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>asm</id>
+            <url>http://repository.ow2.org/nexus</url>
+        </repository>
+    </repositories>
+
     <dependencies>
 
         <!-- web app support -->
@@ -137,21 +144,9 @@
         <!-- asm (for code weaving) -->
 
         <dependency>
-            <groupId>asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>3.3.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>asm</groupId>
-            <artifactId>asm-commons</artifactId>
-            <version>3.3.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>asm</groupId>
-            <artifactId>asm-util</artifactId>
-            <version>3.3.1</version>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-debug-all</artifactId>
+            <version>4.0</version>
         </dependency>
 
         <!-- database -->

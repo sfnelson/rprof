@@ -3,18 +3,17 @@
  */
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
 import nz.ac.vuw.ecs.rprof.HeapTracker;
-import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-
-public class MethodWeaver extends MethodAdapter implements Opcodes {
+public class MethodWeaver extends MethodVisitor implements Opcodes {
 
 	protected final ClassRecord record;
 	protected final nz.ac.vuw.ecs.rprofs.server.domain.Method method;
@@ -27,7 +26,7 @@ public class MethodWeaver extends MethodAdapter implements Opcodes {
 	public MethodWeaver(ClassRecord record,
 						nz.ac.vuw.ecs.rprofs.server.domain.Method method,
 						MethodVisitor mv) {
-		super(mv);
+		super(ASM4, mv);
 		this.record = record;
 		this.method = method;
 		this.ga = new GeneratorAdapter(mv, method.getAccess(), method.getName(), method.getDescription());

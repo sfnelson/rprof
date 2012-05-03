@@ -1,11 +1,11 @@
 package nz.ac.vuw.ecs.rprofs.server.weaving;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.util.ASMifierClassVisitor;
-
 import java.io.OutputStream;
 import java.io.PrintWriter;
+
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.util.ASMifier;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -21,8 +21,9 @@ public class WeaverTestBase {
 
 	protected void print(byte[] cls, OutputStream out) {
 		ClassReader r = new ClassReader(cls);
-		ClassVisitor w = new ASMifierClassVisitor(new PrintWriter(out));
-		r.accept(w, ClassReader.SKIP_DEBUG);
+		r.accept(new TraceClassVisitor(null,
+				new ASMifier(),
+				new PrintWriter(out)), ClassReader.SKIP_DEBUG);
 	}
 
 	private class TestingClassLoader extends ClassLoader {

@@ -48,11 +48,13 @@ public class TrackingClassWeaver extends BasicClassWeaver {
 		}
 	}
 
-	private static class GetTrackerGenerator extends NoopMethodVisitor {
+	private static class GetTrackerGenerator extends MethodVisitor {
 
 		private final GeneratorAdapter visitor;
 
 		public GetTrackerGenerator(Method method, MethodVisitor visitor) {
+			super(ASM4);
+
 			this.visitor = new GeneratorAdapter(visitor, method.getAccess(), method.getName(), method.getDescription());
 		}
 
@@ -84,11 +86,13 @@ public class TrackingClassWeaver extends BasicClassWeaver {
 		}
 	}
 
-	private static class SetTrackerGenerator extends NoopMethodVisitor {
+	private static class SetTrackerGenerator extends MethodVisitor {
 
 		private final GeneratorAdapter visitor;
 
 		public SetTrackerGenerator(Method method, MethodVisitor visitor) {
+			super(ASM4);
+
 			this.visitor = new GeneratorAdapter(visitor, method.getAccess(), method.getName(), method.getDescription());
 		}
 

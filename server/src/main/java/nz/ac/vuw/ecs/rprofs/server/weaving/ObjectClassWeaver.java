@@ -5,19 +5,19 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 
 import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  */
-public class ObjectClassWeaver extends ClassAdapter {
+public class ObjectClassWeaver extends ClassVisitor {
 
 	private final ClassRecord cr;
 
 	public ObjectClassWeaver(ClassVisitor cv, ClassRecord cr) {
-		super(cv);
+		super(Opcodes.ASM4, cv);
 
 		this.cr = cr;
 	}

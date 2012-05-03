@@ -10,12 +10,12 @@ import org.objectweb.asm.*;
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
  */
-public class ThreadClassWeaver extends ClassAdapter {
+public class ThreadClassWeaver extends ClassVisitor {
 
 	private final ClassRecord cr;
 
 	public ThreadClassWeaver(ClassVisitor cv, ClassRecord cr) {
-		super(cv);
+		super(Opcodes.ASM4, cv);
 
 		this.cr = cr;
 	}

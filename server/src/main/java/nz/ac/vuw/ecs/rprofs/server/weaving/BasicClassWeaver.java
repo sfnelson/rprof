@@ -3,9 +3,9 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
-import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
 
@@ -13,14 +13,14 @@ import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 16/04/12
  */
-abstract class BasicClassWeaver extends ClassAdapter {
+abstract class BasicClassWeaver extends ClassVisitor {
 
 	protected final ClassRecord cr;
 
 	private boolean visitedCLInit = false;
 
 	BasicClassWeaver(ClassVisitor cv, ClassRecord cr) {
-		super(cv);
+		super(Opcodes.ASM4, cv);
 
 		this.cr = cr;
 	}
@@ -33,7 +33,7 @@ abstract class BasicClassWeaver extends ClassAdapter {
 		if (major < 49) {
 			version = 49;
 			cr.setProperties(cr.getProperties() | Clazz.CLASS_VERSION_UPDATED);
-		}
+		} //TODO why did we do this again?
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 

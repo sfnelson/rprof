@@ -3,18 +3,21 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzCreator;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 13/09/11
  */
-public class ClassParser extends ClassAdapter {
+public class ClassParser extends ClassVisitor {
 
 	private final ClazzCreator<?> builder;
 
 	public ClassParser(@NotNull ClazzCreator<?> builder) {
-		super(null);
+		super(Opcodes.ASM4);
 		this.builder = builder;
 	}
 
@@ -30,32 +33,6 @@ public class ClassParser extends ClassAdapter {
 		builder.setName(name);
 		builder.setParentName(superName);
 		builder.setAccess(access);
-	}
-
-	@Override
-	public void visitSource(@Nullable String source, @Nullable String debug) {
-		// nothing to do.
-	}
-
-	@Override
-	public void visitOuterClass(@Nullable String owner, @Nullable String name, @Nullable String desc) {
-		// nothing to do.
-	}
-
-	@Override
-	public AnnotationVisitor visitAnnotation(@Nullable String desc, boolean visible) {
-		return null; // nothing to do.
-	}
-
-	@Override
-	public void visitAttribute(@Nullable Attribute attr) {
-		// nothing to do.
-	}
-
-	@Override
-	public void visitInnerClass(@Nullable String name, @Nullable String outerName,
-								@Nullable String innerName, int access) {
-		// nothing to do.
 	}
 
 	@Override
@@ -78,10 +55,5 @@ public class ClassParser extends ClassAdapter {
 				.setAccess(access)
 				.store();
 		return null;
-	}
-
-	@Override
-	public void visitEnd() {
-		// nothing to do.
 	}
 }

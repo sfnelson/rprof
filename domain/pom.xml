@@ -83,6 +83,14 @@
             <version>0.9.29</version>
         </dependency>
 
+        <!-- asm (for classfile constants) -->
+
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-debug-all</artifactId>
+            <version>4.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

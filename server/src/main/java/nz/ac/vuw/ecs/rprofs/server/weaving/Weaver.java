@@ -53,6 +53,8 @@ public class Weaver {
 					// throwable has a transient field, backtrace, which causes off-by-1 errors
 					// see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4934380
 			.add("java/lang/Throwable")
+			.add("java/lang/String") // strings are automatically created, breaking final field tracking
+					// this won't cause errors, but looks weird in output data
 			.get();
 
 	public byte[] weave(ClassRecord record, byte[] classfile) {

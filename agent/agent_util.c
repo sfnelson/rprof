@@ -111,7 +111,7 @@ allocate(jvmtiEnv *jvmti, size_t len)
     error = (*jvmti)->Allocate(jvmti, (jlong) len, (unsigned char **)&ptr);
     check_jvmti_error(jvmti, error, "Cannot allocate memory");
     
-    bzero(ptr, len);
+    memset(ptr, 0xdf, len);
 
     return ptr;
 }

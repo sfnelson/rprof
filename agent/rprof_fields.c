@@ -37,20 +37,22 @@ map_create(FieldTable table, size_t size)
     struct f_map * map;
     
     map = allocate(table->jvmti, sizeof(struct f_map));
-    bzero(map, sizeof(struct f_map));
     if (map == NULL) {
         fatal_error("ERROR: unable to allocate space for a field table\n");
         return NULL;
     }
-    
+    map->using = 0;
+    map->free = JNI_FALSE;
     map->size = 0;
     map->max = size;
+
     map->entries = allocate(table->jvmti, size * sizeof(r_fieldRecord));
-    bzero(map->entries, size * sizeof(r_fieldRecord));
     if (map->entries == NULL) {
         fatal_error("ERROR: unable to allocate space for a field table entries\n");
+        return NULL;
     }
-    
+    bzero(map->entries, size * sizeof(r_fieldRecord));
+
     return map;
 }
 
@@ -277,6 +279,8 @@ fields_create(jvmtiEnv *jvmti, const char *name)
         fatal_error("unable to create change monitor for field table");
         return NULL;
     }
+    
+    table->map = NULL;
     
     return table;
 }

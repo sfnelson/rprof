@@ -130,7 +130,10 @@ create_store(CommEnv env)
     struct store *s;
     
     s = allocate(env->jvmti, sizeof(struct store));
+    s->using = 0;
+    s->size = 0;
     s->max = EVENT_BUFFER_SIZE;
+    s->flush = JNI_FALSE;
     
     return s;
 }
@@ -239,6 +242,13 @@ comm_create(jvmtiEnv *jvmti, char *options)
     check_jvmti_error(jvmti, error, "Cannot create monitor");
     
     env->store = create_store(env);
+    env->prev_id = 0;
+    env->start = NULL;
+    env->weave = NULL;
+    env->log = NULL;
+    env->stop = NULL;
+    env->dataset = NULL;
+    env->benchmark = NULL;
     
 	if (0 == options || 0 == strlen(options)) {
 		comm_init(env, "localhost:8888", "unknown");
@@ -273,6 +283,7 @@ read_header(char *input, size_t size, size_t count, void * arg)
 	if (strncasecmp(input, CONTENT_LENGTH, CONTENT_LENGTH_LEN) == 0) {
 		len = (jint) strtol(&input[CONTENT_LENGTH_LEN], NULL, 0);
 		*(response->length) = len;
+        /* deallocated by jvm after load */
 		*(response->image) = allocate(response->jvmti, (size_t) len);
 	}
     

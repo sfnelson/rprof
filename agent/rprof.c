@@ -313,7 +313,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass site, jthread thread, jclass klas
     
 	bzero(&event, sizeof(event));
     
-	/*if (id == 0) { todo this is a test */
+	/*if (id == 0) { todo not using java id generation because it's broken */
     enterCriticalSection(jvmti); {
 	    id = generate_object_tag();
     }; exitCriticalSection(jvmti);
@@ -725,20 +725,6 @@ cbVMObjectAlloc(jvmtiEnv *jvmti, JNIEnv *env, jthread thread,
 	HEAP_TRACKER_native_newobj(env, klass, thread, klass, o, 0);
 }
 
-/* Callback for JVMTI_EVENT_OBJECT_FREE */
-static void
-cbObjectFree(jvmtiEnv *jvmti, jlong id)
-{
-    r_event event;
-    
-    bzero(&event, sizeof(event));
-    
-    event.type = RPROF_OBJECT_FREED;
-    event.args_len = 1;
-    event.args[0] = id;
-    comm_log(gdata->comm, &event);
-}
-
 static void
 cbClassPrepareHook(jvmtiEnv *jvmti, JNIEnv* env, jthread thread, jclass klass) {
     jvmtiError error;
@@ -1074,7 +1060,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 
 	capabilities.can_generate_all_class_hook_events = 1;
 	capabilities.can_tag_objects  = 1;
-	capabilities.can_generate_object_free_events  = 1;
+	/* capabilities.can_generate_object_free_events  = 1; */
 	/* capabilities.can_get_source_file_name  = 1; */
 	/* capabilities.can_get_line_numbers  = 1; */
 	capabilities.can_generate_vm_object_alloc_events  = 1;
@@ -1097,7 +1083,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	/* JVMTI_EVENT_VM_DEATH */
 	callbacks.VMDeath           = &cbVMDeath;
 	/* JVMTI_EVENT_OBJECT_FREE */
-	callbacks.ObjectFree        = &cbObjectFree;
+	/* callbacks.ObjectFree        = &cbObjectFree; */
 	/* JVMTI_EVENT_VM_OBJECT_ALLOC */
 	callbacks.VMObjectAlloc     = &cbVMObjectAlloc;
 	/* JVMTI_EVENT_CLASS_FILE_LOAD_HOOK */
@@ -1125,9 +1111,9 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	error = (*jvmti)->SetEventNotificationMode(jvmti, JVMTI_ENABLE,
                                                JVMTI_EVENT_VM_DEATH, (jthread)NULL);
 	check_jvmti_error(jvmti, error, "Cannot set event notification");
-	error = (*jvmti)->SetEventNotificationMode(jvmti, JVMTI_ENABLE,
+	/* error = (*jvmti)->SetEventNotificationMode(jvmti, JVMTI_ENABLE,
                                                JVMTI_EVENT_OBJECT_FREE, (jthread)NULL);
-	check_jvmti_error(jvmti, error, "Cannot set event notification");
+	check_jvmti_error(jvmti, error, "Cannot set event notification"); */
 	error = (*jvmti)->SetEventNotificationMode(jvmti, JVMTI_ENABLE,
                                                JVMTI_EVENT_VM_OBJECT_ALLOC, (jthread)NULL);
 	check_jvmti_error(jvmti, error, "Cannot set event notification");

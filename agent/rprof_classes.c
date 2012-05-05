@@ -40,6 +40,10 @@ classes_create(jvmtiEnv *jvmti, const char *name)
     error = (*jvmti)->CreateRawMonitor(jvmti, name, &(list->lock));
     check_jvmti_error(jvmti, error, "Cannot create lock");
     
+    list->max = 0;
+    list->size = 0;
+    list->entries = NULL;
+    
     return list;
 }
 

@@ -28,7 +28,12 @@ COMMON_FLAGS += -D_REENTRANT
 ifdef OPT
     CFLAGS = -Os $(COMMON_FLAGS)
 else
-    CFLAGS = -g $(COMMON_FLAGS)
+    CFLAGS = -g -O0 $(COMMON_FLAGS)
+endif
+
+ifdef VALGRIND_OPTS
+else
+    VALGRIND_OPTS=--suppressions=jdk.supp --num-callers=20
 endif
 
 ifdef DEBUG
@@ -53,7 +58,6 @@ ifeq ($(OS),Darwin)
 	CC      = clang
 	CFLAGS += -arch x86_64 -I$(JDK)/include -I$(JDK)/include/darwin
 	LIBRARY = lib$(LIBNAME).dylib
-	#LPATH  = /Users/stephen/Library/Developer/Xcode/DerivedData/Agent-futybmjwxpndsxcvqeoojdbzvigz/Build/Products/Debug/
 	LPATH	= .
 	LPATHN  = DYLD_LIBRARY_PATH
 	LDFLAGS = -dynamiclib -mimpure-text
@@ -61,7 +65,8 @@ ifeq ($(OS),Darwin)
 endif
 
 ifeq ($(OS),Linux)
-	JDK1    = /usr/lib/jvm/java-7-openjdk-amd64
+	JDK1	= ../../jdk1.8.0
+#	JDK1    = /usr/lib/jvm/java-7-openjdk-amd64
 	JDK2    = /vol/projects/stephen/oracle-jdk7-x86_64
 	ifeq ($(wildcard $(JDK1)),$(JDK1))
 		JDK = $(JDK1)
@@ -81,10 +86,11 @@ LINK_SHARED=$(LINK.c) -shared -o $@
 
 J_OPTS = \
     -Xbootclasspath/a:$(JARFILE) \
-    -agentlib:$(LIBNAME)=$(HOST),$@
+    -agentlib:$(LIBNAME)=$(HOST),$@ \
+    -Xmx1024m -Xint
 
 ifdef DEBUG
-    J_OPTS += -Xcheck:jni
+    J_OPTS += -Xcheck:jni -XX:+UnlockDiagnosticVMOptions
 endif
 
 ifdef J_DEBUG
@@ -95,6 +101,10 @@ ifdef GDB
     JAVA    = $(LPATHN)=$(LPATH) gdb --args $(JDK)/bin/java $(J_OPTS)
 else
     JAVA    = $(LPATHN)=$(LPATH) $(JDK)/bin/java $(J_OPTS)
+endif
+
+ifdef VALGRIND
+    JAVA    = $(LPATHN)=$(LPATH) valgrind $(VALGRIND_OPTS) $(JDK)/bin/java $(J_OPTS)
 endif
 
 all: $(LIBRARY) $(JARFILE)

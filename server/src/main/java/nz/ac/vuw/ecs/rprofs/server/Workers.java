@@ -43,7 +43,7 @@ public class Workers extends HttpServlet {
 	}
 
 	@Override
-	protected synchronized void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		final Continuation continuation = ContinuationSupport.getContinuation(req);
 		byte[] data = (byte[]) req.getAttribute("Data");
 		RequestId request = (RequestId) req.getAttribute("RequestId");

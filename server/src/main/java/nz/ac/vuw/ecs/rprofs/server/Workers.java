@@ -43,7 +43,7 @@ public class Workers extends HttpServlet {
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected synchronized void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		final Continuation continuation = ContinuationSupport.getContinuation(req);
 		byte[] data = (byte[]) req.getAttribute("Data");
 		RequestId request = (RequestId) req.getAttribute("RequestId");
@@ -61,7 +61,7 @@ public class Workers extends HttpServlet {
 			return;
 		}
 
-		if (req.getAttribute("init") == null) {
+		if (continuation.isInitial()) {
 			// first time through
 			boolean hasCache = req.getHeader("HasCache") != null;
 			String requestId = req.getHeader("RequestId");
@@ -85,21 +85,15 @@ public class Workers extends HttpServlet {
 
 				Context.clear();
 			}
-
-			req.setAttribute("init", true);
 		}
 
+		// check timeout -- flush as nothing else to do
 		if (continuation.isExpired()) {
-			returnNoContent(resp);
 			workers.remove(continuation);
-			if (request != null) {
-				// If the worker gets a bad response it flushes data
-				log.warn("worker disconnected, abandoning request {}", request.getValue());
-				Dataset ds = datasets.findDataset((String) req.getAttribute("Dataset"));
-				Context.setDataset(ds);
-				requests.releaseRequest(request);
-				Context.clear();
-			}
+			resp.addHeader("Dataset", dataset);
+			resp.addHeader("RequestId", String.valueOf(request.getValue()));
+			resp.addHeader("Flush", "true");
+			returnNoContent(resp);
 			return;
 		}
 
@@ -109,22 +103,22 @@ public class Workers extends HttpServlet {
 
 			// check still running
 			if (ds.getStopped() != null) {
+				workers.remove(continuation);
 				resp.addHeader("Dataset", dataset);
 				resp.addHeader("RequestId", String.valueOf(request.getValue()));
 				resp.addHeader("Flush", "true");
 				returnNoContent(resp);
-				workers.remove(continuation);
 				return;
 			}
 
 			Context.clear();
 		}
 
+		continuation.suspend();
+
 		if (!workers.contains(continuation)) {
 			workers.offer(continuation);
 		}
-
-		continuation.suspend();
 	}
 
 	protected Continuation getWorker() throws InterruptedException {

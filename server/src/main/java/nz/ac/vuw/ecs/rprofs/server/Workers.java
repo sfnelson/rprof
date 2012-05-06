@@ -90,9 +90,11 @@ public class Workers extends HttpServlet {
 		// check timeout -- flush as nothing else to do
 		if (continuation.isExpired()) {
 			workers.remove(continuation);
-			resp.addHeader("Dataset", dataset);
-			resp.addHeader("RequestId", String.valueOf(request.getValue()));
-			resp.addHeader("Flush", "true");
+			if (request != null) {
+				resp.addHeader("Dataset", dataset);
+				resp.addHeader("RequestId", String.valueOf(request.getValue()));
+				resp.addHeader("Flush", "true");
+			}
 			returnNoContent(resp);
 			return;
 		}

@@ -106,9 +106,9 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 	}
 
 	@Override
-	public void upsert(I toUpdate) {
+	public void replace(I toUpdate) {
 		Long id = toUpdate.getValue();
-		_upsert(new BasicDBObject("_id", id), b);
+		_replace(new BasicDBObject("_id", id), b);
 		reset();
 	}
 
@@ -128,7 +128,7 @@ public abstract class EntityBuilder<B extends EntityBuilder<B, I, T>, I extends 
 
 	abstract void _update(DBObject ref, DBObject update);
 
-	abstract void _upsert(DBObject ref, DBObject update);
+	abstract void _replace(DBObject ref, DBObject update);
 
 	abstract DBCursor _query(DBObject ref);
 

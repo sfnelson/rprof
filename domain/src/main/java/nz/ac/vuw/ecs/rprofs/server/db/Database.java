@@ -14,7 +14,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
-import nz.ac.vuw.ecs.rprofs.server.reports.*;
+import nz.ac.vuw.ecs.rprofs.server.reports.MapReduce;
+import nz.ac.vuw.ecs.rprofs.server.reports.ReduceStore;
+import nz.ac.vuw.ecs.rprofs.server.reports.Reducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +118,18 @@ public class Database {
 		return createFieldSummaryBuilder();
 	}
 
+	public RequestCreator<?> getRequestCreator() {
+		return createRequestBuilder();
+	}
+
+	public RequestQuery<?> getRequestQuery() {
+		return createRequestBuilder();
+	}
+
+	public RequestUpdater<?> getRequestUpdater() {
+		return createRequestBuilder();
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<String> findPackages() {
 		DBCollection classes = getCollection(Clazz.class);
@@ -143,7 +157,7 @@ public class Database {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends DataObject<?, T>> T findEntity(@NotNull Id<?, T> id) {
+	public <I extends Id<I, T>, T extends DataObject<I, T>> T findEntity(@NotNull I id) {
 		if (Dataset.class.equals(id.getTargetClass())) {
 			if (datasets.containsKey(id)) {
 				Dataset ds = datasets.get(id);
@@ -193,254 +207,25 @@ public class Database {
 		return true;
 	}
 
-	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
-	createInstanceMapper(Query<?, Input> input, MapReduce<Input, InstanceId, Instance> mr, boolean replace) {
+	public <Iid extends Id<Iid, I>, I extends DataObject<Iid, I>, Oid extends Id<Oid, O>, O extends DataObject<Oid, O>>
+	Runnable createMapReduce(Class<I> input, Class<O> output, MapReduce<I, Oid, O> mr) {
+		return createMapReduce(input, output, mr, null, false);
+	}
+
+	public <Iid extends Id<Iid, I>, I extends DataObject<Iid, I>, Oid extends Id<Oid, O>, O extends DataObject<Oid, O>>
+	Runnable createMapReduce(Class<I> input, Class<O> output, MapReduce<I, Oid, O> mr, String name, boolean lock) {
+		ReduceStore<Oid, O> store = createReducer(output, mr, name, lock);
+		getCollection(output).drop();
+		Query<Iid, I> query = getBuilder(input);
+		return new MongoMapper<I, Oid, O>(query, mr, store);
+	}
+
+	public <I extends Id<I, T>, T extends DataObject<I, T>>
+	ReduceStore<I, T> createReducer(Class<T> type, Reducer<I, T> reducer, String name, boolean lock) {
 		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce.instances");
-		final MongoInstanceBuilder tmpBuilder = new MongoInstanceBuilder() {
-			@Override
-			DBCollection _getCollection() {
-				return tmp;
-			}
-
-			@Override
-			void _store(DBObject toStore) {
-				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
-						.append("value", toStore));
-			}
-
-			@Override
-			public Instance get() {
-				init((DBObject) b.get("value"));
-				return super.get();
-			}
-
-			@Override
-			InstanceId _createId() {
-				return new InstanceId((Long) b.get("_id"));
-			}
-		};
-
-		if (replace) {
-			getCollection(Instance.class).drop();
-		}
-
-		return new MongoMapper<Input, InstanceId, Instance>(input, tmpBuilder, mr, mr);
-	}
-
-	public <Input extends DataObject<?, Input>> Reducer.ReducerTask
-	createInstanceReducer(MapReduce<Input, InstanceId, Instance> mr) {
-		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce.instances");
-		final MongoInstanceBuilder tmpBuilder = new MongoInstanceBuilder() {
-			@Override
-			DBCollection _getCollection() {
-				return tmp;
-			}
-
-			@Override
-			void _store(DBObject toStore) {
-				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
-						.append("value", toStore));
-			}
-
-			@Override
-			public Instance get() {
-				init((DBObject) b.get("value"));
-				return super.get();
-			}
-
-			@Override
-			InstanceId _createId() {
-				return new InstanceId((Long) b.get("_id"));
-			}
-		};
-
-		return new MongoReducer<InstanceId, Instance>(tmpBuilder, getInstanceCreator(),
-				getInstanceUpdater(), getInstanceQuery(), mr) {
-			@Override
-			protected void cleanup() {
-				tmp.drop();
-			}
-		};
-	}
-
-	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
-	createClassSummaryMapper(Query<?, Input> input, MapReduce<Input, ClassSummaryId, ClassSummary> mr, boolean replace) {
-		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce.classes");
-		final MongoClassSummaryBuilder tmpBuilder = new MongoClassSummaryBuilder() {
-			@Override
-			DBCollection _getCollection() {
-				return tmp;
-			}
-
-			@Override
-			void _store(DBObject toStore) {
-				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
-						.append("value", toStore));
-			}
-
-			@Override
-			public ClassSummary get() {
-				init((DBObject) b.get("value"));
-				return super.get();
-			}
-
-			@Override
-			ClassSummaryId _createId() {
-				return new ClassSummaryId((Long) b.get("_id"));
-			}
-		};
-
-		if (replace) {
-			getCollection(ClassSummary.class).drop();
-		}
-
-		return new MongoMapper<Input, ClassSummaryId, ClassSummary>(input, tmpBuilder, mr, mr);
-	}
-
-	public <Input extends DataObject<?, Input>> Reducer.ReducerTask
-	createClassSummaryReducer(MapReduce<Input, ClassSummaryId, ClassSummary> mr) {
-		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce.classes");
-		final MongoClassSummaryBuilder tmpBuilder = new MongoClassSummaryBuilder() {
-			@Override
-			DBCollection _getCollection() {
-				return tmp;
-			}
-
-			@Override
-			void _store(DBObject toStore) {
-				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
-						.append("value", toStore));
-			}
-
-			@Override
-			public ClassSummary get() {
-				init((DBObject) b.get("value"));
-				return super.get();
-			}
-
-			@Override
-			ClassSummaryId _createId() {
-				return new ClassSummaryId((Long) b.get("_id"));
-			}
-		};
-
-		return new MongoReducer<ClassSummaryId, ClassSummary>(tmpBuilder, getClassSummaryCreator(),
-				getClassSummaryUpdater(), getClassSummaryQuery(), mr) {
-			@Override
-			protected void cleanup() {
-				tmp.drop();
-			}
-		};
-	}
-
-	public <Input extends DataObject<?, Input>, U extends ClassSummaryUpdater<U>> Finisher.FinisherTask
-	createClassSummaryFinisher(final MapReduceFinish<Input, ClassSummaryId, ClassSummary, U> mr) {
-		final ClassSummaryQuery<?> q = getClassSummaryQuery();
-		final ClassSummaryUpdater<?> u = getClassSummaryUpdater();
-		return new Finisher.FinisherTask() {
-			@Override
-			public void finish() {
-				Query.Cursor<? extends ClassSummary> c = q.find();
-				while (c.hasNext()) {
-					u.init();
-					mr.finish(c.next().getId(), (U) u);
-				}
-				c.close();
-			}
-		};
-	}
-
-	public <Input extends DataObject<?, Input>> Mapper.MapTask<Input>
-	createFieldSummaryMapper(Query<?, Input> input, MapReduce<Input, FieldSummaryId, FieldSummary> mr, boolean replace) {
-		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce.fields");
-		final MongoFieldSummaryBuilder tmpBuilder = new MongoFieldSummaryBuilder() {
-			@Override
-			DBCollection _getCollection() {
-				return tmp;
-			}
-
-			@Override
-			void _store(DBObject toStore) {
-				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
-						.append("value", toStore));
-			}
-
-			@Override
-			public FieldSummary get() {
-				init((DBObject) b.get("value"));
-				return super.get();
-			}
-
-			@Override
-			FieldSummaryId _createId() {
-				return new FieldSummaryId((Long) b.get("_id"));
-			}
-		};
-
-		if (replace) {
-			getCollection(FieldSummary.class).drop();
-		}
-
-		return new MongoMapper<Input, FieldSummaryId, FieldSummary>(input, tmpBuilder, mr, mr);
-	}
-
-	public <Input extends DataObject<?, Input>> Reducer.ReducerTask
-	createFieldSummaryReducer(MapReduce<Input, FieldSummaryId, FieldSummary> mr) {
-		DB db = getDatabase();
-		final DBCollection tmp = db.getCollection("tmp.mapreduce.fields");
-		final MongoFieldSummaryBuilder tmpBuilder = new MongoFieldSummaryBuilder() {
-			@Override
-			DBCollection _getCollection() {
-				return tmp;
-			}
-
-			@Override
-			void _store(DBObject toStore) {
-				_getCollection().insert(new BasicDBObject("id", _createId().getValue())
-						.append("value", toStore));
-			}
-
-			@Override
-			public FieldSummary get() {
-				init((DBObject) b.get("value"));
-				return super.get();
-			}
-
-			@Override
-			FieldSummaryId _createId() {
-				return new FieldSummaryId((Long) b.get("_id"));
-			}
-		};
-
-		return new MongoReducer<FieldSummaryId, FieldSummary>(tmpBuilder, getFieldSummaryCreator(),
-				getFieldSummaryUpdater(), getFieldSummaryQuery(), mr) {
-			@Override
-			protected void cleanup() {
-				tmp.drop();
-			}
-		};
-	}
-
-	public <Input extends DataObject<?, Input>, U extends FieldSummaryUpdater<U>> Finisher.FinisherTask
-	createFieldSummaryFinisher(final MapReduceFinish<Input, FieldSummaryId, FieldSummary, U> mr) {
-		final FieldSummaryQuery<?> q = getFieldSummaryQuery();
-		final FieldSummaryUpdater<?> u = getFieldSummaryUpdater();
-		return new Finisher.FinisherTask() {
-			@Override
-			public void finish() {
-				Query.Cursor<? extends FieldSummary> f = q.find();
-				while (f.hasNext()) {
-					u.init();
-					mr.finish(f.next().getId(), (U) u);
-				}
-				f.close();
-			}
-		};
+		DBCollection c = getCollection(type);
+		EntityBuilder<?, I, T> builder = getBuilder(type);
+		return new MongoReduceStore<I, T>(this, db, c, builder, reducer, name, lock);
 	}
 
 	public void flush() {
@@ -483,12 +268,57 @@ public class Database {
 		} else if (type == Event.class) {
 			return root.getCollection("events");
 		} else if (type == ClassSummary.class) {
-			return root.getCollection("results");
+			return root.getCollection("class.results");
 		} else if (type == FieldSummary.class) {
 			return root.getCollection("field.results");
+		} else if (type == Request.class) {
+			return root.getCollection("tmp.requests");
 		} else {
 			throw new RuntimeException("type not implemented: " + type);
 		}
+	}
+
+	synchronized boolean _lock(DB root, DBCollection collection, String owner) throws InterruptedException {
+		DBCollection locks = root.getCollection("locks");
+		DBObject query = new BasicDBObjectBuilder()
+				.add("_id", collection.getName())
+				.add("owner", new BasicDBObject("$exists", false)).get();
+		DBObject update = new BasicDBObject("$set", new BasicDBObjectBuilder()
+				.add("owner", owner)
+				.get());
+		DBObject inc = new BasicDBObject("$inc", new BasicDBObject("requests", 1));
+
+		// first, ensure the lock exists
+		locks.findAndModify(new BasicDBObject("_id", collection.getName()), null, null, false, inc, true, true);
+
+		while (true) {
+			DBObject lock = locks.findAndModify(query, null, null, false, update, true, false);
+			if (lock == null) {
+				log.debug("{} waiting on {}", owner, collection.getName());
+				wait(1000);
+			} else {
+				log.debug("{} has lock on {}", owner, collection.getName());
+				return true;
+			}
+		}
+	}
+
+	synchronized boolean _unlock(DB root, DBCollection collection, String owner) {
+		DBCollection locks = root.getCollection("locks");
+		DBObject query = new BasicDBObjectBuilder()
+				.add("_id", collection.getName())
+				.add("owner", owner).get();
+		DBObject update = new BasicDBObject("$unset", new BasicDBObject("owner", true));
+
+		DBObject lock = locks.findAndModify(query, null, null, false, update, true, false);
+
+		if (lock == null) return false;
+
+		log.debug("{} has released {}", owner, collection.getName());
+
+		notifyAll();
+
+		return true;
 	}
 
 	private List<Dataset> getDatasets() {
@@ -526,7 +356,7 @@ public class Database {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends DataObject<?, T>> EntityBuilder<?, ?, T> getBuilder(@NotNull Class<T> type) {
+	private <I extends Id<I, T>, T extends DataObject<I, T>> EntityBuilder<?, I, T> getBuilder(@NotNull Class<T> type) {
 		if (type.equals(Dataset.class)) {
 			return EntityBuilder.class.cast(createDatasetBuilder());
 		} else if (type.equals(Event.class)) {
@@ -543,6 +373,8 @@ public class Database {
 			return EntityBuilder.class.cast(createClassSummaryBuilder());
 		} else if (type.equals(FieldSummary.class)) {
 			return EntityBuilder.class.cast(createFieldSummaryBuilder());
+		} else if (type.equals(Request.class)) {
+			return EntityBuilder.class.cast(createRequestBuilder());
 		} else {
 			log.error("request for unavaible builder: {}", type);
 			return null;
@@ -809,6 +641,27 @@ public class Database {
 			@Override
 			FieldSummaryId _createId() {
 				return new FieldSummaryId((Long) b.get("_id"));
+			}
+		};
+	}
+
+	private MongoRequestBuilder createRequestBuilder() {
+		final DBCollection requests = getCollection(Request.class);
+		return new MongoRequestBuilder() {
+			@Override
+			DBCollection _getCollection() {
+				return requests;
+			}
+
+			@Override
+			RequestId _createId() {
+				if (b.containsField("_id")) {
+					return new RequestId((Long) b.get("_id"));
+				} else {
+					// TODO this is not multi-server safe!
+					Dataset ds = Context.getDataset();
+					return RequestId.create(ds);
+				}
 			}
 		};
 	}

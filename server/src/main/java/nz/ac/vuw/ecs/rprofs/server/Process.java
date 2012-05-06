@@ -17,6 +17,7 @@ import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.FieldSummary;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassMapReduce;
 import nz.ac.vuw.ecs.rprofs.server.reports.FieldMapReduce;
@@ -52,14 +53,10 @@ public class Process extends HttpServlet {
 				Context.setDataset(dataset);
 
 				if ("classes".equals(target) || "all".equals(target)) {
-					final ClassMapReduce mr = new ClassMapReduce(db.getClazzQuery());
+					final ClassMapReduce cmr = new ClassMapReduce(db.getClazzQuery());
 
-					if (op == null || op.equals("map") || op.equals("mapreduce")) {
-						db.createClassSummaryMapper(db.getInstanceQuery(), mr, true).map();
-					}
-					if (op == null || op.equals("reduce") || op.equals("mapreduce")) {
-						db.createClassSummaryReducer(mr).reduce();
-						db.createClassSummaryFinisher(mr).finish();
+					if (op == null || op.equals("mapreduce")) {
+						db.createMapReduce(Instance.class, ClassSummary.class, cmr).run();
 					}
 					if (op == null || op.equals("summary")) {
 						summary(resp);
@@ -74,12 +71,8 @@ public class Process extends HttpServlet {
 				if ("fields".equals(target) || "all".equals(target)) {
 					final FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
 
-					if (op == null || op.equals("map") || op.equals("mapreduce")) {
-						db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
-					}
-					if (op == null || op.equals("reduce") || op.equals("mapreduce")) {
-						db.createFieldSummaryReducer(fmr).reduce();
-						db.createFieldSummaryFinisher(fmr).finish();
+					if (op == null || op.equals("mapreduce")) {
+						db.createMapReduce(Instance.class, FieldSummary.class, fmr).run();
 					}
 					if (op == null || "summary".equals(op)) {
 						fields(dataset, resp);

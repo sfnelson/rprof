@@ -16,9 +16,10 @@ import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
-import nz.ac.vuw.ecs.rprofs.server.reports.Mapper;
+import nz.ac.vuw.ecs.rprofs.server.reports.ReduceStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,26 +67,45 @@ public class Worker {
 	public void run() throws Exception {
 		String server = System.getProperty("rprofs");
 		URL url = new URL("http://" + server + "/worker");
+		String request = null;
+		String handle = null;
 
 		Handler current = null;
 
 		while (true) {
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("GET");
-			if (current != null)
-				connection.setRequestProperty("Dataset", current.ds.getDatasetHandle());
+			if (current != null) {
+				connection.setRequestProperty("HasCache", "true");
+			}
+			if (request != null) {
+				connection.setRequestProperty("RequestId", request);
+			}
+			if (handle != null) {
+				connection.setRequestProperty("Dataset", handle);
+			}
 
 			connection.connect();
 
-			if (connection.getResponseCode() / 100 != 2) break;
+			if (connection.getResponseCode() / 100 != 2) {
+				log.error("Bad response! {}", connection.getResponseCode());
+				if (current != null) {
+					current.flush();
+				}
+				break;
+			}
 
-			Dataset dataset = getDataset(connection.getHeaderField("Dataset"));
+			handle = connection.getHeaderField("Dataset");
+			request = connection.getHeaderField("RequestId");
+
+			Dataset dataset = getDataset(handle);
 			boolean flush = connection.getHeaderField("Flush") != null;
 			int length = connection.getContentLength();
 
 			if (current != null && (flush || !current.ds.equals(dataset))) {
 				current.flush();
 				current = null;
+				continue;
 			}
 
 			if (dataset == null) {
@@ -103,7 +123,7 @@ public class Worker {
 			}
 
 			if (current == null) {
-				current = new Handler(dataset);
+				current = new Handler(dataset, request);
 			}
 
 			DataInputStream dis = new DataInputStream(connection.getInputStream());
@@ -123,15 +143,18 @@ public class Worker {
 
 	private class Handler {
 		final Dataset ds;
-		final Mapper.MapTask<Event> task;
+		final InstanceMapReduce mr;
+		final ReduceStore<InstanceId, Instance> store;
+		final String request;
 
-		public Handler(Dataset ds) {
+		public Handler(Dataset ds, String request) {
 			this.ds = ds;
+			this.request = request;
 
 			Context.setDataset(ds);
 
-			InstanceMapReduce mr = new InstanceMapReduce(ds, database);
-			task = database.createInstanceMapper(null, mr, false);
+			mr = new InstanceMapReduce(ds, database);
+			store = database.createReducer(Instance.class, mr, request, true);
 		}
 
 		public void process(int length, DataInputStream dis)
@@ -184,7 +207,7 @@ public class Worker {
 					}
 				}
 
-				task.mapVolatile(b.get());
+				mr.map(b.get(), store);
 			}
 
 			long finished = Calendar.getInstance().getTime().getTime();
@@ -196,7 +219,7 @@ public class Worker {
 			log.debug("flushing instances");
 			long started = Calendar.getInstance().getTime().getTime();
 
-			task.flush();
+			store.flush();
 
 			long finished = Calendar.getInstance().getTime().getTime();
 			log.debug("{}: flushed instances in {}ms",

@@ -12,5 +12,5 @@ public interface Updater<U extends Updater<U, I, T>, I extends Id<I, T>, T exten
 
 	void update(I toUpdate);
 
-	void upsert(I toUpdate);
+	void replace(I toUpdate);
 }

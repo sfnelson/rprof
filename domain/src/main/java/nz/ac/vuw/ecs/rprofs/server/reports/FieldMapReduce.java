@@ -1,7 +1,6 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import nz.ac.vuw.ecs.rprofs.server.data.util.FieldQuery;
-import nz.ac.vuw.ecs.rprofs.server.data.util.FieldSummaryUpdater;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.FieldSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
@@ -13,7 +12,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldSummaryId;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 10/04/12
  */
-public class FieldMapReduce<U extends FieldSummaryUpdater<U>> implements MapReduceFinish<Instance, FieldSummaryId, FieldSummary, U> {
+public class FieldMapReduce implements MapReduceFinish<Instance, FieldSummaryId, FieldSummary> {
 
 	private final FieldQuery<?> fields;
 
@@ -41,7 +40,7 @@ public class FieldMapReduce<U extends FieldSummaryUpdater<U>> implements MapRedu
 			boolean isFinal = (lastWrite == null)
 					|| (constructor != null && lastWrite.before(constructor) && info.getWrites() <= 1);
 
-			emitter.emit(id, new FieldSummary(id, isStationary, isConstructed, isFinal,
+			emitter.store(id, new FieldSummary(id, isStationary, isConstructed, isFinal,
 					1, info.getReads(), info.getWrites()));
 		}
 	}
@@ -69,7 +68,7 @@ public class FieldMapReduce<U extends FieldSummaryUpdater<U>> implements MapRedu
 	}
 
 	@Override
-	public void finish(FieldSummaryId id, U updater) {
+	public void finish(FieldSummaryId id, FieldSummary value) {
 		FieldId fid = new FieldId(id.getValue());
 		Field field = fields.find(fid);
 
@@ -86,10 +85,9 @@ public class FieldMapReduce<U extends FieldSummaryUpdater<U>> implements MapRedu
 
 		boolean isDeclaredFinal = (field != null) && field.isFinal();
 
-		updater.setPackageName(packageName)
-				.setName(name)
-				.setDescription(description)
-				.setDeclaredFinal(isDeclaredFinal)
-				.update(id);
+		value.setPackageName(packageName);
+		value.setName(name);
+		value.setDescription(description);
+		value.setDeclaredFinal(isDeclaredFinal);
 	}
 }

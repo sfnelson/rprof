@@ -1,7 +1,9 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
@@ -91,12 +93,13 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 					result.setFirstHashCode(e.getId());
 				} else if (clazz != null && (clazz.getProperties() & Clazz.COLLECTION) != 0) {
 					List<InstanceId> argList = e.getArgs();
-					for (int i = 1; i < argList.size(); i++) { // skip this
-						id = argList.get(i);
-						if (id != null && id.getValue() != 0) {
-							result = new Instance(id);
+					// skip 'this', only one event per object
+					Set<InstanceId> argSet = Sets.newHashSet(argList.subList(1, argList.size()));
+					for (InstanceId i : argSet) {
+						if (i != null && i.getValue() != 0) {
+							result = new Instance(i);
 							result.setFirstCollection(e.getId());
-							emitter.emit(id, result);
+							emitter.store(i, result);
 						}
 					}
 					return;
@@ -104,21 +107,23 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 				break;
 		}
 
-		emitter.emit(id, result);
+		emitter.store(id, result);
 	}
 
 	private static boolean setIfBefore(EventId a, EventId b) {
 		if (b == null) return false; // nothing to do
-		else if (a == null) return true; // nothing to compare to
-		else if (b.before(a)) return true;
-		else return false;
+		if (a == null) return true; // nothing to compare to
+		assert (!a.equals(b));
+		if (b.before(a)) return true;
+		return false;
 	}
 
 	private static boolean setIfAfter(EventId a, EventId b) {
 		if (b == null) return false; // nothing to do
-		else if (a == null) return true; // nothing to compare to
-		else if (b.after(a)) return true;
-		else return false;
+		if (a == null) return true; // nothing to compare to
+		assert (!a.equals(b));
+		if (b.after(a)) return true;
+		return false;
 	}
 
 	@Override

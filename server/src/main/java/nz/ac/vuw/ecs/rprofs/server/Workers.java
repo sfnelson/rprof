@@ -12,10 +12,15 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.data.RequestManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.RequestId;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -24,55 +29,102 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 @Singleton
 public class Workers extends HttpServlet {
 
+	private final Logger log = LoggerFactory.getLogger(Workers.class);
+
 	private BlockingQueue<Continuation> workers = new ArrayBlockingQueue<Continuation>(40);
 
 	private DatasetManager datasets;
+	private RequestManager requests;
 
 	@Inject
-	Workers(DatasetManager datasets) {
+	Workers(DatasetManager datasets, RequestManager requests) {
 		this.datasets = datasets;
+		this.requests = requests;
 	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		String dataset = (String) req.getAttribute("Dataset");
+		final Continuation continuation = ContinuationSupport.getContinuation(req);
 		byte[] data = (byte[]) req.getAttribute("Data");
+		RequestId request = (RequestId) req.getAttribute("RequestId");
+		String dataset = (String) req.getAttribute("Dataset");
 
-		if (dataset == null || data == null) {
-			final Continuation continuation = ContinuationSupport.getContinuation(req);
+		if (data != null) {
+			// good to go
+			resp.addHeader("Dataset", dataset);
+			resp.addHeader("RequestId", String.valueOf(request.getValue()));
+			resp.setContentType("application/rprof");
+			resp.setContentLength(data.length);
+			resp.setStatus(HttpServletResponse.SC_OK);
+			resp.getOutputStream().write(data, 0, data.length);
+			resp.getOutputStream().close();
+			return;
+		}
 
-			if (req.getHeader("Dataset") != null) {
-				// check still running
-				Dataset ds = datasets.findDataset(req.getHeader("Dataset"));
+		if (req.getAttribute("init") == null) {
+			// first time through
+			boolean hasCache = req.getHeader("HasCache") != null;
+			String requestId = req.getHeader("RequestId");
+			dataset = req.getHeader("Dataset");
 
-				if (ds.getStopped() != null) {
-					resp.addHeader("Flush", "true");
-					returnNoContent(resp);
-					workers.remove(continuation);
-					return;
+			if (requestId != null) {
+				Dataset ds = datasets.findDataset(dataset);
+				Context.setDataset(ds);
+
+				request = new RequestId(Long.valueOf(requestId));
+				// first time here
+				if (hasCache) {
+					// keep the request id
+					req.setAttribute("RequestId", request);
+					req.setAttribute("Dataset", dataset);
+				} else {
+					// no cache, so release the request
+					requests.releaseRequest(request);
+					request = null;
 				}
+
+				Context.clear();
 			}
 
-			if (continuation.isExpired()) {
+			req.setAttribute("init", true);
+		}
+
+		if (continuation.isExpired()) {
+			returnNoContent(resp);
+			workers.remove(continuation);
+			if (request != null) {
+				// If the worker gets a bad response it flushes data
+				log.warn("worker disconnected, abandoning request {}", request.getValue());
+				Dataset ds = datasets.findDataset((String) req.getAttribute("Dataset"));
+				Context.setDataset(ds);
+				requests.releaseRequest(request);
+				Context.clear();
+			}
+			return;
+		}
+
+		if (request != null) {
+			Dataset ds = datasets.findDataset(dataset);
+			Context.setDataset(ds);
+
+			// check still running
+			if (ds.getStopped() != null) {
+				resp.addHeader("Dataset", dataset);
+				resp.addHeader("RequestId", String.valueOf(request.getValue()));
+				resp.addHeader("Flush", "true");
 				returnNoContent(resp);
 				workers.remove(continuation);
 				return;
 			}
 
-			if (!workers.contains(continuation)) {
-				workers.offer(continuation);
-			}
-
-			continuation.suspend();
-			return;
+			Context.clear();
 		}
 
-		resp.addHeader("Dataset", dataset);
-		resp.setContentType("application/rprof");
-		resp.setContentLength(data.length);
-		resp.setStatus(HttpServletResponse.SC_OK);
-		resp.getOutputStream().write(data, 0, data.length);
-		resp.getOutputStream().close();
+		if (!workers.contains(continuation)) {
+			workers.offer(continuation);
+		}
+
+		continuation.suspend();
 	}
 
 	protected Continuation getWorker() throws InterruptedException {

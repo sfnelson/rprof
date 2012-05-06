@@ -11,12 +11,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.data.RequestManager;
 import nz.ac.vuw.ecs.rprofs.server.data.util.DatasetUpdater;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
+import nz.ac.vuw.ecs.rprofs.server.domain.FieldSummary;
+import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
 import nz.ac.vuw.ecs.rprofs.server.reports.ClassMapReduce;
 import nz.ac.vuw.ecs.rprofs.server.reports.FieldMapReduce;
-import nz.ac.vuw.ecs.rprofs.server.reports.InstanceMapReduce;
 import org.slf4j.LoggerFactory;
 
 @Singleton
@@ -27,12 +30,14 @@ public class Stop extends HttpServlet {
 	private final DatasetManager datasets;
 	private final Database db;
 	private final Workers workers;
+	private final RequestManager requests;
 
 	@Inject
-	Stop(DatasetManager datasets, Database db, Workers workers) {
+	Stop(DatasetManager datasets, Database db, Workers workers, RequestManager requests) {
 		this.datasets = datasets;
 		this.db = db;
 		this.workers = workers;
+		this.requests = requests;
 	}
 
 	@Override
@@ -49,15 +54,16 @@ public class Stop extends HttpServlet {
 
 		workers.flush(); // wake up all the workers in case their dataset has now finished
 
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException ex) {
-			// do nothing
-		}
-
 		Context.setDataset(dataset);
 
-		reduceInstances(dataset);
+		try {
+			requests.waitUntilDone();
+		} catch (InterruptedException ex) {
+			throw new ServletException(ex);
+		}
+
+		log.info("workers finished ({} instances)", db.getInstanceQuery().count());
+
 		reduceClasses(dataset);
 		reduceFields(dataset);
 
@@ -74,24 +80,17 @@ public class Stop extends HttpServlet {
 
 		resp.setStatus(HttpServletResponse.SC_NO_CONTENT);
 		resp.setContentLength(0);
-	}
 
-	private void reduceInstances(Dataset dataset) {
-		InstanceMapReduce mr = new InstanceMapReduce(dataset, db);
-		db.createInstanceReducer(mr).reduce();
+		db.flush();
 	}
 
 	private void reduceClasses(Dataset dataset) {
 		ClassMapReduce cmr = new ClassMapReduce(db.getClazzQuery());
-		db.createClassSummaryMapper(db.getInstanceQuery(), cmr, true).map();
-		db.createClassSummaryReducer(cmr).reduce();
-		db.createClassSummaryFinisher(cmr).finish();
+		db.createMapReduce(Instance.class, ClassSummary.class, cmr).run();
 	}
 
 	private void reduceFields(Dataset dataset) {
 		FieldMapReduce fmr = new FieldMapReduce(db.getFieldQuery());
-		db.createFieldSummaryMapper(db.getInstanceQuery(), fmr, true).map();
-		db.createFieldSummaryReducer(fmr).reduce();
-		db.createFieldSummaryFinisher(fmr).finish();
+		db.createMapReduce(Instance.class, FieldSummary.class, fmr).run();
 	}
 }

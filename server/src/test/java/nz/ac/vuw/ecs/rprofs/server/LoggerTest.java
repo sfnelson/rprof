@@ -52,7 +52,7 @@ public class LoggerTest {
 		response = createMock(HttpServletResponse.class);
 		builder = createMock(EventCreator.class);
 
-		logger = new Logger(null);
+		logger = new Logger(null, null, null);
 	}
 
 	//@Test

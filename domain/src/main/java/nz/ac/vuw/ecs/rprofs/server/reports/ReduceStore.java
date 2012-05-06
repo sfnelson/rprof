@@ -5,8 +5,10 @@ import nz.ac.vuw.ecs.rprofs.server.model.Id;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
- * Date: 6/12/11
+ * Date: 7/05/12
  */
-public interface Reducer<OutId extends Id<OutId, Output>, Output extends DataObject<OutId, Output>> {
-	Output reduce(OutId id, Iterable<Output> values);
+public interface ReduceStore<I extends Id<I, T>, T extends DataObject<I, T>> extends Emitter<I, T> {
+
+	void flush();
+
 }

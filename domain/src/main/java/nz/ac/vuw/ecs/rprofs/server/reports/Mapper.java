@@ -10,13 +10,5 @@ import nz.ac.vuw.ecs.rprofs.server.model.Id;
 public interface Mapper<Input extends DataObject<?, Input>, OutId extends Id<OutId, Output>,
 		Output extends DataObject<OutId, Output>> {
 
-	interface MapTask<Input extends DataObject<?, Input>> {
-		public void map();
-
-		public void mapVolatile(Input input);
-
-		public void flush();
-	}
-
 	void map(Input input, Emitter<OutId, Output> emitter);
 }

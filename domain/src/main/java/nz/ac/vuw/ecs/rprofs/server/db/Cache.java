@@ -75,7 +75,7 @@ abstract class Cache<I extends Id<I, T>, T extends DataObject<I, T>> implements 
 		MONITOR.register(this);
 	}
 
-	protected abstract void store(I id, T value);
+	public abstract void flush(Map<I, T> toStore);
 
 	@Override
 	protected void finalize() throws Throwable {
@@ -136,10 +136,7 @@ abstract class Cache<I extends Id<I, T>, T extends DataObject<I, T>> implements 
 		map.put(key, value);
 
 		while (maps.size() > NUM_MAPS) {
-			Map<I, T> m = maps.removeFirst();
-			for (I k : m.keySet()) {
-				store(k, m.get(k));
-			}
+			flush(maps.removeFirst());
 		}
 
 		return toReturn;
@@ -149,26 +146,26 @@ abstract class Cache<I extends Id<I, T>, T extends DataObject<I, T>> implements 
 		int size = size();
 		log.debug("flush requested ({} cached)", size);
 		for (Map<I, T> m : maps) {
-			for (I k : m.keySet()) {
-				store(k, m.get(k));
-			}
+			flush(m);
 		}
 		maps.clear();
 	}
 
 	private void reclaim() {
 		int size = size();
-		log.debug("flushing caches to reclaim memory ({} cached)", size);
-		for (int i = 0; i < size / 2; ) {
+		log.debug("flushing cache to reclaim memory ({} cached)", size);
+		int flushed = 0;
+		long started = System.currentTimeMillis();
+		while (flushed < size / 2) {
 			if (maps.isEmpty()) break;
 			Map<I, T> m = maps.removeFirst();
-			i += m.size();
+			flushed += m.size();
 			if (m != null) {
-				for (I k : m.keySet()) {
-					store(k, m.get(k));
-				}
+				flush(m);
 			}
 		}
+		long finished = System.currentTimeMillis();
+		log.debug("flushed {} in {}ms", flushed, finished - started);
 		reclaim = MONITOR.update();
 		if (reclaim && maps.isEmpty()) {
 			log.error("after reclaiming caches memory threshold is still exceeded");

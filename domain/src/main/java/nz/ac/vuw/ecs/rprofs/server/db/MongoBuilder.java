@@ -31,8 +31,7 @@ public abstract class MongoBuilder<B extends EntityBuilder<B, I, T>, I extends I
 	}
 
 	@Override
-	void _upsert(DBObject ref, DBObject update) {
-		update.put("version", 1);
+	void _replace(DBObject ref, DBObject update) {
 		_getCollection().update(ref, update, true, false);
 	}
 

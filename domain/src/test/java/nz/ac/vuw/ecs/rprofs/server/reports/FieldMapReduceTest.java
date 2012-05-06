@@ -36,7 +36,7 @@ public class FieldMapReduceTest {
 
 		emitter = new Emitter<FieldSummaryId, FieldSummary>() {
 			@Override
-			public void emit(FieldSummaryId fieldSummaryId, FieldSummary value) {
+			public void store(FieldSummaryId fieldSummaryId, FieldSummary value) {
 				outId = fieldSummaryId;
 				outValue = value;
 			}

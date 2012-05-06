@@ -3,7 +3,6 @@ package nz.ac.vuw.ecs.rprofs.server.reports;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import nz.ac.vuw.ecs.rprofs.server.data.util.ClassSummaryUpdater;
 import nz.ac.vuw.ecs.rprofs.server.data.util.ClazzQuery;
 import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
@@ -17,7 +16,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 27/03/12
  */
-public class ClassMapReduce<U extends ClassSummaryUpdater<U>> implements MapReduceFinish<Instance, ClassSummaryId, ClassSummary, U> {
+public class ClassMapReduce implements MapReduceFinish<Instance, ClassSummaryId, ClassSummary> {
 
 	private final ClazzQuery<?> classes;
 
@@ -67,7 +66,7 @@ public class ClassMapReduce<U extends ClassSummaryUpdater<U>> implements MapRedu
 		ClassSummaryId id = new ClassSummaryId(type);
 		ClassSummary result = new ClassSummary(id, lastWrite, constructor, firstRead,
 				equals, collection, instance.getFields(), mutable);
-		emitter.emit(id, result);
+		emitter.store(id, result);
 	}
 
 	@Override
@@ -82,7 +81,7 @@ public class ClassMapReduce<U extends ClassSummaryUpdater<U>> implements MapRedu
 	}
 
 	@Override
-	public void finish(ClassSummaryId id, U updater) {
+	public void finish(ClassSummaryId id, ClassSummary value) {
 		if (id == null) return;
 		ClazzId cid = new ClazzId(id.getValue());
 		Clazz clazz = classes.find(cid);
@@ -95,8 +94,7 @@ public class ClassMapReduce<U extends ClassSummaryUpdater<U>> implements MapRedu
 			packageName = className.substring(0, className.lastIndexOf('.'));
 		}
 
-		updater.setClassName(className)
-				.setPackageName(packageName)
-				.update(id);
+		value.setClassName(className);
+		value.setPackageName(packageName);
 	}
 }

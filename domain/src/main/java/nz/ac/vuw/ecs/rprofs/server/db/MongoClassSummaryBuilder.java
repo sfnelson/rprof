@@ -109,6 +109,7 @@ public abstract class MongoClassSummaryBuilder extends MongoBuilder<MongoClassSu
 		return this;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public ClassSummary get() {
 		ClassSummaryId id = new ClassSummaryId(((Long) b.get("_id")).longValue());

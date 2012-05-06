@@ -61,7 +61,14 @@ public class Logger extends HttpServlet {
 					while (true) {
 						if (worker.isExpired()) {
 							worker = workers.getWorker();
-						} else break;
+							continue;
+						}
+						if (worker.getAttribute("Dataset") == null) break;
+						String wDataset = (String) worker.getAttribute("Dataset");
+						if (dataset.equals(wDataset)) break;
+						worker.setAttribute("Flush", true);
+						worker.resume();
+						continue;
 					}
 
 					if (worker.getAttribute("RequestId") == null) {

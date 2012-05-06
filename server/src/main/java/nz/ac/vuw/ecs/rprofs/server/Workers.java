@@ -48,6 +48,7 @@ public class Workers extends HttpServlet {
 		byte[] data = (byte[]) req.getAttribute("Data");
 		RequestId request = (RequestId) req.getAttribute("RequestId");
 		String dataset = (String) req.getAttribute("Dataset");
+		Boolean flush = (Boolean) req.getAttribute("Flush");
 
 		if (data != null) {
 			// good to go
@@ -58,6 +59,17 @@ public class Workers extends HttpServlet {
 			resp.setStatus(HttpServletResponse.SC_OK);
 			resp.getOutputStream().write(data, 0, data.length);
 			resp.getOutputStream().close();
+			return;
+		}
+
+		if (flush != null && flush.booleanValue() == true) {
+			workers.remove(continuation);
+			if (request != null) {
+				resp.addHeader("Dataset", dataset);
+				resp.addHeader("RequestId", String.valueOf(request.getValue()));
+				resp.addHeader("Flush", "true");
+			}
+			returnNoContent(resp);
 			return;
 		}
 

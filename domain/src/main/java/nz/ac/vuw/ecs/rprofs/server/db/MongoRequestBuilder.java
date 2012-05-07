@@ -15,6 +15,8 @@ public abstract class MongoRequestBuilder extends MongoBuilder<MongoRequestBuild
 	@Override
 	public MongoRequestBuilder init(Request value) {
 		b.append("_id", value.getId().getValue());
+		setHasWriteLock(value.hasWriteLock());
+		setHostname(value.getHostname());
 		return this;
 	}
 
@@ -25,9 +27,16 @@ public abstract class MongoRequestBuilder extends MongoBuilder<MongoRequestBuild
 	}
 
 	@Override
+	public MongoRequestBuilder setHostname(String hostname) {
+		b.append("hostname", hostname);
+		return this;
+	}
+
+	@Override
 	public Request get() {
 		Request req = new Request(new RequestId(b.getLong("_id")));
 		req.setHasWriteLock(b.getBoolean("lock", false));
+		req.setHostname(b.getString("hostname"));
 		return req;
 	}
 }

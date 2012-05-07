@@ -70,14 +70,9 @@ public class ClassMapReduce implements MapReduceFinish<Instance, ClassSummaryId,
 	}
 
 	@Override
-	public ClassSummary reduce(ClassSummaryId id, Iterable<ClassSummary> values) {
-		ClassSummary result = new ClassSummary(id);
-
-		for (ClassSummary r : values) {
-			result.append(r);
-		}
-
-		return result;
+	public ClassSummary reduce(ClassSummaryId id, ClassSummary o1, ClassSummary o2) {
+		o1.append(o2);
+		return o1;
 	}
 
 	@Override

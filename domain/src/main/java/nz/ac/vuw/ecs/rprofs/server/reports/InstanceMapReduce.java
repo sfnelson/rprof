@@ -83,6 +83,8 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 				break;
 			case Event.OBJECT_TAGGED:
 			case Event.OBJECT_ALLOCATED:
+				assert (e.getClazz() != null);
+				assert (e.getClazz().getClassIndex() != 0);
 				result.setType(e.getClazz());
 				break;
 			case Event.METHOD_ENTER:
@@ -127,49 +129,48 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 	}
 
 	@Override
-	public Instance reduce(InstanceId id, Iterable<Instance> values) {
-		Instance result = new Instance(id);
+	public Instance reduce(InstanceId id, Instance o1, Instance o2) {
+		assert (id.equals(o1.getId()));
+		assert (o1.getId().equals(o2.getId()));
 
-		for (Instance i : values) {
-			if (i.getType() != null) {
-				assert (result.getType() == null); // type should only be set once per object
-				result.setType(i.getType());
-			}
-			if (setIfAfter(result.getConstructorReturn(), i.getConstructorReturn())) {
-				result.setConstructor(i.getConstructor());
-				result.setConstructorReturn(i.getConstructorReturn());
-			}
-			if (setIfBefore(result.getFirstEquals(), i.getFirstEquals())) {
-				result.setFirstEquals(i.getFirstEquals());
-			}
-			if (setIfBefore(result.getFirstHashCode(), i.getFirstHashCode())) {
-				result.setFirstHashCode(i.getFirstHashCode());
-			}
-			if (setIfBefore(result.getFirstCollection(), i.getFirstCollection())) {
-				result.setFirstCollection(i.getFirstCollection());
-			}
-
-			for (Instance.FieldInfo field : i.getFields().values()) {
-				Instance.FieldInfo toMerge = result.getFieldInfo(field.getId());
-				if (toMerge == null) {
-					toMerge = field;
-				} else {
-					if (setIfBefore(toMerge.getFirstRead(), field.getFirstRead()))
-						toMerge.setFirstRead(field.getFirstRead());
-					if (setIfAfter(toMerge.getLastRead(), field.getLastRead()))
-						toMerge.setLastRead(field.getLastRead());
-					toMerge.addReads(field.getReads());
-
-					if (setIfBefore(toMerge.getFirstWrite(), field.getFirstWrite()))
-						toMerge.setFirstWrite(field.getFirstWrite());
-					if (setIfAfter(toMerge.getLastWrite(), field.getLastWrite()))
-						toMerge.setLastWrite(field.getLastWrite());
-					toMerge.addWrites(field.getWrites());
-				}
-				result.addFieldInfo(toMerge.getId(), toMerge);
-			}
+		if (o2.getType() != null) {
+			assert (o1.getType() == null); // type should only be set once per object
+			o1.setType(o2.getType());
+		}
+		if (setIfAfter(o1.getConstructorReturn(), o2.getConstructorReturn())) {
+			o1.setConstructor(o2.getConstructor());
+			o1.setConstructorReturn(o2.getConstructorReturn());
+		}
+		if (setIfBefore(o1.getFirstEquals(), o2.getFirstEquals())) {
+			o1.setFirstEquals(o2.getFirstEquals());
+		}
+		if (setIfBefore(o1.getFirstHashCode(), o2.getFirstHashCode())) {
+			o1.setFirstHashCode(o2.getFirstHashCode());
+		}
+		if (setIfBefore(o1.getFirstCollection(), o2.getFirstCollection())) {
+			o1.setFirstCollection(o2.getFirstCollection());
 		}
 
-		return result;
+		for (Instance.FieldInfo field : o2.getFields().values()) {
+			Instance.FieldInfo toMerge = o1.getFieldInfo(field.getId());
+			if (toMerge == null) {
+				toMerge = field;
+			} else {
+				if (setIfBefore(toMerge.getFirstRead(), field.getFirstRead()))
+					toMerge.setFirstRead(field.getFirstRead());
+				if (setIfAfter(toMerge.getLastRead(), field.getLastRead()))
+					toMerge.setLastRead(field.getLastRead());
+				toMerge.addReads(field.getReads());
+
+				if (setIfBefore(toMerge.getFirstWrite(), field.getFirstWrite()))
+					toMerge.setFirstWrite(field.getFirstWrite());
+				if (setIfAfter(toMerge.getLastWrite(), field.getLastWrite()))
+					toMerge.setLastWrite(field.getLastWrite());
+				toMerge.addWrites(field.getWrites());
+			}
+			o1.addFieldInfo(toMerge.getId(), toMerge);
+		}
+
+		return o1;
 	}
 }

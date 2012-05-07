@@ -1,6 +1,5 @@
 package nz.ac.vuw.ecs.rprofs.server.reports;
 
-import com.google.common.collect.Lists;
 import nz.ac.vuw.ecs.rprofs.server.data.util.FieldQuery;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;
 import nz.ac.vuw.ecs.rprofs.server.domain.FieldSummary;
@@ -111,7 +110,7 @@ public class FieldMapReduceTest {
 		assertEquals(2, outValue.getReads());
 		assertEquals(1, outValue.getWrites());
 
-		outValue = mr.reduce(outId, Lists.newArrayList(outValue, outValue));
+		outValue = mr.reduce(outId, outValue, outValue);
 		assertNotNull(outValue);
 		assertEquals(fid.getValue(), outId.getValue());
 		assertTrue(outValue.isFinal());

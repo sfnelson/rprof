@@ -6,6 +6,7 @@ package nz.ac.vuw.ecs.rprofs.server.weaving;
 import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 
 /**
  * @author Stephen Nelson (stephen@sfnelson.org)
@@ -30,12 +31,9 @@ public class CLInitMethodWeaver extends MethodWeaver {
 	}
 
 	@Override
-	public void visitInsn(int insn) {
-		if (false || insn == RETURN) {
-			visitMethodInsn(INVOKESTATIC, record.getName(),
-					AgentInitMethodWeaver.NAME, AgentInitMethodWeaver.TYPE);
-		}
-
-		super.visitInsn(insn);
+	public void visitCode() {
+		super.visitCode();
+		visitLdcInsn(Type.getType("L" + record.getName() + ";"));
+		visitTrackerMethod(Tracker.clinit);
 	}
 }

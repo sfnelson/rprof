@@ -33,7 +33,7 @@ abstract class BasicClassWeaver extends ClassVisitor {
 		if (major < 49) {
 			version = 49;
 			cr.setProperties(cr.getProperties() | Clazz.CLASS_VERSION_UPDATED);
-		} //TODO why did we do this again?
+		}
 		super.visit(version, access, name, signature, superName, interfaces);
 	}
 
@@ -44,6 +44,7 @@ abstract class BasicClassWeaver extends ClassVisitor {
 
 		if (m != null && MethodUtils.isCLInit(m)) {
 			visitedCLInit = true;
+			// 'Primitive' classes do not generate ClassPrepare events, so simulate using clinit
 			mv = new CLInitMethodWeaver(cr, m, mv);
 		}
 

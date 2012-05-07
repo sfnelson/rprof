@@ -2,7 +2,6 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
@@ -26,6 +25,7 @@ class MongoReduceStore<I extends Id<I, T>, T extends DataObject<I, T>> extends C
 	private final String id;
 	private final boolean lock;
 
+	@SuppressWarnings("unchecked")
 	public MongoReduceStore(Database database, DB db, DBCollection c, EntityBuilder<?, I, T> builder, Reducer<I, T> reducer, String id, boolean lock) {
 		this.database = database;
 		this.db = db;
@@ -44,7 +44,7 @@ class MongoReduceStore<I extends Id<I, T>, T extends DataObject<I, T>> extends C
 	@Override
 	public void store(I id, T value) {
 		if (containsKey(id)) {
-			value = reducer.reduce(id, Lists.newArrayList(get(id), value));
+			value = reducer.reduce(id, get(id), value);
 		}
 		put(id, value);
 	}
@@ -70,7 +70,7 @@ class MongoReduceStore<I extends Id<I, T>, T extends DataObject<I, T>> extends C
 			value = toStore;
 			exists = false;
 		} else {
-			value = reducer.reduce(id, Lists.newArrayList(value, toStore));
+			value = reducer.reduce(id, value, toStore);
 			exists = true;
 		}
 		if (finisher != null) finisher.finish(id, value);

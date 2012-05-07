@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -12,8 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
+import nz.ac.vuw.ecs.rprofs.server.data.RequestManager;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.RequestId;
 import org.eclipse.jetty.continuation.Continuation;
 import org.slf4j.LoggerFactory;
 
@@ -24,10 +23,10 @@ public class Logger extends HttpServlet {
 
 	private final DatasetManager datasets;
 	private final Workers workers;
-	private final Provider<RequestId> requests;
+	private final RequestManager requests;
 
 	@Inject
-	Logger(DatasetManager datasets, Workers workers, Provider<RequestId> requests) {
+	Logger(DatasetManager datasets, Workers workers, RequestManager requests) {
 		this.datasets = datasets;
 		this.workers = workers;
 		this.requests = requests;
@@ -71,14 +70,17 @@ public class Logger extends HttpServlet {
 						continue;
 					}
 
+					String hostname = (String) worker.getAttribute("Hostname");
 					if (worker.getAttribute("RequestId") == null) {
-						worker.setAttribute("RequestId", requests.get());
+						worker.setAttribute("RequestId",
+								requests.createRequest(
+										hostname));
 					}
 					worker.setAttribute("Dataset", dataset);
 					worker.setAttribute("Data", buffer);
 					worker.resume();
 
-					log.debug("sent {} bytes to worker ({})", buffer.length, dataset);
+					log.debug("sent event batch to {} ({})", hostname, dataset);
 					break;
 				} catch (IllegalStateException ex) {
 					log.error(ex.getMessage(), ex);

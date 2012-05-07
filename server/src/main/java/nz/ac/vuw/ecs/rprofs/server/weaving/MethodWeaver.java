@@ -111,6 +111,7 @@ public class MethodWeaver extends MethodVisitor implements Opcodes {
 		public static final java.lang.reflect.Method newarr = getTrackerMethod("newarr");
 		public static final java.lang.reflect.Method newobj = getTrackerMethod("newobj");
 		public static final java.lang.reflect.Method newcls = getTrackerMethod("newcls");
+		public static final java.lang.reflect.Method clinit = getTrackerMethod("clinit");
 		public static final java.lang.reflect.Method main = getTrackerMethod("main");
 		public static final java.lang.reflect.Method create = getTrackerMethod("create");
 

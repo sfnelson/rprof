@@ -62,12 +62,21 @@ public class HeapTracker {
 		return new HeapTracker();
 	}
 
+	private static native void _clinit(Object cls);
+
+	public static void clinit(Object cls) {
+		if (engaged != 0) {
+			_clinit(cls);
+		}
+	}
+
 	private static native void _newcls(Object cls, int cnum, int[] fieldsToWatch);
 
 	public static void newcls(Object cls, int cnum, int[] fieldsToWatch) {
-		if (engaged != 0) {
-			_newcls(cls, cnum, fieldsToWatch);
-		}
+		/**
+		 * We need this to run before engage is set. This is safe because it's only called from JNI.
+		 */
+		_newcls(cls, cnum, fieldsToWatch);
 	}
 
 	private static native void _newobj(Object thread, Class cls, Object o, long id);

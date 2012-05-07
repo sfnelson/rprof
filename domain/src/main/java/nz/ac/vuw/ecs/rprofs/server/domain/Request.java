@@ -15,6 +15,8 @@ public class Request implements DataObject<RequestId, Request> {
 
 	private boolean hasWriteLock;
 
+	private String hostname;
+
 	public Request(RequestId id) {
 		this.id = id;
 	}
@@ -30,5 +32,13 @@ public class Request implements DataObject<RequestId, Request> {
 
 	public boolean hasWriteLock() {
 		return hasWriteLock;
+	}
+
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
+
+	public String getHostname() {
+		return hostname;
 	}
 }

@@ -46,25 +46,14 @@ public class FieldMapReduce implements MapReduceFinish<Instance, FieldSummaryId,
 	}
 
 	@Override
-	public FieldSummary reduce(FieldSummaryId id, Iterable<FieldSummary> values) {
-		boolean isStationary = true;
-		boolean isConstructed = true;
-		boolean isFinal = true;
-		int instances = 0;
-		long reads = 0;
-		long writes = 0;
-
-		for (FieldSummary summary : values) {
-			isStationary &= summary.isStationary();
-			isConstructed &= summary.isConstructed();
-			isFinal &= summary.isFinal();
-			instances += summary.getInstances();
-			reads += summary.getReads();
-			writes += summary.getWrites();
-		}
-
-		return new FieldSummary(id, isStationary, isConstructed, isFinal,
-				instances, reads, writes);
+	public FieldSummary reduce(FieldSummaryId id, FieldSummary f1, FieldSummary f2) {
+		f1.setStationary(f1.isStationary() & f2.isStationary());
+		f1.setConstructed(f1.isConstructed() & f2.isConstructed());
+		f1.setFinal(f1.isFinal() & f2.isFinal());
+		f1.setInstances(f1.getInstances() + f2.getInstances());
+		f1.setReads(f1.getReads() + f2.getReads());
+		f1.setWrites(f1.getWrites() + f2.getWrites());
+		return f1;
 	}
 
 	@Override

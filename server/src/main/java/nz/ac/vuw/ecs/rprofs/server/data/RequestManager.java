@@ -23,21 +23,20 @@ public class RequestManager {
 		this.database = database;
 	}
 
-	public synchronized RequestId createRequest() {
-		return database.getRequestCreator().store();
+	public synchronized RequestId createRequest(String hostname) {
+		return database.getRequestCreator().setHostname(hostname).store();
 	}
 
 	public synchronized void releaseRequest(RequestId request) {
 		Request rq = database.findEntity(request);
-		//if (rq != null) {
 		database.deleteEntity(rq);
-		//}
 		notifyAll();
 	}
 
 	public synchronized void waitUntilDone() throws InterruptedException {
+		log.debug("waiting for requests to finish");
 		while (database.getRequestQuery().count() > 0) {
-			log.debug("waiting for requests to finish");
+			log.trace("still waiting for requests to finish");
 			wait(10000);
 		}
 	}

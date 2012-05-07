@@ -9,4 +9,5 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.RequestId;
  */
 public interface RequestBuilder<B extends RequestBuilder<B>> extends Builder<B, RequestId, Request> {
 	B setHasWriteLock(boolean hasWriteLock);
+	B setHostname(String hostname);
 }

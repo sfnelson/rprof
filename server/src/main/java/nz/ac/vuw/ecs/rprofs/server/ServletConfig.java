@@ -16,9 +16,7 @@ import javax.validation.*;
 import nz.ac.vuw.ecs.rprofs.server.data.ClassManager;
 import nz.ac.vuw.ecs.rprofs.server.data.DatasetManager;
 import nz.ac.vuw.ecs.rprofs.server.data.EventManager;
-import nz.ac.vuw.ecs.rprofs.server.data.RequestManager;
 import nz.ac.vuw.ecs.rprofs.server.db.Database;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.RequestId;
 import nz.ac.vuw.ecs.rprofs.server.request.*;
 import org.eclipse.jetty.continuation.ContinuationFilter;
 import org.slf4j.LoggerFactory;
@@ -66,11 +64,6 @@ public class ServletConfig extends GuiceServletContextListener {
 				} else {
 					return new Mongo();
 				}
-			}
-
-			@Provides
-			RequestId getRequest(RequestManager manager) {
-				return manager.createRequest();
 			}
 
 			@Provides

@@ -13,12 +13,14 @@ import org.objectweb.asm.commons.GeneratorAdapter;
 
 import static org.objectweb.asm.Opcodes.*;
 
-public class TrackingClassWeaver extends BasicClassWeaver {
+public class TrackingClassWeaver extends ClassVisitor {
+
+	private final ClassRecord cr;
 
 	public TrackingClassWeaver(ClassVisitor cv, ClassRecord cr) {
-		super(cv, cr);
-
+		super(ASM4, cv);
 		cr.getWatches().clear();
+		this.cr = cr;
 	}
 
 	@Override
@@ -46,6 +48,11 @@ public class TrackingClassWeaver extends BasicClassWeaver {
 		} else {
 			return super.visitField(access, name, desc, signature, value);
 		}
+	}
+
+	@Override
+	public void visitEnd() {
+		AgentInitMethodWeaver.generate(cr, this);
 	}
 
 	private static class GetTrackerGenerator extends MethodVisitor {

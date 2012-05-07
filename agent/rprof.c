@@ -36,6 +36,8 @@
 #define HEAP_TRACKER_native_newarr	_newarr		/* Name of java newarray native */
 #define HEAP_TRACKER_newcls			newcls
 #define HEAP_TRACKER_native_newcls	_newcls
+#define HEAP_TRACKER_clinit			clinit
+#define HEAP_TRACKER_native_clinit	_clinit
 #define HEAP_TRACKER_enter			enter		/* Name of java method execution method */
 #define HEAP_TRACKER_exit			exit		/* Name of java method return method */
 #define HEAP_TRACKER_except			except
@@ -218,7 +220,7 @@ watch_field(r_fieldRecord *record)
 	check_jvmti_error(jvmti, error, "Cannot add modify watch to field");
 }
 
-/* Java Native Method for <clinit> */
+/* Java Native Mathoc for _rprof_class_init */
 static void
 HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker, jobject cls, jint cnum, jintArray toWatch)
 {
@@ -322,11 +324,15 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass site, jthread thread, jclass klas
 	tag_object(jvmti, o, id);
 	type = get_tag(jvmti, klass);
     
-    /*
-     if (type == 0) {
-     print_class(gdata->jvmti, klass);
-     }
-     */
+    if (type == 0) {
+#ifdef DEBUG
+        char *cname;
+        (*jvmti)->GetClassSignature(jvmti, klass, &cname, NULL);
+        stdout_message("----untagged class %s for object %llx\n", cname, id);
+        deallocate(jvmti, cname);
+#endif
+        return; // don't generate an event, nothing to say
+    }
     
 	event.type = RPROF_OBJECT_ALLOCATED;
 	event.thread = get_tag(jvmti, thread);
@@ -482,24 +488,98 @@ HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, j
     comm_log(gdata->comm, &event);
 }
 
+static void
+cbClassPrepareHook(jvmtiEnv *jvmti, JNIEnv* env, jthread thread, jclass klass) {
+    jvmtiError error;
+    jlong tag;
+    jint access;
+    char* cname;
+    jmethodID mid;
+    
+    error = (*jvmti)->GetClassModifiers(jvmti, klass, &access);
+    check_jvmti_error(jvmti, error, "could not get class access flags");
+    
+    if ((access & ACC_INTERFACE) != 0) {
+        return; /* interface, don't tag */
+    }
+    
+    tag = get_tag(jvmti, klass);
+    if ((tag & RPROF_CLASS_THREAD_ID) == RPROF_CLASS_THREAD_ID) {
+        return; /* already tagged */
+    }
+    
+    mid = (*env)->GetStaticMethodID(env, klass, "_rprof_agent_init", "()V");
+    if (mid == NULL) {
+        (*env)->ExceptionClear(env);
+        (*jvmti)->GetClassSignature(jvmti, klass, &cname, NULL);
+        stdout_message("====class %s does not have an agent init method\n", cname);
+        deallocate(jvmti, cname);
+        return;
+    }
+    
+    (*env)->CallStaticVoidMethod(env, klass, mid);
+}
+
+/* Java Native Method for <clinit> */
+static void
+HEAP_TRACKER_native_clinit(JNIEnv *env, jclass tracker, jobject cls)
+{
+    if (gdata->vmDead) {
+        return;
+    }
+    
+    if (gdata->vmInitialized == JNI_FALSE) {
+        return;
+    }
+    
+    jlong tag = get_tag(gdata->jvmti, cls);
+    
+    if ((tag & RPROF_CLASS_THREAD_ID) == RPROF_CLASS_THREAD_ID) {
+        return; /* already tagged */
+    }
+    
+    cbClassPrepareHook(gdata->jvmti, env, NULL, cls);
+}
+
+/* call to engage should match phase set in cbVMObjectAlloc */
+static void engage(jvmtiEnv *jvmti, JNIEnv *env)
+{
+    jclass klass;
+    jfieldID field;
+
+    klass = (*env)->FindClass(env, STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
+    if ( klass == NULL ) {
+        fatal_error("ERROR: JNI: Cannot find %s with FindClass\n",
+                    STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
+    }
+
+    /* Engage calls. */    
+    field = (*env)->GetStaticFieldID(env, klass, STRING(HEAP_TRACKER_engaged), "I");
+    if ( field == NULL ) {
+        fatal_error("ERROR: JNI: Cannot get field from %s\n",
+                    STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
+    }
+    (*env)->SetStaticIntField(env, klass, field, 1);
+}
+
 /* Callback for JVMTI_EVENT_VM_START */
 static void
 cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 {
 	enterCriticalSection(jvmti); {
 		jclass klass;
-		jfieldID field;
 		jint rc;
         
 		/* Java Native Methods for class */
-		static JNINativeMethod registry[7] = {
+		static JNINativeMethod registry[8] = {
             {STRING(HEAP_TRACKER_native_newobj), "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newobj},
             {STRING(HEAP_TRACKER_native_newarr), "(Ljava/lang/Object;Ljava/lang/Object;J)V", (void*)&HEAP_TRACKER_native_newarr},
             {STRING(HEAP_TRACKER_native_enter), "(Ljava/lang/Object;II[Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_enter},
             {STRING(HEAP_TRACKER_native_exit), "(Ljava/lang/Object;IILjava/lang/Object;)V", (void*)&HEAP_TRACKER_native_exit},
             {STRING(HEAP_TRACKER_native_except), "(Ljava/lang/Object;IILjava/lang/Object;Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_except},
             {STRING(HEAP_TRACKER_native_main), "(Ljava/lang/Object;II)V", (void*)&HEAP_TRACKER_native_main},
-            {STRING(HEAP_TRACKER_native_newcls), "(Ljava/lang/Object;I[I)V", (void*)&HEAP_TRACKER_native_newcls}
+            {STRING(HEAP_TRACKER_native_newcls), "(Ljava/lang/Object;I[I)V", (void*)&HEAP_TRACKER_native_newcls},
+            {STRING(HEAP_TRACKER_native_clinit), "(Ljava/lang/Object;)V", (void*)&HEAP_TRACKER_native_clinit}
 		};
         
 		/* Register Natives for class whose methods we use */
@@ -509,19 +589,13 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
                         STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
 		}
         
-		rc = (*env)->RegisterNatives(env, klass, registry, 7);
+		rc = (*env)->RegisterNatives(env, klass, registry, 8);
 		if ( rc != 0 ) {
 			fatal_error("ERROR: JNI: Cannot register natives for class %s\n",
                         STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
 		}
         
-		/* Engage calls. */
-		field = (*env)->GetStaticFieldID(env, klass, STRING(HEAP_TRACKER_engaged), "I");
-		if ( field == NULL ) {
-			fatal_error("ERROR: JNI: Cannot get field from %s\n",
-                        STRING(HEAP_TRACKER_package/HEAP_TRACKER_class));
-		}
-		(*env)->SetStaticIntField(env, klass, field, 1);
+        /*engage(jvmti, env); we can start receiving callbacks now, but we don't need to */
         
 		/* Indicate VM has started */
 		gdata->vmStarted = JNI_TRUE;
@@ -584,10 +658,14 @@ cbObjectTagger(jlong class_tag, jlong size, jlong* tag_ptr, jint length, void* u
 		*tag_ptr = generate_object_tag();
 	}
     
+    if (class_tag == 0 || TAG_TO_CNUM(class_tag) == 0) {
+        fatal_error("untagged class %llx! (%llx)\n", class_tag, *tag_ptr);
+    }
+    
     bzero(&event, sizeof(event));
     
     event.type = RPROF_OBJECT_TAGGED;
-    event.cid = (jint)(class_tag & 0xFFFFFFFFll);
+    event.cid = TAG_TO_CNUM(class_tag);
 	event.args_len = 1;
 	event.args[0] = *tag_ptr;
     comm_log(gdata->comm, &event);
@@ -648,6 +726,8 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
         
 		/* Indicate VM is initialized */
 		gdata->vmInitialized = JNI_TRUE;
+        
+        engage(jvmti, env);
         
 	} exitCriticalSection(jvmti);
 }
@@ -722,39 +802,10 @@ static void
 cbVMObjectAlloc(jvmtiEnv *jvmti, JNIEnv *env, jthread thread,
                 jobject o, jclass klass, jlong size)
 {
-	HEAP_TRACKER_native_newobj(env, klass, thread, klass, o, 0);
-}
-
-static void
-cbClassPrepareHook(jvmtiEnv *jvmti, JNIEnv* env, jthread thread, jclass klass) {
-    jvmtiError error;
-    jlong tag;
-    jint access;
-    char* cname;
-    jmethodID mid;
-    
-    error = (*jvmti)->GetClassModifiers(jvmti, klass, &access);
-    check_jvmti_error(jvmti, error, "could not get class access flags");
-    
-    if ((access & ACC_INTERFACE) != 0) {
-        return; /* interface, don't tag */
+    /* don't start too early - this should match engage call */
+    if (gdata->vmInitialized) {
+        HEAP_TRACKER_native_newobj(env, klass, thread, klass, o, 0);
     }
-    
-    tag = get_tag(jvmti, klass);
-    if ((tag & RPROF_CLASS_THREAD_ID) == RPROF_CLASS_THREAD_ID) {
-        return; /* already tagged */
-    }
-    
-    mid = (*env)->GetStaticMethodID(env, klass, "_rprof_agent_init", "()V");
-    if (mid == NULL) {
-        (*env)->ExceptionClear(env);
-        (*jvmti)->GetClassSignature(jvmti, klass, &cname, NULL);
-        stdout_message("====class %s does not have an agent init method\n", cname);
-        deallocate(jvmti, cname);
-        return;
-    }
-    
-    (*env)->CallStaticVoidMethod(env, klass, mid);
 }
 
 #ifdef DEBUG

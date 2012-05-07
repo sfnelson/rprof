@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.worker;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.Calendar;
 
@@ -45,8 +46,10 @@ public class Worker {
 	public static final void main(String[] args) throws Exception {
 		Injector injector = Guice.createInjector(new WorkerModule());
 
+		String hostname = InetAddress.getLocalHost().getHostName();
+
 		Worker worker = injector.getInstance(Worker.class);
-		worker.run();
+		worker.run(hostname);
 	}
 
 	@Nullable
@@ -64,9 +67,10 @@ public class Worker {
 		this.database = database;
 	}
 
-	public void run() throws Exception {
+	public void run(String hostname) throws Exception {
 		String server = System.getProperty("rprofs");
 		URL url = new URL("http://" + server + "/worker");
+		RequestId requestId = null;
 		String request = null;
 		String handle = null;
 
@@ -84,6 +88,9 @@ public class Worker {
 			if (handle != null) {
 				connection.setRequestProperty("Dataset", handle);
 			}
+			if (hostname != null) {
+				connection.setRequestProperty("Hostname", hostname);
+			}
 
 			connection.connect();
 
@@ -97,6 +104,7 @@ public class Worker {
 
 			handle = connection.getHeaderField("Dataset");
 			request = connection.getHeaderField("RequestId");
+			requestId = RequestId.create(request);
 
 			Dataset dataset = getDataset(handle);
 			boolean flush = connection.getHeaderField("Flush") != null;
@@ -123,7 +131,7 @@ public class Worker {
 			}
 
 			if (current == null) {
-				current = new Handler(dataset, request);
+				current = new Handler(hostname, dataset, requestId);
 			}
 
 			DataInputStream dis = new DataInputStream(connection.getInputStream());
@@ -142,19 +150,23 @@ public class Worker {
 	}
 
 	private class Handler {
+		final String hostname;
 		final Dataset ds;
 		final InstanceMapReduce mr;
 		final ReduceStore<InstanceId, Instance> store;
-		final String request;
+		final RequestId request;
 
-		public Handler(Dataset ds, String request) {
+		public Handler(String hostname, Dataset ds, RequestId request) {
+			this.hostname = hostname;
 			this.ds = ds;
 			this.request = request;
 
 			Context.setDataset(ds);
 
+			String name = String.format("%s:%s", hostname, request);
+
 			mr = new InstanceMapReduce(ds, database);
-			store = database.createReducer(Instance.class, mr, request, true);
+			store = database.createReducer(Instance.class, mr, name, true);
 		}
 
 		public void process(int length, DataInputStream dis)

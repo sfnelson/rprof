@@ -15,6 +15,11 @@ public class RequestId extends Id<RequestId, Request> {
 		return new RequestId(dataset.getId().getDatasetIndex(), ++lastId);
 	}
 
+	public static RequestId create(String id) {
+		if (id == null) return null;
+		return new RequestId(Long.parseLong(id));
+	}
+
 	public RequestId() {
 	}
 

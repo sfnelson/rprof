@@ -46,14 +46,14 @@ public class Workers extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		final Continuation continuation = ContinuationSupport.getContinuation(req);
 		byte[] data = (byte[]) req.getAttribute("Data");
-		RequestId request = (RequestId) req.getAttribute("RequestId");
+		RequestId requestId = (RequestId) req.getAttribute("RequestId");
 		String dataset = (String) req.getAttribute("Dataset");
 		Boolean flush = (Boolean) req.getAttribute("Flush");
 
 		if (data != null) {
 			// good to go
 			resp.addHeader("Dataset", dataset);
-			resp.addHeader("RequestId", String.valueOf(request.getValue()));
+			resp.addHeader("RequestId", String.valueOf(requestId.getValue()));
 			resp.setContentType("application/rprof");
 			resp.setContentLength(data.length);
 			resp.setStatus(HttpServletResponse.SC_OK);
@@ -64,9 +64,9 @@ public class Workers extends HttpServlet {
 
 		if (flush != null && flush.booleanValue() == true) {
 			workers.remove(continuation);
-			if (request != null) {
+			if (requestId != null) {
 				resp.addHeader("Dataset", dataset);
-				resp.addHeader("RequestId", String.valueOf(request.getValue()));
+				resp.addHeader("RequestId", String.valueOf(requestId.getValue()));
 				resp.addHeader("Flush", "true");
 			}
 			returnNoContent(resp);
@@ -75,24 +75,26 @@ public class Workers extends HttpServlet {
 
 		if (continuation.isInitial()) {
 			// first time through
+			String hostname = req.getHeader("Hostname");
 			boolean hasCache = req.getHeader("HasCache") != null;
-			String requestId = req.getHeader("RequestId");
+			String request = req.getHeader("RequestId");
 			dataset = req.getHeader("Dataset");
+			req.setAttribute("Hostname", hostname);
 
-			if (requestId != null) {
+			if (request != null) {
 				Dataset ds = datasets.findDataset(dataset);
 				Context.setDataset(ds);
 
-				request = new RequestId(Long.valueOf(requestId));
+				requestId = RequestId.create(request);
 				// first time here
 				if (hasCache) {
 					// keep the request id
-					req.setAttribute("RequestId", request);
+					req.setAttribute("RequestId", requestId);
 					req.setAttribute("Dataset", dataset);
 				} else {
 					// no cache, so release the request
-					requests.releaseRequest(request);
-					request = null;
+					requests.releaseRequest(requestId);
+					requestId = null;
 				}
 
 				Context.clear();
@@ -102,16 +104,16 @@ public class Workers extends HttpServlet {
 		// check timeout -- flush as nothing else to do
 		if (continuation.isExpired()) {
 			workers.remove(continuation);
-			if (request != null) {
+			if (requestId != null) {
 				resp.addHeader("Dataset", dataset);
-				resp.addHeader("RequestId", String.valueOf(request.getValue()));
+				resp.addHeader("RequestId", String.valueOf(requestId.getValue()));
 				resp.addHeader("Flush", "true");
 			}
 			returnNoContent(resp);
 			return;
 		}
 
-		if (request != null) {
+		if (requestId != null) {
 			Dataset ds = datasets.findDataset(dataset);
 			Context.setDataset(ds);
 
@@ -119,7 +121,7 @@ public class Workers extends HttpServlet {
 			if (ds.getStopped() != null) {
 				workers.remove(continuation);
 				resp.addHeader("Dataset", dataset);
-				resp.addHeader("RequestId", String.valueOf(request.getValue()));
+				resp.addHeader("RequestId", String.valueOf(requestId.getValue()));
 				resp.addHeader("Flush", "true");
 				returnNoContent(resp);
 				return;

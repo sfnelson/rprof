@@ -34,7 +34,7 @@ public class Event implements DataObject<EventId, Event> {
 	public static final int METHODS = METHOD_ENTER | METHOD_RETURN | METHOD_EXCEPTION;
 	public static final int FIELDS = FIELD_READ | FIELD_WRITE;
 	public static final int CLASS_EVENTS = CLASS_WEAVE | CLASS_INITIALIZED;
-	public static final int HAS_CLASS = METHODS | FIELDS | CLASS_EVENTS | OBJECT_TAGGED;
+	public static final int HAS_CLASS = METHODS | FIELDS | CLASS_EVENTS | OBJECT_TAGGED | OBJECT_ALLOCATED;
 
 	@NotNull
 	private EventId id;

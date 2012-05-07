@@ -881,6 +881,7 @@ findFieldRecord(jvmtiEnv *jvmti, JNIEnv *env, jclass field_klass, jfieldID field
     if (record->class_tag != class_tag || record->field != field) {
         (*jvmti)->GetClassSignature(jvmti, field_klass, &cname, NULL);
         (*jvmti)->GetFieldName(jvmti, field_klass, field, &fname, NULL, NULL);
+        class_tag = get_tag(jvmti, field_klass);
         fatal_error("could not find field %s.%s (%llx.%llx), found (%llx.%llx)\n",
                     cname, fname,
                     class_tag, field,

@@ -292,11 +292,13 @@ public class Database {
 		locks.findAndModify(new BasicDBObject("_id", collection.getName()), null, null, false, inc, true, true);
 
 		log.debug("{} waiting on {}", owner, collection.getName());
+		int delay = 128;
 		while (true) {
 			DBObject lock = locks.findAndModify(query, null, null, false, update, true, false);
 			if (lock == null) {
 				log.trace("{} still waiting on {}", owner, collection.getName());
-				wait(10000);
+				wait(Math.min(delay, 65536));
+				delay *= 2;
 			} else {
 				log.debug("{} has lock on {}", owner, collection.getName());
 				return true;

@@ -3,6 +3,6 @@ function findBad() {
 	bad.forEach(function (f) {
 		printjson(f.name);
 		var cls = db.fields.findOne({_id:f._id}).owner;
-		printjson(db.instances.findOne({type:cls,fields:{$elemMatch:{_id:f._id,writes:{$gt:1}}}}));
+		printjson(db.instances.findOne({fields:{$elemMatch:{_id:f._id,writes:{$gt:1}}}},{fields:1}));
 	});
 }

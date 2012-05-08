@@ -297,8 +297,8 @@ public class Database {
 			DBObject lock = locks.findAndModify(query, null, null, false, update, true, false);
 			if (lock == null) {
 				log.trace("{} still waiting on {}", owner, collection.getName());
-				wait(Math.min(delay, 16384));
-				delay *= 2;
+				wait(delay);
+				delay = Math.min(delay * 2, 16384);
 			} else {
 				log.debug("{} has lock on {}", owner, collection.getName());
 				return true;

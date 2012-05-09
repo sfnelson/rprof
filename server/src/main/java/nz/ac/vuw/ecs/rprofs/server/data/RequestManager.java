@@ -35,6 +35,7 @@ public class RequestManager {
 
 	public synchronized void waitUntilDone() throws InterruptedException {
 		log.debug("waiting for requests to finish");
+
 		while (database.getRequestQuery().count() > 0) {
 			log.trace("still waiting for requests to finish");
 			wait(10000);

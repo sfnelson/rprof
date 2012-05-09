@@ -40,7 +40,7 @@ public class Worker {
 	//			int len;
 	//			long int params[MAX_PARAMETERS];
 	//		}
-	public static final int MAX_PARAMETERS = 16;
+	public static final int MAX_PARAMETERS = 20;
 	public static final int RECORD_LENGTH = 8 + 8 + 4 + 4 + 4 + 4 + MAX_PARAMETERS * 8;
 
 	public static final void main(String[] args) throws Exception {

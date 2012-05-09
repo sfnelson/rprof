@@ -18,7 +18,8 @@
 		DC4918B5153FE8C400A12CB6 /* rprof.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A2153FE8C400A12CB6 /* rprof.h */; };
 		DC4918B6153FE8C400A12CB6 /* rprof_classes.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A3153FE8C400A12CB6 /* rprof_classes.c */; };
 		DC4918B7153FE8C400A12CB6 /* rprof_classes.h in Headers */ = {isa = PBXBuildFile; fileRef = DC4918A4153FE8C400A12CB6 /* rprof_classes.h */; };
-		DC4918B8153FE8C400A12CB6 /* test_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A5153FE8C400A12CB6 /* test_utils.c */; };
+		DC4918B8153FE8C400A12CB6 /* tests.c in Sources */ = {isa = PBXBuildFile; fileRef = DC4918A5153FE8C400A12CB6 /* tests.c */; };
+		DC8976A41559D1D800845D35 /* test_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = DC8976A31559D1D800845D35 /* test_utils.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,7 +35,8 @@
 		DC4918A2153FE8C400A12CB6 /* rprof.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof.h; sourceTree = "<group>"; };
 		DC4918A3153FE8C400A12CB6 /* rprof_classes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rprof_classes.c; sourceTree = "<group>"; };
 		DC4918A4153FE8C400A12CB6 /* rprof_classes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rprof_classes.h; sourceTree = "<group>"; };
-		DC4918A5153FE8C400A12CB6 /* test_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_utils.c; sourceTree = "<group>"; };
+		DC4918A5153FE8C400A12CB6 /* tests.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tests.c; sourceTree = "<group>"; };
+		DC8976A31559D1D800845D35 /* test_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_utils.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +53,7 @@
 		DC49187D153FE8A300A12CB6 = {
 			isa = PBXGroup;
 			children = (
+				DC8976A31559D1D800845D35 /* test_utils.c */,
 				DC49188F153FE8C400A12CB6 /* agent_util.c */,
 				DC491890153FE8C400A12CB6 /* agent_util.h */,
 				DC49189C153FE8C400A12CB6 /* rprof_comm.c */,
@@ -62,7 +65,7 @@
 				DC4918A2153FE8C400A12CB6 /* rprof.h */,
 				DC4918A3153FE8C400A12CB6 /* rprof_classes.c */,
 				DC4918A4153FE8C400A12CB6 /* rprof_classes.h */,
-				DC4918A5153FE8C400A12CB6 /* test_utils.c */,
+				DC4918A5153FE8C400A12CB6 /* tests.c */,
 				DC491889153FE8A300A12CB6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -147,7 +150,8 @@
 				DC4918B2153FE8C400A12CB6 /* rprof_fields.c in Sources */,
 				DC4918B4153FE8C400A12CB6 /* rprof.c in Sources */,
 				DC4918B6153FE8C400A12CB6 /* rprof_classes.c in Sources */,
-				DC4918B8153FE8C400A12CB6 /* test_utils.c in Sources */,
+				DC4918B8153FE8C400A12CB6 /* tests.c in Sources */,
+				DC8976A41559D1D800845D35 /* test_utils.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

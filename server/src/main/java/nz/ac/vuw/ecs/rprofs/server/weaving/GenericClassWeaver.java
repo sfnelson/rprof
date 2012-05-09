@@ -49,7 +49,7 @@ public class GenericClassWeaver extends BasicClassWeaver {
 			mv = new HashCodeMethodWeaver(cr, method, mv);
 		}
 		// check for: public methods with arguments on a collection
-		else if ((cr.getProperties() & Clazz.COLLECTION) != 0
+		else if ((cr.getProperties() & Clazz.COLLECTION_MATCHED) != 0
 				&& MethodUtils.isPublic(method) && MethodUtils.hasArgs(method)) {
 			mv = new CollectionMethodWeaver(cr, method, mv);
 		}

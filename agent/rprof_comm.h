@@ -18,7 +18,7 @@ comm_weave(CommEnv env,
 		const char* classname, jboolean systemClass,
 		jint class_data_len, const unsigned char* class_data,
 		jint *new_class_len, unsigned char** new_class_data,
-		jint *class_id);
+		jint *class_id, jint *class_properties);
 
 void
 comm_started(CommEnv env);

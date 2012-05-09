@@ -8,8 +8,6 @@ import org.objectweb.asm.ClassVisitor;
  */
 public class GentleClassWeaver extends BasicClassWeaver {
 
-	private boolean clinitCalled = false;
-
 	GentleClassWeaver(ClassVisitor cv, ClassRecord cr) {
 		super(cv, cr);
 

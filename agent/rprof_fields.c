@@ -5,11 +5,27 @@
 
 #define LOAD_FACTOR 0.7
 
+#ifndef _RPROF_TEST
+
 #define LOCK(J, L) \
 check_jvmti_error(J, (*J)->RawMonitorEnter(J, L), "cannot get monitor");
 
 #define RELEASE(J, L) \
 check_jvmti_error(J, (*J)->RawMonitorExit(J, L), "cannot release monitor");
+
+#define CREATE_MONITOR(J, N, L) \
+if ((*J)->CreateRawMonitor(J, N, L) != JVMTI_ERROR_NONE) {\
+    fatal_error("unable to create monitor for field table");\
+    return NULL;\
+}
+
+#else
+
+#define LOCK(J, L) {
+#define RELEASE(J, L) }
+#define CREATE_MONITOR(J, N, L)
+
+#endif
 
 typedef struct {
     jfieldID field;
@@ -249,7 +265,6 @@ FieldTable
 fields_create(jvmtiEnv *jvmti, const char *name)
 {
     FieldTable table;
-    jvmtiError error;
     size_t len;
     
     len = strlen(name);
@@ -268,17 +283,8 @@ fields_create(jvmtiEnv *jvmti, const char *name)
     
     table->jvmti = jvmti;
     
-    error = (*jvmti)->CreateRawMonitor(jvmti, use, &(table->useLock));
-    if (error != JVMTI_ERROR_NONE) {
-        fatal_error("unable to create use monitor for field table");
-        return NULL;
-    }
-    
-    error = (*jvmti)->CreateRawMonitor(jvmti, change, &(table->changeLock));
-    if (error != JVMTI_ERROR_NONE) {
-        fatal_error("unable to create change monitor for field table");
-        return NULL;
-    }
+    CREATE_MONITOR(jvmti, use, &(table->useLock))
+    CREATE_MONITOR(jvmti, change, &(table->changeLock))
     
     table->map = NULL;
     

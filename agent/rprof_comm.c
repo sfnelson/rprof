@@ -22,6 +22,7 @@ typedef struct {
 	unsigned char **image;
 	jint   *length;
 	jint   *class_id;
+    jint   *properties;
 	size_t  offset;
 } Response;
 
@@ -272,6 +273,8 @@ comm_create(jvmtiEnv *jvmti, char *options)
 #define CONTENT_LENGTH_LEN 16
 #define CLASS_ID "Class-id: "
 #define CLASS_ID_LEN 10
+#define CLASS_PROPERTIES "Properties: "
+#define CLASS_PROPERTIES_LEN 12
 
 static size_t
 read_header(char *input, size_t size, size_t count, void * arg)
@@ -281,15 +284,26 @@ read_header(char *input, size_t size, size_t count, void * arg)
     jint id;
     
 	if (strncasecmp(input, CONTENT_LENGTH, CONTENT_LENGTH_LEN) == 0) {
-		len = (jint) strtol(&input[CONTENT_LENGTH_LEN], NULL, 0);
-		*(response->length) = len;
-        /* deallocated by jvm after load */
-		*(response->image) = allocate(response->jvmti, (size_t) len);
+		len = (jint) (strtoull(&input[CONTENT_LENGTH_LEN], NULL, 0) & 0xFFFFFFFF);
+        if (len > 0) {
+            *(response->length) = len;
+            /* deallocated by jvm after load */
+            *(response->image) = allocate(response->jvmti, (size_t) len);
+        }
+        else {
+            *(response->length) = 0;
+            *(response->image) = NULL;
+        }
 	}
     
-	if (strncasecmp(input, CLASS_ID, CLASS_ID_LEN) == 0) {
-		id = (jint) strtol(&input[CLASS_ID_LEN], NULL, 0);
+    if (strncasecmp(input, CLASS_ID, CLASS_ID_LEN) == 0) {
+		id = (jint) (strtoull(&input[CLASS_ID_LEN], NULL, 0) & 0xFFFFFFFF);
 	    *(response->class_id) = id;
+	}
+    
+    if (strncasecmp(input, CLASS_PROPERTIES, CLASS_PROPERTIES_LEN) == 0) {
+		id = (jint) (strtoull(&input[CLASS_PROPERTIES_LEN], NULL, 0) & 0xFFFFFFFF);
+	    *(response->properties) = id;
 	}
     
 	return size * count;
@@ -303,6 +317,8 @@ read_response(char *input, size_t size, size_t count, void * arg)
     size_t offset = response->offset;
 	unsigned char *image = *(response->image);
     size_t read = size * count;
+    
+    if (image == NULL) fatal_error("trying to read data into an unallocated class file\n");
     
     if (offset + read > (size_t) *(response->length)) {
         fatal_error("reading too much");
@@ -408,7 +424,7 @@ comm_weave(CommEnv env,
            const char* classname, jboolean systemClass,
            jint class_len, const unsigned char* class_data,
            jint *new_class_len, unsigned char** new_class_data,
-           jint* class_id)
+           jint* class_id, jint* class_properties)
 {
 	Response r;
     char *url;
@@ -420,6 +436,7 @@ comm_weave(CommEnv env,
 	r.length = new_class_len;
 	r.image = new_class_data;
 	r.class_id = class_id;
+    r.properties = class_properties;
 	r.offset = 0;
     
     OPT_INIT(env, url, env->weave, classname)

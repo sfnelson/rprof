@@ -8,6 +8,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.SerialVersionUIDAdder;
 import org.objectweb.asm.util.CheckClassAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,8 @@ public class Weaver {
 			.add("java/lang/Throwable")
 			.add("java/lang/String") // strings are automatically created, breaking final field tracking
 					// this won't cause errors, but looks weird in output data
+
+			.add("org/apache/geronimo/security/keystore/FileKeystoreManager")
 			.get();
 
 	public byte[] weave(ClassRecord record, byte[] classfile) {
@@ -74,19 +77,20 @@ public class Weaver {
 			visitor = new ObjectClassWeaver(writer, record);
 		} else {
 			if (collections.matcher(record.getName()).find()) {
-				record.addProperty(Clazz.COLLECTION);
+				record.addProperty(Clazz.COLLECTION_MATCHED);
 				log.trace("{} is a collection", record.getName());
 			} else if (generated.matcher(record.getName()).find()) {
-				record.addProperty(Clazz.GENERATED);
+				record.addProperty(Clazz.GENERATED_MATCHED);
 				log.trace("{} is generated", record.getName());
 			}
 			if (includes.matcher(record.getName()).find()) {
 				record.addProperty(Clazz.CLASS_INCLUDE_MATCHED);
 				if (excludes.matcher(record.getName()).find()) {
 					record.addProperty(Clazz.CLASS_EXCLUDE_MATCHED);
-					visitor = new GentleClassWeaver(writer, record);
+					return new byte[0];
 				} else {
 					visitor = new GenericClassWeaver(writer, record);
+					visitor = new SerialVersionUIDAdder(visitor);
 				}
 			} else {
 				visitor = writer;

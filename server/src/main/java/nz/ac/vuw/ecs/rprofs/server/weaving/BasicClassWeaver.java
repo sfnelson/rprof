@@ -7,8 +7,6 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
-
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 16/04/12
@@ -16,8 +14,6 @@ import static org.objectweb.asm.Opcodes.ACC_INTERFACE;
 abstract class BasicClassWeaver extends ClassVisitor {
 
 	protected final ClassRecord cr;
-
-	private boolean visitedCLInit = false;
 
 	BasicClassWeaver(ClassVisitor cv, ClassRecord cr) {
 		super(Opcodes.ASM4, cv);
@@ -43,9 +39,14 @@ abstract class BasicClassWeaver extends ClassVisitor {
 		Method m = cr.getMethod(name, type);
 
 		if (m != null && MethodUtils.isCLInit(m)) {
-			visitedCLInit = true;
-			// 'Primitive' classes do not generate ClassPrepare events, so simulate using clinit
+			/**
+			 * There are several advantages to calling our profiler init method from <clinit>:
+			 * * 'Primitive' classes do not generate ClassPrepare events but they do have <clinit> methods.
+			 * * Calling a method causes <clinit> to run, allowing the class to be used before our method runs.
+			 *   Inserting our init before regular <clinit> prevents events occurring before we're ready.
+			 */
 			mv = new CLInitMethodWeaver(cr, m, mv);
+			cr.addProperty(Clazz.HAS_CLINIT);
 		}
 
 		return mv;
@@ -53,12 +54,18 @@ abstract class BasicClassWeaver extends ClassVisitor {
 
 	@Override
 	public void visitEnd() {
-		if ((cr.getProperties() & Clazz.GENERATED) == 0) {
-			AgentInitMethodWeaver.generate(cr, this);
-		}
+		/**
+		 * We could generate a <clinit> method here, but that has caused problems for some classes which do
+		 * not expect one.
+		 */
+		/*
+		if ((cr.getClazz().getAccess() & ACC_INTERFACE) == 0) {
+			CLInitMethodWeaver.generate(cr, this);
+		}*/
 
-		if (!visitedCLInit && (cr.getClazz().getAccess() & ACC_INTERFACE) == 0) {
-			// CLInitMethodWeaver.generate(cr, this);
+		if ((cr.getProperties() & Clazz.GENERATED_MATCHED) == 0) {
+			AgentInitMethodWeaver.generate(cr, this);
+			cr.addProperty(Clazz.HAS_RINIT);
 		}
 
 		super.visitEnd();

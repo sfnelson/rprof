@@ -93,7 +93,7 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 					result.setFirstEquals(e.getId());
 				} else if (MethodUtils.isHashCode(method)) {
 					result.setFirstHashCode(e.getId());
-				} else if (clazz != null && (clazz.getProperties() & Clazz.COLLECTION) != 0) {
+				} else if (clazz != null && (clazz.getProperties() & Clazz.COLLECTION_MATCHED) != 0) {
 					List<InstanceId> argList = e.getArgs();
 					// skip 'this', only one event per object
 					Set<InstanceId> argSet = Sets.newHashSet(argList.subList(1, argList.size()));

@@ -13,12 +13,15 @@ import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
  */
 public class Clazz implements DataObject<ClazzId, Clazz> {
 
+	/* sync with rprof_classes.h */
 	public static final int CLASS_VERSION_UPDATED = 0x1;
 	public static final int SPECIAL_CLASS_WEAVER = 0x2;
 	public static final int CLASS_INCLUDE_MATCHED = 0x4;
 	public static final int CLASS_EXCLUDE_MATCHED = 0x8;
-	public static final int COLLECTION = 0x10;
-	public static final int GENERATED = 0x20;
+	public static final int COLLECTION_MATCHED = 0x10;
+	public static final int GENERATED_MATCHED = 0x20;
+	public static final int HAS_CLINIT = 0x40;
+	public static final int HAS_RINIT = 0x80;
 
 	@NotNull
 	private ClazzId id;

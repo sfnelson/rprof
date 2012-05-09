@@ -8,13 +8,15 @@
 OS=$(shell uname)
 
 LIBNAME=agent
-SOURCES=rprof.c agent_util.c rprof_fields.c rprof_classes.c rprof_comm.c
-TEST_SOURCES=test_utils.c
+COMMON_SOURCES = rprof_fields.c rprof_classes.c
+BUILD_SOURCES  = $(COMMON_SOURCES) rprof.c rprof_comm.c agent_util.c
+TEST_SOURCES   = $(COMMON_SOURCES) tests.c test_utils.c
+
+BUILD_OBJECTS  = $(BUILD_SOURCES:%.c=%.o)
+TEST_OBJECTS   = $(TEST_SOURCES:%.c=%.o)
 
 JARFILE=../jvmti-lib/target/jvmti-lib-1.0-SNAPSHOT.jar
-
-OBJECTS=$(SOURCES:%.c=%.o)
-TEST_OBJECTS=$(OBJECTS) $(TEST_SOURCES:%.c=%.o)
+TEST_CLASSES=../jvmti-lib/target/test-classes
 
 # Required flags
 COMMON_FLAGS = -fno-strict-aliasing -fPIC -fno-omit-frame-pointer
@@ -38,6 +40,10 @@ endif
 
 ifdef DEBUG
     CFLAGS += -DDEBUG
+endif
+
+ifdef TEST
+    CFLAGS += -D_RPROF_TEST
 endif
 
 # Library name and options needed to build it
@@ -93,8 +99,13 @@ ifdef DEBUG
     J_OPTS += -Xcheck:jni -XX:+UnlockDiagnosticVMOptions
 endif
 
+ifdef J_HOST
+else
+	J_HOST = [::1]:8000
+endif
+
 ifdef J_DEBUG
-    J_OPTS  += -agentlib:jdwp=transport=dt_socket,address=localhost:8000
+    J_OPTS  += -agentlib:jdwp=transport=dt_socket,address=$(J_HOST)
 endif
 
 ifdef GDB
@@ -109,34 +120,34 @@ endif
 
 all: $(LIBRARY) $(JARFILE)
 
-$(LIBRARY): $(OBJECTS)
-	$(LINK_SHARED) $(OBJECTS) $(LIBRARIES)
+$(LIBRARY): $(BUILD_OBJECTS)
+	$(LINK_SHARED) $(BUILD_OBJECTS) $(LIBRARIES)
 
-tests: test-utils
-
-test-utils: $(TEST_OBJECTS)
-	$(CC) -o test-utils $(TEST_OBJECTS) $(LIBRARIES)
+tests: $(TEST_OBJECTS)
+	$(CC) -o tests $(TEST_OBJECTS) $(LIBRARIES)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $? -o $@
 
 clean:
-	rm -f -r $(LIBRARY) $(TEST_OBJECTS) test-utils tmp/pre/* tmp/post/*
+	rm -f -r $(LIBRARY) tests $(TEST_OBJECTS) $(BUILD_OBJECTS) tmp
+	mkdir -p tmp/pre
+	mkdir -p tmp/post
 
 version: all
 	$(JAVA) -version
 
 test: all
-	$(JAVA) -classpath classes Test
+	$(JAVA) -classpath $(TEST_CLASSES) nz.ac.vuw.ecs.rprof.test.RProfTest
 
 example: all
-	$(JAVA) -classpath classes Example
+	$(JAVA) -classpath $(TEST_CLASSES) nz.ac.vuw.ecs.rprof.test.RProfExample
 
 hashmap: all
-	$(JAVA) -classpath classes HashMapError
+	$(JAVA) -classpath $(TEST_CLASSES) nz.ac.vuw.ecs.rprof.test.HashMapError
 
 threads: all
-	$(JAVA) Threads
+	$(JAVA) -classpath $(TEST_CLASSES) nz.ac.vuw.ecs.rprof.test.ThreadsTest
 
 list: all
 	$(JAVA) -jar $(DACAPO) -l

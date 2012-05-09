@@ -13,7 +13,7 @@
 #define RPROF_OBJECT_FREED 0x200
 #define RPROF_METHOD_EXCEPTION 0x400
 
-#define RPROF_MAX_PARAMETERS 16
+#define RPROF_MAX_PARAMETERS 20
 
 typedef struct {
     jlong thread;

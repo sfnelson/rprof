@@ -98,29 +98,34 @@ __asm__ volatile ( \
 /* end of _RESTORE_XMM */
 
 #define _GetClassName(J, C, N) \
-char *cname_orig; \
-check_jvmti_error(J, (*J)->GetClassSignature(J, C, &(cname_orig), NULL), \
-"error getting class name");\
-if (cname_orig[0] == 'L') { N = &cname_orig[1]; } else { N = cname_orig; }\
-if (cname_orig[strlen(cname_orig)-1] == ';') { cname_orig[strlen(cname_orig)-1] = 0; } \
+char *cname_orig = NULL; \
+if (JVMTI_ERROR_NONE != (*J)->GetClassSignature(J, C, &(cname_orig), NULL)) {\
+N = "unknown";\
+}\
+if (cname_orig != NULL && cname_orig[0] == 'L') { N = &cname_orig[1]; } else { N = cname_orig; }\
+if (cname_orig != NULL && cname_orig[strlen(cname_orig)-1] == ';') { cname_orig[strlen(cname_orig)-1] = 0; } \
 {
 
 #define _FreeClassName(J, N) \
 } \
-check_jvmti_error(J, (*J)->Deallocate(J, (unsigned char *)cname_orig), "error deallocating class name");
+if (cname_orig != NULL) {\
+check_jvmti_error(J, (*J)->Deallocate(J, (unsigned char *)cname_orig), "error deallocating class name");\
+}\
 
 
 #define _GetFieldName(J, C, F, N) \
-char *fname_orig; \
-check_jvmti_error(J, (*J)->GetFieldName(J, C, F, &(fname_orig), NULL, NULL), \
-"error getting field name");\
+char *fname_orig = NULL; \
+if (JVMTI_ERROR_NONE != (*J)->GetFieldName(J, C, F, &(fname_orig), NULL, NULL)) { \
+N = "unknown";\
+}\
 N = fname_orig;\
 {
 
 #define _FreeFieldName(J, N) \
 } \
-check_jvmti_error(J, (*J)->Deallocate(J, (unsigned char *)fname_orig), "error deallocating field name");
-
+if (fname_orig != NULL) {\
+check_jvmti_error(J, (*J)->Deallocate(J, (unsigned char *)fname_orig), "error deallocating field name");\
+}
 
 
 #define CreateEvent(J, L) \

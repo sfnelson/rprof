@@ -27,7 +27,7 @@ void
 comm_stopped(CommEnv env);
 
 jlong
-comm_log(CommEnv env, r_event *event);
+comm_log(CommEnv env, EventRecord *event);
 
 void
 comm_flush(CommEnv env);

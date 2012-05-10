@@ -13,9 +13,8 @@
 #define RPROF_OBJECT_FREED 0x200
 #define RPROF_METHOD_EXCEPTION 0x400
 
-#define RPROF_MAX_PARAMETERS 20
-
 typedef struct {
+    jlong id;
     jlong thread;
     jint type;
     jint cid;
@@ -24,7 +23,7 @@ typedef struct {
         jint fid;
     } attr;
     jint args_len;
-    jlong args[RPROF_MAX_PARAMETERS];
-} r_event;
+    jlong args[];
+} EventRecord;
 
 #endif

@@ -97,7 +97,7 @@ __asm__ volatile ( \
 : "memory");
 /* end of _RESTORE_XMM */
 
-#define GetClassName(J, C, N) \
+#define _GetClassName(J, C, N) \
 char *cname_orig; \
 check_jvmti_error(J, (*J)->GetClassSignature(J, C, &(cname_orig), NULL), \
 "error getting class name");\
@@ -105,9 +105,26 @@ if (cname_orig[0] == 'L') { N = &cname_orig[1]; } else { N = cname_orig; }\
 if (cname_orig[strlen(cname_orig)-1] == ';') { cname_orig[strlen(cname_orig)-1] = 0; } \
 {
 
-#define FreeClassName(J, N) \
+#define _FreeClassName(J, N) \
 } \
-deallocate(J, cname_orig);\
+check_jvmti_error(J, (*J)->Deallocate(J, (unsigned char *)cname_orig), "error deallocating class name");
+
+
+#define _GetFieldName(J, C, F, N) \
+char *fname_orig; \
+check_jvmti_error(J, (*J)->GetFieldName(J, C, F, &(fname_orig), NULL, NULL), \
+"error getting field name");\
+N = fname_orig;\
+{
+
+#define _FreeFieldName(J, N) \
+} \
+check_jvmti_error(J, (*J)->Deallocate(J, (unsigned char *)fname_orig), "error deallocating field name");
+
+
+
+#define CreateEvent(J, L) \
+allocate(J, sizeof(EventRecord) + L * sizeof(jlong))
 
 /* ------------------------------------------------------------------- */
 
@@ -205,27 +222,6 @@ watch_field(r_fieldRecord *record)
     jvmtiEnv *jvmti = gdata->jvmti;
 	jvmtiError error;
     
-    /*
-     jlong ctag;
-     jint cnum;
-     char *cname, *fname;
-     
-     error = (*jvmti)->GetClassSignature(jvmti, record->cls, &cname, NULL);
-     check_jvmti_error(jvmti, error, "could not get class name\n");
-     
-     error = (*jvmti)->GetFieldName(jvmti, record->cls, record->field, &fname, NULL, NULL);
-     check_jvmti_error(jvmti, error, "could not get field name\n");
-     
-     error = (*jvmti)->GetTag(jvmti, record->cls, &ctag);
-     check_jvmti_error(jvmti, error, "could not get class tag\n");
-     
-     cnum = TAG_TO_CNUM(ctag);
-     
-     stdout_message("--watching %x,%x (%s.%s) \n", cnum, record->field, cname, fname);
-     deallocate(jvmti, cname);
-     deallocate(jvmti, fname);
-     */
-    
 	error = (*jvmti)->SetFieldAccessWatch(jvmti, record->cls, record->field);
 	check_jvmti_error(jvmti, error, "Cannot add access watch to field");
 	error = (*jvmti)->SetFieldModificationWatch(jvmti, record->cls, record->field);
@@ -246,7 +242,7 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker,
 	r_fieldRecord* toStore;
 	r_fieldRecord* record;
 	size_t i;
-	r_event event;
+	EventRecord *event;
     
     jvmti = gdata->jvmti;
     
@@ -257,22 +253,26 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker,
 	tag = get_tag(jvmti, klass);
     if ((tag & RPROF_CLASS_THREAD_ID) == RPROF_CLASS_THREAD_ID) {
         char *cname;
-        (*jvmti)->GetClassSignature(jvmti, klass, &cname, NULL);
+        _GetClassName(jvmti, klass, cname)
         fatal_error("trying to tag class %s more than once! (%d, %d)\n",
                     cname, TAG_TO_CNUM(tag), cid);
-        deallocate(jvmti, cname);
+        _FreeClassName(jvmti, cname)
     }
-    
-	bzero(&event, sizeof(event));
     
 	tag = tag_class(jvmti, klass, cid);
     
-    event.type = RPROF_CLASS_INITIALIZED;
-    event.cid = cid;
-    event.args_len = 1;
-    event.args[0] = tag;
+    event = CreateEvent(jvmti, 1);
     
-	comm_log(gdata->comm, &event);
+    event->type = RPROF_CLASS_INITIALIZED;
+    event->thread = 0;
+    event->cid = cid;
+    event->attr.mid = 0;
+    event->args_len = 1;
+    event->args[0] = tag;
+    
+	comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
     
     /* if there are no fields to watch we're done now */
 	if (toWatch == NULL) return;
@@ -314,7 +314,8 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker,
     /* cleanup */
     (*env)->ReleaseIntArrayElements(env, toWatch, targetFields,         /* (1) */
                                     JNI_ABORT);
-    deallocate(jvmti, fields);                                          /* (2) */
+    error = (*jvmti)->Deallocate(jvmti, (unsigned char*) fields);       /* (2) */
+    check_jvmti_error(jvmti, error, "could not deallocate fields\n");
     deallocate(jvmti, toStore);                                         /* (3) */
 }
 
@@ -323,7 +324,7 @@ static void
 HEAP_TRACKER_native_newobj(JNIEnv *env, jclass tracker, jthread thread,
                            jclass klass, jobject o, jlong id)
 {
-    r_event event;
+    EventRecord *event;
     jlong type;
     jvmtiEnv *jvmti;
     
@@ -332,8 +333,6 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass tracker, jthread thread,
 	}
     
     jvmti = gdata->jvmti;
-    
-	bzero(&event, sizeof(event));
     
 	/*if (id == 0) { todo not using java id generation because it's broken */
     enterCriticalSection(jvmti); {
@@ -346,30 +345,38 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass tracker, jthread thread,
     
     if (type == 0) {
         char *cname;
+        jboolean untagged = JNI_FALSE;
         jclass array;
-        (*jvmti)->GetClassSignature(jvmti, klass, &cname, NULL);
+        _GetClassName(jvmti, klass, cname)
         if (cname[0] == '[') {
             /* tag array class and continue */
             array = (*env)->FindClass(env, "java/lang/reflect/Array");
             type = get_tag(jvmti, array);
-            deallocate(jvmti, cname);
         }
         else {
 #ifdef DEBUG
             stdout_message("---- untagged class %s for object %llx\n", cname, id);
 #endif
-            deallocate(jvmti, cname);
-            return; // don't generate an event, nothing to say
+            untagged = JNI_TRUE;
+        }
+        _FreeClassName(jvmti, cname);
+        if (untagged) {
+            return;
         }
     }
     
-	event.type = RPROF_OBJECT_ALLOCATED;
-	event.thread = get_tag(jvmti, thread);
-	event.cid = TAG_TO_CNUM(type);
-	event.args_len = 1;
-	event.args[0] = id;
+    event = CreateEvent(jvmti, 1);
+
+	event->type = RPROF_OBJECT_ALLOCATED;
+	event->thread = get_tag(jvmti, thread);
+	event->cid = TAG_TO_CNUM(type);
+    event->attr.mid = 0;
+	event->args_len = 1;
+	event->args[0] = id;
     
-	comm_log(gdata->comm, &event);
+	comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
 }
 
 /* Java Native Method for newarray */
@@ -377,7 +384,7 @@ static void
 HEAP_TRACKER_native_newarr(JNIEnv *env, jclass tracker, jthread thread,
                            jobject a, jlong id)
 {
-    r_event event;
+    EventRecord *event;
     jvmtiEnv *jvmti;
     
 	if ( gdata->vmDead ) {
@@ -386,20 +393,24 @@ HEAP_TRACKER_native_newarr(JNIEnv *env, jclass tracker, jthread thread,
     
 	jvmti = gdata->jvmti;
     
-	bzero(&event, sizeof(event));
-    
 	if (id == 0) {
         id = generate_object_tag();
     }
     
 	tag_object(jvmti, a, id);
     
-    event.type = RPROF_ARRAY_ALLOCATED;
-    event.thread = get_tag(jvmti, thread);
-    event.args_len = 1;
-    event.args[0] = id;
+    event = CreateEvent(jvmti, 1);
+
+    event->type = RPROF_ARRAY_ALLOCATED;
+    event->thread = get_tag(jvmti, thread);
+    event->cid = 0;
+    event->attr.mid = 0;
+    event->args_len = 1;
+    event->args[0] = id;
     
-    comm_log(gdata->comm, &event);
+    comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
 }
 
 /* Java Native Method for method execution */
@@ -408,35 +419,35 @@ HEAP_TRACKER_native_enter(JNIEnv *env, jclass tracker, jthread thread,
                           jint cnum, jint mnum, jarray args)
 {
 	jvmtiEnv *jvmti;
-    r_event event;
-	int i;
+    EventRecord *event;
+	size_t i, len = 0;
     
 	if ( gdata->vmDead ) {
 		return;
 	}
     
-	bzero(&event, sizeof(event));
-    
 	jvmti = gdata->jvmti;
     
-    event.type = RPROF_METHOD_ENTER;
-    event.thread = get_tag(jvmti, thread);
-    event.cid = cnum;
-    event.attr.mid = mnum;
+    if (args != NULL) {
+        len = (size_t) ((*env)->GetArrayLength(env, args));
+    }
     
-	if (args != NULL) {
-		event.args_len = (*env)->GetArrayLength(env, args);
-        if (event.args_len > RPROF_MAX_PARAMETERS) {
-            fatal_error("max method parameters exceeded! %d.%d %d > %d\n",
-                        cnum, mnum, event.args_len, RPROF_MAX_PARAMETERS);
-        }
-		for (i = 0; i < event.args_len; i++) {
-			jobject o = (*env)->GetObjectArrayElement(env, args, i);
-			event.args[i] = get_tag(jvmti, o);
-		}
+    event = CreateEvent(jvmti, len);
+    
+    event->type = RPROF_METHOD_ENTER;
+    event->thread = get_tag(jvmti, thread);
+    event->cid = cnum;
+    event->attr.mid = mnum;
+    event->args_len = (jint) len;
+    
+    for (i = 0; i < len; i++) {
+        jobject o = (*env)->GetObjectArrayElement(env, args, (jint) i);
+        event->args[i] = get_tag(jvmti, o);
 	}
     
-	comm_log(gdata->comm, &event);
+	comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
 }
 
 /* Java Native Method for method return */
@@ -444,7 +455,7 @@ static void
 HEAP_TRACKER_native_exit(JNIEnv *env, jclass tracker, jthread thread,
                          jint cnum, jint mnum, jobject arg)
 {
-    r_event event;
+    EventRecord *event;
     jvmtiEnv *jvmti;
     
     if ( gdata->vmDead ) {
@@ -453,19 +464,22 @@ HEAP_TRACKER_native_exit(JNIEnv *env, jclass tracker, jthread thread,
     
     jvmti = gdata->jvmti;
     
-    bzero(&event, sizeof(event));
+    event = CreateEvent(jvmti, 1);
     
-    event.type = RPROF_METHOD_RETURN;
-    event.thread = get_tag(jvmti, thread);
-    event.cid = cnum;
-    event.attr.mid = mnum;
+    event->type = RPROF_METHOD_RETURN;
+    event->thread = get_tag(jvmti, thread);
+    event->cid = cnum;
+    event->attr.mid = mnum;
+    event->args_len = 0;
     
     if (arg != NULL) {
-        event.args_len = 1;
-        event.args[0] = get_tag(jvmti, arg);
+        event->args_len = 1;
+        event->args[0] = get_tag(jvmti, arg);
     }
     
-    comm_log(gdata->comm, &event);
+    comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
 }
 
 /* Java Native Method for method exceptional return */
@@ -473,7 +487,45 @@ static void
 HEAP_TRACKER_native_except(JNIEnv *env, jclass tracker, jthread thread,
                            jint cnum, jint mnum, jobject arg, jobject thrown)
 {
-    r_event event;
+    EventRecord *event;
+    jvmtiEnv *jvmti;
+
+    if ( gdata->vmDead ) {
+        return;
+    }
+    
+    jvmti = gdata->jvmti;
+    
+    event = CreateEvent(jvmti, 2);
+    
+    event->type = RPROF_METHOD_EXCEPTION;
+    event->thread = get_tag(jvmti, thread);
+    event->cid = cnum;
+    event->attr.mid = mnum;
+    event->args_len = 0;
+
+    if (arg != NULL) {
+        event->args_len = 1;
+        event->args[0] = get_tag(jvmti, arg);
+    }
+    
+    if (thrown != NULL) {
+        event->args_len = 2;
+        event->args[1] = get_tag(jvmti, thrown);
+        if (arg == NULL) {
+            event->args[0] = 0;
+        }
+    }
+    
+    comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
+}
+
+static void
+HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum)
+{
+    EventRecord *event;
     jvmtiEnv *jvmti;
     
     if ( gdata->vmDead ) {
@@ -482,43 +534,17 @@ HEAP_TRACKER_native_except(JNIEnv *env, jclass tracker, jthread thread,
     
     jvmti = gdata->jvmti;
     
-    bzero(&event, sizeof(event));
+    event = CreateEvent(jvmti, 0);
     
-    event.type = RPROF_METHOD_EXCEPTION;
-    event.thread = get_tag(jvmti, thread);
-    event.cid = cnum;
-    event.attr.mid = mnum;
+    event->type = RPROF_METHOD_ENTER;
+    event->thread = get_tag(gdata->jvmti, thread);
+    event->cid = cnum;
+    event->attr.mid = mnum;
+    event->args_len = 0;
     
-    if (arg != NULL) {
-        event.args_len = 1;
-        event.args[0] = get_tag(jvmti, arg);
-    }
+    comm_log(gdata->comm, event);
     
-    if (thrown != NULL) {
-        event.args_len = 2;
-        event.args[1] = get_tag(jvmti, thrown);
-    }
-    
-    comm_log(gdata->comm, &event);
-}
-
-static void
-HEAP_TRACKER_native_main(JNIEnv *env, jclass klass, jthread thread, jint cnum, jint mnum)
-{
-    r_event event;
-    
-    if ( gdata->vmDead ) {
-        return;
-    }
-    
-    bzero(&event, sizeof(event));
-    
-    event.type = RPROF_METHOD_ENTER;
-    event.thread = get_tag(gdata->jvmti, thread);
-    event.cid = cnum;
-    event.attr.mid = mnum;
-    
-    comm_log(gdata->comm, &event);
+    deallocate(jvmti, event);
 }
 
 /* Called by cbClassTagger, cbClassPrepareHook, and _clinit to tag and initialize class */
@@ -597,7 +623,7 @@ cbClassPrepareHook(jvmtiEnv *jvmti, JNIEnv* env, jthread thread, jclass klass) {
         return; /* interface, ignore */
     }
     
-    GetClassName(jvmti, klass, cname);
+    _GetClassName(jvmti, klass, cname);
 
     if (!classes_find(gdata->classes, cname, &cid, &props)) {
         fatal_error("could not find class %s in class table!", cname);
@@ -610,7 +636,7 @@ cbClassPrepareHook(jvmtiEnv *jvmti, JNIEnv* env, jthread thread, jclass klass) {
         handle_class(jvmti, env, klass, cname, cid, props);
     }
 
-    FreeClassName(jvmti, cname);
+    _FreeClassName(jvmti, cname);
 }
 
 /* Java Native Method for <clinit> */
@@ -627,7 +653,7 @@ HEAP_TRACKER_native_clinit(JNIEnv *env, jclass tracker, jobject klass)
     
     jvmti = gdata->jvmti;
     
-    GetClassName(jvmti, klass, cname);
+    _GetClassName(jvmti, klass, cname);
     
     if (!classes_find(gdata->classes, cname, &cid, &props)) {
         fatal_error("could not find class %s in class table!\n", cname);
@@ -635,7 +661,7 @@ HEAP_TRACKER_native_clinit(JNIEnv *env, jclass tracker, jobject klass)
     
     handle_class(jvmti, env, klass, cname, cid, props);
     
-    FreeClassName(jvmti, cname);
+    _FreeClassName(jvmti, cname);
 }
 
 /* call to engage should match phase set in cbVMObjectAlloc */
@@ -705,7 +731,8 @@ cbVMStart(jvmtiEnv *jvmti, JNIEnv *env)
 static jint
 cbObjectTagger(jlong class_tag, jlong size, jlong* tag_ptr, jint length, void* userData)
 {
-	r_event event;
+	EventRecord *event;
+    jvmtiEnv *jvmti;
     
 	if (length != -1) {
 		/* TODO: stop ignoring arrays! */
@@ -721,13 +748,20 @@ cbObjectTagger(jlong class_tag, jlong size, jlong* tag_ptr, jint length, void* u
         fatal_error("untagged class %llx! (%llx)\n", class_tag, *tag_ptr);
     }
     
-    bzero(&event, sizeof(event));
+    jvmti = gdata->jvmti;
     
-    event.type = RPROF_OBJECT_TAGGED;
-    event.cid = TAG_TO_CNUM(class_tag);
-	event.args_len = 1;
-	event.args[0] = *tag_ptr;
-    comm_log(gdata->comm, &event);
+    event = CreateEvent(jvmti, 1);
+    
+    event->type = RPROF_OBJECT_TAGGED;
+    event->thread = 0;
+    event->cid = TAG_TO_CNUM(class_tag);
+    event->attr.mid = 0;
+	event->args_len = 1;
+	event->args[0] = *tag_ptr;
+    
+    comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
     
 	return JVMTI_VISIT_OBJECTS;
 }
@@ -985,15 +1019,15 @@ findFieldRecord(jvmtiEnv *jvmti, JNIEnv *env, jclass field_klass, jfieldID field
     }
     
     if (record->class_tag != class_tag || record->field != field) {
-        (*jvmti)->GetClassSignature(jvmti, field_klass, &cname, NULL);
-        (*jvmti)->GetFieldName(jvmti, field_klass, field, &fname, NULL, NULL);
+        _GetClassName(jvmti, field_klass, cname)
+        _GetFieldName(jvmti, field_klass, field, fname)
         class_tag = get_tag(jvmti, field_klass);
         fatal_error("could not find field %s.%s (%llx.%llx), found (%llx.%llx)\n",
                     cname, fname,
                     class_tag, field,
                     record->class_tag, record->field);
-        deallocate(jvmti, cname);
-        deallocate(jvmti, fname);
+        _FreeFieldName(jvmti, fname)
+        _FreeClassName(jvmti, cname)
     }
 }
 
@@ -1016,21 +1050,23 @@ _cbFieldAccess(jvmtiEnv *jvmti,
                jobject object,
                jfieldID field)
 {
-    r_event event;
+    EventRecord *event;
     r_fieldRecord record;
-    
-    bzero(&event, sizeof(r_event));
     
     findFieldRecord(jvmti, env, field_klass, field, &record);
     
-    event.thread = get_tag(jvmti, thread);
-    event.type = RPROF_FIELD_READ;
-    event.cid = record.id.id.cls;
-    event.attr.fid = record.id.id.field;
-    event.args_len = 1;
-    event.args[0] = get_tag(jvmti, object);
+    event = CreateEvent(jvmti, 1);
     
-    comm_log(gdata->comm, &event);
+    event->thread = get_tag(jvmti, thread);
+    event->type = RPROF_FIELD_READ;
+    event->cid = record.id.id.cls;
+    event->attr.fid = record.id.id.field;
+    event->args_len = 1;
+    event->args[0] = get_tag(jvmti, object);
+    
+    comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
 }
 
 static void JNICALL
@@ -1075,33 +1111,34 @@ _cbFieldModification(jvmtiEnv *jvmti,
                      char signature_type,
                      jvalue new_value)
 {
-    r_event event;
+    EventRecord *event;
     r_fieldRecord record;
-    
-    bzero(&event, sizeof(event));
     
     findFieldRecord(jvmti, env, field_klass, field, &record);
     
-    event.type = RPROF_FIELD_WRITE;
-    event.thread = get_tag(jvmti, thread);
-    event.cid = record.id.id.cls;
-    event.attr.fid = record.id.id.field;
+    event = CreateEvent(jvmti, 2);
     
-    event.args_len = 2;
-    event.args[0] = get_tag(jvmti, object);
+    event->type = RPROF_FIELD_WRITE;
+    event->thread = get_tag(jvmti, thread);
+    event->cid = record.id.id.cls;
+    event->attr.fid = record.id.id.field;
+    event->args_len = 2;
+    event->args[0] = get_tag(jvmti, object);
     switch (signature_type) {
         case 'L':
         case '[':
             if (new_value.l != NULL) {
-                event.args[1] = get_tag(jvmti, new_value.l);
+                event->args[1] = get_tag(jvmti, new_value.l);
             }
             break;
         default:
-            event.args_len = 1;
+            event->args_len = 1;
             break;
     }
     
-    comm_log(gdata->comm, &event);
+    comm_log(gdata->comm, event);
+    
+    deallocate(jvmti, event);
 }
 
 static void JNICALL

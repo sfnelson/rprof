@@ -39,6 +39,7 @@ public class Logger extends HttpServlet {
 		log.trace("receiving events");
 
 		String dataset = req.getHeader("Dataset");
+		String records = req.getHeader("Records");
 
 		Dataset ds = datasets.findDataset(dataset);
 		Context.setDataset(ds);
@@ -77,6 +78,7 @@ public class Logger extends HttpServlet {
 										hostname));
 					}
 					worker.setAttribute("Dataset", dataset);
+					worker.setAttribute("Records", records);
 					worker.setAttribute("Data", buffer);
 					worker.resume();
 

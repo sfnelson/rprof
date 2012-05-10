@@ -97,6 +97,27 @@ deallocate(jvmtiEnv *jvmti, void *ptr)
 {
     jvmtiError error;
     
+#ifdef DEBUG
+    size_t *p = (size_t *) ptr;
+    char *start = (char *) ptr;
+    
+    size_t len = p[-2];
+    char *end = &start[len];
+    
+    size_t start_guard = p[-1];
+    size_t end_guard = ((size_t *)end)[0];
+    
+    if (start_guard != 0xdfdfdfdfdfdfdfdf) {
+        fatal_error("start guard got stomped");
+    }
+    
+    if (end_guard != 0xdfdfdfdfdfdfdfdf) {
+        fatal_error("end guard got stomped");
+    }
+    
+    ptr = &(p[-2]);
+#endif
+
     error = (*jvmti)->Deallocate(jvmti, ptr);
     check_jvmti_error(jvmti, error, "Cannot deallocate memory");
 }
@@ -108,10 +129,24 @@ allocate(jvmtiEnv *jvmti, size_t len)
     jvmtiError error;
     void      *ptr = NULL;
     
+#ifdef DEBUG
+    size_t    *p = NULL;
+    size_t     l = len;
+
+    len += 3 * sizeof(size_t);
+#endif
+
     error = (*jvmti)->Allocate(jvmti, (jlong) len, (unsigned char **)&ptr);
     check_jvmti_error(jvmti, error, "Cannot allocate memory");
     
+#ifdef DEBUG
     memset(ptr, 0xdf, len);
+    
+    p = (size_t *) ptr;
+    p[0] = l;
+    
+    ptr = &(p[2]);
+#endif
 
     return ptr;
 }

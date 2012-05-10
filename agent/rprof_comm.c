@@ -15,7 +15,7 @@
 #include "rprof_events.h"
 #include "rprof_comm.h"
 
-#define EVENT_BUFFER_SIZE 121072
+#define EVENT_BUFFER_SIZE (20 * 1024 * 1024 * sizeof(unsigned char))
 
 typedef struct {
     jvmtiEnv *jvmti;
@@ -26,24 +26,16 @@ typedef struct {
 	size_t  offset;
 } Response;
 
-typedef struct {
-    int id_upper;
-    int id_lower;
-	int thread_upper;
-	int thread_lower;
-	int message;
-	int cnum;
-	int mnum;
-	int len;
-	int params[RPROF_MAX_PARAMETERS * 2];
-} EventRecord;
-
 struct store {
-    size_t using;
-    size_t size;
-    size_t max;
-    jboolean flush;
-    EventRecord events[EVENT_BUFFER_SIZE];
+    size_t using;       /* number of threads currently using store */
+    size_t size;        /* consumed data */
+    size_t max;         /* available data */
+    size_t records;     /* number of records contained */
+    union {
+        jboolean flush;
+        size_t _padding;
+    } flush;       /* should flush, aligned */
+    unsigned char events[EVENT_BUFFER_SIZE];
 };
 
 struct _CommEnv {
@@ -74,7 +66,7 @@ ADD_HEADER(X, "Keep-Alive: 600")
 curl_slist_append(NULL, X)
 
 #define ADD_HEADER(X, Y) \
-(*X) = curl_slist_append(*X, Y);
+X = curl_slist_append(X, Y);
 
 typedef curl_write_callback header_func;
 typedef curl_write_callback data_func;
@@ -88,7 +80,7 @@ post(const char* dest, struct curl_slist *headers, void *data, size_t len,
     long int status;
     CURL* curl = curl_easy_init();
     
-    ADD_HEADERS(&headers);
+    ADD_HEADERS(headers);
     
     curl_easy_setopt(curl, CURLOPT_URL, dest);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
@@ -134,7 +126,8 @@ create_store(CommEnv env)
     s->using = 0;
     s->size = 0;
     s->max = EVENT_BUFFER_SIZE;
-    s->flush = JNI_FALSE;
+    s->records = 0;
+    s->flush.flush = JNI_FALSE;
     
     return s;
 }
@@ -142,8 +135,14 @@ create_store(CommEnv env)
 static void
 destroy_store(CommEnv env, struct store *s)
 {
+    struct curl_slist *headers = NULL;
+    char records[255];
+    
     if (s->size > 0) {
-        post(env->log, HEADER(env->dataset), s->events, s->size * sizeof(EventRecord),
+        sprintf(records, "Records: %lu", s->records);
+        ADD_HEADER(headers, env->dataset)
+        ADD_HEADER(headers, records)
+        post(env->log, headers, s->events, s->size,
              NULL, NULL, NULL, NULL);
     }
     
@@ -152,7 +151,7 @@ destroy_store(CommEnv env, struct store *s)
 }
 
 static jlong
-request_store(CommEnv env, size_t toStore, struct store **store, EventRecord **record)
+request_store(CommEnv env, size_t size, struct store **store, EventRecord **record)
 {
     struct store *current = NULL, *old = NULL;
     jlong id = 0;
@@ -161,24 +160,24 @@ request_store(CommEnv env, size_t toStore, struct store **store, EventRecord **r
     
     current = env->store;
     
-    if (current->size + toStore > current->max) {
+    if (current->size + size > current->max) {
         old = current;
         current = create_store(env);
         env->store = current;
     }
     
-    if (toStore > 0) {
-        (*record) = &(current->events[current->size]);
-        current->size += toStore;
+    if (size > 0) {
+        (*record) = (EventRecord*) &(current->events[current->size]);
+        current->size += size;
+        current->records++;
         
-        id = env->prev_id + 1;
-        env->prev_id += toStore;
+        id = ++(env->prev_id);
     }
     
     (current->using)++;
     
     if (old != NULL && old->using > 0) {
-        old->flush = JNI_TRUE;
+        old->flush.flush = JNI_TRUE;
         RELEASE(env->jvmti, env->lock)
     }
     else if (old != NULL) {
@@ -198,7 +197,7 @@ release_store(CommEnv env, struct store *store)
 {
     LOCK(env->jvmti, env->lock)
     
-    if (store->using == 1 && store->flush == JNI_TRUE) {
+    if (store->using == 1 && store->flush.flush == JNI_TRUE) {
         RELEASE(env->jvmti, env->lock)
         destroy_store(env, store);
     }
@@ -279,6 +278,8 @@ comm_create(jvmtiEnv *jvmti, char *options)
 static size_t
 read_header(char *input, size_t size, size_t count, void * arg)
 {
+    jvmtiEnv *jvmti;
+    jvmtiError error;
     Response *response = arg;
 	jint len;
     jint id;
@@ -286,9 +287,14 @@ read_header(char *input, size_t size, size_t count, void * arg)
 	if (strncasecmp(input, CONTENT_LENGTH, CONTENT_LENGTH_LEN) == 0) {
 		len = (jint) (strtoull(&input[CONTENT_LENGTH_LEN], NULL, 0) & 0xFFFFFFFF);
         if (len > 0) {
+            jvmti = response->jvmti;
+
             *(response->length) = len;
+            
             /* deallocated by jvm after load */
-            *(response->image) = allocate(response->jvmti, (size_t) len);
+            /* don't use allocate because this MUST be JVM allocated */
+            error = (*jvmti)->Allocate(jvmti, len, response->image);
+            check_jvmti_error(jvmti, error, "Error allocating space for class file");
         }
         else {
             *(response->length) = 0;
@@ -358,39 +364,45 @@ void
 comm_stopped(CommEnv env)
 {
     char lastId[255];
-    struct curl_slist *headers;
+    struct curl_slist *headers = NULL;
     
     sprintf(lastId, "Last-Event: %ld", env->prev_id);
-    headers = HEADER(env->dataset);
-    ADD_HEADER(&headers, lastId);
+    ADD_HEADER(headers, env->dataset)
+    ADD_HEADER(headers, lastId)
     
 	post(env->stop, headers, NULL, 0, NULL, NULL, NULL, NULL);
 }
 
-#define untohl(X) (htonl((uint32_t)((X >> 32) & 0xFFFFFFFF)))
-#define lntohl(X) (htonl((uint32_t)(X & 0xFFFFFFFF)))
+#define mask32 0xFFFFFFFF
+#define PUT_NETWORK_LONG(X, V) \
+((uint32_t *)&(X))[0] = htonl(mask32 & (uint32_t)(V>>32));\
+((uint32_t *)&(X))[1] = htonl(mask32 & (uint32_t)(V));
+
+#define PUT_NETWORK_INT(X, V) \
+X = htonl(V);
 
 jlong
-comm_log(CommEnv env, r_event *event)
+comm_log(CommEnv env, EventRecord *event)
 {
     struct store *store;
     EventRecord *record;
     jlong id;
-    jint i;
+    size_t size, i, len;
     
-    id = request_store(env, 1, &store, &record);
+    len = (size_t) event->args_len;
+    size = sizeof(EventRecord) + len * sizeof(jlong);
+
+    id = request_store(env, size, &store, &record);
     
-    record->id_upper =  untohl(id);
-    record->id_lower = lntohl(id);
-    record->thread_upper = untohl(event->thread);
-    record->thread_lower = lntohl(event->thread);
-    record->message = htonl(event->type);
-    record->cnum = htonl(event->cid);
-    record->mnum = htonl(event->attr.mid);
-    record->len = htonl(event->args_len);
-    for (i = 0; i < event->args_len; i++) {
-        record->params[i * 2] = untohl(event->args[i]);
-        record->params[i * 2 + 1] = lntohl(event->args[i]);
+    PUT_NETWORK_LONG(record->id, id);
+    PUT_NETWORK_LONG(record->thread, event->thread);
+    PUT_NETWORK_INT(record->type, event->type);
+    PUT_NETWORK_INT(record->cid, event->cid);
+    PUT_NETWORK_INT(record->attr.mid, event->attr.mid);
+    PUT_NETWORK_INT(record->args_len, event->args_len);
+
+    for (i = 0; i < len; i++) {
+        PUT_NETWORK_LONG(record->args[i], event->args[i]);
     }
     
     release_store(env, store);
@@ -409,7 +421,7 @@ comm_flush(CommEnv env)
     env->store = create_store(env);
     
     if (store->using > 0) {
-        store->flush = JNI_TRUE;
+        store->flush.flush = JNI_TRUE;
         store = NULL;
         RELEASE(env->jvmti, env->lock);
     }

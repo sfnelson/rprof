@@ -48,12 +48,14 @@ public class Workers extends HttpServlet {
 		byte[] data = (byte[]) req.getAttribute("Data");
 		RequestId requestId = (RequestId) req.getAttribute("RequestId");
 		String dataset = (String) req.getAttribute("Dataset");
+		String records = (String) req.getAttribute("Records");
 		Boolean flush = (Boolean) req.getAttribute("Flush");
 
 		if (data != null) {
 			// good to go
 			resp.addHeader("Dataset", dataset);
 			resp.addHeader("RequestId", String.valueOf(requestId.getValue()));
+			resp.addHeader("Records", records);
 			resp.setContentType("application/rprof");
 			resp.setContentLength(data.length);
 			resp.setStatus(HttpServletResponse.SC_OK);

@@ -134,9 +134,11 @@ public class Worker {
 				current = new Handler(hostname, dataset, requestId);
 			}
 
+			int records = Integer.valueOf(connection.getHeaderField("Records"));
+
 			DataInputStream dis = new DataInputStream(connection.getInputStream());
 
-			current.process(length, dis);
+			current.process(length, records, dis);
 		}
 	}
 
@@ -169,23 +171,23 @@ public class Worker {
 			store = database.createReducer(Instance.class, mr, name, true);
 		}
 
-		public void process(int length, DataInputStream dis)
+		public void process(int length, int records, DataInputStream dis)
 				throws IOException {
 
-			log.debug("storing {} events", length / RECORD_LENGTH);
+			log.debug("storing {} events", records);
 			long started = Calendar.getInstance().getTime().getTime();
 
 			long first = 0, last = 0;
 
 			EventCreator<?> b = database.getEventCreater();
 
-			for (int i = 0; i < length / RECORD_LENGTH; i++) {
+			for (int i = 0; i < records; i++) {
 				long id = dis.readLong();
 				b.setId(EventId.create(ds, id));
 				b.setThread(parseObjectId(ds, dis.readLong()));
 
 				if (i == 0) first = id;
-				if (i + 1 == length / RECORD_LENGTH) last = id;
+				last = id;
 
 				int type = dis.readInt();
 
@@ -207,16 +209,9 @@ public class Worker {
 
 				int len = dis.readInt();
 
-				if (len > MAX_PARAMETERS) {
-					log.warn("warning: {} is greater than MAX_PARAMETERS\n", len);
-					len = MAX_PARAMETERS;
-				}
-
-				for (int j = 0; j < MAX_PARAMETERS; j++) {
+				for (int j = 0; j < len; j++) {
 					long arg = dis.readLong();
-					if (j < len) {
-						b.addArg(parseObjectId(ds, arg));
-					}
+					b.addArg(parseObjectId(ds, arg));
 				}
 
 				mr.map(b.get(), store);

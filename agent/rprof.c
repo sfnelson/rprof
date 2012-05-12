@@ -268,6 +268,8 @@ HEAP_TRACKER_native_newcls(JNIEnv *env, jclass tracker,
     
 	tag = tag_class(jvmti, klass, cid);
     
+    classes_remove(gdata->classes, cid);
+    
     event = CreateEvent(jvmti, 1);
     
     event->type = RPROF_CLASS_INITIALIZED;
@@ -793,7 +795,10 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
     
     enterCriticalSection(jvmti); {
         
-        classes_visit(gdata->classes, jvmti, env, &cbClassTagger);
+        ClassList system_classes = gdata->classes;
+        gdata->classes = classes_create(jvmti, "classes");
+        classes_visit(system_classes, jvmti, env, &cbClassTagger);
+        classes_destroy(system_classes);
         
 #ifdef DEBUG
         stdout_message("----- loaded classes for init\n");
@@ -1285,7 +1290,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	check_jvmti_error(jvmti, error, "Cannot create agent data monitor");
     
     gdata->fields = fields_create(jvmti, "field table");
-    gdata->classes = classes_create(jvmti, "classes list");
+    gdata->classes = classes_create(jvmti, "system classes");
     gdata->comm = comm_create(jvmti, host, benchmark);
     
 	comm_started(gdata->comm);

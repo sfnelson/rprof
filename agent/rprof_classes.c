@@ -79,7 +79,7 @@ static void
 init(ClassList list, size_t new_size)
 {
     size_t size = new_size * sizeof(struct _ClassListEntry);
-
+    
     list->max = new_size;
     list->entries = allocate(list->jvmti, size);
 }
@@ -103,7 +103,7 @@ classes_add(ClassList list, const char *cname, jint cid, jint properties)
     const size_t len = (strlen(cname) + 1) * sizeof(char);
     char *toStore = allocate(list->jvmti, len);
     memcpy(toStore, cname, len);
-
+    
     /* increase available size of necessary */
     if (size >= max) {
         init(list, 2 * max);
@@ -119,6 +119,37 @@ classes_add(ClassList list, const char *cname, jint cid, jint properties)
     entry->cname = toStore;
     entry->cid = cid;
     entry->properties = properties;
+    
+    RELEASE(list);
+}
+
+void
+classes_remove(ClassList list, const jint cid)
+{
+    LOCK(list);
+    
+    if (list->entries != NULL && list->size > 0) {
+        size_t size = list->size;
+        size_t i = 0;
+        
+        for (i = 0; i < size; i++) {
+            if (list->entries[i].cid == cid) break;
+        }
+        
+        if (i < size) {
+            deallocate(list->jvmti, list->entries[i].cname);
+            size--;
+            if (i < size) {
+                list->entries[i].cid = list->entries[size].cid;
+                list->entries[i].cname = list->entries[size].cname;
+                list->entries[i].properties = list->entries[size].properties;
+            }
+            list->entries[size].cid = 0;
+            list->entries[size].cname = NULL;
+            list->entries[size].properties = 0;
+            list->size = size;
+        }
+    }
     
     RELEASE(list);
 }
@@ -170,7 +201,7 @@ void
 classes_destroy(ClassList list)
 {
     if (list == NULL) return;
-
+    
     _LOCK(list->jvmti, list->lock);
     
     jrawMonitorID lock = list->lock;

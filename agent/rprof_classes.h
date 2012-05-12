@@ -22,6 +22,9 @@ classes_create(jvmtiEnv* jvmti, const char *name);
 void
 classes_add(ClassList classes, const char *cname, jint cid, jint properties);
 
+void
+classes_remove(ClassList classes, jint cid);
+
 typedef void (*ClassVisitor) (jvmtiEnv *jvmti, JNIEnv *jni,
                               const char *cname, jint cid, jint properties);
 void

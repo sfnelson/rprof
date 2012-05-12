@@ -131,6 +131,12 @@ static void testClassList() {
     
     classes_visit(classes, NULL, NULL, &class_visitor);
     
+    for (i = 1; i <= 24; i++) {
+        classes_remove(classes, (jint) i);
+    }
+    
+    classes_visit(classes, NULL, NULL, &class_visitor);
+    
     classes_destroy(classes);
     
     printf("Class Tests: %llu/%llu assertions passed\n", passed, count);

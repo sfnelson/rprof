@@ -129,7 +129,7 @@ tests: $(TEST_OBJECTS)
 	$(CC) $(CFLAGS) -c $? -o $@
 
 clean:
-	rm -f -r $(LIBRARY) tests $(TEST_OBJECTS) $(BUILD_OBJECTS) tmp
+	rm -f -r $(LIBRARY) tests $(TEST_OBJECTS) $(BUILD_OBJECTS) tmp scratch
 	mkdir -p tmp/pre
 	mkdir -p tmp/post
 

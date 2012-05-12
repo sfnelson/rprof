@@ -84,12 +84,23 @@
           <root url="jar://$MODULE_DIR$/../../dacapo/dat/geronimo-jetty6-minimal-2.1.4/lib/slf4j-log4j12-1.4.3.jar!/" />
           <root url="jar://$MODULE_DIR$/../../dacapo/dat/geronimo-jetty6-minimal-2.1.4/lib/xpp3-1.1.3.4.O.jar!/" />
           <root url="jar://$MODULE_DIR$/../../dacapo/dat/geronimo-jetty6-minimal-2.1.4/lib/xstream-1.2.2.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../dacapo/dat/geronimo-jetty6-minimal-2.1.4/repository/org/apache/geronimo/modules/geronimo-jetty6/2.1.4/geronimo-jetty6-2.1.4.jar!/" />
+          <root url="file://$MODULE_DIR$/../../dacapo/dat/geronimo-jetty6-minimal-2.1.4/repository/org/apache/geronimo/daytrader/daytrader-jetty/2.2-SNAPSHOT/daytrader-jetty-2.2-SNAPSHOT.car/web.war/WEB-INF/classes" />
+          <root url="jar://$MODULE_DIR$/../../dacapo/dat/geronimo-jetty6-minimal-2.1.4/repository/org/apache/geronimo/daytrader/daytrader-jetty/2.2-SNAPSHOT/daytrader-jetty-2.2-SNAPSHOT.car/dt-ejb.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../dacapo/dat/geronimo-jetty6-minimal-2.1.4/repository/axis/axis/1.4/axis-1.4.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../dacapo/dat/geronimo-jetty6-minimal-2.1.4/repository/org/apache/geronimo/modules/geronimo-axis/2.1.4/geronimo-axis-2.1.4.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
           <root url="file://$MODULE_DIR$/../../dacapo/benchmarks/harness/src" />
           <root url="file://$MODULE_DIR$/../../dacapo/benchmarks/libs/daytrader/src" />
           <root url="jar://$USER_HOME$/Downloads/geronimo-kernel-2.1.5-sources.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/geronimo-jetty6-2.1.5-sources.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/com.springsource.org.apache.axis-sources-1.4.0.jar!/" />
+          <root url="file://$MODULE_DIR$/../../dacapo/benchmarks/libs/daytrader/tmp/ejb/src/main/java" />
+          <root url="file://$MODULE_DIR$/../../dacapo/benchmarks/libs/daytrader/src" />
+          <root url="file://$MODULE_DIR$/../../dacapo/benchmarks/libs/daytrader/tmp/dacapo/src/main/java" />
+          <root url="jar://$USER_HOME$/Downloads/geronimo-axis-2.1.5-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

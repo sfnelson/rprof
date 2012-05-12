@@ -44,7 +44,7 @@ void
 stdout_message(const char * format, ...)
 {
     va_list ap;
-
+    
     va_start(ap, format);
     (void)vfprintf(stdout, format, ap);
     va_end(ap);
@@ -58,7 +58,7 @@ void
 fatal_error(const char * format, ...)
 {
     va_list ap;
-
+    
     va_start(ap, format);
     (void)vfprintf(stderr, format, ap);
     (void)fflush(stderr);
@@ -78,14 +78,14 @@ void
 check_jvmti_error(jvmtiEnv* jvmti, jvmtiError errnum, const char* str)
 {
     if ( errnum != JVMTI_ERROR_NONE ) {
-	char       *errnum_str;
-	
-	errnum_str = NULL;
-	(void)(*jvmti)->GetErrorName(jvmti, errnum, &errnum_str);
-	
-	fatal_error("ERROR: JVMTI: %d(%s): %s\n", errnum, 
-		(errnum_str==NULL?"Unknown":errnum_str),
-		(str==NULL?"":str));
+        char       *errnum_str;
+        
+        errnum_str = NULL;
+        (void)(*jvmti)->GetErrorName(jvmti, errnum, &errnum_str);
+        
+        fatal_error("ERROR: JVMTI: %d(%s): %s\n", errnum, 
+                    (errnum_str==NULL?"Unknown":errnum_str),
+                    (str==NULL?"":str));
     }
 }
 
@@ -117,7 +117,7 @@ deallocate(jvmtiEnv *jvmti, void *ptr)
     
     ptr = &(p[-2]);
 #endif
-
+    
     error = (*jvmti)->Deallocate(jvmti, ptr);
     check_jvmti_error(jvmti, error, "Cannot deallocate memory");
 }
@@ -132,10 +132,10 @@ allocate(jvmtiEnv *jvmti, size_t len)
 #ifdef DEBUG
     size_t    *p = NULL;
     size_t     l = len;
-
+    
     len += 3 * sizeof(size_t);
 #endif
-
+    
     error = (*jvmti)->Allocate(jvmti, (jlong) len, (unsigned char **)&ptr);
     check_jvmti_error(jvmti, error, "Cannot allocate memory");
     
@@ -147,8 +147,41 @@ allocate(jvmtiEnv *jvmti, size_t len)
     
     ptr = &(p[2]);
 #endif
-
+    
     return ptr;
+}
+
+void
+parse_agent_args(char *args, char **host, char **agent_home, char **benchmark)
+{
+    if (NULL == args || 0 == strlen(args));
+    else if (NULL == strchr(args, ','));
+    else {
+        *host = args;
+        *agent_home = &strchr(args, ',')[1];
+        
+        if (NULL != strchr(*agent_home, ',')) {
+            *benchmark = &strchr(*agent_home, ',')[1];
+            (*agent_home)[-1] = 0;
+            (*benchmark)[-1] = 0;
+            
+            return;
+        }
+    }
+    
+    fatal_error("error parsing agent arguments: expected -agentlib:agent=host,path,program");
+}
+
+void
+load_agent_jar(jvmtiEnv *jvmti, const char *agent_home)
+{
+    jvmtiError error;
+    char       agent_path[FILENAME_MAX+1];
+    
+    sprintf(agent_path, AGENT_JAR_NAME_FORMAT_STR, agent_home);
+    
+    error = (*jvmti)->AddToBootstrapClassLoaderSearch(jvmti, agent_path);
+    check_jvmti_error(jvmti, error, "Cannot add to boot classpath");
 }
 
 /* ------------------------------------------------------------------- */

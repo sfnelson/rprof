@@ -56,8 +56,6 @@ public class Weaver {
 			.add("java/lang/Throwable")
 			.add("java/lang/String") // strings are automatically created, breaking final field tracking
 					// this won't cause errors, but looks weird in output data
-
-			.add("org/apache/geronimo/security/keystore/FileKeystoreManager")
 			.get();
 
 	public byte[] weave(ClassRecord record, byte[] classfile) {

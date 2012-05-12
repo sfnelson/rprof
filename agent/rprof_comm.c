@@ -228,11 +228,10 @@ comm_init(CommEnv env, const char *host, const char *benchmark)
 }
 
 CommEnv
-comm_create(jvmtiEnv *jvmti, char *options)
+comm_create(jvmtiEnv *jvmti, const char *host, const char *benchmark)
 {
     CommEnv env;
 	jvmtiError error;
-	char *benchmark;
     
     env = allocate(jvmti, sizeof(struct _CommEnv));
 	
@@ -249,22 +248,11 @@ comm_create(jvmtiEnv *jvmti, char *options)
     env->stop = NULL;
     env->dataset = NULL;
     env->benchmark = NULL;
-    
-	if (0 == options || 0 == strlen(options)) {
-		comm_init(env, "localhost:8888", "unknown");
-	}
-	else if (0 == strchr(options, ',')) {
-        comm_init(env, options, "unknown");
-	}
-	else {
-	    benchmark = strchr(options, ',');
-	    benchmark[0] = 0;
-	    benchmark++;
-	    comm_init(env, options, benchmark);
-	}
-    
-	curl_global_init(CURL_GLOBAL_ALL);
-    
+
+    comm_init(env, host, benchmark);
+
+    curl_global_init(CURL_GLOBAL_ALL);
+
     return env;
 }
 

@@ -15,8 +15,8 @@ TEST_SOURCES   = $(COMMON_SOURCES) tests.c test_utils.c
 BUILD_OBJECTS  = $(BUILD_SOURCES:%.c=%.o)
 TEST_OBJECTS   = $(TEST_SOURCES:%.c=%.o)
 
-JARFILE=../jvmti-lib/target/jvmti-lib-1.0-SNAPSHOT.jar
-TEST_CLASSES=../jvmti-lib/target/test-classes
+AGENT_HOME     = $(shell pwd)
+TEST_CLASSES   = ../jvmti-lib/target/test-classes
 
 # Required flags
 COMMON_FLAGS = -fno-strict-aliasing -fPIC -fno-omit-frame-pointer
@@ -91,12 +91,11 @@ endif
 LINK_SHARED=$(LINK.c) -shared -o $@
 
 J_OPTS = \
-    -Xbootclasspath/a:$(JARFILE) \
-    -agentlib:$(LIBNAME)=$(HOST),$@ \
+    -agentlib:$(LIBNAME)=$(HOST),$(AGENT_HOME),$@ \
     -Xmx1024m -Xint
 
 ifdef DEBUG
-    J_OPTS += -Xcheck:jni -XX:+UnlockDiagnosticVMOptions
+    J_OPTS += -Xcheck:jni
 endif
 
 ifdef J_HOST

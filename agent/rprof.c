@@ -102,8 +102,10 @@ char *cname_orig = NULL; \
 if (JVMTI_ERROR_NONE != (*J)->GetClassSignature(J, C, &(cname_orig), NULL)) {\
 N = "unknown";\
 }\
-if (cname_orig != NULL && cname_orig[0] == 'L') { N = &cname_orig[1]; } else { N = cname_orig; }\
-if (cname_orig != NULL && cname_orig[strlen(cname_orig)-1] == ';') { cname_orig[strlen(cname_orig)-1] = 0; } \
+else {\
+if (cname_orig[0] == 'L') { N = &cname_orig[1]; } else { N = cname_orig; }\
+if (cname_orig[strlen(cname_orig)-1] == ';') { cname_orig[strlen(cname_orig)-1] = 0; } \
+}\
 {
 
 #define _FreeClassName(J, N) \
@@ -349,7 +351,7 @@ HEAP_TRACKER_native_newobj(JNIEnv *env, jclass tracker, jthread thread,
 	type = get_tag(jvmti, klass);
     
     if (type == 0) {
-        char *cname;
+        char *cname = NULL;
         jboolean untagged = JNI_FALSE;
         jclass array;
         _GetClassName(jvmti, klass, cname)
@@ -1177,6 +1179,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 	jint                   res;
 	jvmtiCapabilities      capabilities;
 	jvmtiEventCallbacks    callbacks;
+    char *host, *agent_home, *benchmark;
     
 	/* Setup initial global agent data area
 	 *   Use of static/extern data should be handled carefully here.
@@ -1275,12 +1278,15 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     
     /* perform our init */
     
+    parse_agent_args(options, &host, &agent_home, &benchmark);
+    load_agent_jar(jvmti, agent_home);
+    
 	error = (*jvmti)->CreateRawMonitor(jvmti, "agent data", &(gdata->lock));
 	check_jvmti_error(jvmti, error, "Cannot create agent data monitor");
     
     gdata->fields = fields_create(jvmti, "field table");
     gdata->classes = classes_create(jvmti, "classes list");
-    gdata->comm = comm_create(jvmti, options);
+    gdata->comm = comm_create(jvmti, host, benchmark);
     
 	comm_started(gdata->comm);
     

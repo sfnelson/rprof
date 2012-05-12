@@ -11,7 +11,7 @@ struct _CommEnv;
 typedef struct _CommEnv *CommEnv;
 
 CommEnv
-comm_create(jvmtiEnv *jvmti, char *options);
+comm_create(jvmtiEnv *jvmti, const char *host, const char *benchmark);
 
 void
 comm_weave(CommEnv env,

@@ -46,17 +46,22 @@
 #include <jni.h>
 #include <jvmti.h>
 
+#define AGENT_JAR_NAME_FORMAT_STR "%s/../jvmti-lib/target/jvmti-lib-1.0-SNAPSHOT.jar"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-void  stdout_message(const char * format, ...);
-void  fatal_error(const char * format, ...);
-
-void  check_jvmti_error(jvmtiEnv *jvmti, jvmtiError errnum, const char *str);
-void  deallocate(jvmtiEnv *jvmti, void *ptr);
-void *allocate(jvmtiEnv *jvmti, size_t len);
-
+    
+    void  stdout_message(const char * format, ...);
+    void  fatal_error(const char * format, ...);
+    
+    void  check_jvmti_error(jvmtiEnv *jvmti, jvmtiError errnum, const char *str);
+    void  deallocate(jvmtiEnv *jvmti, void *ptr);
+    void *allocate(jvmtiEnv *jvmti, size_t len);
+    
+    void  parse_agent_args(char* args, char **host, char **agent_home, char **benchmark);
+    void  load_agent_jar(jvmtiEnv *jvmti, const char *agent_home);
+    
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

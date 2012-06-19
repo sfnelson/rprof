@@ -20,6 +20,10 @@ public interface ClassSummaryBuilder<I extends ClassSummaryBuilder<I>> extends B
 
 	I setNumObjects(int numObjects);
 
+	I setNumFullyImmutable(int numFullyImmutable);
+
+	I setNumFullyMutable(int numFullyMutable);
+
 	I setEqCol(int[] eqcol);
 
 	I setEq(int[] eq);

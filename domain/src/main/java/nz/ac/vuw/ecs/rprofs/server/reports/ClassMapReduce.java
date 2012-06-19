@@ -34,6 +34,9 @@ public class ClassMapReduce implements MapReduceFinish<Instance, ClassSummaryId,
 		EventId firstRead = null;
 		EventId lastWrite = null;
 
+		boolean isFullyImmutable = true;
+		boolean isFullyMutable = true;
+
 		for (FieldId fid : instance.getFields().keySet()) {
 			Instance.FieldInfo field = instance.getFields().get(fid);
 			EventId read = field.getFirstRead();
@@ -48,24 +51,28 @@ public class ClassMapReduce implements MapReduceFinish<Instance, ClassSummaryId,
 					lastWrite = write;
 				}
 			}
-			if (read != null && write != null) {
-				if (read.before(write)) {
-					mutable.add(fid);
-				}
+			if (read != null && write != null && read.before(write)) {
+				mutable.add(fid);
+				isFullyImmutable = false;
+			} else {
+				isFullyMutable = false;
 			}
 		}
 
+		if (isFullyImmutable) isFullyMutable = false;
+
 		EventId equals = instance.getFirstEquals();
-		if (equals != null && instance.getFirstHashCode() != null
-				&& equals.after(instance.getFirstHashCode())) {
+		if (equals == null) equals = instance.getFirstHashCode();
+		else if (instance.getFirstHashCode() != null && equals.after(instance.getFirstHashCode())) {
 			equals = instance.getFirstHashCode();
 		}
 
 		EventId collection = instance.getFirstCollection();
 
 		ClassSummaryId id = new ClassSummaryId(type);
-		ClassSummary result = new ClassSummary(id, lastWrite, constructor, firstRead,
-				equals, collection, instance.getFields(), mutable);
+		ClassSummary result = new ClassSummary(id, isFullyImmutable, isFullyMutable,
+				lastWrite, constructor, firstRead, equals, collection,
+				instance.getFields(), mutable);
 		emitter.store(id, result);
 	}
 

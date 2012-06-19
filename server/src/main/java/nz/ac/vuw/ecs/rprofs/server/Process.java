@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server;
 import java.io.IOException;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import javax.servlet.ServletException;
@@ -59,7 +60,7 @@ public class Process extends HttpServlet {
 						db.createMapReduce(Instance.class, ClassSummary.class, cmr).run();
 					}
 					if (op == null || op.equals("summary")) {
-						summary(resp);
+						classes(resp);
 						return;
 					}
 					if ("print".equals(op)) {
@@ -76,6 +77,18 @@ public class Process extends HttpServlet {
 					}
 					if (op == null || "summary".equals(op)) {
 						fields(dataset, resp);
+						return;
+					}
+				}
+
+				if ("objects".equals(target)) {
+					final ClassMapReduce cmr = new ClassMapReduce(db.getClazzQuery());
+
+					if (op == null || op.equals("mapreduce")) {
+						db.createMapReduce(Instance.class, ClassSummary.class, cmr).run();
+					}
+					if (op == null || "summary".equals(op)) {
+						objects(dataset, resp);
 						return;
 					}
 				}
@@ -122,95 +135,276 @@ public class Process extends HttpServlet {
 		resp.getOutputStream().close();
 	}
 
-	private void summary(HttpServletResponse resp) throws IOException {
+	private static class ClassData implements Comparable<ClassData> {
+		final int numFields;
+		int numClasses;
+		int numObjects;
+		int numImmClasses;
+		int numMutClasses;
+		int numImmObjects;
+		int numMutObjects;
+
+		public ClassData(int numFields) {
+			this.numFields = numFields;
+		}
+
+		public String toString() {
+			return String.format("%d,%d,%d,%d,%d,%d,%d", numFields,
+					numClasses, numImmClasses, numMutClasses,
+					numObjects, numImmObjects, numMutObjects);
+		}
+
+		@Override
+		public int compareTo(ClassData o) {
+			return numFields - o.numFields;
+		}
+	}
+
+	private void classes(HttpServletResponse resp) throws IOException {
 		resp.setStatus(HttpServletResponse.SC_OK);
 		resp.setContentType("text/plain");
 		ServletOutputStream out = resp.getOutputStream();
 
-		int[] eqcol = new int[13];
-		int[] eq = new int[13];
-		int[] col = new int[13];
-		int[] none = new int[13];
+		Map<Integer, ClassData> data = Maps.newTreeMap();
 
 		Query.Cursor<? extends ClassSummary> query = db.getClassSummaryQuery().find();
 		while (query.hasNext()) {
 			ClassSummary r = query.next();
 
 			Map<FieldId, FieldInfo> fields = r.getFields();
-			int core0 = 0;
-			int core1 = 0;
-			int coreN = 0;
+			ClassData c = data.get(fields.size());
+			if (c == null) {
+				c = new ClassData(fields.size());
+				data.put(fields.size(), c);
+			}
+
+			boolean classFullyImmutable = true;
+			boolean classFullyMutable = true;
 			for (FieldInfo field : fields.values()) {
 				if (field.getMutable() == 0) {
-					core0++;
-					if (field.getReads() > 0) {
-						core1++;
-					}
-					if (field.getReads() >= r.getNumObjects()) {
-						coreN++;
-					}
+					classFullyMutable = false;
+				} else {
+					classFullyImmutable = false;
 				}
 			}
-
-			boolean half = (core0 >= Math.max(1, fields.size() / 2));
-			boolean full = (core0 >= Math.max(1, fields.size()));
-
-			// todo is requiring at least one field sensible?
-			if (fields.size() == 0) {
-				half = false;
-				full = false;
-			}
-
-			if (full && !half) {
-				throw new RuntimeException("wat?");
-			}
-
-			getTotals(eqcol, r.getEqCol(), core0, core1, coreN, half, full);
-			getTotals(eq, r.getEq(), core0, core1, coreN, half, full);
-			getTotals(col, r.getCol(), core0, core1, coreN, half, full);
-			getTotals(none, r.getNone(), core0, core1, coreN, half, full);
+			if (classFullyImmutable) classFullyMutable = false;
+			c.numClasses += 1;
+			if (classFullyImmutable) c.numImmClasses += 1;
+			if (classFullyMutable) c.numMutClasses += 1;
+			c.numObjects += r.getNumObjects();
+			c.numImmObjects += r.getNumFullyImmutable();
+			c.numMutObjects += r.getNumFullyMutable();
 		}
 
-		out.println("Set,Constructor,Coarse,Fine,Equals,Collection,Immutable,Total,"
-				+ "Partial(n),Partial(1),Partial(0),Combined,Semi-Immutable,Fully-Immutable");
+		out.println("Fields,Classes,ImmClasses,MutClasses,Objects,ImmObjects,MutObjects");
 
-		out.print("All Objects");
-		for (int i = 0; i < none.length; i++) {
-			out.print(",");
-			out.print(eqcol[i] + eq[i] + col[i] + none[i]);
+		for (ClassData c : data.values()) {
+			out.println(c.toString());
 		}
-		out.println();
-
-		out.print("In Equals");
-		for (int i = 0; i < none.length; i++) {
-			out.print(",");
-			out.print(eqcol[i] + eq[i]);
-		}
-		out.println();
-
-		out.print("In Collection");
-		for (int i = 0; i < none.length; i++) {
-			out.print(",");
-			out.print(eqcol[i] + col[i]);
-		}
-		out.println();
-
-		out.print("In Both");
-		for (int i = 0; i < none.length; i++) {
-			out.print(",");
-			out.print(eqcol[i]);
-		}
-		out.println();
-
-		out.print("In Neither");
-		for (int i = 0; i < none.length; i++) {
-			out.print(",");
-			out.print(none[i]);
-		}
-		out.println();
-
 
 		resp.getOutputStream().close();
+	}
+
+	private void addObject(int[] out, int[] in) {
+		out[0] += in[CONSTRUCTOR_COARSE_FINE_EQUALS_COLL];
+		out[0] += in[CONSTRUCTOR_COARSE_FINE_EQUALS];
+		out[0] += in[CONSTRUCTOR_COARSE_FINE_COLL];
+		out[0] += in[CONSTRUCTOR_COARSE_FINE];
+
+		out[1] += in[CONSTRUCTOR_COARSE_EQUALS_COLL];
+		out[1] += in[CONSTRUCTOR_COARSE_EQUALS];
+		out[1] += in[CONSTRUCTOR_COARSE_COLL];
+		out[1] += in[CONSTRUCTOR_COARSE];
+
+		out[2] += in[CONSTRUCTOR_FINE_EQUALS_COLL];
+		out[2] += in[CONSTRUCTOR_FINE_EQUALS];
+		out[2] += in[CONSTRUCTOR_FINE_COLL];
+		out[2] += in[CONSTRUCTOR_FINE];
+
+		out[3] += in[CONSTRUCTOR_EQUALS_COLL];
+		out[3] += in[CONSTRUCTOR_EQUALS];
+		out[3] += in[CONSTRUCTOR_COLL];
+		out[3] += in[CONSTRUCTOR];
+
+		out[4] += in[COARSE_FINE_EQUALS_COLL];
+		out[4] += in[COARSE_FINE_EQUALS];
+		out[4] += in[COARSE_FINE_COLL];
+		out[4] += in[COARSE_FINE];
+
+		out[5] += in[COARSE_EQUALS_COLL];
+		out[5] += in[COARSE_EQUALS];
+		out[5] += in[COARSE_COLL];
+		out[5] += in[COARSE];
+
+		out[6] += in[FINE_EQUALS_COLL];
+		out[6] += in[FINE_EQUALS];
+		out[6] += in[FINE_COLL];
+		out[6] += in[FINE];
+
+		out[7] += in[EQUALS_COLL];
+		out[7] += in[EQUALS];
+		out[7] += in[COLL];
+		out[7] += in[NONE];
+
+		out[8] += in[FINE_EQUALS];
+
+		out[8] += in[CONSTRUCTOR_COARSE_FINE_EQUALS_COLL];
+		out[8] += in[CONSTRUCTOR_COARSE_FINE_EQUALS];
+		out[8] += in[CONSTRUCTOR_FINE_EQUALS_COLL];
+		out[8] += in[CONSTRUCTOR_FINE_EQUALS];
+		out[8] += in[COARSE_FINE_EQUALS_COLL];
+		out[8] += in[COARSE_FINE_EQUALS];
+		out[8] += in[FINE_EQUALS_COLL];
+		out[8] += in[FINE_EQUALS];
+
+		out[9] += in[CONSTRUCTOR_COARSE_EQUALS_COLL];
+		out[9] += in[CONSTRUCTOR_COARSE_EQUALS];
+		out[9] += in[CONSTRUCTOR_EQUALS_COLL];
+		out[9] += in[CONSTRUCTOR_EQUALS];
+		out[9] += in[COARSE_EQUALS_COLL];
+		out[9] += in[COARSE_EQUALS];
+		out[9] += in[EQUALS_COLL];
+		out[9] += in[EQUALS];
+
+		out[10] += in[CONSTRUCTOR_COARSE_FINE_EQUALS_COLL];
+		out[10] += in[CONSTRUCTOR_COARSE_FINE_COLL];
+		out[10] += in[CONSTRUCTOR_FINE_EQUALS_COLL];
+		out[10] += in[CONSTRUCTOR_FINE_COLL];
+		out[10] += in[COARSE_FINE_EQUALS_COLL];
+		out[10] += in[COARSE_FINE_COLL];
+		out[10] += in[FINE_EQUALS_COLL];
+		out[10] += in[FINE_COLL];
+
+		out[11] += in[CONSTRUCTOR_COARSE_EQUALS_COLL];
+		out[11] += in[CONSTRUCTOR_COARSE_COLL];
+		out[11] += in[CONSTRUCTOR_EQUALS_COLL];
+		out[11] += in[CONSTRUCTOR_COLL];
+		out[11] += in[COARSE_EQUALS_COLL];
+		out[11] += in[COARSE_COLL];
+		out[11] += in[EQUALS_COLL];
+		out[11] += in[COLL];
+	}
+
+	private String printObject(String name, int[] counts) {
+		StringBuilder b = new StringBuilder();
+		b.append(name);
+		for (int i = 0; i < counts.length; i++) {
+			b.append(',');
+			b.append(counts[i]);
+		}
+		return b.toString();
+	}
+
+	private void objects(Dataset dataset, HttpServletResponse resp) throws IOException {
+		resp.setStatus(HttpServletResponse.SC_OK);
+		resp.setContentType("text/plain");
+		ServletOutputStream out = resp.getOutputStream();
+
+		final int SIZE = 12;
+
+		int[] all = new int[SIZE];
+		int[] nosys = new int[SIZE];
+		int[] eqcol = new int[SIZE];
+		int[] eq = new int[SIZE];
+		int[] col = new int[SIZE];
+		int[] none = new int[SIZE];
+
+		Query.Cursor<? extends ClassSummary> query = db.getClassSummaryQuery().find();
+		while (query.hasNext()) {
+			ClassSummary r = query.next();
+
+			addObject(all, r.getEqCol());
+			addObject(all, r.getEq());
+			addObject(all, r.getCol());
+			addObject(all, r.getNone());
+
+			if (r.getClassName() == null || r.getClassName().startsWith("java")) {
+				addObject(nosys, r.getEqCol());
+				addObject(nosys, r.getEq());
+				addObject(nosys, r.getCol());
+				addObject(nosys, r.getNone());
+			}
+
+			addObject(eqcol, r.getEqCol());
+			addObject(eq, r.getEq());
+			addObject(col, r.getCol());
+			addObject(none, r.getNone());
+		}
+
+		out.println("Set,CoSfS,CoS,CfS,C,oSfS,oS,fS,None,fSE,E,fSK,K");
+
+		out.println(printObject("All", all));
+		out.println(printObject("NoSys", nosys));
+		out.println(printObject("EqCol", eqcol));
+		out.println(printObject("Eq", eq));
+		out.println(printObject("Col", col));
+		out.println(printObject("None", none));
+
+		resp.getOutputStream().close();
+	}
+
+	public static final int FIELD_DSCF = 0;
+	public static final int FIELD_DSC = 1;
+	public static final int FIELD_DSF = 2;
+	public static final int FIELD_DS = 3;
+	public static final int FIELD_DCF = 4;
+	public static final int FIELD_DC = 5;
+	public static final int FIELD_DF = 6;
+	public static final int FIELD_D = 7;
+	public static final int FIELD_SCF = 8;
+	public static final int FIELD_SC = 9;
+	public static final int FIELD_SF = 10;
+	public static final int FIELD_S = 11;
+	public static final int FIELD_CF = 12;
+	public static final int FIELD_C = 13;
+	public static final int FIELD_F = 14;
+	public static final int FIELD_NONE = 15;
+
+	private void addField(int[] counts, FieldSummary r) {
+		if (r.isDeclaredFinal() && r.isStationary() && r.isConstructed() && r.isFinal())
+			counts[FIELD_DSCF]++;
+		else if (r.isDeclaredFinal() && r.isStationary() && r.isConstructed())
+			counts[FIELD_DSC]++;
+		else if (r.isDeclaredFinal() && r.isStationary() && r.isFinal())
+			counts[FIELD_DSF]++;
+		else if (r.isDeclaredFinal() && r.isStationary())
+			counts[FIELD_DS]++;
+		else if (r.isDeclaredFinal() && r.isConstructed() && r.isFinal())
+			counts[FIELD_DCF]++;
+		else if (r.isDeclaredFinal() && r.isConstructed())
+			counts[FIELD_DC]++;
+		else if (r.isDeclaredFinal() && r.isFinal())
+			counts[FIELD_DF]++;
+		else if (r.isDeclaredFinal())
+			counts[FIELD_D]++;
+		else if (r.isStationary() && r.isConstructed() && r.isFinal())
+			counts[FIELD_SCF]++;
+		else if (r.isStationary() && r.isConstructed())
+			counts[FIELD_SC]++;
+		else if (r.isStationary() && r.isFinal())
+			counts[FIELD_SF]++;
+		else if (r.isStationary())
+			counts[FIELD_S]++;
+		else if (r.isConstructed() && r.isFinal())
+			counts[FIELD_CF]++;
+		else if (r.isConstructed())
+			counts[FIELD_C]++;
+		else if (r.isFinal())
+			counts[FIELD_F]++;
+		else
+			counts[FIELD_NONE]++;
+	}
+
+	private String printField(String name, int total, int[] counts) {
+		StringBuilder b = new StringBuilder();
+		b.append(name);
+		b.append(',');
+		b.append(total);
+		for (int i = 0; i < counts.length; i++) {
+			b.append(',');
+			b.append(counts[i]);
+		}
+		return b.toString();
 	}
 
 	private void fields(Dataset dataset, HttpServletResponse resp) throws IOException {
@@ -218,52 +412,62 @@ public class Process extends HttpServlet {
 		resp.setContentType("text/plain");
 		ServletOutputStream out = resp.getOutputStream();
 
-		int total = 0;
-		int numDSCF = 0;
-		int numDSC = 0;
-		int numDSF = 0;
-		int numDS = 0;
-		int numDCF = 0;
-		int numDC = 0;
-		int numDF = 0;
-		int numDNone = 0;
-		int numSCF = 0;
-		int numSC = 0;
-		int numSF = 0;
-		int numS = 0;
-		int numCF = 0;
-		int numC = 0;
-		int numF = 0;
-		int numNone = 0;
+		int numAll = 0;
+		int[] all = new int[16];
+
+		int numNoSystem = 0;
+		int[] noSystem = new int[16];
+
+		int numPrim = 0;
+		int[] prim = new int[16];
+
+		int numPrimNoSystem = 0;
+		int[] primNoSystem = new int[16];
+
+		int numRef = 0;
+		int[] ref = new int[16];
+
+		int numRefNoSystem = 0;
+		int[] refNoSystem = new int[16];
 
 		Query.Cursor<? extends FieldSummary> query = db.getFieldSummaryQuery().find();
 		while (query.hasNext()) {
 			FieldSummary r = query.next();
 
-			total++;
-			if (false) ;
-			else if (r.isDeclaredFinal() && r.isStationary() && r.isConstructed() && r.isFinal()) numDSCF++;
-			else if (r.isDeclaredFinal() && r.isStationary() && r.isConstructed()) numDSC++;
-			else if (r.isDeclaredFinal() && r.isStationary() && r.isFinal()) numDSF++;
-			else if (r.isDeclaredFinal() && r.isStationary()) numDS++;
-			else if (r.isDeclaredFinal() && r.isConstructed() && r.isFinal()) numDCF++;
-			else if (r.isDeclaredFinal() && r.isConstructed()) numDC++;
-			else if (r.isDeclaredFinal() && r.isFinal()) numDF++;
-			else if (r.isDeclaredFinal()) numDNone++;
-			else if (r.isStationary() && r.isConstructed() && r.isFinal()) numSCF++;
-			else if (r.isStationary() && r.isConstructed()) numSC++;
-			else if (r.isStationary() && r.isFinal()) numSF++;
-			else if (r.isStationary()) numS++;
-			else if (r.isConstructed() && r.isFinal()) numCF++;
-			else if (r.isConstructed()) numC++;
-			else if (r.isFinal()) numF++;
-			else numNone++;
+			numAll++;
+			addField(all, r);
+
+			if (r.getDescription().startsWith("L")) {
+				numRef++;
+				addField(ref, r);
+			} else {
+				numPrim++;
+				addField(prim, r);
+			}
+
+			if (!r.getPackageName().startsWith("sun.")
+					&& !r.getPackageName().startsWith("java.")
+					&& !r.getPackageName().startsWith("javax.")) {
+				numNoSystem++;
+				addField(noSystem, r);
+
+				if (r.getDescription().startsWith("L")) {
+					numRefNoSystem++;
+					addField(refNoSystem, r);
+				} else {
+					numPrimNoSystem++;
+					addField(primNoSystem, r);
+				}
+			}
 		}
 
-		out.println(String.format("%s,%d," + "%d,%d,%d,%d,%d,%d,%d,%d," + "%d,%d,%d,%d,%d,%d,%d,%d",
-				dataset.getBenchmark(), total,
-				numDSCF, numDSC, numDSF, numDS, numDCF, numDC, numDF, numDNone,
-				numSCF, numSC, numSF, numS, numCF, numC, numF, numNone));
+		out.println("Set,Total,DSCF,DSC,DSF,DS,DCF,DC,DF,D,SCF,SC,SF,S,CF,C,F,None");
+		out.println(printField("All", numAll, all));
+		out.println(printField("Prim", numPrim, prim));
+		out.println(printField("Ref", numRef, ref));
+		out.println(printField("NoSystem", numNoSystem, noSystem));
+		out.println(printField("PrimNS", numPrimNoSystem, primNoSystem));
+		out.println(printField("RefNS", numRefNoSystem, refNoSystem));
 
 		resp.getOutputStream().close();
 	}

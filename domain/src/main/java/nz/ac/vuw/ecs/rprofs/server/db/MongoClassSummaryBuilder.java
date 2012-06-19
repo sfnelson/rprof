@@ -29,6 +29,8 @@ public abstract class MongoClassSummaryBuilder extends MongoBuilder<MongoClassSu
 		setClassName(value.getClassName());
 		setPackageName(value.getPackageName());
 		setNumObjects(value.getNumObjects());
+		setNumFullyImmutable(value.getNumFullyImmutable());
+		setNumFullyMutable(value.getNumFullyMutable());
 		setEqCol(value.getEqCol());
 		setEq(value.getEq());
 		setCol(value.getCol());
@@ -59,6 +61,18 @@ public abstract class MongoClassSummaryBuilder extends MongoBuilder<MongoClassSu
 	@Override
 	public MongoClassSummaryBuilder setNumObjects(int numObjects) {
 		b.put("objects", numObjects);
+		return this;
+	}
+
+	@Override
+	public MongoClassSummaryBuilder setNumFullyImmutable(int numFullyImmutable) {
+		b.put("fullyimm", numFullyImmutable);
+		return this;
+	}
+
+	@Override
+	public MongoClassSummaryBuilder setNumFullyMutable(int numFullyMutable) {
+		b.put("fullymut", numFullyMutable);
 		return this;
 	}
 
@@ -118,6 +132,8 @@ public abstract class MongoClassSummaryBuilder extends MongoBuilder<MongoClassSu
 		String packageName = b.getString("package");
 
 		int numObjects = b.getInt("objects", 0);
+		int numFullyImmutable = b.getInt("fullyimm", 0);
+		int numFullyMutable = b.getInt("fullymut", 0);
 
 		List<?> eqcolList = (List<?>) b.get("eqcol");
 		int[] eqcol = new int[eqcolList.size()];
@@ -154,7 +170,10 @@ public abstract class MongoClassSummaryBuilder extends MongoBuilder<MongoClassSu
 				fields.put(fid, info);
 			}
 		}
-		ClassSummary cs = new ClassSummary(id, numObjects, eqcol, eq, col, none, fields);
+		ClassSummary cs = new ClassSummary(id, eqcol, eq, col, none, fields);
+		cs.setNumObjects(numObjects);
+		cs.setNumFullyImmutable(numFullyImmutable);
+		cs.setNumFullyMutable(numFullyMutable);
 		cs.setClassName(className);
 		cs.setPackageName(packageName);
 		return cs;

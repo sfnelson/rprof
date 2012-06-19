@@ -99,6 +99,10 @@ public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 
 	private int numObjects;
 
+	private int numFullyImmutable;
+
+	private int numFullyMutable;
+
 	@NotNull
 	private int[] eqcol;
 
@@ -127,13 +131,15 @@ public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 		fields = Maps.newHashMap();
 	}
 
-	public ClassSummary(ClassSummaryId id,
+	public ClassSummary(ClassSummaryId id, boolean fullyImmutable, boolean fullyMutable,
 						EventId lastWrite, EventId constructor, EventId firstRead,
 						EventId equals, EventId collection, Map<FieldId, Instance.FieldInfo> fields,
 						Set<FieldId> mutable) {
 		this(id);
 
 		numObjects = 1;
+		if (fullyImmutable) numFullyImmutable++;
+		if (fullyMutable) numFullyMutable++;
 
 		boolean isConstructor = (lastWrite == null) || (constructor != null && lastWrite.before(constructor));
 		boolean isCoarse = (firstRead == null) || (lastWrite == null) || (lastWrite.before(firstRead));
@@ -158,10 +164,9 @@ public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 		}
 	}
 
-	public ClassSummary(ClassSummaryId id, int numObjects,
+	public ClassSummary(ClassSummaryId id,
 						int[] eqcol, int[] eq, int[] col, int[] none, Map<FieldId, FieldInfo> fields) {
 		this.id = id;
-		this.numObjects = numObjects;
 		this.eqcol = eqcol;
 		this.eq = eq;
 		this.col = col;
@@ -208,6 +213,22 @@ public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 
 	public void setNumObjects(int numObjects) {
 		this.numObjects = numObjects;
+	}
+
+	public int getNumFullyImmutable() {
+		return numFullyImmutable;
+	}
+
+	public void setNumFullyImmutable(int numFullyImmutable) {
+		this.numFullyImmutable = numFullyImmutable;
+	}
+
+	public int getNumFullyMutable() {
+		return numFullyMutable;
+	}
+
+	public void setNumFullyMutable(int numFullyMutable) {
+		this.numFullyMutable = numFullyMutable;
 	}
 
 	@NotNull
@@ -259,6 +280,8 @@ public class ClassSummary implements DataObject<ClassSummaryId, ClassSummary> {
 		assert (id.equals(result.getId()));
 
 		numObjects += result.numObjects;
+		numFullyImmutable += result.numFullyImmutable;
+		numFullyMutable += result.numFullyMutable;
 
 		for (int i = 0; i < eqcol.length; i++) {
 			eqcol[i] += result.eqcol[i];

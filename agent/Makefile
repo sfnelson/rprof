@@ -139,6 +139,9 @@ version: all
 test: all
 	$(JAVA) -classpath $(TEST_CLASSES) nz.ac.vuw.ecs.rprof.test.RProfTest
 
+colltest: all
+	$(JAVA) -classpath $(TEST_CLASSES) nz.ac.vuw.ecs.rprof.test.CollectionTest
+
 example: all
 	$(JAVA) -classpath $(TEST_CLASSES) nz.ac.vuw.ecs.rprof.test.RProfExample
 

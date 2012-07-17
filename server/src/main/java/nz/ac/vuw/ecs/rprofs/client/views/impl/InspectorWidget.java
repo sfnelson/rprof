@@ -28,7 +28,7 @@ public class InspectorWidget extends Composite implements ProfilerAppView {
 	public InspectorWidget(ViewListView views) {
 		this.bottom = views;
 
-		initWidget((GWT.<Binder>create(Binder.class)).createAndBindUi(this));
+		initWidget(GWT.<Binder>create(Binder.class).createAndBindUi(this));
 	}
 
 	@Override

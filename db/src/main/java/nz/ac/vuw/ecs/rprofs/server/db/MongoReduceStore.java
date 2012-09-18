@@ -6,9 +6,9 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
-import nz.ac.vuw.ecs.rprofs.server.reports.Finisher;
-import nz.ac.vuw.ecs.rprofs.server.reports.ReduceStore;
-import nz.ac.vuw.ecs.rprofs.server.reports.Reducer;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.Finisher;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.ReduceStore;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.Reducer;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>

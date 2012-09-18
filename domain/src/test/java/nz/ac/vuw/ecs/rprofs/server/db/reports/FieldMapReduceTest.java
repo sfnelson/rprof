@@ -1,4 +1,4 @@
-package nz.ac.vuw.ecs.rprofs.server.reports;
+package nz.ac.vuw.ecs.rprofs.server.db.reports;
 
 import nz.ac.vuw.ecs.rprofs.server.data.util.FieldQuery;
 import nz.ac.vuw.ecs.rprofs.server.domain.Field;

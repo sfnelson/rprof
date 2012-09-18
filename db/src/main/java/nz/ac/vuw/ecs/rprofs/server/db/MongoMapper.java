@@ -3,8 +3,8 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 import nz.ac.vuw.ecs.rprofs.server.data.util.Query;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
-import nz.ac.vuw.ecs.rprofs.server.reports.Mapper;
-import nz.ac.vuw.ecs.rprofs.server.reports.ReduceStore;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.Mapper;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.ReduceStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

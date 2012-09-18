@@ -1,4 +1,4 @@
-package nz.ac.vuw.ecs.rprofs.server.reports;
+package nz.ac.vuw.ecs.rprofs.server.db.reports;
 
 import java.util.List;
 import java.util.Set;

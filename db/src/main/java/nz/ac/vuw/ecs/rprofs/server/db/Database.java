@@ -14,9 +14,9 @@ import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
-import nz.ac.vuw.ecs.rprofs.server.reports.MapReduce;
-import nz.ac.vuw.ecs.rprofs.server.reports.ReduceStore;
-import nz.ac.vuw.ecs.rprofs.server.reports.Reducer;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.MapReduce;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.ReduceStore;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.Reducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

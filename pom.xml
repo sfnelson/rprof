@@ -13,15 +13,31 @@
         <module>jvmti-lib</module>
         <module>worker</module>
         <module>domain</module>
+        <module>db</module>
+        <module>mapreduce</module>
     </modules>
 
     <properties>
         <rprof.version>1.0-SNAPSHOT</rprof.version>
-        <maven.compiler.source>1.6</maven.compiler.source>
-        <maven.compiler.target>1.6</maven.compiler.target>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
     </properties>
 
     <dependencies>
+
+        <!-- logging -->
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>0.9.29</version>
+        </dependency>
 
         <!-- testing -->
 

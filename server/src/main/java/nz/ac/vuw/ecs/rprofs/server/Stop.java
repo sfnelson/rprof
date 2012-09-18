@@ -18,8 +18,8 @@ import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.FieldSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.Instance;
-import nz.ac.vuw.ecs.rprofs.server.reports.ClassMapReduce;
-import nz.ac.vuw.ecs.rprofs.server.reports.FieldMapReduce;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.ClassMapReduce;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.FieldMapReduce;
 import org.slf4j.LoggerFactory;
 
 @Singleton

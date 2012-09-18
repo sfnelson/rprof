@@ -12,7 +12,7 @@
     <name>Server</name>
 
     <properties>
-        <gwt.version>2.4.0</gwt.version>
+        <gwt.version>2.5.0-rc1</gwt.version>
         <gwt.style>PRETTY</gwt.style>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -149,44 +149,6 @@
             <version>4.0</version>
         </dependency>
 
-        <!-- database -->
-
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-            <version>2.6.3</version>
-        </dependency>
-
-        <!-- logging -->
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.6.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>0.9.29</version>
-        </dependency>
-
-        <!-- testing -->
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.8.2</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.easymock</groupId>
-            <artifactId>easymock</artifactId>
-            <version>3.0</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- private -->
 
         <dependency>
@@ -198,6 +160,18 @@
         <dependency>
             <groupId>nz.ac.vuw.ecs.rprof</groupId>
             <artifactId>domain</artifactId>
+            <version>${rprof.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>nz.ac.vuw.ecs.rprof</groupId>
+            <artifactId>db</artifactId>
+            <version>${rprof.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>nz.ac.vuw.ecs.rprof</groupId>
+            <artifactId>mapreduce</artifactId>
             <version>${rprof.version}</version>
         </dependency>
 
@@ -240,8 +214,8 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
-                <version>2.4.0</version>
-                <dependencies>
+                <version>${gwt.version}</version>
+                <!--<dependencies>
                     <dependency>
                         <groupId>com.google.gwt</groupId>
                         <artifactId>gwt-user</artifactId>
@@ -257,7 +231,7 @@
                         <artifactId>requestfactory-server</artifactId>
                         <version>${gwt.version}</version>
                     </dependency>
-                </dependencies>
+                </dependencies>-->
                 <configuration>
                     <module>nz.ac.vuw.ecs.rprofs.profiler</module>
                     <runTarget>/index.html</runTarget>

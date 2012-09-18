@@ -8,6 +8,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.DatasetId;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -77,8 +78,8 @@ public class MongoDatasetBuilderTest {
 	public void testStore() throws Exception {
 		toReturn = 15;
 		DatasetId id = builder.store();
-		assertEquals(15l, id.getValue());
-		assertEquals(15l, stored.get("_id"));
+		Assert.assertEquals(15l, id.getValue());
+		Assert.assertEquals(15l, stored.get("_id"));
 	}
 
 	@Test
@@ -95,10 +96,10 @@ public class MongoDatasetBuilderTest {
 				.get());
 		Dataset ds = builder.get();
 
-		assertEquals(1l, ds.getId().getValue());
-		assertEquals("foobar", ds.getBenchmark());
-		assertEquals(started, ds.getStarted());
-		assertEquals(stopped, ds.getStopped());
-		assertEquals("rprof_foobar_1", ds.getDatasetHandle());
+		Assert.assertEquals(1l, ds.getId().getValue());
+		Assert.assertEquals("foobar", ds.getBenchmark());
+		Assert.assertEquals(started, ds.getStarted());
+		Assert.assertEquals(stopped, ds.getStopped());
+		Assert.assertEquals("rprof_foobar_1", ds.getDatasetHandle());
 	}
 }

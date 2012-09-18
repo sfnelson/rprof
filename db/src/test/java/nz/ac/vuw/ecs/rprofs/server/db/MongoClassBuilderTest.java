@@ -5,12 +5,12 @@ import nz.ac.vuw.ecs.rprofs.server.data.util.FieldCreator;
 import nz.ac.vuw.ecs.rprofs.server.data.util.MethodCreator;
 import nz.ac.vuw.ecs.rprofs.server.domain.Clazz;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
+import org.easymock.EasyMock;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.easymock.EasyMock.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * Author: Stephen Nelson <stephen@sfnelson.org>
@@ -85,9 +85,9 @@ public class MongoClassBuilderTest {
 		query = null;
 		long count = 0;
 
-		cursor = createMock(DBCursor.class);
-		mBuilder = createMock(MongoMethodBuilder.class);
-		fBuilder = createMock(MongoFieldBuilder.class);
+		cursor = EasyMock.createMock(DBCursor.class);
+		mBuilder = EasyMock.createMock(MongoMethodBuilder.class);
+		fBuilder = EasyMock.createMock(MongoFieldBuilder.class);
 	}
 
 	@Test
@@ -153,12 +153,12 @@ public class MongoClassBuilderTest {
 
 		ClazzId id = new ClazzId(15l);
 
-		expect(mBuilder.store(id, "org.foo.Bar")).andReturn(null);
-		expect(fBuilder.store(id, "org.foo.Bar")).andReturn(null);
-		expect(cursor.hasNext()).andReturn(false); // get children
+		EasyMock.expect(mBuilder.store(id, "org.foo.Bar")).andReturn(null);
+		EasyMock.expect(fBuilder.store(id, "org.foo.Bar")).andReturn(null);
+		EasyMock.expect(cursor.hasNext()).andReturn(false); // get children
 		cursor.close();
 
-		replay(fBuilder, mBuilder, cursor);
+		EasyMock.replay(fBuilder, mBuilder, cursor);
 
 		builder.setName("org.foo.Bar");
 		builder.addMethod(mBuilder);
@@ -166,12 +166,12 @@ public class MongoClassBuilderTest {
 		nextId = 15;
 		builder.store();
 
-		verify(fBuilder, mBuilder, cursor);
+		EasyMock.verify(fBuilder, mBuilder, cursor);
 
-		assertNotNull(stored);
-		assertEquals(15l, stored.get("_id"));
-		assertEquals("org.foo.Bar", stored.get("name"));
-		assertEquals(new BasicDBObjectBuilder().add("parentName", "org.foo.Bar").get(), query);
+		Assert.assertNotNull(stored);
+		Assert.assertEquals(15l, stored.get("_id"));
+		Assert.assertEquals("org.foo.Bar", stored.get("name"));
+		Assert.assertEquals(new BasicDBObjectBuilder().add("parentName", "org.foo.Bar").get(), query);
 	}
 
 	@Test
@@ -179,24 +179,24 @@ public class MongoClassBuilderTest {
 		ClazzId id = new ClazzId(15l);
 		ClazzId pid = new ClazzId(16l);
 
-		expect(cursor.hasNext()).andReturn(true);
-		expect(cursor.next()).andReturn(new BasicDBObject("_id", 16l));
+		EasyMock.expect(cursor.hasNext()).andReturn(true);
+		EasyMock.expect(cursor.next()).andReturn(new BasicDBObject("_id", 16l));
 		cursor.close();
-		expect(cursor.hasNext()).andReturn(false);
+		EasyMock.expect(cursor.hasNext()).andReturn(false);
 		cursor.close();
 
-		replay(cursor);
+		EasyMock.replay(cursor);
 
 		builder.setName("org.foo.Bar");
 		builder.setParentName("org.Foo");
 		nextId = 15l;
 		builder.store();
 
-		verify(cursor);
+		EasyMock.verify(cursor);
 
-		assertNotNull(stored);
-		assertEquals(16l, stored.get("parent"));
-		assertEquals("org.Foo", stored.get("parentName"));
+		Assert.assertNotNull(stored);
+		Assert.assertEquals(16l, stored.get("parent"));
+		Assert.assertEquals("org.Foo", stored.get("parentName"));
 	}
 
 	@Test
@@ -204,22 +204,22 @@ public class MongoClassBuilderTest {
 		ClazzId id = new ClazzId(15l);
 		ClazzId pid = new ClazzId(16l);
 
-		expect(cursor.hasNext()).andReturn(true);
-		expect(cursor.next()).andReturn(new BasicDBObject("_id", 16l));
-		expect(cursor.hasNext()).andReturn(false);
+		EasyMock.expect(cursor.hasNext()).andReturn(true);
+		EasyMock.expect(cursor.next()).andReturn(new BasicDBObject("_id", 16l));
+		EasyMock.expect(cursor.hasNext()).andReturn(false);
 		cursor.close();
 
-		replay(cursor);
+		EasyMock.replay(cursor);
 
 		builder.setName("org.foo.Bar");
 		nextId = 15l;
 		builder.store();
 
-		verify(cursor);
+		EasyMock.verify(cursor);
 
-		assertEquals(new BasicDBObject("parentName", "org.foo.Bar"), query);
-		assertEquals(new BasicDBObject("_id", 16l), ref);
-		assertEquals(new BasicDBObject("parent", 15l), update);
+		Assert.assertEquals(new BasicDBObject("parentName", "org.foo.Bar"), query);
+		Assert.assertEquals(new BasicDBObject("_id", 16l), ref);
+		Assert.assertEquals(new BasicDBObject("parent", 15l), update);
 	}
 
 	@Test
@@ -234,12 +234,12 @@ public class MongoClassBuilderTest {
 				.add("initialized", true).get());
 		Clazz result = builder.get();
 
-		assertEquals(1l, result.getId().getValue());
-		assertEquals("org.foo.Bar", result.getName());
-		assertEquals(new ClazzId(2l), result.getParent());
-		assertEquals("org.Foo", result.getParentName());
-		assertEquals(3, result.getProperties());
-		assertEquals(4, result.getAccess());
-		assertEquals(true, result.isInitialized());
+		Assert.assertEquals(1l, result.getId().getValue());
+		Assert.assertEquals("org.foo.Bar", result.getName());
+		Assert.assertEquals(new ClazzId(2l), result.getParent());
+		Assert.assertEquals("org.Foo", result.getParentName());
+		Assert.assertEquals(3, result.getProperties());
+		Assert.assertEquals(4, result.getAccess());
+		Assert.assertEquals(true, result.isInitialized());
 	}
 }

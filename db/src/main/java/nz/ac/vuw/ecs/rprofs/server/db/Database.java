@@ -9,14 +9,15 @@ import com.google.inject.Singleton;
 import com.mongodb.*;
 import javax.validation.constraints.NotNull;
 import nz.ac.vuw.ecs.rprofs.Context;
+import nz.ac.vuw.ecs.rprofs.server.data.DataSource;
 import nz.ac.vuw.ecs.rprofs.server.data.util.*;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.MapReduce;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.ReduceStore;
+import nz.ac.vuw.ecs.rprofs.server.db.reports.Reducer;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
 import nz.ac.vuw.ecs.rprofs.server.model.DataObject;
 import nz.ac.vuw.ecs.rprofs.server.model.Id;
-import nz.ac.vuw.ecs.rprofs.server.db.reports.MapReduce;
-import nz.ac.vuw.ecs.rprofs.server.db.reports.ReduceStore;
-import nz.ac.vuw.ecs.rprofs.server.db.reports.Reducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * Date: 9 September, 2011
  */
 @Singleton
-public class Database {
+public class Database implements DataSource {
 
 	private final Logger log = LoggerFactory.getLogger(Database.class);
 

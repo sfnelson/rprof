@@ -9,10 +9,10 @@ import com.mongodb.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.ClassSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClassSummaryId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -131,15 +131,15 @@ public class MongoClassSummaryBuilderTest {
 				.get());
 		ClassSummary result = builder.get();
 
-		assertEquals(1l, result.getId().getValue());
-		assertEquals(className, result.getClassName());
-		assertEquals(packageName, result.getPackageName());
-		assertEquals(numObjects, result.getNumObjects());
-		assertArrayEquals(eqcol, result.getEqCol());
-		assertArrayEquals(eq, result.getEq());
-		assertArrayEquals(col, result.getCol());
-		assertArrayEquals(none, result.getNone());
-		assertEquals(fields, result.getFields());
+		Assert.assertEquals(1l, result.getId().getValue());
+		Assert.assertEquals(className, result.getClassName());
+		Assert.assertEquals(packageName, result.getPackageName());
+		Assert.assertEquals(numObjects, result.getNumObjects());
+		Assert.assertArrayEquals(eqcol, result.getEqCol());
+		Assert.assertArrayEquals(eq, result.getEq());
+		Assert.assertArrayEquals(col, result.getCol());
+		Assert.assertArrayEquals(none, result.getNone());
+		Assert.assertEquals(fields, result.getFields());
 	}
 
 	@Test
@@ -157,13 +157,13 @@ public class MongoClassSummaryBuilderTest {
 				.setFields(fields)
 				.store();
 
-		assertEquals(className, stored.get("class"));
-		assertEquals(packageName, stored.get("package"));
-		assertEquals(numObjects, stored.get("objects"));
-		assertEquals(eqcolList, stored.get("eqcol"));
-		assertEquals(eqList, stored.get("eq"));
-		assertEquals(colList, stored.get("col"));
-		assertEquals(noneList, stored.get("none"));
-		assertEquals(1l, ((List<DBObject>) stored.get("fields")).get(0).get("_id"));
+		Assert.assertEquals(className, stored.get("class"));
+		Assert.assertEquals(packageName, stored.get("package"));
+		Assert.assertEquals(numObjects, stored.get("objects"));
+		Assert.assertEquals(eqcolList, stored.get("eqcol"));
+		Assert.assertEquals(eqList, stored.get("eq"));
+		Assert.assertEquals(colList, stored.get("col"));
+		Assert.assertEquals(noneList, stored.get("none"));
+		Assert.assertEquals(1l, ((List<DBObject>) stored.get("fields")).get(0).get("_id"));
 	}
 }

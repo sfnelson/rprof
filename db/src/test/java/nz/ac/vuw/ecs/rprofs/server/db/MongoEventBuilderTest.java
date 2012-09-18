@@ -10,6 +10,7 @@ import com.mongodb.DBObject;
 import nz.ac.vuw.ecs.rprofs.server.domain.Dataset;
 import nz.ac.vuw.ecs.rprofs.server.domain.Event;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.*;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,8 +57,8 @@ public class MongoEventBuilderTest {
 	public void testSetId() throws Exception {
 		EventId id = EventId.create(ds, 1);
 
-		assertNull(b.b.get("_id"));
-		assertSame(b, b.setId(id));
+		Assert.assertNull(b.b.get("_id"));
+		Assert.assertSame(b, b.setId(id));
 		assertEquals(id.getValue(), b.b.get("_id"));
 	}
 
@@ -65,14 +66,14 @@ public class MongoEventBuilderTest {
 	public void testSetThread() throws Exception {
 		InstanceId thread = InstanceId.create(ds, 2);
 
-		assertNull(b.b.get("thread"));
+		Assert.assertNull(b.b.get("thread"));
 		assertEquals(b, b.setThread(thread));
 		assertEquals(thread.getValue(), b.b.get("thread"));
 	}
 
 	@Test
 	public void testSetEvent() throws Exception {
-		assertNull(b.b.get("event"));
+		Assert.assertNull(b.b.get("event"));
 		assertEquals(b, b.setEvent(3));
 		assertEquals(3, b.b.get("event"));
 	}
@@ -81,7 +82,7 @@ public class MongoEventBuilderTest {
 	public void testSetClazz() throws Exception {
 		ClazzId clazz = ClazzId.create(ds, 4);
 
-		assertNull(b.b.get("class"));
+		Assert.assertNull(b.b.get("class"));
 		assertEquals(b, b.setClazz(clazz));
 		assertEquals(clazz.getValue(), b.b.get("class"));
 	}
@@ -91,7 +92,7 @@ public class MongoEventBuilderTest {
 		ClazzId clazz = ClazzId.create(ds, 4);
 		MethodId method = MethodId.create(ds, clazz, (short) 5);
 
-		assertNull(b.b.get("method"));
+		Assert.assertNull(b.b.get("method"));
 		assertEquals(b, b.setMethod(method));
 		assertEquals(method.getValue(), b.b.get("method"));
 	}
@@ -101,7 +102,7 @@ public class MongoEventBuilderTest {
 		ClazzId clazz = ClazzId.create(ds, 4);
 		FieldId field = FieldId.create(ds, clazz, (short) 6);
 
-		assertNull(b.b.get("field"));
+		Assert.assertNull(b.b.get("field"));
 		assertEquals(b, b.setField(field));
 		assertEquals(field.getValue(), b.b.get("field"));
 	}
@@ -112,7 +113,7 @@ public class MongoEventBuilderTest {
 		InstanceId y = null;
 		InstanceId z = InstanceId.create(ds, 8);
 
-		assertFalse(b.b.containsField("args"));
+		Assert.assertFalse(b.b.containsField("args"));
 
 		b.addArg(x);
 		b.addArg(y);
@@ -144,15 +145,15 @@ public class MongoEventBuilderTest {
 
 		b.store();
 
-		assertTrue(b.b.isEmpty());
+		Assert.assertTrue(b.b.isEmpty());
 
-		assertEquals(id.getValue(), result.get("_id"));
-		assertEquals(thread.getValue(), result.get("thread"));
-		assertEquals(3, result.get("event"));
-		assertEquals(clazz.getValue(), result.get("class"));
-		assertEquals(method.getValue(), result.get("method"));
-		assertEquals(field.getValue(), result.get("field"));
-		assertEquals(Lists.newArrayList(x.getValue(), null, z.getValue()), result.get("args"));
+		Assert.assertEquals(id.getValue(), result.get("_id"));
+		Assert.assertEquals(thread.getValue(), result.get("thread"));
+		Assert.assertEquals(3, result.get("event"));
+		Assert.assertEquals(clazz.getValue(), result.get("class"));
+		Assert.assertEquals(method.getValue(), result.get("method"));
+		Assert.assertEquals(field.getValue(), result.get("field"));
+		Assert.assertEquals(Lists.newArrayList(x.getValue(), null, z.getValue()), result.get("args"));
 	}
 
 	@Test
@@ -177,12 +178,12 @@ public class MongoEventBuilderTest {
 				.get());
 		Event result = b.get();
 
-		assertEquals(id, result.getId());
-		assertEquals(thread, result.getThread());
-		assertEquals(Event.METHOD_EXCEPTION, result.getEvent());
-		assertEquals(clazz, result.getClazz());
-		assertEquals(method, result.getMethod());
-		assertEquals(field, result.getField());
-		assertEquals(Lists.newArrayList(x, y, z), result.getArgs());
+		Assert.assertEquals(id, result.getId());
+		Assert.assertEquals(thread, result.getThread());
+		Assert.assertEquals(Event.METHOD_EXCEPTION, result.getEvent());
+		Assert.assertEquals(clazz, result.getClazz());
+		Assert.assertEquals(method, result.getMethod());
+		Assert.assertEquals(field, result.getField());
+		Assert.assertEquals(Lists.newArrayList(x, y, z), result.getArgs());
 	}
 }

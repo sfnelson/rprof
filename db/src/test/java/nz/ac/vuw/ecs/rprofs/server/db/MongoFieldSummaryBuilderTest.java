@@ -3,6 +3,7 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 import com.mongodb.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.FieldSummary;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldSummaryId;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -99,17 +100,17 @@ public class MongoFieldSummaryBuilderTest {
 				.get());
 		FieldSummary result = builder.get();
 
-		assertEquals(1l, result.getId().getValue());
-		assertEquals(packageName, result.getPackageName());
-		assertEquals(name, result.getName());
-		assertEquals(description, result.getDescription());
-		assertEquals(isDeclaredFinal, result.isDeclaredFinal());
-		assertEquals(isFinal, result.isFinal());
-		assertEquals(isStationary, result.isStationary());
-		assertEquals(isConstructed, result.isConstructed());
-		assertEquals(instances, result.getInstances());
-		assertEquals(reads, result.getReads());
-		assertEquals(writes, result.getWrites());
+		Assert.assertEquals(1l, result.getId().getValue());
+		Assert.assertEquals(packageName, result.getPackageName());
+		Assert.assertEquals(name, result.getName());
+		Assert.assertEquals(description, result.getDescription());
+		Assert.assertEquals(isDeclaredFinal, result.isDeclaredFinal());
+		Assert.assertEquals(isFinal, result.isFinal());
+		Assert.assertEquals(isStationary, result.isStationary());
+		Assert.assertEquals(isConstructed, result.isConstructed());
+		Assert.assertEquals(instances, result.getInstances());
+		Assert.assertEquals(reads, result.getReads());
+		Assert.assertEquals(writes, result.getWrites());
 	}
 
 	@Test
@@ -128,15 +129,15 @@ public class MongoFieldSummaryBuilderTest {
 				.setWrites(writes)
 				.store();
 
-		assertEquals(packageName, stored.get("package"));
-		assertEquals(name, stored.get("name"));
-		assertEquals(description, stored.get("description"));
-		assertEquals(isDeclaredFinal, stored.get("declaredFinal"));
-		assertEquals(isFinal, stored.get("final"));
-		assertEquals(isStationary, stored.get("stationary"));
-		assertEquals(isConstructed, stored.get("constructed"));
-		assertEquals(instances, stored.get("instances"));
-		assertEquals(reads, stored.get("reads"));
-		assertEquals(writes, stored.get("writes"));
+		Assert.assertEquals(packageName, stored.get("package"));
+		Assert.assertEquals(name, stored.get("name"));
+		Assert.assertEquals(description, stored.get("description"));
+		Assert.assertEquals(isDeclaredFinal, stored.get("declaredFinal"));
+		Assert.assertEquals(isFinal, stored.get("final"));
+		Assert.assertEquals(isStationary, stored.get("stationary"));
+		Assert.assertEquals(isConstructed, stored.get("constructed"));
+		Assert.assertEquals(instances, stored.get("instances"));
+		Assert.assertEquals(reads, stored.get("reads"));
+		Assert.assertEquals(writes, stored.get("writes"));
 	}
 }

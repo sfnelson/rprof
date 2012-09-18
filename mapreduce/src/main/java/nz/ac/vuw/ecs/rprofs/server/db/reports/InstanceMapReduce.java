@@ -6,7 +6,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 import nz.ac.vuw.ecs.rprofs.Context;
 import nz.ac.vuw.ecs.rprofs.domain.MethodUtils;
-import nz.ac.vuw.ecs.rprofs.server.db.Database;
+import nz.ac.vuw.ecs.rprofs.server.data.DataSource;
 import nz.ac.vuw.ecs.rprofs.server.domain.*;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
@@ -21,11 +21,11 @@ public class InstanceMapReduce implements MapReduce<Event, InstanceId, Instance>
 
 	private final Logger log = LoggerFactory.getLogger(InstanceMapReduce.class);
 
-	private final Database database;
+	private final DataSource database;
 
 	private final Dataset dataset;
 
-	public InstanceMapReduce(Dataset dataset, Database database) {
+	public InstanceMapReduce(Dataset dataset, DataSource database) {
 		this.dataset = dataset;
 		this.database = database;
 	}

@@ -2,9 +2,11 @@ package nz.ac.vuw.ecs.rprofs.server.db;
 
 import com.google.common.collect.Lists;
 import com.mongodb.*;
-import nz.ac.vuw.ecs.rprofs.server.domain.Field;
+import nz.ac.vuw.ecs.rprofs.server.domain.Method;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
-import nz.ac.vuw.ecs.rprofs.server.domain.id.FieldId;
+import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
+import org.easymock.EasyMock;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,12 +19,12 @@ import static org.junit.Assert.assertEquals;
  * Author: Stephen Nelson <stephen@sfnelson.org>
  * Date: 14/09/11
  */
-public class MongoFieldBuilderTest {
+public class MongoMethodBuilderTest {
 
 	private MongoClassBuilder cb;
-	private MongoFieldBuilder fb;
+	private MongoMethodBuilder mb;
 
-	private FieldId nextId;
+	private MethodId nextId;
 
 	private List<BasicDBObject> stored = Lists.newArrayList();
 
@@ -31,8 +33,8 @@ public class MongoFieldBuilderTest {
 		stored.clear();
 		nextId = null;
 
-		cb = createMock(MongoClassBuilder.class);
-		fb = new MongoFieldBuilder(cb) {
+		cb = EasyMock.createMock(MongoClassBuilder.class);
+		mb = new MongoMethodBuilder(cb) {
 			@Override
 			void _store(DBObject toStore) {
 				BasicDBObject s = new BasicDBObject();
@@ -61,7 +63,7 @@ public class MongoFieldBuilderTest {
 			}
 
 			@Override
-			FieldId _createId() {
+			MethodId _createId() {
 				return nextId;
 			}
 		};
@@ -69,59 +71,59 @@ public class MongoFieldBuilderTest {
 
 	@Test
 	public void testSetName() throws Exception {
-		fb.setName("foobar");
-		assertEquals("foobar", fb.b.get("name"));
+		mb.setName("foobar");
+		assertEquals("foobar", mb.b.get("name"));
 	}
 
 	@Test
 	public void testSetDescription() throws Exception {
-		fb.setDescription("foobar");
-		assertEquals("foobar", fb.b.get("description"));
+		mb.setDescription("foobar");
+		assertEquals("foobar", mb.b.get("description"));
 	}
 
 	@Test
 	public void testSetAccess() throws Exception {
-		fb.setAccess(15);
-		assertEquals(15, fb.b.get("access"));
+		mb.setAccess(15);
+		assertEquals(15, mb.b.get("access"));
 	}
 
 	@Test
 	public void testSetOwner() throws Exception {
 		ClazzId id = new ClazzId(15);
-		fb.setOwner(id);
-		assertEquals(id.getValue(), fb.b.get("owner"));
+		mb.setOwner(id);
+		assertEquals(id.getValue(), mb.b.get("owner"));
 	}
 
 	@Test
 	public void testSetOwnerName() throws Exception {
-		fb.setOwnerName("foobar");
-		assertEquals("foobar", fb.b.get("ownerName"));
+		mb.setOwnerName("foobar");
+		assertEquals("foobar", mb.b.get("ownerName"));
 	}
 
 	@Test
 	public void testStore() throws Exception {
 		ClazzId id = new ClazzId(15l);
-		this.nextId = new FieldId(16l);
+		this.nextId = new MethodId(16l);
 
-		cb.addField(fb);
+		cb.addMethod(mb);
 
-		replay(cb);
+		EasyMock.replay(cb);
 
-		fb.store();
+		mb.store();
 
-		verify(cb);
+		EasyMock.verify(cb);
 
-		reset(cb);
+		EasyMock.reset(cb);
 
-		replay(cb);
+		EasyMock.replay(cb);
 
-		fb.store(id, "org.foo.Bar");
+		mb.store(id, "org.foo.Bar");
 
-		verify(cb);
+		EasyMock.verify(cb);
 
-		assertEquals(1, stored.size());
+		Assert.assertEquals(1, stored.size());
 		BasicDBObject o = stored.get(0);
-		assertEquals(new BasicDBObjectBuilder()
+		Assert.assertEquals(new BasicDBObjectBuilder()
 				.add("_id", 16l)
 				.add("owner", 15l)
 				.add("ownerName", "org.foo.Bar")
@@ -131,15 +133,15 @@ public class MongoFieldBuilderTest {
 
 	@Test
 	public void testGet() throws Exception {
-		FieldId fieldId = new FieldId(16l);
+		MethodId methodId = new MethodId(16l);
 		String name = "fuzz";
 		String desc = "fozz";
 		int access = 15;
 		ClazzId clazzId = new ClazzId(17l);
 		String cname = "org/foo/Bar";
 
-		fb.init(new BasicDBObjectBuilder()
-				.add("_id", fieldId.getValue())
+		mb.init(new BasicDBObjectBuilder()
+				.add("_id", methodId.getValue())
 				.add("name", name)
 				.add("description", desc)
 				.add("access", access)
@@ -147,13 +149,13 @@ public class MongoFieldBuilderTest {
 				.add("ownerName", cname)
 				.get());
 
-		Field f = fb.get();
+		Method m = mb.get();
 
-		assertEquals(fieldId, f.getId());
-		assertEquals(name, f.getName());
-		assertEquals(desc, f.getDescription());
-		assertEquals(access, f.getAccess());
-		assertEquals(clazzId, f.getOwner());
-		assertEquals(cname, f.getOwnerName());
+		Assert.assertEquals(methodId, m.getId());
+		Assert.assertEquals(name, m.getName());
+		Assert.assertEquals(desc, m.getDescription());
+		Assert.assertEquals(access, m.getAccess());
+		Assert.assertEquals(clazzId, m.getOwner());
+		Assert.assertEquals(cname, m.getOwnerName());
 	}
 }

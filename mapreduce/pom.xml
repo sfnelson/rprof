@@ -13,28 +13,28 @@
     <name>MapReduce</name>
 
     <dependencies>
-    <!-- private -->
+        <!-- private -->
 
-    <dependency>
-        <groupId>nz.ac.vuw.ecs.rprof</groupId>
-        <artifactId>db</artifactId>
-        <version>${rprof.version}</version>
-    </dependency>
+        <dependency>
+            <groupId>nz.ac.vuw.ecs.rprof</groupId>
+            <artifactId>domain</artifactId>
+            <version>${rprof.version}</version>
+        </dependency>
 
-</dependencies>
+    </dependencies>
 
-<build>
-<plugins>
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-            <source>${maven.compiler.source}</source>
-            <target>${maven.compiler.target}</target>
-        </configuration>
-    </plugin>
-</plugins>
-</build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

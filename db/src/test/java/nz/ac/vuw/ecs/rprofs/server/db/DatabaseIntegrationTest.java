@@ -36,7 +36,7 @@ public class DatabaseIntegrationTest {
 		pb.environment().put("PATH", "/bin:/usr/bin:/usr/local/bin:~/bin:~/workspace/mongodb/bin");
 		pb.command("/usr/bin/which", "mongod");
 		Scanner in = new Scanner(pb.start().getInputStream());
-		Assert.assertTrue(in.hasNextLine());
+		assertTrue(in.hasNextLine());
 		String path = in.nextLine();
 
 		pb.command().clear();

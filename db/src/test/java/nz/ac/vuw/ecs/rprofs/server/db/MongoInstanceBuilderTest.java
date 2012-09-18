@@ -6,6 +6,7 @@ import nz.ac.vuw.ecs.rprofs.server.domain.id.ClazzId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.EventId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.InstanceId;
 import nz.ac.vuw.ecs.rprofs.server.domain.id.MethodId;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -137,13 +138,13 @@ public class MongoInstanceBuilderTest {
 				.get());
 		Instance result = builder.get();
 
-		assertEquals(1l, result.getId().getValue());
-		assertEquals(clazzId, result.getType());
-		assertEquals(constructor, result.getConstructor());
-		assertEquals(consReturn, result.getConstructorReturn());
-		assertEquals(firstEquals, result.getFirstEquals());
-		assertEquals(firstHashcode, result.getFirstHashCode());
-		assertEquals(firstCollection, result.getFirstCollection());
+		Assert.assertEquals(1l, result.getId().getValue());
+		Assert.assertEquals(clazzId, result.getType());
+		Assert.assertEquals(constructor, result.getConstructor());
+		Assert.assertEquals(consReturn, result.getConstructorReturn());
+		Assert.assertEquals(firstEquals, result.getFirstEquals());
+		Assert.assertEquals(firstHashcode, result.getFirstHashCode());
+		Assert.assertEquals(firstCollection, result.getFirstCollection());
 	}
 
 	@Test
@@ -158,11 +159,11 @@ public class MongoInstanceBuilderTest {
 				.setFirstCollection(firstCollection)
 				.store();
 
-		assertEquals(clazzId.getValue(), stored.get("type"));
-		assertEquals(constructor.getValue(), stored.get("constructor"));
-		assertEquals(consReturn.getValue(), stored.get("constructorReturn"));
-		assertEquals(firstEquals.getValue(), stored.get("firstEquals"));
-		assertEquals(firstHashcode.getValue(), stored.get("firstHashCode"));
-		assertEquals(firstCollection.getValue(), stored.get("firstCollection"));
+		Assert.assertEquals(clazzId.getValue(), stored.get("type"));
+		Assert.assertEquals(constructor.getValue(), stored.get("constructor"));
+		Assert.assertEquals(consReturn.getValue(), stored.get("constructorReturn"));
+		Assert.assertEquals(firstEquals.getValue(), stored.get("firstEquals"));
+		Assert.assertEquals(firstHashcode.getValue(), stored.get("firstHashCode"));
+		Assert.assertEquals(firstCollection.getValue(), stored.get("firstCollection"));
 	}
 }
